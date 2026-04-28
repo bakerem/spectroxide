@@ -6,7 +6,7 @@
 
 Numerical solver for **CMB spectral distortions** from energy and photon injection in the early Universe.
 
-Energy released into the photon-baryon plasma at redshifts $z \sim 10^3$--$5\times 10^6$ creates deviations from a perfect blackbody spectrum. These spectral distortions --- $\mu$-type (chemical potential) and $y$-type (Compton) --- encode information about early-universe physics, from the dissipation of primordial acoustic waves to exotic particle decays and dark sector interactions.
+Energy released into the photon-baryon plasma at redshifts $z \sim 10^3 - 2 \times 10^6$ creates deviations from a perfect blackbody spectrum. These spectral distortions --- $\mu$-type (chemical potential) and $y$-type (Compton) --- encode information about early-universe physics, from the dissipation of primordial acoustic waves to exotic particle decays and dark sector interactions.
 
 spectroxide solves the coupled photon-electron Boltzmann equation including Compton scattering (Kompaneets equation), double Compton emission, bremsstrahlung, and Hubble expansion. It provides both a **full PDE solver** (Rust) and a **fast Green's function approximation** (Rust + Python).
 
