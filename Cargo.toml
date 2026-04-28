@@ -1,0 +1,69 @@
+[package]
+name = "spectroxide"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Open-source solver for the cosmological thermalization problem: CMB spectral distortions from energy release in the early Universe"
+license = "MIT"
+authors = [
+    "Ethan Baker <ebaker@bu.edu>",
+    "Hongwan Liu",
+    "Siddharth Mishra-Sharma",
+]
+repository = "https://github.com/bakerem/spectroxide"
+homepage = "https://github.com/bakerem/spectroxide"
+documentation = "https://docs.rs/spectroxide"
+readme = "README.md"
+keywords = ["cosmology", "cmb", "spectral-distortion", "thermalization", "physics"]
+categories = ["science", "simulation"]
+
+[dependencies]
+
+[dev-dependencies]
+approx = "0.5"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "solver_benchmarks"
+harness = false
+
+[[bin]]
+name = "spectroxide"
+path = "src/main.rs"
+
+[lib]
+name = "spectroxide"
+path = "src/lib.rs"
+
+[lints.clippy]
+too_many_arguments = "allow"
+manual_range_contains = "allow"
+needless_borrows_for_generic_args = "allow"
+collapsible_if = "allow"
+manual_clamp = "warn"
+manual_is_multiple_of = "allow"
+unnecessary_map_or = "allow"
+derivable_impls = "allow"
+type_complexity = "allow"
+doc_overindented_list_items = "allow"
+doc_lazy_continuation = "allow"
+needless_range_loop = "allow"
+inconsistent_digit_grouping = "allow"
+should_implement_trait = "allow"
+if_same_then_else = "warn"
+redundant_field_names = "allow"
+expect_fun_call = "allow"
+useless_vec = "warn"
+manual_range_patterns = "allow"
+assign_op_pattern = "allow"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+# Compile dependencies at opt-level 2 in dev/test builds so criterion, approx,
+# and (indirectly) any test-only code aren't the bottleneck on `cargo test`.
+# First-party crate stays at opt-level 0 for fast incremental rebuilds.
+[profile.dev.package."*"]
+opt-level = 2

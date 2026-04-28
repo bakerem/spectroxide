@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectroxide"
+version = "0.1.0"
+description = "Python API for CMB spectral distortion calculations"
+# readme = "../README.md"  # outside package dir; omitted for setuptools compatibility
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    { name = "Ethan Baker" },
+    { name = "Hongwan Liu" },
+    { name = "Siddharth Mishra-Sharma" },
+]
+keywords = ["cosmology", "cmb", "spectral-distortion", "thermalization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = ["numpy", "scipy"]
+
+[project.optional-dependencies]
+plot = ["matplotlib"]
+notebook = ["matplotlib", "jupyter"]
+dev = ["matplotlib", "jupyter"]
+doc = [
+    "sphinx>=7.0",
+    "pydata-sphinx-theme>=0.15",
+    "nbsphinx>=0.9",
+    "nbsphinx-link>=1.3",
+    "sphinx-copybutton>=0.5",
+    "ipython",
+]
+
+# NOTE: Publication-quality plots (apply_style with usetex=True) require
+# a LaTeX installation with dvipng and the cm-super font package.
+# Install via your system package manager or conda:
+#
+#   conda install -c conda-forge texlive-core dvipng cm-super
+#
+# On Debian/Ubuntu:
+#   sudo apt install texlive-latex-extra dvipng cm-super
+#
+# On macOS (Homebrew):
+#   brew install --cask mactex-no-gui
+
+[project.urls]
+Repository = "https://github.com/bakerem/spectroxide"
+Issues = "https://github.com/bakerem/spectroxide/issues"
+
+[tool.setuptools.packages.find]
+include = ["spectroxide*"]

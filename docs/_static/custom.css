@@ -1,0 +1,81 @@
+/* spectroxide docs custom styles */
+
+/* Lead paragraph on landing page */
+.lead {
+    font-size: 1.15em;
+    line-height: 1.6;
+    color: var(--pst-color-text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Tighter spacing for grid cards */
+.sd-card {
+    border-radius: 8px;
+}
+
+.sd-card .sd-card-body {
+    padding: 1rem 1.25rem;
+}
+
+.sd-card .sd-card-title {
+    font-size: 1.05em;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+/* Math blocks: slightly more breathing room */
+div.math {
+    margin: 1.2em 0;
+}
+
+/* Admonition styling */
+.admonition {
+    border-radius: 6px;
+}
+
+/* Code blocks in tabs */
+.sd-tab-content .highlight {
+    margin: 0;
+}
+
+/* API reference: function signatures.
+   Lighter than the default theme treatment — no fill, thin accent rule
+   on the left, modest padding so signatures don't dominate the page. */
+dt.sig {
+    background: transparent;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0;
+    border-left: 2px solid var(--pst-color-border);
+    margin-top: 1.2em;
+}
+
+/* Function/method names: emphasized but not heavy */
+dt.sig .sig-name,
+dt.sig .pre {
+    font-weight: 500;
+}
+
+/* Parameter / Returns / Raises field labels: less aggressive than the
+   default theme bold + colored treatment. */
+dl.field-list > dt {
+    font-weight: 500;
+    background: transparent;
+    padding-left: 0;
+    color: var(--pst-color-text-muted);
+}
+
+/* Tighter spacing inside parameter lists */
+dl.field-list > dd {
+    margin-bottom: 0.6em;
+}
+
+/* List tables: more compact */
+.rst-content table.docutils td,
+.rst-content table.docutils th {
+    padding: 0.5rem 0.75rem;
+}
+
+/* Tutorial description table */
+table.docutils td p {
+    margin-bottom: 0;
+}

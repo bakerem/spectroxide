@@ -1,0 +1,88 @@
+/target
+Cargo.lock
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+.vscode/
+scheduled_tasks.lock
+
+# Generated outputs (regenerate with `cargo run --release`)
+output.json
+sweep_output.json
+photon_injection_output.json
+lcdm_*.json
+pde_*.json
+demo_greens_table.npz
+
+# Large data files (download via data/cosmotherm/download_greens.sh)
+data/cosmotherm/Greens*/
+data/cosmotherm/Greens*.tar.gz
+data/*.npz
+notebooks/data/*.npz
+
+# WSL artifacts
+*Zone.Identifier
+
+# Scratch planning files
+plan.md
+
+# Generated figures (regenerate from notebooks)
+*.pdf
+*.png
+!comparison_with_literature.png
+!notebooks/figures/*.pdf
+!paper/paper.pdf
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.dvi
+texput.*
+!docs/*.tex
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Executed notebook snapshots (regenerate by running notebooks)
+*_executed.ipynb
+
+# Debug/diagnostic output
+tau_ff_*.txt
+tau_ff_*.csv
+test_photon_*.json
+
+# Coverage reports
+*.coverage
+python/.coverage
+coverage/
+
+# Documentation build artifacts
+docs/_build/
+
+# Python
+__pycache__/
+*.egg-info/
+*.pyc
+.eggs/
+dist/
+build/
+
+# Third-party cloned repos
+dev/AxionLimits/
+
+# Temporary solver output
+*.stderr
+
+# Review artifacts
+review_report.md
+*.zip

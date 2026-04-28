@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  rust:
+    name: Rust tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build
+        run: cargo build --release
+      - name: Unit tests
+        run: cargo test --lib
+      - name: Science tests
+        run: cargo test --test science_suite
+      - name: Convergence tests
+        run: cargo test --test convergence_order
+      - name: Doc tests
+        run: cargo test --doc
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Format check
+        run: cargo fmt --check
+
+  rust-coverage:
+    name: Rust coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Run coverage
+        run: cargo llvm-cov --release --lcov --output-path lcov.info
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          flags: rust
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Coverage summary
+        run: cargo llvm-cov report --release 2>&1 | tail -25
+
+  python:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: cd python && pip install -e ".[plot]"
+      - name: Install test dependencies
+        run: pip install pytest pytest-cov scipy black
+      - name: Black format check
+        run: python -m black --check python/spectroxide/
+      - name: Test imports
+        run: |
+          python -c "from spectroxide import greens_function, run_single"
+          python -c "from spectroxide.greens import greens_function; dn = greens_function(3.0, 2e5); print(f'G_th(3, 2e5) = {dn:.4e}')"
+      - name: Run Python tests with coverage
+        run: |
+          cd python
+          pytest tests/ --cov=spectroxide --cov-report=xml:coverage.xml --cov-report=term-missing -v
+      - name: Upload Python coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: python/coverage.xml
+          flags: python
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  docs:
+    name: Docs build (Sphinx + rustdoc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python package (for autodoc imports)
+        run: cd python && pip install -e ".[plot]"
+      - name: Install Sphinx + extensions
+        run: pip install -r docs/requirements.txt
+      - name: Build site (Sphinx + embedded rustdoc)
+        run: make -C docs html
+      - name: Verify rustdoc was embedded
+        run: test -f docs/_build/html/rust/spectroxide/index.html
+      - name: Upload built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html

@@ -1,0 +1,88 @@
+cff-version: 1.2.0
+message: >-
+  If you use spectroxide in your research, please cite the accompanying paper
+  and Chluba & Sunyaev (2012). If you use the Green's function mode, please
+  also cite Chluba (2013) and Chluba (2015).
+title: "spectroxide: a code package for computing cosmic microwave background spectral distortions"
+abstract: >-
+  We present spectroxide, a code package for computing cosmic microwave background
+  spectral distortions in which all ~14,500 lines of Rust code, Python interface,
+  and ~400 automated tests were written by an AI assistant (Claude Code) under
+  human physicist supervision. The solver evolves the photon Boltzmann equation
+  under Compton scattering, double Compton emission, and Bremsstrahlung from
+  z ~ 5 x 10^6 to the present, computing spectral distortions from arbitrary heat
+  and photon injection within this redshift range. No fully open-source code of
+  this kind is publicly available; we validate against analytic limits, published
+  spectra, and publicly available precomputed Green's function tables. We document
+  the development as a case study in AI-assisted scientific computing, highlighting
+  how domain expertise caught physics bugs (incorrect dimensional prefactors,
+  near-cancellation errors) that evaded the full automated test suite, and provide
+  recommendations for best practices in human--AI collaborative development of
+  scientific software. We make spectroxide publicly available on GitHub.
+type: software
+authors:
+  - family-names: Baker
+    given-names: Ethan
+    email: ebaker@bu.edu
+    affiliation: "Physics Department, Boston University"
+  - family-names: Liu
+    given-names: Hongwan
+    email: hongwan@bu.edu
+    affiliation: "Physics Department, Boston University"
+  - family-names: Mishra-Sharma
+    given-names: Siddharth
+    email: smishras@bu.edu
+    affiliation: "Faculty of Computing & Data Sciences and Physics Department, Boston University"
+version: 0.1.0
+date-released: 2026-04-27
+license: MIT
+repository-code: "https://github.com/bakerem/spectroxide"
+url: "https://github.com/bakerem/spectroxide"
+keywords:
+  - cosmology
+  - cmb
+  - spectral-distortion
+  - thermalization
+  - physics
+references:
+  - type: article
+    authors:
+      - family-names: Chluba
+        given-names: Jens
+      - family-names: Sunyaev
+        given-names: Rashid A.
+    title: "The evolution of CMB spectral distortions in the early Universe"
+    journal: "Monthly Notices of the Royal Astronomical Society"
+    volume: 419
+    issue: 2
+    start: 1294
+    end: 1314
+    year: 2012
+    doi: "10.1111/j.1365-2966.2011.19786.x"
+    notes: "CosmoTherm; cite if you use spectroxide."
+  - type: article
+    authors:
+      - family-names: Chluba
+        given-names: Jens
+    title: "Green's function of the cosmological thermalization problem"
+    journal: "Monthly Notices of the Royal Astronomical Society"
+    volume: 434
+    issue: 1
+    start: 352
+    end: 357
+    year: 2013
+    doi: "10.1093/mnras/stt1025"
+    notes: "Cite if you use the Green's function mode."
+  - type: article
+    authors:
+      - family-names: Chluba
+        given-names: Jens
+    title: "Green's function of the cosmological thermalization problem -- II. Effect of photon injection and constraints"
+    journal: "Monthly Notices of the Royal Astronomical Society"
+    volume: 454
+    issue: 4
+    start: 4182
+    end: 4196
+    year: 2015
+    doi: "10.1093/mnras/stv2243"
+    notes: "Cite if you use the Green's function mode."
