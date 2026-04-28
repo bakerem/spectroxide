@@ -98,6 +98,13 @@ jobs:
         run: cd python && pip install -e ".[plot]"
       - name: Install Sphinx + extensions
         run: pip install -r docs/requirements.txt
+
+      # Fix for: PandocMissing in tutorials/*.nblink
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
       - name: Build site (Sphinx + embedded rustdoc)
         run: make -C docs html
       - name: Verify rustdoc was embedded
