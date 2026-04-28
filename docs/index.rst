@@ -3,7 +3,7 @@ spectroxide
 
 A PDE solver for CMB :math:`\mu`- and :math:`y`-type spectral
 distortions from energy and photon injection between :math:`z \sim 10^3`
-and :math:`z \sim 10^7`.
+and :math:`z \sim 5\times 10^6`.
 
 The photon occupation number :math:`n(x, \tau)` evolves under
 Kompaneets scattering, double Compton, bremsstrahlung, Hubble expansion,
