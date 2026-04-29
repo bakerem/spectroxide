@@ -259,6 +259,7 @@ If you use spectroxide in your research, please cite the accompanying paper
 and Chluba & Sunyaev (2012). If you use the Green's function mode, please
 also cite Chluba (2013) and Chluba (2015):
 
+- Baker, Liu & Mishra-Sharma (2026), "spectroxide: a code package for computing cosmic microwave background spectral distortions" ([arXiv:2604.24838](https://arxiv.org/abs/2604.24838)) --- this paper
 - Chluba & Sunyaev (2012), "The evolution of CMB spectral distortions in the early Universe", MNRAS 419, 1294 ([arXiv:1109.6552](https://arxiv.org/abs/1109.6552), [doi:10.1111/j.1365-2966.2011.19786.x](https://doi.org/10.1111/j.1365-2966.2011.19786.x)) --- CosmoTherm thermalization solver
 - Chluba (2013), "Green's function of the cosmological thermalization problem", MNRAS 434, 352 ([arXiv:1304.6120](https://arxiv.org/abs/1304.6120), [doi:10.1093/mnras/stt1025](https://doi.org/10.1093/mnras/stt1025)) --- Green's function I
 - Chluba (2015), "Green's function of the cosmological thermalization problem -- II. Effect of photon injection and constraints", MNRAS 454, 4182 ([arXiv:1506.06582](https://arxiv.org/abs/1506.06582), [doi:10.1093/mnras/stv2243](https://doi.org/10.1093/mnras/stv2243)) --- Green's function II (photon injection)
