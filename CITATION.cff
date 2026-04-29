@@ -44,6 +44,28 @@ keywords:
   - spectral-distortion
   - thermalization
   - physics
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Baker
+      given-names: Ethan
+      email: ebaker@bu.edu
+      affiliation: "Physics Department, Boston University"
+    - family-names: Liu
+      given-names: Hongwan
+      email: hongwan@bu.edu
+      affiliation: "Physics Department, Boston University"
+    - family-names: Mishra-Sharma
+      given-names: Siddharth
+      email: smishras@bu.edu
+      affiliation: "Faculty of Computing & Data Sciences and Physics Department, Boston University"
+  title: "spectroxide: a code package for computing cosmic microwave background spectral distortions"
+  year: 2026
+  url: "https://arxiv.org/abs/2604.24838"
+  identifiers:
+    - type: other
+      value: "arXiv:2604.24838"
+      description: "arXiv preprint"
 references:
   - type: article
     authors:
