@@ -451,7 +451,8 @@ impl KompaneetsWorkspace {
 /// (backward Euler) inside the Newton iteration. This ensures DC/BR and Kompaneets
 /// see the same evolving Δn, matching CosmoTherm's approach.
 pub struct DcbrCoupling<'a> {
-    /// DC/BR absorption rates: `R[i] = (K/x³)(e^{x_e}-1)`, capped at 1e8.
+    /// DC/BR absorption rates: `R[i] = (K/x³)(e^{x_e}-1)`, uncapped
+    /// (non-finite entries are replaced by 0 at the call site).
     pub emission_rates: &'a [f64],
     /// Equilibrium target: `neq[i] = n_pl(x/ρ_eq) - n_pl(x)`.
     pub n_eq_minus_n_pl: &'a [f64],

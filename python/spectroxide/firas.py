@@ -23,6 +23,22 @@ Usage
 >>> chi2 = firas.chi2(model_kJy)             # χ² for a model in kJy/sr
 >>> mu_limit = firas.upper_limit_mu()        # 95% CL upper limit on |μ|
 >>> result = firas.fit_distortion(delta_n_func)  # joint (μ, y, ΔT/T) fit
+
+Statistical conventions
+-----------------------
+Two distinct — and mutually inconsistent — limit conventions coexist in
+this module (validation audit, dev/audit/firas_audit.md §2.5/§2.7):
+
+- ``upper_limit_*`` family: two-sided ``|Â| + 1.96 σ`` at 95%, Fixsen
+  1996 style. Reproduces the literature 9e-5 / 1.5e-5 anchors only with
+  ``marginalise_y=False`` / ``marginalise_mu=False`` (Fixsen fit μ and y
+  separately); the joint-marginalisation defaults are ~1.8× looser.
+- ``profile_limit_floating_T``: one-sided profile likelihood
+  (Δχ² = 2.71, z = 1.645 at 95%) with T floated, matching the modern
+  Chluba, Cyr & Johnson 2024 practice.
+
+The two 95% numbers are not interchangeable; state which convention any
+quoted limit uses.
 """
 
 from __future__ import annotations
@@ -472,12 +488,23 @@ class FIRASData:
         Optionally also marginalises over ``y`` and over the galactic
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
+        .. warning::
+            The default ``marginalise_y=True`` does **not** reproduce the
+            literature limit |μ| < 9e-5. Fixsen 1996 §6.2 fit μ and y
+            *separately* ("too similar to fit them simultaneously"); the
+            severe μ–y shape degeneracy over the FIRAS band inflates σ_μ
+            by ~82% under joint marginalisation, giving a ~1.8× looser
+            (more conservative) limit. ``marginalise_y=False`` reproduces
+            Fixsen's μ̂ = −1e-5 ± 4e-5 and the 9e-5 limit to ≲8%
+            (validation audit, dev/audit/firas_audit.md §2.4).
+
         Parameters
         ----------
         cl : float, optional
             Confidence level (default 0.95).
         marginalise_y : bool, optional
             If *True* (default), also marginalise over y-distortion.
+            Use *False* to match the Fixsen 1996 recipe (see warning).
         marginalise_galactic : bool, optional
             If *True* (default), also marginalise over the galactic dust
             template.
@@ -510,12 +537,23 @@ class FIRASData:
         Optionally also marginalises over ``μ`` and over the galactic
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
+        .. warning::
+            The default ``marginalise_mu=True`` does **not** reproduce the
+            literature limit |y| < 1.5e-5: Fixsen 1996 fit μ and y
+            *separately*, and the μ–y degeneracy inflates σ_y by ~82%
+            under joint marginalisation. ``marginalise_mu=False``
+            reproduces the Fixsen statistical fit (ŷ ± σ ≈ −0.3e-6 ±
+            4.0e-6 vs the paper's −1e-6 ± 6e-6 statistical; the published
+            15e-6 additionally folds in a 4e-6 systematic). See
+            dev/audit/firas_audit.md §2.4.
+
         Parameters
         ----------
         cl : float, optional
             Confidence level (default 0.95).
         marginalise_mu : bool, optional
             If *True* (default), also marginalise over μ-distortion.
+            Use *False* to match the Fixsen 1996 recipe (see warning).
         marginalise_galactic : bool, optional
             If *True* (default), also marginalise over the galactic dust
             template.

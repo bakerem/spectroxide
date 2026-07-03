@@ -177,7 +177,9 @@ pub fn saha_hydrogen(z: f64, cosmo: &Cosmology) -> f64 {
 /// value from Chluba & Thomas (2011), also used by DarkHistory.
 fn alpha_recomb(t: f64) -> f64 {
     let tt = t / 1.0e4;
-    let f = 1.125; // Chluba & Thomas (2011)
+    let f = 1.125; // Chluba & Thomas (2011); their printed best fit is 1.126 —
+                   // a 0.09% slip, negligible vs the 1-5% TLA accuracy
+                   // (dev/audit/recombination_audit.md)
     f * 1e-19 * 4.309 * tt.powf(-0.6166) / (1.0 + 0.6703 * tt.powf(0.5300))
 }
 

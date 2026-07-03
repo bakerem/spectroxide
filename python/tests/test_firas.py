@@ -335,6 +335,56 @@ class TestUpperLimits:
         # Without y marginalisation, limit should be tighter (less freedom)
         assert mu_no_marg <= mu_marg + 1e-10
 
+    def test_upper_limit_mu_fixsen_anchor(self):
+        """Fixsen 1996 recipe (separate μ fit) reproduces |μ| < 9e-5.
+
+        Fixsen 1996 §6.2 fit μ and y separately; only that convention
+        reproduces the published anchor. Audit finding P1-5
+        (dev/audit/firas_audit.md §2.4): agreement to ≲8% expected;
+        allow 15% for convention slack (T₀ update, covariance source).
+        """
+        firas = FIRASData()
+        mu_lim = firas.upper_limit_mu(cl=0.95, marginalise_y=False)
+        assert abs(mu_lim - MU_FIRAS_95) / MU_FIRAS_95 < 0.15, (
+            f"Fixsen-recipe mu limit {mu_lim:.3e} deviates >15% from "
+            f"the literature anchor {MU_FIRAS_95:.3e}"
+        )
+
+    def test_upper_limit_y_fixsen_anchor(self):
+        """Fixsen 1996 recipe reproduces the statistical y fit.
+
+        The published 1.5e-5 folds in a 4e-6 systematic that this
+        pipeline does not model, so anchor to the statistical-only
+        limit |ŷ| + 1.96·σ_stat ≈ 1.3e-5 (σ_stat = 6e-6, ŷ = −1e-6).
+        Audit finding P1-5 (dev/audit/firas_audit.md §2.4).
+        """
+        firas = FIRASData()
+        y_lim = firas.upper_limit_y(cl=0.95, marginalise_mu=False)
+        y_anchor_stat = 1e-6 + 1.96 * 6e-6
+        assert abs(y_lim - y_anchor_stat) / y_anchor_stat < 0.45, (
+            f"Fixsen-recipe y limit {y_lim:.3e} deviates >45% from the "
+            f"statistical anchor {y_anchor_stat:.3e}"
+        )
+        # And it must sit below the published limit (which adds systematics)
+        assert y_lim < Y_FIRAS_95 * 1.1
+
+    def test_upper_limit_default_marginalisation_is_looser(self):
+        """Document P1-5: joint-marginalisation defaults are ~1.8× looser.
+
+        The μ–y degeneracy inflates σ by ~82% when cross-marginalising.
+        This test pins the ratio so a future change to the default
+        convention is caught rather than silently shifting quoted limits.
+        """
+        firas = FIRASData()
+        ratio_mu = firas.upper_limit_mu(cl=0.95) / firas.upper_limit_mu(
+            cl=0.95, marginalise_y=False
+        )
+        ratio_y = firas.upper_limit_y(cl=0.95) / firas.upper_limit_y(
+            cl=0.95, marginalise_mu=False
+        )
+        assert 1.4 < ratio_mu < 2.5, f"mu marginalisation ratio {ratio_mu:.2f}"
+        assert 1.4 < ratio_y < 2.6, f"y marginalisation ratio {ratio_y:.2f}"
+
 
 # =========================================================================
 # Multi-parameter (μ, y, ΔT/T) fits

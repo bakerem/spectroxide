@@ -686,13 +686,15 @@ mod tests {
     /// This test catches that class of error by computing K_BR from first
     /// principles and asserting the order of magnitude.
     ///
-    /// Hand calculation at z=10^5, x=0.1, rho_e=1 (T_e=T_z):
-    ///   BR_PREFACTOR ≈ 6.1e-40 m³
-    ///   θ_z^{-7/2} ≈ (4.60e-5)^{-3.5} ≈ 2.1e16
+    /// Hand calculation at z=10^5, x=0.1, rho_e=1 (T_e=T_z); figures
+    /// re-derived in the B1 validation audit (dev/audit/
+    /// double_compton_bremsstrahlung_audit.md, F1):
+    ///   BR_PREFACTOR ≈ 3.82e-39 m³
+    ///   θ_z^{-7/2} ≈ (4.60e-5)^{-3.5} ≈ 1.5e15
     ///   exp(-0.1) ≈ 0.90
     ///   n_HII ≈ 1.9e14 m^{-3} (fully ionized H at z=10^5)
-    ///   g_ff ≈ 3
-    ///   K_BR ≈ 6.1e-40 × 2.1e16 × 0.90 × 1.9e14 × 3 ≈ 6.6e-9
+    ///   g_ff ≈ 1.9
+    ///   K_BR ≈ 3.82e-39 × 1.5e15 × 0.90 × 1.9e14 × 1.9 ≈ 1.9e-9
     #[test]
     fn test_br_emission_coefficient_magnitude() {
         let cosmo = crate::cosmology::Cosmology::default();

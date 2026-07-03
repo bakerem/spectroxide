@@ -72,11 +72,11 @@ pub fn visibility_j_bb_star(z: f64) -> f64 {
 ///
 /// J_y(z) = [1 + ((1+z)/6.0×10⁴)^{2.58}]^{−1}
 ///
-/// Functional form from Chluba (2013), arXiv:1304.6120, Eq. 5. The denominator
-/// constant here (6.0×10⁴) comes from the updated refit in Arsenadze et al.
-/// (2025), arXiv:2502.11432; the original Chluba 2013 value was 5.9×10⁴, a
-/// ~1–2 % shift across the transition region. We keep 6.0×10⁴ for consistency
-/// with the J_μ/(1-J_μ) transition scale and with CosmoTherm GF tables.
+/// Functional form and coefficients from Chluba (2013), arXiv:1304.6120,
+/// Eq. 5, which reads (1+z)/(6.0×10⁴) with exponent 2.58 — verified against
+/// the paper's raw text in the B1 validation audit (dev/audit/greens_audit.md,
+/// M-2; an earlier version of this comment wrongly attributed 6.0×10⁴ to an
+/// Arsenadze et al. 2025 refit of an original 5.9×10⁴).
 /// Approaches 1 for z ≪ 6×10⁴ and 0 for z ≫ 6×10⁴. Note: J_y ≠ (1 − J_μ) in
 /// the transition region; using the independent fit gives better spectral
 /// agreement with PDE results.

@@ -75,18 +75,20 @@ mod tests {
     // test_theta_e_with_scaling removed: theta_e_with(θ_z) is defined as
     // rho_e * θ_z, so asserting (1.05 * θ_z).abs() < 1e-30 was tautological.
 
-    /// Verify ρ_e for a Bose-Einstein distribution with known μ.
+    /// Verify ρ_eq = 1 exactly for any Bose-Einstein distribution.
     ///
-    /// For n_BE(x, μ) = 1/(e^{x+μ}-1), the Compton equilibrium ratio is:
-    ///   ρ_e = I₄/(4G₃) where I₄ = ∫x⁴ n(1+n)dx, G₃ = ∫x³ n dx.
-    /// For μ > 0: spectrum is harder than Planck → ρ_e > 1.
-    /// For μ < 0: spectrum is softer → ρ_e < 1.
+    /// Analytic anchor: for n_BE(x, μ) = 1/(e^{x+μ}-1), n(1+n) = −dn/dx, so
+    /// integrating by parts gives I₄ = ∫x⁴ n(1+n)dx = 4∫x³ n dx = 4G₃
+    /// identically — a BE spectrum is the Kompaneets stationary state, so its
+    /// Compton-equilibrium temperature is T_z for ALL μ. Any deviation of
+    /// ρ_e = I₄/(4G₃) from 1 is pure O(dx²) quadrature error, which must be
+    /// μ-independent at this order and shrink under grid refinement.
+    /// (Validation-audit finding P1-3: an earlier version asserted
+    /// "μ>0 ⇒ ρ_e>1", which is wrong physics that passed on grid noise.)
     #[test]
     fn test_equilibrium_for_bose_einstein() {
+        // Only positive μ: n_BE(x, μ) has a pole at x = |μ| for μ < 0.
         let grid = FrequencyGrid::log_uniform(1e-4, 50.0, 10000);
-
-        // Only test positive μ: n_BE(x, μ) = 1/(e^{x+μ}-1) is well-defined for μ > 0.
-        // Negative μ causes a pole at x = |μ| which makes the integral diverge.
         for &mu in &[1e-4, 1e-3, 5e-3] {
             let n_be: Vec<f64> = grid
                 .x
@@ -97,51 +99,26 @@ mod tests {
             let mut te = ElectronTemperature::default();
             te.update_equilibrium(&grid.x, &n_be);
 
-            // Independent numerical integration (proper trapezoidal for n(1+n))
-            let mut g3 = 0.0;
-            let mut i4 = 0.0;
-            for i in 1..grid.n {
-                let dx = grid.x[i] - grid.x[i - 1];
-                let x_mid = 0.5 * (grid.x[i] + grid.x[i - 1]);
-                let n_mid = 0.5 * (n_be[i] + n_be[i - 1]);
-                let n_l = n_be[i - 1];
-                let n_r = n_be[i];
-                let nn1_mid = 0.5 * (n_l * (1.0 + n_l) + n_r * (1.0 + n_r));
-                g3 += x_mid.powi(3) * n_mid * dx;
-                i4 += x_mid.powi(4) * nn1_mid * dx;
-            }
-            let rho_expected = i4 / (4.0 * g3);
-
-            let rel = (te.rho_e - rho_expected).abs() / rho_expected;
+            // Analytic target ρ_eq = 1; ~2e-6 discretization floor at N=10000.
             assert!(
-                rel < 1e-6,
-                "μ={mu}: ρ_e={:.10} vs expected {rho_expected:.10}, err={rel:.2e}",
+                (te.rho_e - 1.0).abs() < 1e-5,
+                "μ={mu}: ρ_eq must be 1 for any BE spectrum, got {:.10}",
                 te.rho_e
             );
-
-            // Physical direction check: μ > 0 → fewer low-x photons → harder spectrum → ρ_e > 1
-            assert!(
-                te.rho_e > 1.0,
-                "μ={mu}>0 should give ρ_e>1, got {:.10}",
-                te.rho_e
-            );
-
-            // Larger μ → more deviation from 1 (use tolerance; at small μ the signal is ~μ²)
-            if mu > 1e-4 {
-                let rho_small = {
-                    let n_small: Vec<f64> = grid
-                        .x
-                        .iter()
-                        .map(|&x| 1.0 / ((x + 1e-4).exp() - 1.0))
-                        .collect();
-                    crate::spectrum::compton_equilibrium_ratio(&grid.x, &n_small)
-                };
-                assert!(
-                    te.rho_e >= rho_small - 1e-9,
-                    "Larger μ should give larger ρ_e: μ={mu} → {:.10} < μ=1e-4 → {rho_small:.10}",
-                    te.rho_e
-                );
-            }
         }
+
+        // Grid-refinement check: the residual is discretization error, so it
+        // must shrink (O(dx²) ⇒ ~4× per doubling; require at least 2×).
+        let mu = 1e-3;
+        let err_at = |n_points: usize| {
+            let g = FrequencyGrid::log_uniform(1e-4, 50.0, n_points);
+            let n_be: Vec<f64> = g.x.iter().map(|&x| 1.0 / ((x + mu).exp() - 1.0)).collect();
+            (crate::spectrum::compton_equilibrium_ratio(&g.x, &n_be) - 1.0).abs()
+        };
+        let (e_coarse, e_fine) = (err_at(5000), err_at(20000));
+        assert!(
+            e_fine < 0.5 * e_coarse,
+            "|ρ_eq−1| must be discretization error: N=5000 → {e_coarse:.2e}, N=20000 → {e_fine:.2e}"
+        );
     }
 }

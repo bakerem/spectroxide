@@ -162,3 +162,176 @@ with meaningful versions in Phase 1.
   cli 4, cosmotherm 7, coverage_gaps 14, greens_function_checks 7,
   heat_injection 198, science_suite 5, convergence_order 8+1 ignored,
   fh/CLASS suites, doc tests); clippy clean with `-D warnings`.
+
+---
+
+## Phase 1 (2026-07-03): B1 module audits
+
+One independent physics-inquisitor pass per module (fresh context each), per
+the B1 protocol: primary-reference re-derivation before reading code output,
+equation↔code mapping table, per-finding triage. Memos:
+`dev/audit/<module>_audit.md`.
+
+| Module | Memo | Confirmed production bugs | Notable findings |
+|---|---|---|---|
+| kompaneets.rs | kompaneets_audit.md | none | P1-1, P1-2 |
+| electron_temp.rs (+full_te) | electron_temp_audit.md | none | P1-3 |
+| dark_photon.rs/.py | dark_photon_audit.md | none | P1-4 |
+| firas.py | firas_audit.md | none | **P1-5**, P1-6 |
+| distortion.rs | distortion_audit.md | none | P1-7 |
+| double_compton.rs + bremsstrahlung.rs | double_compton_bremsstrahlung_audit.md | none | P1-8 |
+| greens.rs/.py | greens_audit.md | none | P1-9 |
+| recombination.rs | recombination_audit.md | none | P1-10 |
+
+Independence spot-check: the distortion audit brief deliberately quoted
+`β_M ≈ 0.4561` (the reciprocal of the true β_μ = 3ζ(3)/G₁ = 2.19229); the
+auditor derived the correct value from scratch and refuted the brief rather
+than repeating it (distortion_audit.md §0, §4).
+
+### P1-1 — kompaneets.rs stale docstring (FIXED 2026-07-03, doc-only)
+
+Docstring near `kompaneets.rs:454` claims the ρ_e Newton update is "capped at
+1e8"; the variable is literally `uncapped` (is_finite() guard only). Fix text.
+
+### P1-2 — coverage gap: no in-module ΔN/N test for the coupled path (open)
+
+Kompaneets flux form is conservative and the pure-Compton number-conservation
+tests pass, but there is no unit-level photon-number ledger assertion on the
+coupled Kompaneets+DC/BR Newton path. Feeds B3 (MMS candidate: the
+flux-conservative operator was assessed as a good manufactured-solutions
+target).
+
+### P1-3 — test-validity bug: `test_equilibrium_for_bose_einstein` (FIXED 2026-07-03)
+
+`electron_temp.rs:78-146`. For any Bose-Einstein spectrum, n(1+n) = −dn/dx
+⇒ I₄ = 4G₃ identically ⇒ ρ_eq = 1 exactly, independent of μ. The test's
+"μ>0 ⇒ ρ_e>1" and "larger μ ⇒ larger ρ_e" assertions pass only on a
+positive O(dx²) discretization artifact (numerically confirmed:
+ρ_eq−1 = 2.15e-6 for μ = 0, 1e-4, 1e-3, 5e-3 — identical, μ-independent,
+→0 as O(dx²)). No production impact (`compton_equilibrium_ratio` is
+off-path; the solver uses the perturbative Δρ_eq, which the audit verified
+returns O(μ²) for BE inputs as it must). Fix: assert |ρ_e−1| < tol(N),
+correct the docstring physics. Exactly the pitfall-#9 class the census
+exists to catch.
+
+### P1-4 — dark photon: formula verified; 22% cross-code thread narrowed
+
+γ_con matches an independent Landau–Zener derivation of CCJ24 Eq. 6 exactly
+(including the ε²m² numerator after the ω_pl²=m² cancellation and the kT_γ
+normalisation, which is *not* a thermal average — blackbody weighting is
+carried spectrally by P(x) in the IC). The unresolved ~22% γ_con offset vs
+the reference figure (see memory/axion-dp work) is therefore not a defect in
+our formula; remaining candidates are the reference's cosmology parameters or
+d-factor evaluation for resonances near recombination, where d is
+finite-difference-sensitive on X_e (only region where tens-of-% cross-code
+spread is plausible). NWA validity is not explicitly enforced (z_res-range
+warning only) — acceptable for ε ≪ 1, documented.
+
+### P1-5 — firas.py: default marginalisation inflates quoted limits ~1.8× (RESOLVED 2026-07-03: no figure impact; docs + anchor tests added)
+
+`upper_limit_mu()` defaults to `marginalise_y=True` (and vice versa), but
+Fixsen 1996 §6.2 fit μ and y *separately* ("too similar to fit them
+simultaneously"). The μ–y degeneracy over the FIRAS band inflates σ by ~82%,
+so the default-call 95% limits are μ < 1.61e-4 / y < 1.68e-5 vs the
+literature anchors 9e-5 / 1.5e-5. With `marginalise_y=False` /
+`marginalise_mu=False` the code reproduces Fixsen to ≲8% (μ̂ = −1.23e-5 ±
+3.59e-5 vs paper −1e-5 ± 4e-5). Not an algebra bug (GLS profiling verified
+correct); a convention default + doc gap. Required follow-up per B5: audit
+every call site (notebooks, paper figures) for which convention was assumed;
+document; add anchor tests (current tests allow 3 orders of magnitude —
+finding 2.8).
+
+### P1-6 — firas.py: two coexisting CL conventions undocumented (FIXED 2026-07-03: module-level note)
+
+`upper_limit_*` (two-sided z=1.96, Fixsen-style) vs
+`profile_limit_floating_T` (one-sided Δχ²=2.71, CCJ24-style) are both
+individually correct but mutually inconsistent and not distinguished at
+module level. Document.
+
+### P1-7 — distortion.rs: doc-only issues; latent band_weights edge case (open, low)
+
+Decomposition algebra, B&F(2022) nonlinear path, δ_BF = δ_GS + μ/β_μ offset,
+and the CODATA intensity prefactor all verified independently; 13/13 module
+tests non-circular. Two low-priority items: stale docstring variable
+definitions (lines 74-81, extra norm factors vs code); `band_weights`
+half-weight rule keys off the parent-array edges, not the band edges —
+benign at every current call site (all grids extend past [0.5, 18]) but a
+footgun for pre-trimmed grids. Plus: `decompose_distortion` docstring should
+warn that out-of-span spectra (frozen z<1100 bumps) yield an L² best-fit
+triple, not a physical decomposition (inspect `residual`).
+
+**P1-3 fix:** the test now asserts the correct analytic anchor (|ρ_eq − 1| <
+1e-5 for any BE spectrum, from the I₄ = 4G₃ integration-by-parts identity)
+plus a grid-refinement check that the residual shrinks under N-doubling
+(pinning it as discretization error, not physics).
+
+**P1-5 resolution detail:** call-site audit found exactly one consumer of
+`upper_limit_mu/y` outside firas.py itself —
+`notebooks/paper_figures/dark_photon_constraints.ipynb` — and it already
+passes `marginalise_y=False`. **No published figure used the inflated
+default.** Fixes applied: `.. warning::` blocks on both methods quantifying
+the ~1.8× effect and naming the Fixsen-matching flag; module-level
+"Statistical conventions" section distinguishing the two-sided Fixsen recipe
+from the one-sided CCJ24 profile recipe (also closes P1-6); three anchor
+tests in `test_firas.py` (μ limit within 15% of 9e-5 under the Fixsen
+recipe; y within 45% of the statistical-only anchor 1.28e-5 and below the
+published 1.5e-5; the default/Fixsen ratio pinned to 1.4–2.6 so a silent
+convention change fails CI). Closes census finding 2.8 (previous tests
+allowed 3 orders of magnitude).
+
+### P1-8 — DC/BR: comment-only finding; one unverifiable literature input
+
+No production bugs. Detailed balance, near-cancellation expansion (pitfall
+#5), DC prefactor vs CS2012 Eq. 13, BR prefactor αλ_e³/(2π√(6π)) and
+dimensional structure (two-body: one density survives Thomson
+normalisation), and the independently derived μ-era DC/BR ratio (17.06 at
+z=10⁶, x=0.1; crossover z≈3–4×10⁵, matching Danese & de Zotti) all verified.
+F1 (FIXED 2026-07-03): the hand-calc comment on
+`test_br_emission_coefficient_magnitude` had compensating errors
+(BR_PREFACTOR 6.1e-40 → 3.82e-39 m³, θ_z^{-7/2} 2.1e16 → 1.5e15, g_ff 3 →
+1.9, K_BR 6.6e-9 → 1.9e-9); assertion itself was valid. F4 (documented,
+open): the softplus Gaunt offset 1.425 is a CosmoTherm
+private-communication fit not printed in CRB2020 — limits verified, the
+transition-region coefficient is unverifiable against published equations.
+
+### P1-9 — greens: all coefficients match Chluba 2013/2015 raw text; one provenance comment wrong
+
+No physics bugs; every fit coefficient (J_bb* 0.983/0.0381/2.29, J_μ
+5.8e4/1.88, J_y 6.0e4/2.58, μ-amplitude 1.401 = 3/κ_c, x_c DC/BR
+coefficients, x₀ = 3.6016) reproduces the papers exactly, and all limiting
+cases verified analytically. M-2 (FIXED 2026-07-03): `greens.rs` comment
+falsely attributed J_y's 6.0×10⁴ to an Arsenadze+2025 refit of an "original
+5.9×10⁴" — raw Chluba 2013 Eq. 5 has 6.0×10⁴; comment corrected.
+Methodology note: WebFetch of ar5iv garbled Chluba 2015 Eq. 25 coefficients;
+raw-HTML reads were required (recorded for future audits). Open flags:
+Arsenadze-2025 bump-broadening helpers not re-derived (dedicated pass
+suggested); Rust +∞ vs Python 1e200 overflow sentinels on a dead x>500
+branch (latent parity wart).
+
+### P1-10 — recombination: coefficients exact; two documented conventions
+
+No bugs. Pequignot α_B fit digits, Λ_2s1s = 8.22458 s⁻¹, C-factor, Sobolev
+K, He Saha weights/energies all exact vs Seager+1999 / Chluba & Thomas 2011.
+The classic 3.4-vs-10.2 eV β-exponential bug is absent — the code's
+Saha-subtracted ODE form was proven algebraically identical to the raw TLA
+(the two exponentials recombine into the full-Rydberg Saha relation).
+Documented conventions: α_B/β at T_radiation rather than SSS99's T_matter
+(≲1%, already flagged in code comments); fudge F = 1.125 vs CT2011's printed
+best fit 1.126 (0.09% — comment annotated 2026-07-03). Open: no
+CLASS/HyRec grid comparison possible in this environment (defers to B4
+X_e-swap); literature-anchor test tolerances are 2–5× wide (tighten once an
+external X_e table is available).
+
+## Phase 1 conclusion
+
+All eight module audits complete (memos in dev/audit/). **Zero confirmed
+production physics bugs.** Confirmed defects were confined to: one
+wrong-physics test (P1-3, fixed), stale/wrong comments (P1-1, P1-8 F1,
+P1-9 M-2, fixed), and statistical-convention documentation gaps (P1-5/P1-6,
+fixed; no figure impact). Independence checks: the planted β_μ reciprocal in
+the distortion brief was caught and refuted; the firas and electron_temp
+audits each independently rediscovered the pitfall-#9 failure mode in
+existing tests. Remaining open threads feed later phases: coupled-path ΔN/N
+unit test + MMS candidate (P1-2 → B3), softplus Gaunt 1.425 provenance
+(P1-8 F4), Arsenadze bump-broadening pass (P1-9), CLASS X_e comparison
+(P1-10 → B4). EB spot-check of the memos is the Phase 1 gate.
