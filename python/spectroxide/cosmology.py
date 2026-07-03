@@ -82,11 +82,19 @@ class Cosmology:
 
     @classmethod
     def planck2015(cls) -> "Cosmology":
-        """Planck 2015 best-fit parameters."""
+        """Planck 2015 best-fit parameters.
+
+        Density fractions are derived from the paper's physical densities
+        (ω_b = 0.02225, ω_cdm = 0.1198) so they match the Rust
+        ``Cosmology::planck2015``.  Note: the Rust preset uses
+        t_cmb = 2.726 (CosmoTherm DI-file convention) while this one keeps
+        the paper value 2.7255 — a known divergence tracked in the
+        validation audit; use :data:`PLANCK2015_COSMO` for CT comparisons.
+        """
         return cls(
             h=0.6727,
-            omega_b=0.049169,
-            omega_m=0.313906,
+            omega_b=0.02225 / 0.6727**2,
+            omega_m=(0.02225 + 0.1198) / 0.6727**2,
             y_p=0.2467,
             t_cmb=2.7255,
             n_eff=3.046,
@@ -94,11 +102,20 @@ class Cosmology:
 
     @classmethod
     def planck2018(cls) -> "Cosmology":
-        """Planck 2018 best-fit parameters."""
+        """Planck 2018 best-fit parameters (Planck VI, Table 2, last column).
+
+        Density fractions are derived from the paper's physical densities
+        (ω_b = 0.02237, ω_cdm = 0.1200) so they match the Rust
+        ``Cosmology::planck2018`` exactly.  Note Ω_m here is ≈ 0.31377,
+        not the paper's 0.3153: the paper's Ω_m includes the Σm_ν = 0.06 eV
+        massive-neutrino contribution (ω_ν ≈ 0.00064), which this code does
+        not model.  Anchoring ω_b/ω_cdm/h (the CMB-calibrated early-universe
+        densities) is the consistent ν-less reduction for distortion physics.
+        """
         return cls(
             h=0.6736,
-            omega_b=0.04930,
-            omega_m=0.31530,
+            omega_b=0.02237 / 0.6736**2,
+            omega_m=(0.02237 + 0.1200) / 0.6736**2,
             y_p=0.2454,
             t_cmb=2.7255,
             n_eff=3.044,
@@ -236,24 +253,48 @@ def _solve_saha_quadratic(s):
         return (-s + (s * s + 4.0 * s) ** 0.5) / 2.0
 
 
+def _solve_saha_linear(s):
+    """Solve X/(1-X) = S for X (scalar)."""
+    if s > 1e15:
+        return 1.0
+    elif s < 1e-15:
+        return s
+    else:
+        return s / (1.0 + s)
+
+
 def _saha_he_ii(z, cosmo):
-    """He II -> He I Saha fraction (54.4 eV). g-ratio = 1."""
+    """He II -> He I Saha fraction (54.4 eV). g-ratio = 1.
+
+    RECFAST/Seager+1999 total-free-electron form y/(1-y) = K(T)/n_e with
+    n_e = n_H + 2 n_He (H fully ionized throughout He recombination).
+    Mirrors the Rust ``saha_he_ii``; the old He-only quadratic form with
+    n_e = y n_He was wrong by a large factor in the transition region.
+    """
     t = cosmo["t_cmb"] * (1.0 + z)
-    n_he = _cosmo_n_h(z, cosmo) * cosmo["y_p"] / (4.0 * (1.0 - cosmo["y_p"]))
+    n_h = _cosmo_n_h(z, cosmo)
+    n_he = n_h * cosmo["y_p"] / (4.0 * (1.0 - cosmo["y_p"]))
     if n_he < 1e-30:
         return 1.0
-    s = _thermal_de_broglie(t) * np.exp(-_E_HE_II_ION / (_K_BOLTZMANN * t)) / n_he
-    return _solve_saha_quadratic(s)
+    n_e = n_h + 2.0 * n_he
+    s = _thermal_de_broglie(t) * np.exp(-_E_HE_II_ION / (_K_BOLTZMANN * t)) / n_e
+    return _solve_saha_linear(s)
 
 
 def _saha_he_i(z, cosmo):
-    """He I -> He Saha fraction (24.6 eV). g-ratio = 4."""
+    """He I -> He Saha fraction (24.6 eV). g-ratio = 4.
+
+    Total-free-electron form with n_e = n_H + n_He; mirrors the Rust
+    ``saha_he_i``.
+    """
     t = cosmo["t_cmb"] * (1.0 + z)
-    n_he = _cosmo_n_h(z, cosmo) * cosmo["y_p"] / (4.0 * (1.0 - cosmo["y_p"]))
+    n_h = _cosmo_n_h(z, cosmo)
+    n_he = n_h * cosmo["y_p"] / (4.0 * (1.0 - cosmo["y_p"]))
     if n_he < 1e-30:
         return 1.0
-    s = 4.0 * _thermal_de_broglie(t) * np.exp(-_E_HE_I_ION / (_K_BOLTZMANN * t)) / n_he
-    return _solve_saha_quadratic(s)
+    n_e = n_h + n_he
+    s = 4.0 * _thermal_de_broglie(t) * np.exp(-_E_HE_I_ION / (_K_BOLTZMANN * t)) / n_e
+    return _solve_saha_linear(s)
 
 
 def _helium_electron_fraction(z, cosmo):
@@ -301,19 +342,31 @@ def _peebles_c(z, x_e, cosmo):
     return rate_down / denom if denom > 0.0 else 1.0
 
 
-def _peebles_step(z_new, x_h, dz, cosmo):
-    """Single forward Euler step of the Peebles TLA ODE."""
-    t = cosmo["t_cmb"] * (1.0 + z_new)
-    n_h = _cosmo_n_h(z_new, cosmo)
-    h = _cosmo_hubble(z_new, cosmo)
-    c_r = _peebles_c(z_new, min(x_h, 1.0), cosmo)
+def _peebles_rhs(z, x_h, cosmo):
+    """Peebles TLA ODE right-hand side dX_h/dz_up at (z, X_h)."""
+    t = cosmo["t_cmb"] * (1.0 + z)
+    n_h = _cosmo_n_h(z, cosmo)
+    h = _cosmo_hubble(z, cosmo)
+    c_r = _peebles_c(z, min(x_h, 1.0), cosmo)
     alpha = _alpha_recomb(t)
-    x_saha = min(_saha_hydrogen(z_new, cosmo), 1.0)
+    x_saha = min(_saha_hydrogen(z, cosmo), 1.0)
     one_minus_xs = max(1.0 - x_saha, 1e-30)
-    rhs_factor = c_r * alpha * n_h / (h * (1.0 + z_new))
+    rhs_factor = c_r * alpha * n_h / (h * (1.0 + z))
     saha_term = x_saha**2 * max(1.0 - x_h, 0.0) / one_minus_xs
-    f_val = rhs_factor * (x_h**2 - saha_term)
-    return np.clip(x_h - dz * f_val, 1e-5, 1.0)
+    return rhs_factor * (x_h**2 - saha_term)
+
+
+def _peebles_step(z_new, x_h, dz, cosmo):
+    """Single trapezoidal (Heun) step of the Peebles TLA ODE.
+
+    Second-order accurate in dz; mirrors the Rust ``peebles_step``
+    (audit M1 / recomb).  Steps from z_prev = z_new + dz down to z_new.
+    """
+    z_prev = z_new + dz
+    k1 = _peebles_rhs(z_prev, x_h, cosmo)
+    x_pred = np.clip(x_h - dz * k1, 1e-5, 1.0)
+    k2 = _peebles_rhs(z_new, x_pred, cosmo)
+    return np.clip(x_h - 0.5 * dz * (k1 + k2), 1e-5, 1.0)
 
 
 def _find_saha_switch(cosmo):
@@ -594,7 +647,7 @@ def cosmic_time(
     z: float,
     cosmo: CosmoLike | None = None,
     z_upper: float = 1.0e9,
-    n_points: int = 128,
+    n_points: int = 2048,
 ) -> float:
     """Cosmic time ``t(z)`` by quadrature of ``dt/dz = −1/((1+z) H(z))``.
 
@@ -611,8 +664,8 @@ def cosmic_time(
         Upper integration limit (default ``1e9``).  Increase for very
         early-Universe applications (e.g., neutrino decoupling).
     n_points : int, optional
-        Number of quadrature points (default 128).  Increase for higher
-        accuracy at small ``z``.
+        Number of quadrature points (default 2048, giving < 1e-5 relative
+        quadrature error at all z; mirrors the Rust ``cosmic_time``).
 
     Returns
     -------

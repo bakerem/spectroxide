@@ -85,6 +85,41 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  parity:
+    name: Rust-Python parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: cd python && pip install -e "."
+      - name: Install pytest
+        run: pip install pytest
+      - name: Regenerate parity fixture from current Rust
+        run: cargo run --release --example generate_parity_fixtures -- /tmp/parity_fresh.json
+      - name: Check committed fixture is current
+        run: |
+          python - <<'EOF'
+          import json
+          fresh = json.load(open("/tmp/parity_fresh.json"))
+          committed = json.load(open("python/tests/data/parity_fixtures.json"))
+          fg = {(g["name"], g["cosmo"]): g for g in fresh["groups"]}
+          cg = {(g["name"], g["cosmo"]): g for g in committed["groups"]}
+          assert fg.keys() == cg.keys(), (
+              f"group mismatch: {fg.keys() ^ cg.keys()}"
+          )
+          for key, g in fg.items():
+              assert g["inputs"] == cg[key]["inputs"], f"stale inputs in {key}"
+          print(f"{len(fg)} groups, inputs in sync")
+          EOF
+      - name: Run parity tests against fresh fixture
+        run: |
+          cd python
+          SPECTROXIDE_PARITY_FIXTURE=/tmp/parity_fresh.json python -m pytest tests/test_parity.py -q
+
   docs:
     name: Docs build (Sphinx + rustdoc)
     runs-on: ubuntu-latest

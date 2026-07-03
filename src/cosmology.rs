@@ -393,7 +393,10 @@ impl Cosmology {
         let u_low = (1.0 + z).ln();
         let u_high = (1.0 + 1.0e9_f64).ln();
 
-        let n = 64;
+        // 2048 midpoint points give < 1e-5 relative quadrature error at all z
+        // (n = 64 was ~0.8% off at z = 10; audit Phase 0 / parity harness).
+        // Mirrors the Python `cosmic_time` default.
+        let n = 2048;
         let h = (u_high - u_low) / (n as f64);
         let mut result = 0.0;
         for i in 0..n {

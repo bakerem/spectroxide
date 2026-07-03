@@ -83,38 +83,42 @@ pip install -e "python/.[notebook]"   # ... or with Jupyter too
 ### Python: PDE solver
 
 ```python
-from spectroxide import run_sweep
+from spectroxide import solve, run_sweep
 import numpy as np
 
 # Single-burst injection at z = 2e5 (mu-era)
-result = run_sweep(
+result = solve(
     injection={"type": "single_burst", "z_h": 2e5, "sigma_z": 5000},
     delta_rho=1e-5,
     z_start=3e5, z_end=1e3,
 )
-r = result["results"][0]
-print(f"mu = {r['pde_mu']:.3e}, y = {r['pde_y']:.3e}")
+print(f"mu = {result.mu:.3e}, y = {result.y:.3e}")
 
-# Full spectrum is in r["x"], r["delta_n"]
-x, delta_n = np.array(r["x"]), np.array(r["delta_n"])
+# Full spectrum is in result.x, result.delta_n
+x, delta_n = result.x, result.delta_n
 
 # Decaying particle
-result = run_sweep(
+result = solve(
     injection={"type": "decaying_particle", "f_x": 5e5, "gamma_x": 5e4},
     z_start=5e6, z_end=1e3,
 )
 
 # DM annihilation (s-wave)
-result = run_sweep(
+result = solve(
     injection={"type": "annihilating_dm", "f_ann": 1e-22},
     z_start=5e6, z_end=1e3,
 )
 
 # Dark photon oscillation (NWA resonant conversion)
-result = run_sweep(
+result = solve(
     injection={"type": "dark_photon_resonance", "epsilon": 1e-7, "m_ev": 1e-5},
     z_end=1e3,  # z_start auto-set to z_res
 )
+
+# Multi-redshift single-burst sweep (one Rust call, parallelised internally)
+sweep = run_sweep(z_injections=np.geomspace(2e3, 5e5, 15).tolist(), delta_rho=1e-5)
+r = sweep["results"][0]
+print(f"z_h = {r['z_h']:.1e}: mu = {r['pde_mu']:.3e}, y = {r['pde_y']:.3e}")
 ```
 
 ### Python: Green's function (fast approximate, no Rust needed)

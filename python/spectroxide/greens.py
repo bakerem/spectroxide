@@ -683,7 +683,6 @@ from .cosmology import (  # noqa: E402,F401
     _cosmo_hubble,
     _cosmo_n_h,
     _cosmo_n_e,
-    _saha_hydrogen,
     _saha_he_i,
     _saha_he_ii,
     ionization_fraction,
@@ -888,22 +887,23 @@ def _photon_survival_probability_numerical(x, z_h, cosmo):
     inv_x3 = 1.0 / (x * x * x)
     f_he = cosmo["y_p"] / (4.0 * (1.0 - cosmo["y_p"]))
 
+    # Full ionization fraction including H (Peebles TLA below the Saha switch)
+    # and He (He²⁺ at z≳8000, He⁺ at 2000≲z≲8000). Mirrors Rust
+    # tau_ff_survival, which uses recombination::ionization_fraction. The
+    # previous raw-Saha branching exponentially underestimated X_e below
+    # z ≈ 1500 (no freeze-out) and omitted helium electrons at z > 1500.
+    z_grid = np.exp(log_z_end + np.arange(n_steps + 1) * d_log_z)
+    x_e_grid = np.asarray(ionization_fraction(z_grid, cosmo), dtype=np.float64)
+
     tau = 0.0
     for i in range(n_steps + 1):
-        log_z = log_z_end + i * d_log_z
-        z = np.exp(log_z)
+        z = float(z_grid[i])
         opz = 1.0 + z
 
         tz = _K_BOLTZMANN * cosmo["t_cmb"] * opz / _M_E_C2
         te = tz  # T_e ~ T_z in y-era
 
-        # Ionization fraction
-        if z > 6000.0:
-            x_e_frac = 1.0 + f_he
-        elif z > 1500.0:
-            x_e_frac = min(_saha_hydrogen(z, cosmo), 1.0)
-        else:
-            x_e_frac = _saha_hydrogen(z, cosmo)
+        x_e_frac = float(x_e_grid[i])
 
         n_h = _cosmo_n_h(z, cosmo)
         n_he = f_he * n_h
@@ -931,15 +931,14 @@ def _photon_survival_probability_numerical(x, z_h, cosmo):
 # Photon injection helpers
 # ---------------------------------------------------------------------------
 
-# Gauss-Legendre nodes/weights for 32-point quadrature (half-interval [0,1])
-_GL32_X, _GL32_W = np.polynomial.legendre.leggauss(32)
-
 
 def _y_compton(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOrArray:
     """Integrated Compton y-parameter ``y_γ(z) = ∫₀ᶻ θ_e σ_T n_e c / H dz'``.
 
-    Internal helper for the photon-injection broadened bump. 32-point
-    Gauss–Legendre quadrature in ``ln(1+z)``.
+    Internal helper for the photon-injection broadened bump. 128-point
+    midpoint rule in ``ln(1+z)``, mirroring the Rust
+    ``Cosmology::compton_y_parameter`` exactly (32-point Gauss–Legendre
+    under-resolved the steep X_e drop at recombination by up to ~2.5%).
     """
     if cosmo is None:
         cosmo = DEFAULT_COSMO
@@ -947,21 +946,26 @@ def _y_compton(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOrArray:
     z_arr = np.atleast_1d(np.asarray(z, dtype=np.float64))
     scalar = np.ndim(z) == 0
 
-    ln_min = 0.0  # ln(1+0)
+    n_nodes = 128
     ln_max = np.log(1.0 + z_arr)  # shape (N,)
+    h_step = ln_max / n_nodes  # shape (N,)
 
-    # Map GL nodes from [-1,1] to [ln_min, ln_max] for each z
-    # mid, half: shape (N,)
-    mid = 0.5 * (ln_max + ln_min)
-    half = 0.5 * (ln_max - ln_min)
-
-    # GL nodes for all (z, node) pairs: shape (N, 32)
-    u = mid[:, np.newaxis] + half[:, np.newaxis] * _GL32_X[np.newaxis, :]
-    zp = np.exp(u) - 1.0  # shape (N, 32)
+    # Midpoint nodes for all (z, node) pairs: shape (N, 128)
+    i_mid = np.arange(n_nodes) + 0.5
+    u = h_step[:, np.newaxis] * i_mid[np.newaxis, :]
+    zp = np.exp(u) - 1.0  # shape (N, 128)
     opz = 1.0 + zp
 
+    # Matter temperature tracks T_γ while Compton coupling is strong
+    # (z ≳ z_dec ≈ 200) and drops as (1+z)² after decoupling. Mirrors the
+    # Rust Cosmology::compton_y_parameter (audit M1): using T_γ below z_dec
+    # overestimates the integrand by a few % at worst.
+    z_dec = 200.0
     t_z = cosmo["t_cmb"] * opz
-    theta_e = _K_BOLTZMANN * t_z / (_M_ELECTRON * _C_LIGHT**2)
+    t_matter = cosmo["t_cmb"] * opz**2 / (1.0 + z_dec)
+    theta_e = (
+        _K_BOLTZMANN * np.where(zp > z_dec, t_z, t_matter) / (_M_ELECTRON * _C_LIGHT**2)
+    )
 
     # _cosmo_n_e needs ionization_fraction which handles arrays
     # Flatten for the call, then reshape
@@ -974,8 +978,8 @@ def _y_compton(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOrArray:
     # Integrand: theta_e * sigma_T * c * n_e / h_z, shape (N, 32)
     integrand = theta_e * _SIGMA_THOMSON * _C_LIGHT * n_e / h_z
 
-    # Weighted sum over GL nodes: shape (N,)
-    result = np.dot(integrand, _GL32_W) * half
+    # Midpoint sum: shape (N,)
+    result = integrand.sum(axis=1) * h_step
 
     if scalar:
         return float(result[0])

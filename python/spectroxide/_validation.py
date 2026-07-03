@@ -545,6 +545,52 @@ def warn_convolution_resolution(n_z, z_min, z_max):
             )
 
 
+def validate_pde_injection_grid_args(x, x_min, x_max, n_x, *, defaults):
+    """Reject frequency-grid kwargs that the PDE injection path silently ignores.
+
+    ``solve(injection={...})`` and ``solve(dn_planck=...)`` dispatch to the
+    Rust binary, which builds its own frequency grid internally (fixed
+    extent from :mod:`grid`, point count from ``n_points``/``production_grid``).
+    The Rust CLI has no ``--x-min``/``--x-max`` flags, so ``x``, ``x_min``,
+    ``x_max``, and ``n_x`` have zero effect on this path — passing anything
+    but their defaults silently produced the default-grid result with no
+    indication that the requested grid was never applied.
+
+    Parameters
+    ----------
+    x : array_like or None
+        Custom frequency grid passed to :func:`solve`.
+    x_min, x_max : float
+        Frequency bounds passed to :func:`solve`.
+    n_x : int
+        Frequency point count passed to :func:`solve`.
+    defaults : tuple
+        ``(x_min_default, x_max_default, n_x_default)`` to compare against.
+
+    Raises
+    ------
+    TypeError
+        If ``x`` is not *None*, or ``x_min``/``x_max``/``n_x`` differ from
+        their defaults.
+    """
+    x_min_default, x_max_default, n_x_default = defaults
+    if (
+        x is not None
+        or x_min != x_min_default
+        or x_max != x_max_default
+        or n_x != n_x_default
+    ):
+        raise TypeError(
+            "x/x_min/x_max/n_x have no effect with injection=... or "
+            "dn_planck=... (method='pde'): the Rust binary builds its own "
+            "frequency grid internally, with fixed extent and point count "
+            "controlled only by n_points/production_grid. Pass "
+            "n_points=... to change resolution, or use "
+            "method='greens_function'/'table', or photon_source=... "
+            "(which does honor x/x_min/x_max/n_x), instead."
+        )
+
+
 def warn_grid_resolution_photon(n_points, injection_type):
     """Warn if PDE grid is too coarse for photon injection scenarios.
 

@@ -353,7 +353,7 @@ pub fn photon_survival_probability(x: f64, z: f64) -> f64 {
 /// At z > 5×10⁴ (μ-era): P_s = exp(−x_c/x), the quasi-stationary approximation
 /// which correctly accounts for Compton redistribution. The raw τ_ff integral
 /// would overestimate absorption here because it ignores Compton upscattering.
-fn photon_survival_probability_numerical(x: f64, z_h: f64, cosmo: &Cosmology) -> f64 {
+pub fn photon_survival_probability_numerical(x: f64, z_h: f64, cosmo: &Cosmology) -> f64 {
     // μ-era: use the analytic formula (accounts for Compton redistribution)
     if z_h > 5.0e4 {
         return photon_survival_probability(x, z_h);

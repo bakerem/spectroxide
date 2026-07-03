@@ -1600,6 +1600,9 @@ def solve(
         n_threads=kwargs.pop("n_threads", None),
     )
     if injection is not None or _dn_planck is not None:
+        _val.validate_pde_injection_grid_args(
+            x, x_min, x_max, n_x, defaults=(0.01, 30.0, 500)
+        )
         data = _run_pde_single_solve(
             injection=injection,
             dn_planck=_dn_planck,

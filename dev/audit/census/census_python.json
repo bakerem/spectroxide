@@ -1,0 +1,1224 @@
+[
+ {
+  "file": "python/tests/test_anisotropy.py",
+  "test": "test_boost_identity_g_shape",
+  "provenance": "analytic",
+  "target": "boost identity residual -xG' = Y_SZ + 3G < 1e-3",
+  "source": "exact identity (superposition of blackbodies), docstring: 'pure math'",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_anisotropy.py",
+  "test": "test_boost_linearity",
+  "provenance": "analytic",
+  "target": "amplitudes scale x10 with input to 1e-6",
+  "source": "linearity of boost operator (exact)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_anisotropy.py",
+  "test": "test_boost_of_temperature_shift_decomposes_to_y",
+  "provenance": "analytic",
+  "target": "boosted dT*G gives y=dT, dT'=3dT, mu=0 to 2%",
+  "source": "same exact boost identity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_anisotropy.py",
+  "test": "test_e_g_contributes_only_to_dt",
+  "provenance": "analytic",
+  "target": "include_e_g adds exactly +1 to b_dT, mu unchanged (=0)",
+  "source": "definition of e_G term in boost operator",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_anisotropy.py",
+  "test": "test_load_class_cls_fixture",
+  "provenance": "literature",
+  "target": "CLASS TT acoustic peak at 180<=l<=260; >=2000 multipoles",
+  "source": "CLASS fixture (data/class_fixtures); Planck TT first peak l~220",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_round_trip_identity",
+  "provenance": "analytic",
+  "target": "dn -> DI[Jy/sr] -> dn round trip to 1e-10",
+  "source": "exact unit-conversion inverse (2hnu^3/c^2 factor)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_zero_di_gives_zero_dn",
+  "provenance": "structural",
+  "target": "zero DI gives zero dn",
+  "source": "trivial zero map",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_round_trip",
+  "provenance": "analytic",
+  "target": "Jy/sr -> dn -> Jy/sr round trip to 1e-10",
+  "source": "exact unit-conversion inverse",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_peaks_around_x4",
+  "provenance": "analytic",
+  "target": "G_bb(x) in Jy/sr peaks at 3<x<5",
+  "source": "closed form x^4 e^-x/(1-e^-x)^2 peak near x~3.9",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_pure_gbb_fully_stripped",
+  "provenance": "analytic",
+  "target": "recovers injected alpha=1e-4 to 0.1%; residual photon number ~0",
+  "source": "synthesis-recovery: stripping a pure G_bb must return injected amplitude",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_mu_shape_mostly_preserved",
+  "provenance": "analytic",
+  "target": "stripping M(x) removes alpha<10% of amplitude, spectrum within 10% of peak",
+  "source": "M(x) approximately photon-number-neutral (analytic property)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_y_shape_mostly_preserved",
+  "provenance": "analytic",
+  "target": "stripping Y_SZ removes little (same 10% bounds)",
+  "source": "Y_SZ approximately photon-number-neutral",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_mixed_signal",
+  "provenance": "analytic",
+  "target": "recovers alpha_in=5e-4 to 5% and mu component to 10% of peak",
+  "source": "synthesis-recovery of known injected amplitudes",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_number_conservation",
+  "provenance": "analytic",
+  "target": "int x^2 dn_nc dx < 1e-8 after stripping",
+  "source": "number conservation ~0 by construction of strip_gbb",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_swave_scales_with_fann",
+  "provenance": "analytic",
+  "target": "heating rate doubles with f_ann x2 to 1e-10",
+  "source": "linearity in f_ann (exact)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_cosmotherm.py",
+  "test": "test_pwave_vs_swave_ratio",
+  "provenance": "analytic",
+  "target": "rp/rs = 1+z exactly (1e-10)",
+  "source": "<sigma v> ~ v^2 ~ T ~ (1+z), exact ratio",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_prefactor_matches_ah21",
+  "provenance": "literature",
+  "target": "-dQ/dz/H = 1.7095e-6 f_chi(MeV/m_chi) to 1%; q>0.999",
+  "source": "Ali-Haimoud 2021 (arXiv:2101.04070) Eq. 2.11, hand-derived constant",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_gamma_chi_p_spot_value",
+  "provenance": "analytic",
+  "target": "Gamma_chi_p = 1.2472e-12 s^-1 at z=1e5 to 2e-3",
+  "source": "hand calculation from AH21 momentum-exchange rate formula",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_mu_max_tight_coupling",
+  "provenance": "literature",
+  "target": "|mu_max| = 8.6e-5 for m_chi=0.1 MeV to 20%; q>0.99",
+  "source": "AH21 Eq. 2.20 (|mu_max|=8.6e-6 f_chi MeV/m_chi); tol covers Chluba-2013 vs AH21 visibility difference",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_ah21_fig1_benchmark",
+  "provenance": "literature",
+  "target": "z_dec in (3e6,8e6); mu in (-2e-6,-5e-7)",
+  "source": "AH21 Fig. 1 benchmark (z_dec~5e6, |mu|~1e-6)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_q_bounded_and_dm_colder",
+  "provenance": "dimensional",
+  "target": "0<=q<=1 and T_chi<=T_gamma for 3 parameter sets",
+  "source": "physical bounds: DM never hotter than photons, deposited fraction bounded",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_n_indices_and_electron_scatterer",
+  "provenance": "dimensional",
+  "target": "q finite and >=0 for n in {-2,2,4,6}; electron-scatterer rate finite and <=0",
+  "source": "sign/finiteness from physics (DM-baryon scattering cools photons)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_f_chi_linearity",
+  "provenance": "analytic",
+  "target": "heating rate ratio 0.5 for f_chi halved, to 1%",
+  "source": "linearity in f_chi (exact)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_dm_baryon.py",
+  "test": "test_rust_python_parity",
+  "provenance": "analytic",
+  "target": "prefactor/q z-independent to 1e-12 across 3 redshifts",
+  "source": "exact z-independence of (3/2)n_chi k T_gamma/rho_gamma",
+  "flag": false,
+  "note": "Name says parity but assertion is an analytic invariance; actual Rust parity lives in src/dm_baryon.rs sharing the same AH21 targets"
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_dim_constants",
+  "provenance": "structural",
+  "target": "DIM=18, index positions, N_MOMENTS=15",
+  "source": "basis layout constants",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_load_basis",
+  "provenance": "analytic",
+  "target": "matrix shapes 18x18; eps_Theta=eps_Y0=4; eps_mu=1/1.4007; beta_m=3G2/(2G1)",
+  "source": "exact energy weights (4 for T/y) and kappa_c=1.4007 mu constant; G-integral formula",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_spectral_channels",
+  "provenance": "structural",
+  "target": "channel grid shape (970,), positive, increasing",
+  "source": "basis file channel count",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_g_bb_at_known_point",
+  "provenance": "analytic",
+  "target": "G(2) = 2e^2/(e^2-1)^2 to 1e-12",
+  "source": "closed form",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_yk_zero_matches_y0",
+  "provenance": "analytic",
+  "target": "Y_0 equals SZ shape G(x)[x coth(x/2)-4] to 1e-10",
+  "source": "closed-form SZ shape",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_yk_recursion",
+  "provenance": "analytic",
+  "target": "-x dY_{k-1}/dx = 4 Y_k to 1e-4 (finite diff)",
+  "source": "exact boost recursion O_x Y_{k-1} = 4 Y_k",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_amplitude_spectrum_linearity",
+  "provenance": "analytic",
+  "target": "unit vectors synthesize exactly G(x), M(x), Y_0(x)",
+  "source": "basis definition (exact)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_table1_N0",
+  "provenance": "literature",
+  "target": "y=-0.02070, mu=0.8385 to 0.5%",
+  "source": "EC26 Table 1, N=0 row",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_table1_N15",
+  "provenance": "literature",
+  "target": "y=-0.02060, mu=0.8374 to 0.5%",
+  "source": "EC26 Table 1, N=15 row",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_ox_m_projection",
+  "provenance": "literature",
+  "target": "O_x M = 0.3736 Y0 + 1.9069 M to 2% via constrained Gram projection",
+  "source": "SS-II / WP-0 acceptance values (quoted in paper); mirrors constrainedRepOn in fh_matrices.wl",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_b0_mu_era_computation_50_50",
+  "provenance": "literature",
+  "target": "energy split f_y, f_mu each in [0.40,0.60]",
+  "source": "EC26 Fig. 10 anchor: O_x M ~ 1.9M+0.4Y splits energy nearly evenly",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_fh_basis.py",
+  "test": "test_wp3_stationary_y_audit",
+  "provenance": "regression-pin",
+  "target": "mu-overlay residual norm < 5% (computation basis); CSV finite",
+  "source": "WP-3 status-log finding ('stationary overlay tracks full solution to 0.1% in mu-slot') = code's own prior output; explicitly labelled as a re-audit",
+  "flag": false,
+  "note": "y-residual is reported but deliberately not asserted; test skips if CSV absent"
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_n_freq",
+  "provenance": "literature",
+  "target": "43 frequency channels",
+  "source": "Fixsen et al. 1996 FIRAS monopole dataset",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_freq_range_ghz",
+  "provenance": "literature",
+  "target": "freq range brackets ~68-640 GHz",
+  "source": "Fixsen et al. 1996 (cited in docstring)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_x_range",
+  "provenance": "dimensional",
+  "target": "x spans roughly 1-11 (brackets 0.5-2 and 8-15)",
+  "source": "follows from FIRAS 68-640 GHz and T=2.726 K",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_covariance_shape",
+  "provenance": "structural",
+  "target": "cov and cov_inv are 43x43",
+  "source": "dataset dimension",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_covariance_symmetric",
+  "provenance": "structural",
+  "target": "cov == cov.T",
+  "source": "matrix property of loaded data",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_correlation_diagonal_near_ones",
+  "provenance": "analytic",
+  "target": "diag(corr) = 1 to 0.01",
+  "source": "definition of correlation matrix",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_cov_inv_is_inverse",
+  "provenance": "analytic",
+  "target": "C @ C^-1 = I to 1e-8",
+  "source": "matrix-inverse identity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_repr",
+  "provenance": "structural",
+  "target": "repr contains '43' and 'GHz'",
+  "source": "API string check",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_custom_t_cmb",
+  "provenance": "structural",
+  "target": "t_cmb attribute round-trips; x grid shifts",
+  "source": "API passthrough",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_freq_cm_to_ghz_known_value",
+  "provenance": "analytic",
+  "target": "1 cm^-1 = 29.9792 GHz to 0.01",
+  "source": "c = 2.998e10 cm/s (exact conversion)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_freq_cm_to_x_identity",
+  "provenance": "analytic",
+  "target": "x=1 at nu=kT/h to 1e-6",
+  "source": "definition x = h nu/(kT)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_dn_to_dI_kJy_zero",
+  "provenance": "structural",
+  "target": "zero dn gives zero dI",
+  "source": "trivial zero map",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_mu_template_nonzero",
+  "provenance": "structural",
+  "target": "template shape (43,), nonzero",
+  "source": "API sanity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_y_template_nonzero",
+  "provenance": "structural",
+  "target": "template shape (43,), nonzero",
+  "source": "API sanity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_chi2_null_good_fit",
+  "provenance": "analytic",
+  "target": "0 < chi2_null < 200 for 43 channels",
+  "source": "chi2 ~ ndof +/- sqrt(2 ndof) statistics; FIRAS consistent with blackbody",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_chi2_perfect_fit_zero",
+  "provenance": "analytic",
+  "target": "chi2(model=residuals) = 0",
+  "source": "chi2 definition identity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_fit_amplitude_best_fit_reduces_chi2",
+  "provenance": "analytic",
+  "target": "chi2_min <= chi2_null",
+  "source": "least-squares property",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_marginalised_sigma_larger",
+  "provenance": "analytic",
+  "target": "marginalised sigma >= raw sigma",
+  "source": "profiling over nuisance cannot shrink errors",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_marginalised_chi2_min_leq_null",
+  "provenance": "analytic",
+  "target": "chi2_min <= chi2_null",
+  "source": "least-squares property",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_upper_limit_mu_order_of_magnitude",
+  "provenance": "dimensional",
+  "target": "1e-6 < mu_95 < 1e-3",
+  "source": "order-of-magnitude vs literature O(1e-5) FIRAS limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_upper_limit_y_order_of_magnitude",
+  "provenance": "dimensional",
+  "target": "1e-7 < y_95 < 1e-3",
+  "source": "order-of-magnitude vs literature O(1e-5)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_upper_limit_mu_no_y_marginalisation",
+  "provenance": "analytic",
+  "target": "limit without y-marg <= with",
+  "source": "fewer nuisance parameters -> tighter limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_fit_distortion_null",
+  "provenance": "structural",
+  "target": "ndof == 40 (43-3) and finite params",
+  "source": "channel count minus 3 fitted params",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_predict_null",
+  "provenance": "structural",
+  "target": "zero params predict zero",
+  "source": "trivial",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_predict_linearity",
+  "provenance": "analytic",
+  "target": "prediction linear in mu to 1e-12",
+  "source": "linear model by construction",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_predict_with_extra_dn_callable",
+  "provenance": "structural",
+  "target": "zero extra dn gives zero prediction",
+  "source": "trivial",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_predict_with_extra_dn_array",
+  "provenance": "structural",
+  "target": "zero extra dn gives zero prediction",
+  "source": "trivial",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_fisher_matrix_symmetric",
+  "provenance": "analytic",
+  "target": "F == F.T",
+  "source": "Fisher matrix symmetric by definition",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_fisher_single_template",
+  "provenance": "analytic",
+  "target": "F[0,0] = t^T C^-1 t to 1e-12",
+  "source": "Fisher definition identity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_mu_95_value",
+  "provenance": "literature",
+  "target": "MU_FIRAS_95 == 9e-5",
+  "source": "Fixsen et al. 1996 (|mu| < 9e-5, 95% CL)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_y_95_value",
+  "provenance": "literature",
+  "target": "Y_FIRAS_95 == 1.5e-5",
+  "source": "Fixsen et al. 1996 (|y| < 1.5e-5, 95% CL)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_mu_68_value",
+  "provenance": "literature",
+  "target": "MU_FIRAS_68 == 4.5e-5",
+  "source": "Fixsen 1996 95% limit / 2 (Gaussian 1-sigma); no explicit citation in test",
+  "flag": false,
+  "note": "68% value is derived, not directly quoted in Fixsen; origin clear enough not to flag"
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_y_68_value",
+  "provenance": "literature",
+  "target": "Y_FIRAS_68 == 7.5e-6",
+  "source": "Fixsen 1996 95% limit / 2; no explicit citation in test",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_template_shape",
+  "provenance": "structural",
+  "target": "galactic template shape (43,)",
+  "source": "dataset dimension",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_default_t_dust_9k",
+  "provenance": "literature",
+  "target": "default t_dust == 9.0 K",
+  "source": "Fixsen 1996 Sect. 6.1 (cited in docstring)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_helper_matches_method",
+  "provenance": "structural",
+  "target": "module helper matches cached method to 1e-12",
+  "source": "same code path consistency (API), not independent implementations",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_mu_limit_relaxes_or_equal",
+  "provenance": "analytic",
+  "target": "limit with galactic marg >= without",
+  "source": "adding nuisance freedom cannot tighten limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_y_limit_relaxes_or_equal",
+  "provenance": "analytic",
+  "target": "limit with galactic marg >= without",
+  "source": "same inequality",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_limit_on_model_relaxes_or_equal",
+  "provenance": "analytic",
+  "target": "limit_on_model with galactic marg >= without",
+  "source": "same inequality",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_mu_limit_still_order_of_magnitude",
+  "provenance": "dimensional",
+  "target": "1e-6 < mu limit < 1e-3 with galactic marg",
+  "source": "order-of-magnitude vs FIRAS literature",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_y_limit_still_order_of_magnitude",
+  "provenance": "dimensional",
+  "target": "1e-7 < y limit < 1e-3 with galactic marg",
+  "source": "order-of-magnitude vs FIRAS literature",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_profile_limit_floating_T_with_galactic",
+  "provenance": "literature",
+  "target": "finite limit; t_best in [2.720, 2.732] K",
+  "source": "FIRAS T_CMB = 2.725 +/- a few mK (Fixsen 2009)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_firas.py",
+  "test": "test_profile_limit_floating_T_relaxes",
+  "provenance": "analytic",
+  "target": "floating-T limit with galactic marg >= without",
+  "source": "nuisance-marginalisation inequality",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_planck_low_x_rayleigh_jeans",
+  "provenance": "analytic",
+  "target": "n_pl -> 1/x at x<<1 to 1%",
+  "source": "Rayleigh-Jeans limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_planck_large_x_wien",
+  "provenance": "analytic",
+  "target": "n_pl -> e^-x at x>>1 to 1e-3",
+  "source": "Wien limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_planck_identity_derivative",
+  "provenance": "analytic",
+  "target": "dn/dx + n(1+n) = 0 residual < 1% of scale",
+  "source": "Planck identity",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_g_bb_integral_gives_g3",
+  "provenance": "analytic",
+  "target": "int x^3 G_bb dx = 4 G3 = 4pi^4/15 to 0.5%",
+  "source": "exact energy integral",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_mu_shape_zero_crossing",
+  "provenance": "analytic",
+  "target": "M(x) crosses zero at beta_mu ~ 2.19; sign pattern",
+  "source": "beta_mu from photon-number/energy balance (Chluba)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_y_shape_zero_crossing",
+  "provenance": "analytic",
+  "target": "Y_SZ zero at x coth(x/2)=4 (x~3.831), found by bisection",
+  "source": "transcendental equation solved independently in-test",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_mu_and_y_energy_neutral_basis",
+  "provenance": "dimensional",
+  "target": "|cos angle| of energy-neutral f_mu, f_y < 0.95",
+  "source": "Chluba & Jeong 2014 energy-neutral basis reduces M-Y correlation (raw cos~0.88)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_j_bb_high_z_thermalization",
+  "provenance": "analytic",
+  "target": "J_bb(1e7) < 1e-10",
+  "source": "thermalization limit J_bb->0 at z>>z_mu",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_j_bb_low_z_no_thermalization",
+  "provenance": "analytic",
+  "target": "J_bb(1e3) = 1 to 1e-6",
+  "source": "J_bb->1 limit at z<<z_mu",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_j_mu_high_z",
+  "provenance": "analytic",
+  "target": "J_mu(1e7) = 1 to 1%",
+  "source": "pure mu-era limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_j_mu_low_z",
+  "provenance": "analytic",
+  "target": "J_mu(1e3) < 0.01",
+  "source": "no-mu limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_j_bb_star_non_negative",
+  "provenance": "dimensional",
+  "target": "J_bb* in [0,1] at 5 redshifts",
+  "source": "visibility is a fraction; clamping requirement",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_j_y_complements_j_mu",
+  "provenance": "dimensional",
+  "target": "|J_y - (1-J_mu)| < 0.3",
+  "source": "approximate energy conservation between independently-fitted Chluba 2013 visibilities",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_gf_deep_mu_era",
+  "provenance": "analytic",
+  "target": "decomposed mu = 1.401 J_bb* J_mu drho to 5%",
+  "source": "mu = 1.401 drho/rho (deep mu-era), Chluba 2013 visibility scaling",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_gf_y_era",
+  "provenance": "analytic",
+  "target": "y = drho/4 to 5%; mu < 0.1 y",
+  "source": "y = drho/(4 rho) exact y-era result",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_gf_linearity",
+  "provenance": "structural",
+  "target": "2*g1 == g*2 to 1e-15",
+  "source": "tautological: both sides are the same call doubled",
+  "flag": false,
+  "note": "assertion cannot fail; tests nothing beyond determinism"
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_gf_energy_conservation",
+  "provenance": "analytic",
+  "target": "int x^3 G_th dx = G3 to 20%",
+  "source": "energy conservation; 20% slack documented from Chluba J_T=(1-J_bb*)/4 approximation",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_mu_from_single_burst",
+  "provenance": "analytic",
+  "target": "mu = 1.401 J_bb* J_mu drho to 5% for Gaussian burst",
+  "source": "mu=1.401 drho/rho with Chluba 2013 visibilities",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_y_from_single_burst_y_era",
+  "provenance": "analytic",
+  "target": "y = drho/4 to 5%",
+  "source": "exact y-era result",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_pure_mu_distortion",
+  "provenance": "analytic",
+  "target": "decompose(mu M(x)) recovers mu to 2%, y<1% mu",
+  "source": "synthesis-recovery",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_pure_y_distortion",
+  "provenance": "analytic",
+  "target": "decompose(y Y(x)) recovers y to 2%, mu<5% y",
+  "source": "synthesis-recovery; M-Y correlation leakage noted",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_drho_matches_direct_integral",
+  "provenance": "analytic",
+  "target": "returned drho = int x^3 dn dx / G3 to 1e-3",
+  "source": "drho definition, independent trapezoid quadrature in-test",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_fit_residual_small",
+  "provenance": "analytic",
+  "target": "BF fit recovers injected mu and y to 5%",
+  "source": "synthesis-recovery; BE and Chluba-M mu coincide in linear regime",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_hubble_today",
+  "provenance": "analytic",
+  "target": "H(0) = 100h km/s/Mpc to 1%",
+  "source": "H0 definition with h=0.71",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_ionization_fraction_pre_recombination",
+  "provenance": "dimensional",
+  "target": "X_e(1e4) > 1",
+  "source": "full ionization + helium implies X_e>1",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_ionization_fraction_post_recombination",
+  "provenance": "dimensional",
+  "target": "1e-5 < X_e(500) < 0.01",
+  "source": "standard recombination freeze-out X_e ~ O(1e-4)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_baryon_photon_ratio_scaling",
+  "provenance": "analytic",
+  "target": "R(z1)/R(z2) = (1+z2)/(1+z1) to 1e-6",
+  "source": "R ~ 1/(1+z) exact scaling",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_photon_gf_high_x_dominated_by_survival",
+  "provenance": "dimensional",
+  "target": "|G(x_inj=10)| > 10x |G(x_inj=0.01)|",
+  "source": "P_s -> 1 vs -> 0 limits (order-of-magnitude)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_mu_sign_flip_at_x_balanced",
+  "provenance": "dimensional",
+  "target": "mu>0 at x_inj=10, mu<0 at x_inj=2",
+  "source": "sign flip across balance point x0 ~ 3.60 (Chluba 2015 photon injection)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_photon_survival_limits",
+  "provenance": "dimensional",
+  "target": "P_s(10)>0.99, P_s(1e-5)<1e-10",
+  "source": "survival probability limiting behavior",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_x_c_dc_dominates_at_high_z",
+  "provenance": "dimensional",
+  "target": "x_c_dc > x_c_br at z=2e6",
+  "source": "DC dominates absorption at high z (physical ordering)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_x_c_br_dominates_at_low_z",
+  "provenance": "dimensional",
+  "target": "x_c_br > x_c_dc at z=1e4",
+  "source": "BR dominates at low z",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_n_hydrogen",
+  "provenance": "analytic",
+  "target": "n_H ~ (1+z)^3 to 1e-6",
+  "source": "exact scaling",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_n_electron",
+  "provenance": "analytic",
+  "target": "n_e = X_e n_H to 1%",
+  "source": "definition",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_n_electron_custom_x_e",
+  "provenance": "analytic",
+  "target": "n_e = 0.5 n_H with x_e=0.5 to 1e-6",
+  "source": "definition",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_omega_gamma",
+  "provenance": "dimensional",
+  "target": "1e-5 < Omega_gamma < 1e-4",
+  "source": "known Omega_gamma ~ 5e-5 order of magnitude",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_rho_gamma_scaling",
+  "provenance": "analytic",
+  "target": "rho_gamma ~ (1+z)^4 to 1e-6",
+  "source": "exact scaling",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_default",
+  "provenance": "literature",
+  "target": "h=0.71, omega_b=0.044, Y_p=0.24",
+  "source": "Chluba 2013 default cosmology (also project CLAUDE.md defaults)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_planck2015",
+  "provenance": "literature",
+  "target": "h = 0.6727",
+  "source": "Planck 2015 parameters",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_planck2018",
+  "provenance": "literature",
+  "target": "h = 0.6736, T_cmb = 2.7255",
+  "source": "Planck 2018 parameters",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens.py",
+  "test": "test_to_dict",
+  "provenance": "structural",
+  "target": "to_dict round-trips h and omega_b",
+  "source": "API round-trip",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_shape",
+  "provenance": "structural",
+  "target": "g_th (50,7) / g_ph (80,3,5) and companion array shapes",
+  "source": "construction dimensions (two classes share this name)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_metadata_preserved",
+  "provenance": "structural",
+  "target": "metadata dict values survive construction",
+  "source": "API",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_at_grid_point",
+  "provenance": "cross-method",
+  "target": "table interpolation at grid points reproduces stored values (rtol 1e-6 / 1e-10)",
+  "source": "table vs direct stored evaluation (spline passes through training points); two classes share this name",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_round_trip",
+  "provenance": "structural",
+  "target": "save/load .npz round-trips all arrays and metadata exactly",
+  "source": "serialization round-trip (two classes share this name)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_distortion_from_heating_single_burst",
+  "provenance": "cross-method",
+  "target": "convolved narrow burst matches point GF evaluation to 15%",
+  "source": "table convolution vs direct evaluation",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_distortion_from_heating_zero_rate",
+  "provenance": "structural",
+  "target": "zero heating gives zero distortion",
+  "source": "trivial",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_mu_from_heating_deep_mu_era",
+  "provenance": "analytic",
+  "target": "mu = 1.401 J_bb* J_mu drho to 20%",
+  "source": "mu = 1.401 drho/rho with Chluba 2013 visibilities",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_zero_rate",
+  "provenance": "structural",
+  "target": "zero photon injection rate gives zero",
+  "source": "trivial",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_single_burst",
+  "provenance": "structural",
+  "target": "solve(method='table') returns finite mu, y, matching z_h and array lengths",
+  "source": "API integration, finiteness only",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_energy_conservation",
+  "provenance": "analytic",
+  "target": "int x^3 G_th dx / G3 = 1 to 20%",
+  "source": "energy conservation; slack documented from Chluba J_T approximation",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_mu_decreases_toward_low_z",
+  "provenance": "dimensional",
+  "target": "mu(highest z) >= 0.5 mu(lowest z) in mu-era",
+  "source": "monotonicity of thermalization efficiency",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_y_increases_toward_low_z",
+  "provenance": "analytic",
+  "target": "y -> 0.25 at z<3e3 to 0.02",
+  "source": "y = drho/4 pure y-era limit",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_greens_function_agrees_with_analytic_in_limits",
+  "provenance": "cross-method",
+  "target": "NC-stripped table GF matches analytic GF to 5% in deep mu and y eras",
+  "source": "table interpolation vs analytic greens_function",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_greens_table.py",
+  "test": "test_single_z_table",
+  "provenance": "structural",
+  "target": "single-z table returns raw stored values to 1e-10",
+  "source": "degenerate-grid round-trip",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_parity.py",
+  "test": "test_parity",
+  "provenance": "cross-method",
+  "target": "Python mirror matches Rust-generated fixture values per-group rtol (declared in fixture)",
+  "source": "tests/data/parity_fixtures.json generated by cargo example generate_parity_fixtures; Rust vs Python implementations",
+  "flag": false,
+  "note": "fixture values are Rust code output by design; the assertion is agreement between the two independent ports, not a physics target"
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_production_n_points",
+  "provenance": "structural",
+  "target": "PRODUCTION n_points == 4000",
+  "source": "preset constant",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_debug_n_points",
+  "provenance": "structural",
+  "target": "DEBUG n_points == 1000",
+  "source": "preset constant",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_apply_settings_default_production",
+  "provenance": "structural",
+  "target": "merged n_points == 4000",
+  "source": "preset merge logic",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_apply_settings_debug",
+  "provenance": "structural",
+  "target": "merged n_points == 1000",
+  "source": "preset merge logic",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_apply_settings_override",
+  "provenance": "structural",
+  "target": "override n_points == 2000",
+  "source": "preset merge logic",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_apply_settings_none_values_ignored",
+  "provenance": "structural",
+  "target": "None does not override; n_points == 4000",
+  "source": "preset merge logic",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_resolve_quality_settings",
+  "provenance": "structural",
+  "target": "resolved (4000, True, ...)",
+  "source": "preset constants",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_resolve_quality_settings_debug",
+  "provenance": "structural",
+  "target": "resolved (1000, False, ...)",
+  "source": "preset constants",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_h_passthrough",
+  "provenance": "structural",
+  "target": "--h arg equals '0.6736'",
+  "source": "CLI arg round-trip",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_omega_b_passthrough",
+  "provenance": "structural",
+  "target": "--omega-b arg equals '0.044'",
+  "source": "CLI arg round-trip",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_omega_m_passthrough",
+  "provenance": "structural",
+  "target": "--omega-m arg equals '0.26'; no --omega-cdm",
+  "source": "CLI arg round-trip",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_delta_I_property",
+  "provenance": "structural",
+  "target": "delta_I returns tuples of length 50, finite, positive for positive dn",
+  "source": "API property",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_z_h_set",
+  "provenance": "structural",
+  "target": "z_h attribute == 5e4 after construction",
+  "source": "dataclass round-trip",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_single_burst_mu_era",
+  "provenance": "analytic",
+  "target": "mu/drho in (0.5, 1.5) at z=5e5",
+  "source": "mu = 1.401 drho/rho deep mu-era (broad window)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_single_burst_y_era",
+  "provenance": "literature",
+  "target": "y/drho in (0.20, 0.23) at z=3e4",
+  "source": "Chluba 2013 GF: y = J_y(z_h)/4 with J_y(3e4) ~ 0.86 (docstring)",
+  "flag": false,
+  "note": "0.86 is the Chluba 2013 J_y fit evaluated at 3e4; fit itself is literature"
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_solve_custom_x_grid",
+  "provenance": "structural",
+  "target": "len(result.x) == 200 and equals input grid",
+  "source": "API passthrough",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_solver.py",
+  "test": "test_custom_x_grid",
+  "provenance": "structural",
+  "target": "len(result['x']) == 100 for run_single custom grid",
+  "source": "API passthrough",
+  "flag": false
+ }
+]

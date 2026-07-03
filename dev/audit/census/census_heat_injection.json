@@ -1,0 +1,1624 @@
+[
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_beta_mu_from_zeta_functions",
+  "provenance": "analytic",
+  "target": "BETA_MU = 3zeta(3)/zeta(2) ~ 2.19229 to 1e-4",
+  "source": "zeta-function identity; Abramowitz & Stegun Table 23.3, OEIS A002117",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_kappa_c_from_numerical_integration",
+  "provenance": "analytic",
+  "target": "KAPPA_C = 3*int x^3 M(x) dx / G3 matches hardcoded 2.1419 to 0.5%",
+  "source": "energy conservation for pure mu-distortion, independent quadrature",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_spectral_integrals_exact_values",
+  "provenance": "analytic",
+  "target": "G1=pi^2/6, G3=pi^4/15, I4=4G3 to 1e-14; numerical G3 to 1e-7",
+  "source": "Riemann zeta integral representation; A&S Ch. 23",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_compton_equilibrium_planck_exact",
+  "provenance": "analytic",
+  "target": "I4/(4G3)=1 for Planck spectrum to 1e-4",
+  "source": "integration-by-parts identity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_y_sz_zero_crossing_from_transcendental_equation",
+  "provenance": "analytic",
+  "target": "Y_SZ zero at x0~3.8310 where x coth(x/2)=4",
+  "source": "transcendental equation solved by independent bisection; Zeldovich & Sunyaev 1969",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_mu_shape_zero_crossing_and_sign_structure",
+  "provenance": "analytic",
+  "target": "M(beta_mu)=0 exactly; sign structure around beta_mu",
+  "source": "definition M(x)=(x/beta_mu - 1) g_bb/x",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_mu_efficiency_deep_mu_era",
+  "provenance": "analytic",
+  "target": "mu = (3/kappa_c) J_bb* J_mu drho to 5% at z=5e5; y << mu",
+  "source": "Kompaneets + number conservation; SZ 1970, Hu & Silk 1993, Chluba 2013 (visibility factors evaluated via code's Chluba-2013 fits)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_y_efficiency_y_era",
+  "provenance": "analytic",
+  "target": "y = drho/4 (visibility-corrected) to 5% at z=3000; mu << y",
+  "source": "exact definition of y-parameter; ZS 1969, Kompaneets 1957",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_thermalization_suppression_high_z",
+  "provenance": "dimensional",
+  "target": "mu,y < 1e-3 * drho at z=5e6",
+  "source": "exponential J_bb* suppression argument (~exp(-(z/2e6)^2.5))",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_greens_function_linearity",
+  "provenance": "analytic",
+  "target": "doubling amplitude doubles mu,y,spectrum to 1e-10/1e-8",
+  "source": "linearity of Green's function by construction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_visibility_function_physical_constraints",
+  "provenance": "dimensional",
+  "target": "J's in [0,1], monotone, correct limits; J_mu/J_y crossing in [3e4,1e5]",
+  "source": "model-independent limits; crossing range from mu-y transition literature",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_greens_function_energy_accounting",
+  "provenance": "analytic",
+  "target": "int G_th x^3 dx / G3 = 1 to 3% in pure regimes; <22% in transition",
+  "source": "total energy conservation; Chluba 2013 Eq. 5",
+  "flag": false,
+  "note": "22% transition bound accommodates observed 18% peak of the J_y ansatz - labelled in docstring"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decaying_particle_time_dependence",
+  "provenance": "analytic",
+  "target": "rate/(n_H/rho_g) follows exp(-Gamma dt) to 5%; rate >= 0",
+  "source": "exact exponential decay kinematics",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_firas_limits_consistency",
+  "provenance": "literature",
+  "target": "FIRAS_MU_LIMIT=9e-5, FIRAS_Y_LIMIT=1.5e-5; LCDM mu << limit",
+  "source": "Fixsen et al. 1996, ApJ 473, 576 (95% CL)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_single_burst_energy_normalization",
+  "provenance": "analytic",
+  "target": "integral of dQ/dz equals drho to 1%",
+  "source": "Gaussian normalization",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_mu_y_transition_redshift",
+  "provenance": "literature",
+  "target": "mu-y energy-weight crossing in [2e4, 1e5]",
+  "source": "z_muy ~ 5e4 consensus: Hu & Silk 1993; Chluba & Sunyaev 2012; Khatri & Sunyaev 2012",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_greens_function_smooth_transition",
+  "provenance": "dimensional",
+  "target": "G_th finite, continuous (<20% jump per 1% z-step), positive at x=5",
+  "source": "continuity/sign arguments",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_literature_mu_y_conversion_coefficients",
+  "provenance": "analytic",
+  "target": "mu = 1.401 drho (10%), y = 0.25 drho (10%), dominance ordering",
+  "source": "1.401=3/kappa_c and 1/4 exact; SZ 1970, Hu & Silk 1993, Chluba 2013",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_literature_regime_boundaries",
+  "provenance": "dimensional",
+  "target": "mode ordering at z=3e6/2e5/1e4; suppression <10%/1% of drho at z=3e6",
+  "source": "three-regime structure, SZ 1970",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_planck_is_stable_equilibrium",
+  "provenance": "analytic",
+  "target": "no injection: max|dn(x>0.1)|<5e-5, |drho|<1e-7",
+  "source": "Planck is equilibrium; bound = 2.5x physical adiabatic-cooling estimate",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_initial_perturbation_evolution",
+  "provenance": "dimensional",
+  "target": "mu>0 for injection at x_i=5 > x0~3.6; nonzero distortion",
+  "source": "sign prediction from Chluba 2015 photon-injection theory",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_thermalization_suppression_monotonic",
+  "provenance": "dimensional",
+  "target": "J_bb* and mu/drho monotone decreasing with z; mu/drho<0.01 at z=5e6",
+  "source": "monotonicity of thermalization efficiency",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decaying_particle_pde_vs_gf",
+  "provenance": "cross-method",
+  "target": "PDE vs GF mu sign agreement; drho>0",
+  "source": "PDE solver vs Green's function",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_spectral_decomposition_mixed_mode",
+  "provenance": "analytic",
+  "target": "decompose recovers input mu to 2%, y to 5%",
+  "source": "round-trip of synthetic mu*M + y*Y spectrum",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_analytic_match",
+  "provenance": "analytic",
+  "target": "PDE mu matches (3/kappa_c)(x_i G2/G3 - 4/3) dN to 20%",
+  "source": "Chluba 2015 MNRAS 454, 4182 deep-mu-era formula",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_negative_mu_chluba2015",
+  "provenance": "analytic",
+  "target": "mu<0 at x_inj=2, |mu(x0)|<15% scale, sign flip; 20% vs Eq. 30",
+  "source": "Chluba 2015 arXiv:1506.06582 Eqs. 30-31",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dark_photon_nwa_gf_prediction",
+  "provenance": "analytic",
+  "target": "z_res in [1e5,1e6]; mu>y; eps^2 scaling exact to 1%",
+  "source": "NWA formula; Mirizzi, Redondo & Sigl 2009; Arias et al. 2012",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_annihilation_redshift_scaling",
+  "provenance": "analytic",
+  "target": "s-wave rate ~ (1+z)^2, p-wave ~ (1+z)^3 to 0.1%",
+  "source": "exact scaling of annihilation rate",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_annihilation_mu_y_properties",
+  "provenance": "dimensional",
+  "target": "mu,y>0; mu/y>0.5 s-wave; p-wave mu/y > s-wave mu/y",
+  "source": "sign/ordering from redshift weighting",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decay_rate_non_monotonic",
+  "provenance": "dimensional",
+  "target": "decay heating rate has interior maximum (rate(z>1e4) > rate(1e4))",
+  "source": "competing n_H/rho_g vs exp(-Gamma t) factors",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dark_photon_mass_dependent_distortion_type",
+  "provenance": "dimensional",
+  "target": "z_res regimes per mass; y vs mu dominance; efficiency suppression ordering",
+  "source": "NWA + visibility regime structure",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dark_photon_conservation_sum_rule",
+  "provenance": "analytic",
+  "target": "E_mu+E_y+E_temp = drho to 30%; algebraic identity to 1e-12",
+  "source": "GF energy branching sum rule",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_plasma_frequency_formula",
+  "provenance": "analytic",
+  "target": "omega_pl API vs first-principles n_e to 1e-10; (1+z)^3 scaling to 1%",
+  "source": "plasma frequency formula, self-consistent recomputation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_greens_function_decomposition_accuracy",
+  "provenance": "cross-method",
+  "target": "decomposed mu/y of G_th matches visibility prediction to 5% (dominant component)",
+  "source": "least-squares decomposition vs GF visibility construction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_y_to_mu_conversion",
+  "provenance": "analytic",
+  "target": "mu>0, drho>0, energy conservation to 15%",
+  "source": "energy conservation + heating sign",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_spectral_shape_near_orthogonality",
+  "provenance": "dimensional",
+  "target": "|r(M,Y)|<0.3; |r(M,G)|,|r(Y,G)|<0.95",
+  "source": "near-orthogonality of basis shapes under x^2 dx measure",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_recombination_ionization_history",
+  "provenance": "literature",
+  "target": "X_e(1e4)~1+f_He, X_e(1100)~0.16, X_e(800)~1e-3, X_e(200)~2-4e-4; monotone",
+  "source": "RECFAST; Seager, Sasselov & Scott 2000 ApJ 523, 1",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_recombination_saha_peebles_physics",
+  "provenance": "analytic",
+  "target": "Saha limits (X_e->1 high T, ->0 low T), Peebles>Saha freeze-out, He stages",
+  "source": "Saha equation regime limits",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_recombination_cache_properties",
+  "provenance": "cross-method",
+  "target": "cached X_e vs direct computation to 1-2%",
+  "source": "same implementation, cache vs direct path (consistency, not independent physics)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_kompaneets_large_perturbation_stability",
+  "provenance": "analytic",
+  "target": "finite mu,y; drho within factor 2 of injected 1e-3",
+  "source": "energy conservation (loose) + stability",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_gaunt_ff_z_dependence",
+  "provenance": "dimensional",
+  "target": "g_ff(Z=2) < g_ff(Z=1), both positive",
+  "source": "ln(2.25/(xZ)) argument decreases with Z",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_gaunt_ff_limiting_behavior",
+  "provenance": "dimensional",
+  "target": "g_ff(x=50)~1 within 0.5; g_ff low-x > high-x",
+  "source": "softplus asymptotics of Born-approximation Gaunt factor",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_he_ionization_saha_regimes",
+  "provenance": "analytic",
+  "target": "He2+ fraction >0.95 at z=1e4, He+ dominant at z=4000, bounds/monotonicity",
+  "source": "Saha equilibrium regime limits (He ionization potentials)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_br_temperature_scaling",
+  "provenance": "analytic",
+  "target": "K_BR ratio = (theta2/theta1)^3.5 x Gaunt ratio to 5%",
+  "source": "theta_e^{-7/2} scaling from BR emission formula",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_temperature_scaling",
+  "provenance": "analytic",
+  "target": "K_DC ratio = (theta2/theta1)^2 to 1%",
+  "source": "theta_z^2 scaling of DC emissivity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_high_freq_suppression_decay",
+  "provenance": "analytic",
+  "target": "H_dc(0)=1 to 1e-14; monotone decreasing",
+  "source": "exact normalization + exp(-2x) decay",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_cosmology_self_consistency",
+  "provenance": "analytic",
+  "target": "z_eq self-consistency to 1e-10 (and in [3000,4000]); Omega closure; E(z) asymptotics; t_C ~ (1+z)^-3",
+  "source": "Friedmann-equation identities from code's own parameters",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_density_scaling_relations",
+  "provenance": "analytic",
+  "target": "n_H ~ (1+z)^3, rho_g ~ (1+z)^4, n_He/n_H = Y_p/(4(1-Y_p)) to 1e-10",
+  "source": "exact scaling relations",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_cosmic_time_milestones",
+  "provenance": "literature",
+  "target": "t0 in 12-15 Gyr; t(1100) in 200-500 kyr; t(1e6) 3-30 months",
+  "source": "standard LCDM age ~13.8 Gyr, recombination ~380 kyr",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_compton_equilibrium_mu_distortion",
+  "provenance": "dimensional",
+  "target": "rho_e>1 for mu>0 and rho_e - 1 < 0.01",
+  "source": "sign of harder spectrum, O(mu) magnitude",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_electron_temperature_feedback",
+  "provenance": "dimensional",
+  "target": "|mu|>1e-10; rho_e in (0.99,1.01)",
+  "source": "nonzero response, near-equilibrium T_e",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_gf_mu_resolution_independence",
+  "provenance": "structural",
+  "target": "mu converges with GF integration resolution (500/2000/5000 pts)",
+  "source": "self-convergence, no physics target",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_y_era_burst_spectral_purity",
+  "provenance": "analytic",
+  "target": "y/(drho/4) in [0.7,1.3]; |mu/y|<0.20",
+  "source": "y=drho/4 exact in y-era",
+  "flag": false,
+  "note": "tolerances tightened to measured values (~0.99, ~0.09) but target is analytic"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_planck_integral_accuracy",
+  "provenance": "analytic",
+  "target": "numerical G3, G2, I4 match exact constants to 1e-4",
+  "source": "zeta-function integrals",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_helium_electron_fraction_and_transition_continuity",
+  "provenance": "analytic",
+  "target": "He e- fraction in [0, 2f_He], correct limits; Saha->Peebles continuity <5%/z-step",
+  "source": "conservation bounds + continuity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decomposition_comprehensive",
+  "provenance": "analytic",
+  "target": "round-trip recovery of dT (10%), negative mu (15%), mixed mu+y (15%/30%)",
+  "source": "synthetic input decomposition",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_firas_check_and_energy_consistency",
+  "provenance": "analytic",
+  "target": "FIRAS mu fraction ~0.5 at half-limit; drho = mu*kappa_c/3 to 15%",
+  "source": "construction (mu=half FIRAS limit) + kappa_c energy relation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_greens_function_asymptotic_limits",
+  "provenance": "analytic",
+  "target": "G_th -> Y(x)/4 at z=1e3 within 50%; mu-shape sign structure at z=2e5",
+  "source": "GF asymptotic limits",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_grid_find_index_boundaries",
+  "provenance": "structural",
+  "target": "find_index boundary/exact-point behavior",
+  "source": "API contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_grid_extreme_configurations",
+  "provenance": "structural",
+  "target": "log grid dx/x constant to 1%; uniform grid dx constant",
+  "source": "grid construction properties",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_solver_snapshot_consistency",
+  "provenance": "structural",
+  "target": "snapshot count/order; nonzero distortion; rho_e near 1",
+  "source": "plumbing checks",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_brightness_temperature",
+  "provenance": "analytic",
+  "target": "T_b deviation = 0 for Planck (<1e-10); sign change near beta_mu for mu-distortion",
+  "source": "brightness-temperature definition + mu zero crossing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_thomas_algorithm_accuracy",
+  "provenance": "analytic",
+  "target": "tridiagonal solve of -u''=sin(pi x) matches sin(pi x)/pi^2 to O(h^2)",
+  "source": "exact PDE solution",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_kompaneets_photon_number_hybrid_grid",
+  "provenance": "analytic",
+  "target": "photon number conserved to 1% under pure Kompaneets",
+  "source": "Kompaneets conserves photon number exactly",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_kompaneets_large_dtau_stability",
+  "provenance": "analytic",
+  "target": "no NaN at dtau=100; energy conserved to 10%",
+  "source": "implicit-scheme stability + energy conservation at T_e=T_z",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_custom_injection_closure",
+  "provenance": "structural",
+  "target": "Custom closure returns specified rate",
+  "source": "API contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_custom_injection_captures_data",
+  "provenance": "structural",
+  "target": "Custom closure with captured Vec evaluates polynomial to 1e-10",
+  "source": "API contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_negative_injection_cooling",
+  "provenance": "analytic",
+  "target": "drho<0 and equals injected -1e-5 to 10%",
+  "source": "energy conservation, sign",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heating_rate_sign_convention",
+  "provenance": "dimensional",
+  "target": "heating_rate>0, heating_rate_per_redshift<0",
+  "source": "dz/dt < 0 sign convention",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decaying_particle_extreme_lifetime",
+  "provenance": "dimensional",
+  "target": "rate nonnegative, finite, nonzero for tau >> t_universe",
+  "source": "exp(-Gamma t) ~ 1 limit",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_compton_equilibrium_mu_distortion_deviation",
+  "provenance": "analytic",
+  "target": "rho_e - 1 in (1e-5, 1e-3) for BE(mu=1e-4), i.e. O(mu) x factor-10 band",
+  "source": "perturbative expansion of I4/(4G3) for BE distribution",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_suppression_monotonicity",
+  "provenance": "dimensional",
+  "target": "H_dc(0)=1; nonnegative; decreasing for x>2",
+  "source": "exact normalization + monotone decay",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_suppression_extreme_x",
+  "provenance": "structural",
+  "target": "H_dc(100)<1e-50, H_dc(50)<1e-20 finite, H_dc(1000)=0 (cutoff)",
+  "source": "implementation cutoff behavior",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_br_coefficient_saha_transition",
+  "provenance": "structural",
+  "target": "K_BR finite and nonnegative across He recombination z",
+  "source": "finiteness only",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_adaptive_dz_bounds",
+  "provenance": "structural",
+  "target": "dz_min <= dz <= 0.05z",
+  "source": "solver config contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_snapshot_close_spacing",
+  "provenance": "structural",
+  "target": "snapshots land at requested z to 1%, monotone",
+  "source": "plumbing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_mu_y_shapes_independent",
+  "provenance": "dimensional",
+  "target": "M(x)/Y(x) ratio varies by >0.1 across x",
+  "source": "linear independence of basis shapes",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_no_injection_full_range",
+  "provenance": "analytic",
+  "target": "max|dn(x>0.1)| < 5e-5 over z=[3e6,200] with no injection",
+  "source": "null test; bound = 2.5x adiabatic-cooling estimate (tightened per CLAUDE.md Pitfall #9)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_linearity_double_injection",
+  "provenance": "analytic",
+  "target": "mu ratio 2.0 +/- 2.5%, drho ratio 2.0 +/- 1%",
+  "source": "linearity of Boltzmann equation for small dn",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_cosmology_presets",
+  "provenance": "literature",
+  "target": "h, omega_b, omega_cdm, Y_p, T_cmb, N_eff match Planck 2015/2018",
+  "source": "Planck 2015/2018 parameter papers",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_high_z_dtau_convergence",
+  "provenance": "cross-method",
+  "target": "dtau_max=3 PDE mu vs GF mu to 15% at z_h=5e5",
+  "source": "PDE vs Green's function",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_thermalization_era_pure_temperature_shift",
+  "provenance": "literature",
+  "target": "mu/drho = (3/kappa_c) J_bb*(3e6) J_mu(3e6) ~ 0.08 to 10%; energy to 3%",
+  "source": "Chluba 2013 MNRAS 436, 2232 Eq. 5 (docstring gives oracle+uncertainty); #[ignore]d production-grid test",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_coupled_vs_split_z1e6",
+  "provenance": "cross-method",
+  "target": "coupled IMEX vs operator-split mu ratio in [0.9,1.1]; both conserve energy to 15%",
+  "source": "two integration schemes of same equations",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_nc_planck_stable_and_photon_number",
+  "provenance": "analytic",
+  "target": "NC no-injection: max|dn|<1e-6; with injection dN/N<1e-3",
+  "source": "null test + number-conservation by construction of NC mode",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_nc_energy_y_era_and_high_z_mu",
+  "provenance": "analytic",
+  "target": "NC energy conservation to 10%; y-era unchanged to 1%; NC error vs 1.401 not worse",
+  "source": "energy conservation + mu=1.401 drho analytic target",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_br_heating_integral_planck_zero",
+  "provenance": "analytic",
+  "target": "BR heating integral ~ 0 (<1e-10) for Planck at T_e=T_z",
+  "source": "detailed balance",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_heating_integral_planck_zero",
+  "provenance": "analytic",
+  "target": "DC heating integral ~ 0 (<1e-10) for Planck at T_e=T_z",
+  "source": "detailed balance",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_lambda_expansion_small_at_high_z",
+  "provenance": "dimensional",
+  "target": "Lambda < 1e-6 and > 0 at z=1e6",
+  "source": "strong Compton coupling estimate",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_relativistic_correction_magnitude",
+  "provenance": "analytic",
+  "target": "1+2.5 theta_e correction <0.2%, DC (1+14.16 theta)^-1 correction <1% at z=1e6",
+  "source": "relativistic correction formulas evaluated at theta_z(1e6)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_mu_decay_eigenvalue",
+  "provenance": "dimensional",
+  "target": "Kompaneets-only preserves mu (>0.85); DC/BR decays mu below that",
+  "source": "mu is Kompaneets equilibrium; DC/BR thermalization direction",
+  "flag": false,
+  "note": "0.85 preservation floor loose; diagnostic tau_th comparison is print-only"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_backward_euler_accuracy",
+  "provenance": "analytic",
+  "target": "1/(1+a) >= exp(-a) for all a>=0 (BE under-thermalizes)",
+  "source": "exact inequality",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_kompaneets_free_streaming",
+  "provenance": "analytic",
+  "target": "energy conserved to 1% (y IC); mu preserved to 15% (mu IC) without DC/BR",
+  "source": "conservation + Kompaneets equilibrium",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_spectral_shape_after_burst",
+  "provenance": "analytic",
+  "target": "corr(dn,M)>0.95; fit residual <5%; mu/drho in [0.8,1.5] at z_h=1e6",
+  "source": "mu-shape dominance; range from 1.401 x J_bb*(1e6) J_mu ~ 1.23",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_alpha_rho_from_integrals",
+  "provenance": "analytic",
+  "target": "ALPHA_RHO = 2 zeta(3)/(pi^4/15) ~ 0.3702 to 1e-14",
+  "source": "G2/G3 exact values",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_x_balanced_from_first_principles",
+  "provenance": "analytic",
+  "target": "X_BALANCED = 4G3/(3G2) ~ 3.602 to 1e-14",
+  "source": "exact constant",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_survival_regime_structure",
+  "provenance": "dimensional",
+  "target": "x_c_DC dominates at z=2e6, x_c_BR at z=1e4; x_c non-monotone",
+  "source": "opposite z-scalings of DC and BR absorption",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_gf_energy_only_limit",
+  "provenance": "dimensional",
+  "target": "P_s<0.01 for x_inj=1e-5; photon GF same sign as alpha_rho x G_th",
+  "source": "P_s->0 limit (approximate under Arsenadze T_mu)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_gf_balanced_injection_zero_mu",
+  "provenance": "analytic",
+  "target": "|mu(x0)| < 1% of mu(x=10); P_s(x0)>0.99",
+  "source": "exact cancellation at x0=4G3/(3G2)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_gf_sign_flip_negative_mu",
+  "provenance": "analytic",
+  "target": "mu(2)<0, mu(10)>0; ratio matches (1-P_s x0/x) formula to 1%",
+  "source": "Chluba 2015 photon-injection mu formula",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_gf_soft_photon_absorbed",
+  "provenance": "dimensional",
+  "target": "mu>0 for absorbed soft photons (P_s~0)",
+  "source": "absorbed photons act as pure energy injection",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_vs_gf_photon_injection_high_x",
+  "provenance": "literature",
+  "target": "PDE mu at x_inj=10 matches Chluba 2015 Eq. 30 (~3.25e-5) to 10%",
+  "source": "Chluba 2015 MNRAS 454, 4182 Eq. 30 (docstring gives oracle+uncertainty)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_vs_gf_photon_injection_low_x",
+  "provenance": "literature",
+  "target": "PDE mu at x_inj=2 negative, matches Chluba 2015 Eq. 30 (~-8.1e-6) to 15%",
+  "source": "Chluba 2015 Eq. 30 with P_s -> 1",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_vs_gf_photon_injection_balanced",
+  "provenance": "analytic",
+  "target": "|mu_PDE(x0)| < 5% of analytic mu_max(x=10)",
+  "source": "mu(x_balanced)=0 by construction of Chluba 2015 coefficient",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_vs_gf_photon_injection_y_era",
+  "provenance": "dimensional",
+  "target": "J_mu<0.05 at z=5e3; |y|>1e-10; GF mu(y-era) << mu(mu-era)",
+  "source": "regime structure",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_gf_mu_linearity",
+  "provenance": "analytic",
+  "target": "mu linear in dN/N to 1e-12",
+  "source": "linearity by construction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_annihilation_swave_low_x_spectral_shape",
+  "provenance": "cross-method",
+  "target": "PDE/GF spectral ratio at x=0.3-0.8 = 1 +/- 30%",
+  "source": "PDE solver vs GF convolution",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_energy_conservation_tight",
+  "provenance": "analytic",
+  "target": "drho = alpha_rho x_inj dN/N to 3% for 5 x_inj values",
+  "source": "exact energy bookkeeping of injected photons",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_superposition",
+  "provenance": "analytic",
+  "target": "mu and spectrum of A+B = A plus B to 3%",
+  "source": "PDE linearity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_energy_number_decomposition",
+  "provenance": "analytic",
+  "target": "PDE mu matches (3/kappa_c) alpha_rho (x - x0 P_s) dN J_bb* J_mu to 15%, signs match",
+  "source": "Chluba 2015 energy-number imbalance identity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_spectral_decomposition_residual",
+  "provenance": "dimensional",
+  "target": "3-component fit RMS residual < 12% of peak",
+  "source": "spectral completeness of mu+y+dT basis",
+  "flag": true,
+  "note": "docstring states residual 'should be < 5%' but assertion allows 12% - the 12% has no stated independent origin (looks widened to code output)"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_pde_vs_gf_tight_mu_era",
+  "provenance": "cross-method",
+  "target": "PDE vs GF mu to 10% at 3 x_inj values, signs match",
+  "source": "PDE solver vs GF photon-injection formula",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_mu_y_systematics",
+  "provenance": "analytic",
+  "target": "mu monotone in x_inj; zero crossing at x0 +/- 0.5",
+  "source": "Chluba 2015 sign-flip location x0=3.602",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_gf_algebraic_identities",
+  "provenance": "analytic",
+  "target": "P_s->0 sign identity; linearity to 1e-12; |mu(x0)| < 2% of mu(10)",
+  "source": "exact algebraic identities of photon GF",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_number_conservation_pure_kompaneets",
+  "provenance": "analytic",
+  "target": "dN/N conserved to 1% at z=2000 (DC/BR negligible)",
+  "source": "Kompaneets photon-number conservation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_scenario_vs_initial_condition",
+  "provenance": "cross-method",
+  "target": "scenario-source vs initial-condition mu agree to 30%, same sign",
+  "source": "two injection code paths of same solver",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_grid_convergence",
+  "provenance": "structural",
+  "target": "Richardson: |mu(2000)-mu(1000)| < 1.5x|mu(1000)-mu(500)|; 5% agreement",
+  "source": "self-convergence",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_spectral_shape_match_mu_era",
+  "provenance": "cross-method",
+  "target": "normalized PDE vs GF spectral shape RMS < 0.10",
+  "source": "PDE vs GF full spectral shape",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_depletion_signs_and_magnitude",
+  "provenance": "analytic",
+  "target": "drho<0; mu>0; mu = (3/kappa_c)(P/3) J_bb* J_mu to 15% for uniform depletion",
+  "source": "entropy-corrected mu formula; Chluba & Cyr 2024",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_extreme_frequencies",
+  "provenance": "dimensional",
+  "target": "mu(x=20)>0, mu(x=0.5)<0; |ratio| within factor ~3 of (x_h-x0)/(x0-x_l)",
+  "source": "sign and approximate linear-in-x scaling",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_injection_kompaneets_redistribution_y_era",
+  "provenance": "analytic",
+  "target": "J_mu<0.01 at z=3000; y measurable; drho = alpha_rho x dN to 5%",
+  "source": "energy conservation in y-era",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_mu_first_principles_ratio",
+  "provenance": "analytic",
+  "target": "PDE mu = 1.401 drho J_bb* J_mu to 12% at z=2e5",
+  "source": "3/kappa_c coefficient + Chluba 2013 visibility",
+  "flag": false,
+  "note": "12% tolerance labelled as documented PDE-vs-GF systematic"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_y_era_pure_y_parameter",
+  "provenance": "analytic",
+  "target": "y = drho/4 to 5%; |mu/y|<0.1 at z=5000",
+  "source": "exact y-parameter definition",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_energy_conservation_sweep_tight",
+  "provenance": "analytic",
+  "target": "measured drho matches injected to 2% at 7 redshifts",
+  "source": "energy conservation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_decay_total_energy_deposited",
+  "provenance": "cross-method",
+  "target": "drho>0; PDE y vs GF y to 16%",
+  "source": "PDE vs GF for fast-decay scenario",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_swave_vs_pwave_mu_y_ratio",
+  "provenance": "dimensional",
+  "target": "p-wave |mu/y| > s-wave; all mu,y positive",
+  "source": "extra (1+z) weighting of p-wave",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_dm_annihilation_pde_vs_gf",
+  "provenance": "cross-method",
+  "target": "PDE vs GF mu to 12% (mu-era-clipped injection window)",
+  "source": "PDE vs GF with matched integration bounds (docstring documents oracle)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_superposition_two_bursts",
+  "provenance": "analytic",
+  "target": "combined mu = sum of individual to 3% (y 30%)",
+  "source": "PDE linearity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_heating_cooling_cancellation",
+  "provenance": "analytic",
+  "target": "+/-drho bursts cancel: max|dn diff from no-injection run| < 1e-12",
+  "source": "exact algebraic cancellation of source; differenced against no-injection run",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_thermalization_suppression_net_decrease",
+  "provenance": "dimensional",
+  "target": "mu/drho decreases from z=2e5 to 5e5; >1.0 at z=2e5",
+  "source": "J_bb* monotone suppression",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_spectral_shape_mu_era",
+  "provenance": "analytic",
+  "target": "dn shape matches M(x) with rel RMS < 10% in x=[1,15]",
+  "source": "pure mu-shape in deep mu-era",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_spectral_shape_y_era",
+  "provenance": "analytic",
+  "target": "dn shape matches Y_SZ(x) with rel RMS < 10%",
+  "source": "pure y-shape in y-era",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_decay_lifetime_controls_mu_y",
+  "provenance": "dimensional",
+  "target": "early decay |mu/y| > late decay; signs positive",
+  "source": "decay epoch controls mu vs y weighting",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_dm_fann_linear_scaling",
+  "provenance": "analytic",
+  "target": "mu,y double with f_ann to 15%",
+  "source": "linearity (tolerance widened for adiabatic-cooling offset, explained in comment)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_spectral_decomposition_residual_sweep",
+  "provenance": "dimensional",
+  "target": "3-component reconstruction rel RMS < 20% at 3 redshifts",
+  "source": "decomposition completeness",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_pde_vs_gf_multi_z_sweep",
+  "provenance": "cross-method",
+  "target": "PDE vs 1.401 J_bb* J_mu GF mu to 20-40% (z-dependent); y to 5% at z=5000",
+  "source": "PDE B&F decomposition vs Chluba visibility convolution",
+  "flag": false,
+  "note": "mu tolerances calibrated to measured method disagreement ('measured ~35%'), documented as decomposition-definition mismatch"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_custom_matches_single_burst",
+  "provenance": "structural",
+  "target": "Custom closure replicating SingleBurst matches builtin to 1%",
+  "source": "injection infrastructure identity (same physics code)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_dm_annihilation_energy_conservation",
+  "provenance": "analytic",
+  "target": "PDE drho = time-integrated heating rate to 20%",
+  "source": "energy conservation (independent quadrature of heating rate)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_transition_region_mixed_distortion",
+  "provenance": "analytic",
+  "target": "mu,y>0; |mu/y| in (1e-4,100); energy to 2% at z=1e4",
+  "source": "energy conservation + mixed-mode positivity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_heat_pde_amplitude_linearity",
+  "provenance": "analytic",
+  "target": "mu,y ratios = 2.0 +/- 2%",
+  "source": "PDE linearity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_refinement_grid_properties",
+  "provenance": "structural",
+  "target": "refined grid monotone, no duplicates, n>2000",
+  "source": "grid construction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_strong_depletion_scaling",
+  "provenance": "dimensional",
+  "target": "mu(gc=1)/mu(gc=0.01) in (20, 105) - sublinear vs linear 100",
+  "source": "depletion saturation 1-exp(-gc/x)",
+  "flag": false,
+  "note": "105 upper bound chosen from observed ~1%-of-100 behavior (documented in comment)"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_compton_y_parameter_post_recombination",
+  "provenance": "dimensional",
+  "target": "y_C(500)<0.05, y_C(100)<0.01",
+  "source": "post-recombination X_e ~ 1e-4 suppression",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_gf_photon_injection_post_recombination_locked_in",
+  "provenance": "dimensional",
+  "target": "P_s(3,500)>0.5; smooth GF part <1e-3 far from x_inj; delta survives",
+  "source": "locked-in physics; comment documents x_c fit extrapolation artifact at z<1e4",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_photon_survival_post_recombination",
+  "provenance": "regression-pin",
+  "target": "x_c(500)<1 and P_s(3,500)>0.5",
+  "source": "code's x_c fitting-formula extrapolation behavior (physical x_c ~ 0 post-recombination)",
+  "flag": false,
+  "note": "explicitly documented as fitting-formula artifact accommodation; harmless because J_Compton ~ 0"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_photon_injection_post_recombination",
+  "provenance": "dimensional",
+  "target": "spectral peak stays within 3 sigma of x_inj; far-field <10% of peak",
+  "source": "locked-in distortion at z<1100 (Compton inefficient)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_photon_depletion_post_recombination",
+  "provenance": "dimensional",
+  "target": "depletion dip at x_inj, negative, concentrated",
+  "source": "locked-in depletion",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_tabulated_heating_matches_single_burst",
+  "provenance": "cross-method",
+  "target": "tabulated interpolation vs closed-form SingleBurst mu,y to 2%",
+  "source": "two injection code paths of same solver (interpolation consistency)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_tabulated_heating_zero_outside_bounds",
+  "provenance": "structural",
+  "target": "rate zero outside table, positive inside",
+  "source": "API contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_load_heating_table_roundtrip",
+  "provenance": "structural",
+  "target": "CSV load roundtrip, sorted, interpolates, zero outside",
+  "source": "I/O plumbing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_load_photon_source_table_roundtrip",
+  "provenance": "structural",
+  "target": "2D CSV load, interpolation inside, zero outside bounds",
+  "source": "I/O plumbing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_gaunt_ff_cross_validation",
+  "provenance": "analytic",
+  "target": "g_ff in 1-10 range; low-x > high-x; Z ordering; classical limit matches CRB20 softplus formula to 1%",
+  "source": "Chluba, Ravenni & Bolliet 2020 formula asymptotics (Karzas & Latter 1961 mentioned but not tabulated values)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_compton_y_parameter_convergence",
+  "provenance": "structural",
+  "target": "128-pt vs 1024-pt quadrature to 1%; y_C(1e5)>0.1, monotone",
+  "source": "self-convergence plus order-of-magnitude sanity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decaying_particle_photon_vacuum",
+  "provenance": "structural",
+  "target": "photon_source_rate nonzero at x_inj, heating_rate zero, 1 refinement zone",
+  "source": "scenario routing contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_tabulated_photon_source_interpolation",
+  "provenance": "structural",
+  "target": "bilinear interpolation positive inside, zero outside",
+  "source": "API contract",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_solver_config_validation",
+  "provenance": "structural",
+  "target": "invalid configs rejected",
+  "source": "validation plumbing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_output_format_parsing",
+  "provenance": "structural",
+  "target": "OutputFormat::from_str parsing",
+  "source": "plumbing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_bose_factor_taylor_vs_exact",
+  "provenance": "analytic",
+  "target": "Taylor error < 2 x drho^2 x(x+2)/2 + 1e-10; direction of Bose-factor shift",
+  "source": "second-order Taylor remainder derived from f''(1)=x(x+2)exp(x)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_recombination_physical_values",
+  "provenance": "literature",
+  "target": "X_e(3000) in (1,1.2); X_e(1100)~0.14; X_e(800)~3e-3; X_e(200)~3e-4; monotone",
+  "source": "RECFAST; Seager, Sasselov & Scott 1999; Peebles 1968",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_grid_convergence_rate",
+  "provenance": "structural",
+  "target": "Richardson ratio in (1.5,10) suggesting ~2nd order; 1000 vs 2000 pt mu to 10%",
+  "source": "self-convergence",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pb2009_bose_einstein_temperature",
+  "provenance": "literature",
+  "target": "BE decomposition recovers mu_0 to 10%; phi_BE = (1-1.11 mu_0)^{-1/4} slightly > 1",
+  "source": "Procopio & Burigana 2009 A&A 507, 1243",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pb2009_energy_conservation",
+  "provenance": "analytic",
+  "target": "energy conservation: 1.5% default grid, 0.5% production grid",
+  "source": "exact target drho_out=drho_in; docstring documents why P&B's 0.05% is not the applicable oracle",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pb2009_grid_coverage",
+  "provenance": "structural",
+  "target": "production grid covers x in [10^-4.3, 10^1.7]",
+  "source": "P&B 2009 grid range (configuration check, no physics assertion)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_kompaneets_preserves_bose_einstein",
+  "provenance": "analytic",
+  "target": "BE spectrum preserved under pure Kompaneets to 5%",
+  "source": "BE is stationary solution of Kompaneets equation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_newton_convergence_indirect",
+  "provenance": "dimensional",
+  "target": "mu,y>0; dn finite; rho_e in [0.5,1.01]",
+  "source": "sanity bounds as Newton-convergence proxy",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "golden_mu_era_spectral_shape",
+  "provenance": "literature",
+  "target": "PDE mu = (3/kappa_c) J_bb* J_mu drho (~1.36e-5) to 10%; y/mu<8%; energy to 2%; M(x) sign structure",
+  "source": "Chluba 2013 MNRAS 436, 2232 Eq. 5 (docstring gives oracle+uncertainty; production grid)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "golden_y_era_spectral_shape",
+  "provenance": "analytic",
+  "target": "y = drho/4 to 3%; mu/y<4%; energy to 1%; Y_SZ sign structure; step count bounds",
+  "source": "exact y-era relation",
+  "flag": false,
+  "note": "tolerances annotated with measured values (0.4%, 2.2%) but target analytic; step-count bounds are structural"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "golden_transition_era_spectral_shape",
+  "provenance": "analytic",
+  "target": "energy to 2%; mu,y>0; sum rule mu/1.401+4y within factor 2.5 of drho",
+  "source": "energy conservation + basis-independent sum rule (docstring explains why mu/y not compared to GF)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_solver_respects_cosmology_parameters",
+  "provenance": "dimensional",
+  "target": "different cosmologies give different mu (>0.1%), same positive sign",
+  "source": "parameter sensitivity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dcbr_affects_thermalization_depth",
+  "provenance": "dimensional",
+  "target": "mu without DC/BR > mu with DC/BR at z_h=5e5",
+  "source": "thermalization direction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_soft_photon_equivalence_multi_z",
+  "provenance": "analytic",
+  "target": "drho matches alpha_rho x_inj dN to 40% at 4 redshifts",
+  "source": "energy conservation through DC/BR pre-absorption path",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_intermediate_photon_injection_x01",
+  "provenance": "analytic",
+  "target": "drho matches injected to 5% at x_inj=0.1",
+  "source": "energy conservation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decaying_particle_photon_soft_pde",
+  "provenance": "literature",
+  "target": "mu/drho in [1.15, 1.42] (decay-weighted 1.401 x visibility)",
+  "source": "Chluba 2013 Eq. 5 decay-weighted; docstring gives oracle+uncertainty",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_decaying_particle_photon_hard_pde",
+  "provenance": "dimensional",
+  "target": "drho>0; mu/drho in (-0.1, 1.6) physical range",
+  "source": "physical bounds on mu/drho",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dcbr_thermalizes_mu_distortion",
+  "provenance": "dimensional",
+  "target": "mu decreases from z=2e5 to 5e3; mu/drho O(1) at z=2e5",
+  "source": "DC/BR thermalization direction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_post_recombination_locked_in_distortion",
+  "provenance": "dimensional",
+  "target": "photon drho < 10% of injected; mu,y < 1% of drho at z_h=800",
+  "source": "X_e ~ 1e-4 decoupling argument",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dcbr_dimensional_scaling_vs_z",
+  "provenance": "dimensional",
+  "target": "DC/BR ratio increases with z; <5 at z=1e4; positive finite",
+  "source": "first-principles dimensional scaling (K_BR ~ n_ion lambda_e^3, K_DC ~ theta_z^2); guards historical /n_e bug",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_full_te_rho_e_for_mu_distortion",
+  "provenance": "analytic",
+  "target": "compton_equilibrium_ratio matches independent I4/(4G3) quadrature to 1e-6; rho_e>1 for mu>0; =1 for Planck",
+  "source": "independent numerical integration of same definition",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dc_br_ratio_pinned_z1e6",
+  "provenance": "regression-pin",
+  "target": "DC/BR at z=1e6, x=1 in (8, 50)",
+  "source": "band around observed ~15-20 (BRpack Gaunt), with first-principles order-of-magnitude backing; explicitly a pinned regression guard for the /n_e bug",
+  "flag": false,
+  "note": "test name and comment label it as pinned; failure messages diagnose known bug modes"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_timestep_convergence_order",
+  "provenance": "structural",
+  "target": "mu spread < 5% across dy_max in [0.005,0.05]; step count increases",
+  "source": "temporal self-convergence",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_nc_stripping_integral_zero",
+  "provenance": "analytic",
+  "target": "dN/N < 1e-5 after NC run; mu preserved",
+  "source": "number conservation enforced by NC construction",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_negative_occupation_guard",
+  "provenance": "dimensional",
+  "target": "min(n_pl + dn) > -1e-3 under gc=10 depletion; finite",
+  "source": "physical n >= 0 constraint with numerical-undershoot allowance",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dcbr_absorption_coefficients_at_soft_x",
+  "provenance": "dimensional",
+  "target": "K_BR, K_DC > 0; absorption rate > 1e-4; DC/BR in (0.01,100) at z=2e5",
+  "source": "order-of-magnitude absorption efficiency at x=0.01",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pde_negative_injection_produces_negative_distortion",
+  "provenance": "dimensional",
+  "target": "mu<0, y<0, drho<0 for cooling burst",
+  "source": "sign of distortion under cooling",
+  "flag": false,
+  "note": "the 'energy conservation' assertion is algebraically tautological: dt_t is defined so that mu/1.401+4y+4dt_t == drho identically - it cannot fail"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_diag_warnings_collected",
+  "provenance": "structural",
+  "target": "warnings populated and cleared by reset()",
+  "source": "diagnostics plumbing",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_gf_energy_sum_rule",
+  "provenance": "literature",
+  "target": "J_mu J_bb* + J_y + (1-J_bb*) = 1 to 20%, max deviation in transition region",
+  "source": "Chluba 2013 Sect. 3: residual bounded ~16-17% near z~7-8e4",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_transition_region_pde_z3e4",
+  "provenance": "dimensional",
+  "target": "mu,y>0; mu/drho>1e-3, y/drho>0.1; energy to 5%",
+  "source": "mixed-mode positivity + energy conservation",
+  "flag": false,
+  "note": "mu/drho floor informed by measured B&F value ~0.03 (documented in comment)"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_transition_region_pde_z8e4",
+  "provenance": "dimensional",
+  "target": "mu,y>0; mu>y at z=8e4; energy to 5%",
+  "source": "mu-dominance in mu-side transition + energy conservation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_transition_region_pde_z5e4_gf_comparison",
+  "provenance": "cross-method",
+  "target": "PDE vs GF: mu within 100%, y within 300%, same signs",
+  "source": "PDE B&F vs GF visibility convolution; loose by documented decomposition-basis mismatch",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_pure_y_analytical_convergence",
+  "provenance": "analytic",
+  "target": "y = drho/4 to 1%; |mu/y|<5%; energy to 1% at z_h=5000",
+  "source": "exact y-era relation",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_extreme_small_injection",
+  "provenance": "analytic",
+  "target": "mu/drho identical to 10% between drho=1e-5 and 1e-7",
+  "source": "linearity",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_extreme_large_injection",
+  "provenance": "analytic",
+  "target": "mu_PDE/mu_linear(Chluba 2013) in [0.9,1.3] at drho=0.01; energy to 10%; Newton clean",
+  "source": "Chluba 2013 Eq. 5 linear prediction; nonlinear band bounded",
+  "flag": false,
+  "note": "upper 1.3 informed by 'empirically 9% observed' nonlinear correction (documented in docstring)"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_grid_transition_artifact",
+  "provenance": "structural",
+  "target": "mu converges <5% between 2000 and 4000 pts; energy <2% both",
+  "source": "self-convergence",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_br_absolute_value_z1e6_x1",
+  "provenance": "dimensional",
+  "target": "K_BR(z=1e6, x=1) in (1e-10, 1e-6), i.e. O(1e-8)",
+  "source": "order-of-magnitude from BR formula; Rybicki & Lightman 1979 Eq. 5.14b, Chluba & Sunyaev 2012 Eq. 14; guards /n_e bug (~1e-19 failure mode)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_recombination_quantitative_milestones",
+  "provenance": "literature",
+  "target": "X_e at z=1e4/1400/1100/800/200 within RECFAST bands",
+  "source": "Seager, Sasselov & Scott 2000, ApJ 523, 1",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_perturbative_te_small_mu_distortion",
+  "provenance": "analytic",
+  "target": "rho_eq > 1 both methods; perturbative delta-rho O(eps) in (1e-8,1e-4)",
+  "source": "perturbative dI4/(4G3) - dG3/G3 formula vs exact ratio",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_visibility_functions_literature_limits",
+  "provenance": "literature",
+  "target": "J_bb*, J_mu, J_y limits and z~5e4 crossover; visibility sum within 25% of 1",
+  "source": "Chluba 2013 MNRAS 436, 2232 Fig. 2 regime boundaries",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_adiabatic_cooling_no_injection",
+  "provenance": "literature",
+  "target": "mu_ac = -2.9e-9 to 25%; y < 0.3|mu|; drho = -3.1e-9 to 25%",
+  "source": "Chluba & Sunyaev 2012 MNRAS 419, 1294; Chluba 2016 Fig. 1 (docstring gives oracle+uncertainty)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_dm_baryon_scattering_pde_vs_gf",
+  "provenance": "cross-method",
+  "target": "PDE vs GF mu to 35%; |mu| in (5e-7, 2e-6) per AH21; mu<0; y subdominant",
+  "source": "PDE vs GF; amplitude anchor Ali-Haimoud 2021 arXiv:2101.04070 Fig. 1 (|mu|~1e-6)",
+  "flag": false,
+  "note": "35% tolerance calibrated to measured ~29% method disagreement, documented as decomposition-definition systematic"
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "test_full_te_perturbative_vs_brute_force",
+  "provenance": "analytic",
+  "target": "perturbative rho_e (1 + dI4/(4G3) - dG3/G3) agrees with brute-force I4/(4G3) to 10% for mu=1e-4; both > 1",
+  "source": "first-order perturbative expansion vs exact ratio (O(dn^2) terms explain the 10% tolerance, documented)",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "assert_rel",
+  "provenance": "structural",
+  "target": "helper: generic relative-error assertion",
+  "source": "test helper, not a test; inventory attributes its internal assert to this fn",
+  "flag": false
+ },
+ {
+  "file": "tests/heat_injection.rs",
+  "test": "find_resonance_z",
+  "provenance": "structural",
+  "target": "helper: asserts omega_pl bisection bracket contains resonance",
+  "source": "test helper (bracket precondition), not a test",
+  "flag": false
+ }
+]
