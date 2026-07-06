@@ -31,6 +31,33 @@ jobs:
       - name: Format check
         run: cargo fmt --check
 
+  miri-kernel:
+    # Machine-checks UB-freedom of the get_unchecked hot loops in kompaneets.rs
+    # (Thomas solver, K_old precompute, Newton inner loop) on tiny-N kernel
+    # tests. Miri is 100-1000x slower than native so ONLY the small-N
+    # `miri_kernel*` and `thomas_solve*` tests run here. See R4.2 in
+    # dev/audit/highprec_numerics.md.
+    name: Miri (unsafe kernel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - name: Miri on kernel tests
+        run: cargo +nightly miri test --lib miri_kernel
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+      - name: Miri on Thomas solver
+        run: cargo +nightly miri test --lib thomas_solve
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+      - name: Debug-assert kernel tests (exercises debug_assert! guards in CI)
+        # The full release-only rule exists because the *whole* suite is slow in
+        # debug; these tiny-N kernel tests are fast and are the only place the
+        # get_unchecked debug_assert! input validation runs in CI.
+        run: cargo test --lib miri_kernel thomas_solve
+
   rust-coverage:
     name: Rust coverage
     runs-on: ubuntu-latest

@@ -1,0 +1,17 @@
+{
+  "case": "A_adiabatic_lcdm",
+  "class_version": "v3.3.0 (0ceb7a9)",
+  "class_branching": "exact (external/distortions/Greens_data.dat)",
+  "cosmology": {"h":0.71,"omega_b":0.0221836,"omega_cdm":0.1088856,"T_cmb":2.726,"YHe":0.24,"N_ur":3.046},
+  "total_injected_drho": 2.8288e-08,
+  "methods": {
+    "class_exact":  {"mu": 1.93096e-08, "y": 3.45274e-09},
+    "spx_pde":      {"mu": 1.0493e-08,  "y": 4.6413e-09, "z_start": 4.9e6, "z_end": 200, "n_points": 2000, "steps": 102643},
+    "spx_gf_visibility": {"mu": 1.6041e-08, "y": 3.6406e-09}
+  },
+  "total_distortion_energy_mu_over_1401_plus_4y": {
+    "class_exact": 2.7594e-08, "spx_pde": 2.6055e-08, "spx_gf": 2.6012e-08
+  },
+  "finding": "total distortion energy agrees <6%; mu/y split differs — attributed to branching-approx spread (spx-GF vs CLASS 17% mu) + PDE-vs-GF transition redistribution. No bug. See class_sd_comparison.md.",
+  "note": "heating history identical by construction; comparison isolates thermalisation"
+}

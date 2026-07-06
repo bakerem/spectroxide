@@ -1426,6 +1426,118 @@ mod tests {
         );
     }
 
+    // ---- Miri kernel tests (R4.2) --------------------------------------
+    // Tiny-N (~48 point) exercises of every `get_unchecked` block in this
+    // module: the Thomas solver, the K_old precompute, and the Newton inner
+    // loop. Miri is 100-1000x slower than native so these deliberately use a
+    // small grid and few steps. Run with:
+    //   cargo +nightly miri test --lib miri_kernel
+    // The same tests also run under plain debug `cargo test miri_kernel` in CI
+    // so the `debug_assert!` input validation executes somewhere in CI (they
+    // are tiny, so this does not violate the release-only rule that exists for
+    // the *full* suite). See dev/audit/highprec_numerics.md R4.2.
+
+    /// Thomas solver over a ~40-wide SPD tridiagonal system (loop body, not
+    /// just the 2x2/3x3 corner cases) — exercises the forward/back-substitution
+    /// `get_unchecked` accesses across many interior indices under Miri.
+    #[test]
+    fn miri_kernel_thomas_wide() {
+        let n = 41;
+        let lower = vec![-1.0; n];
+        let diag = vec![2.5; n];
+        let upper = vec![-1.0; n];
+        let mut rhs = vec![1.0; n];
+        let mut work = vec![0.0; n];
+        thomas_solve_inplace(&lower, &diag, &upper, &mut rhs, &mut work);
+        // Diagonally dominant => bounded, finite, positive solution.
+        for &v in &rhs {
+            assert!(v.is_finite() && v > 0.0, "thomas solution {v}");
+        }
+    }
+
+    /// Coupled step with T_e ≠ T_z (driven y-distortion), no DC/BR, several
+    /// steps. Forces the Newton inner loop to actually iterate (non-equilibrium
+    /// residual), exercising the K_old precompute and Newton `get_unchecked`
+    /// paths rather than the zero-distortion early-out.
+    #[test]
+    fn miri_kernel_coupled_driven_no_dcbr() {
+        let grid = FrequencyGrid::log_uniform(1e-3, 30.0, 48);
+        let mut delta_n = vec![0.0; grid.n];
+        let theta_z = 1e-4;
+        let theta_e = 1.05e-4; // ρ_e = 1.05 → nonzero (φ−1) source
+        let mut ws = KompaneetsWorkspace::new(&grid);
+        for _ in 0..5 {
+            let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
+                &grid, &mut delta_n, theta_e, theta_z, 0.01, None, None, &mut ws, 0.0, 20,
+            );
+            assert!(conv, "Newton should converge on tiny driven grid");
+        }
+        let max_dn = delta_n.iter().copied().fold(0.0_f64, |a, b| a.max(b.abs()));
+        assert!(max_dn.is_finite() && max_dn > 0.0, "should build a distortion");
+    }
+
+    /// Coupled step with DC/BR active and a nonzero equilibrium offset, tiny N.
+    /// Exercises the DC/BR branch of the Newton assembly + inner loop.
+    #[test]
+    fn miri_kernel_coupled_with_dcbr() {
+        let grid = FrequencyGrid::log_uniform(1e-3, 30.0, 48);
+        let mut delta_n = vec![0.0; grid.n];
+        let theta = 1e-4;
+        let mut ws = KompaneetsWorkspace::new(&grid);
+        let emission_rates: Vec<f64> = grid
+            .x
+            .iter()
+            .map(|&x| crate::double_compton::dc_emission_coefficient(x, theta) / x.powi(3))
+            .collect();
+        // small nonzero n_eq offset so the DC/BR residual is not trivially 0
+        let n_eq: Vec<f64> = grid.x.iter().map(|&x| 1e-6 * (-x).exp()).collect();
+        let zeros = vec![0.0; grid.n];
+        let dcbr = DcbrCoupling {
+            emission_rates: &emission_rates,
+            n_eq_minus_n_pl: &n_eq,
+            dem_drho_eq: &zeros,
+            dneq_drho_eq: &zeros,
+            photon_source: None,
+            cn_dcbr: false,
+        };
+        for _ in 0..5 {
+            let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
+                &grid, &mut delta_n, theta, theta, 0.01, Some(&dcbr), None, &mut ws, 0.0, 20,
+            );
+            assert!(conv, "Newton should converge with DC/BR on tiny grid");
+        }
+        assert!(delta_n.iter().all(|v| v.is_finite()));
+    }
+
+    /// Coupled step with a photon source term, tiny N. Exercises the
+    /// `photon_source: Some(..)` residual path in the Newton inner loop.
+    #[test]
+    fn miri_kernel_coupled_with_source() {
+        let grid = FrequencyGrid::log_uniform(1e-3, 30.0, 48);
+        let mut delta_n = vec![0.0; grid.n];
+        let theta = 1e-4;
+        let mut ws = KompaneetsWorkspace::new(&grid);
+        let zeros = vec![0.0; grid.n];
+        // narrow source bump near the middle of the grid
+        let mid = grid.n / 2;
+        let mut source = vec![0.0; grid.n];
+        source[mid] = 1e-8;
+        let dcbr = DcbrCoupling {
+            emission_rates: &zeros,
+            n_eq_minus_n_pl: &zeros,
+            dem_drho_eq: &zeros,
+            dneq_drho_eq: &zeros,
+            photon_source: Some(&source),
+            cn_dcbr: false,
+        };
+        let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
+            &grid, &mut delta_n, theta, theta, 0.01, Some(&dcbr), None, &mut ws, 0.0, 20,
+        );
+        assert!(conv, "Newton should converge with photon source on tiny grid");
+        assert!(delta_n.iter().all(|v| v.is_finite()));
+        assert!(delta_n[mid] != 0.0, "source should inject at mid grid point");
+    }
+
     /// Verify that a small temperature perturbation produces a Y_SZ spectral shape.
     ///
     /// For T_e slightly > T_z, the Kompaneets equation produces Δn ∝ Y_SZ(x).

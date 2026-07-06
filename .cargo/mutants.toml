@@ -1,0 +1,27 @@
+# cargo-mutants configuration (Workstream R2, dev/PLAN_VALIDATION_ROUND2).
+# Committed so the mutation run is reproducible. cargo-mutants is a dev TOOL —
+# it touches nothing in Cargo.toml and adds no production dependency.
+
+# Fast-but-sensitive test subset run against each mutant first (R2.2). If a
+# mutant survives this set, escalate that file to the full heat_injection suite
+# by hand. These are the suites most likely to kill a physics mutation quickly.
+test_tool = "cargo"
+additional_cargo_test_args = [
+    "--release",
+    "--lib",
+    "--test", "greens_function_checks",
+    "--test", "mms_convergence",
+    "--test", "conservation_fuzz",
+    "--test", "coverage_gaps",
+    "--test", "convergence_order",
+]
+
+# Exclude I/O plumbing and doc/logging-only lines from the denominator so the
+# headline mutation score reflects physics code (R2.2, R2.4). main/cli/output
+# are I/O plumbing; the exclusion is stated in the memo so the score is honest.
+exclude_globs = [
+    "src/main.rs",
+    "src/cli.rs",
+    "src/output.rs",
+    "src/bin/**",
+]
