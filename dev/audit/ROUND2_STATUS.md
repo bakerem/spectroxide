@@ -67,8 +67,10 @@ until the runs actually complete.
 
 ## Decisions / inputs needed from EB
 
-1. **P0-6** (carried from Round 1): planck2015 T_CMB convention (2.726 vs
-   2.7255) — resolve before the R6 capsule freezes conventions.
+1. ~~**P0-6**: planck2015 T_CMB convention~~ **RESOLVED 2026-07-06 (EB: use
+   2.7255).** Rust `planck2015()` now → 2.7255 (paper/Fixsen-2009, matches
+   Python); added `planck2015_cosmotherm()` → 2.726 for CT comparisons (mirrors
+   Python `PLANCK2015_COSMO`). All 7 CosmoTherm tests pass unchanged.
 2. **R5 photon-injection digitization** (`digitization_request.md` D1/D2):
    try the Chluba-2015 arXiv tarball first; digitize the remainder. Dark-photon
    is already anchored via AxionLimits (no action).

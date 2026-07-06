@@ -178,8 +178,26 @@ impl Cosmology {
         }
     }
 
-    /// Planck 2015 cosmological parameters (matching CosmoTherm DI files).
+    /// Planck 2015 cosmological parameters (Planck XIII, Table 4).
+    ///
+    /// `T_CMB = 2.7255 K` is the paper / Fixsen (2009) monopole value. This is
+    /// the general-purpose Planck-2015 preset and matches the Python
+    /// `Cosmology.planck2015()` convention exactly (P0-6, resolved 2026-07-06).
+    ///
+    /// For CosmoTherm comparisons use [`Cosmology::planck2015_cosmotherm`]
+    /// instead: CosmoTherm's DI files bake in the Fixsen (1996) value
+    /// `T_CMB = 2.726 K`, so the CT-comparison tests route through that preset.
     pub fn planck2015() -> Self {
+        Self::new_unchecked(2.7255, 0.02225, 0.1198, 0.6727, 3.046, 0.2467)
+    }
+
+    /// Planck-2015 parameters with the **CosmoTherm** `T_CMB = 2.726 K`
+    /// convention (Fixsen 1996, baked into CosmoTherm v1.0.3 DI files).
+    ///
+    /// Identical to [`Cosmology::planck2015`] except for `T_CMB`. Use this for
+    /// CosmoTherm cross-validation so the comparison is at the DI files' own
+    /// monopole. Mirrors Python's `PLANCK2015_COSMO`. (P0-6.)
+    pub fn planck2015_cosmotherm() -> Self {
         Self::new_unchecked(2.726, 0.02225, 0.1198, 0.6727, 3.046, 0.2467)
     }
 
@@ -413,9 +431,12 @@ impl Default for Cosmology {
     /// Default parameters matching Chluba (2013) Green's function paper.
     ///
     /// These are intentionally **not** the latest Planck values. The defaults
-    /// match CosmoTherm v1.0.3 (Y_p=0.24, T₀=2.726 K, Ω_m=0.26, Ω_b=0.044,
-    /// h=0.71, N_eff=3.046) so that PDE output can be validated against
-    /// published CosmoTherm results without cosmology mismatch.
+    /// match Chluba (2013) / CosmoTherm v1.0.3 (Y_p=0.24, T₀=2.726 K,
+    /// Ω_m=0.26, Ω_b=0.044, h=0.71) so that PDE output can be validated
+    /// against published CosmoTherm results without cosmology mismatch.
+    /// N_eff=3.046 follows the Chluba 2013 paper; CosmoTherm's Greens.cpp
+    /// hard-codes 3.04 (a ~2×10⁻⁴ difference in Ω_rel, negligible for
+    /// distortions; Python's COSMOTHERM_GF_COSMO carries 3.04 explicitly).
     ///
     /// For Planck-era parameters use [`Cosmology::planck2015`] or
     /// [`Cosmology::planck2018`].

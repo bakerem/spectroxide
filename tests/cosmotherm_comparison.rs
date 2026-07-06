@@ -123,7 +123,7 @@ fn test_cosmotherm_cooling_sign_convention() {
 /// dissipation), but validates the PDE-to-intensity conversion pipeline.
 #[test]
 fn test_pde_intensity_conversion_sanity() {
-    let cosmo = Cosmology::planck2015();
+    let cosmo = Cosmology::planck2015_cosmotherm();
     let mut solver = ThermalizationSolver::builder(cosmo.clone())
         .grid(GridConfig {
             n_points: 2000,
@@ -265,7 +265,7 @@ fn test_cosmotherm_cooling_pde_comparison() {
     // The cooling injects Δρ/ρ ~ -4e-9 spread over z ~ 5e4 to 2e6.
     // We use a positive burst at z=2e5 (μ-era) to compare spectral shapes.
     let drho_pde = 1e-5; // Much larger for numerical accuracy
-    let cosmo = Cosmology::planck2015();
+    let cosmo = Cosmology::planck2015_cosmotherm();
     let mut solver = ThermalizationSolver::builder(cosmo)
         .grid(GridConfig {
             n_points: 2000,
@@ -411,7 +411,7 @@ fn test_cosmotherm_damping_mu_y_comparison() {
     // f_x = 1e3 eV, gamma_x = 1e-13 s⁻¹ (lifetime ~ 10¹³ s ~ age at z ~ 10⁵)
     // gives μ ~ O(10⁻⁷ to 10⁻⁶), which is larger than ΛCDM damping but allows
     // a meaningful order-of-magnitude comparison.
-    let cosmo = Cosmology::planck2015();
+    let cosmo = Cosmology::planck2015_cosmotherm();
     let mut solver = ThermalizationSolver::builder(cosmo)
         .grid(GridConfig {
             n_points: 2000,
@@ -476,7 +476,7 @@ fn test_cosmotherm_damping_mu_y_comparison() {
 /// This validates the end-to-end pipeline: PDE -> Δn -> ΔI conversion.
 #[test]
 fn test_cosmotherm_single_burst_spectral_shape() {
-    let cosmo = Cosmology::planck2015();
+    let cosmo = Cosmology::planck2015_cosmotherm();
     let mut solver = ThermalizationSolver::builder(cosmo)
         .grid(GridConfig {
             n_points: 2000,
@@ -640,7 +640,7 @@ fn test_adiabatic_cooling_mu_vs_cosmotherm() {
     );
 
     // --- PDE solver with matching cosmology ---
-    let cosmo = Cosmology::planck2015();
+    let cosmo = Cosmology::planck2015_cosmotherm();
     let mut solver = ThermalizationSolver::new(cosmo, GridConfig::default());
     solver.set_config(SolverConfig {
         z_start: 3.0e6,
