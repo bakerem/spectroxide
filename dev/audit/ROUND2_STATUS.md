@@ -13,7 +13,7 @@ Session 2026-07-06 progress:
 | R4.1 | mpmath oracles | ✅ done | `highprec_numerics.md`, `dev/scripts/highprec_oracle.py`, `dev/output/highprec/oracle.json` |
 | R4.2 | Miri on unsafe kernel | ✅ **GREEN** | 7 kernel tests, `miri-kernel` CI job; 0 UB detected |
 | R1 | CLASS `sd` comparison | 🟡 Case A done, B–D scaffolded | `class_sd_comparison.md`, `dev/scripts/class_sd_compare.py` |
-| R2 | Mutation testing | 🚧 tooling install pending | `.cargo/mutants.toml`, `dev/scripts/run_mutation_shards.sh` |
+| R2 | Mutation testing | 🚧 installed+verified; runs BLOCKED (see below) | `.cargo/mutants.toml`, `dev/scripts/run_mutation_shards.sh` |
 | R3 | Clean-room refsolver | 🚧 WIP (subagent hit session limit) | `dev/refsolver/` + `STATUS.md` |
 | R5 | Literature curves | 🟡 request + skipping test done | `digitization_request.md`, `test_literature_curves.py` |
 | R6 | Repro capsule | ⬜ not started | — |
@@ -35,6 +35,36 @@ Session 2026-07-06 progress:
 **Zero confirmed production physics bugs this session** (consistent with
 Round 1).
 
+## R2 mutation testing — installed & verified, runs blocked
+
+`cargo-mutants v27.1.0` (commit a29be7b4) installed and working. Verified it
+parses the project and generates mutants (list-only, no test runs):
+`src/electron_temp.rs` → 6, `src/dark_photon.rs` → 112, `src/bremsstrahlung.rs`
+→ 288.
+
+**BLOCKER (needs EB / a fix before real runs):** the repo's `.gitmodules` is a
+**`/dev/null` character device** (`crw-rw-rw- 1 nobody nogroup 1,3`, a
+submodule-disabling trick), not a regular file. cargo-mutants' default (safe)
+mode copies the whole source tree to a scratch dir and **fails to copy the
+`.gitmodules` device** ("Permission denied"). Workarounds and why each is
+unsatisfactory *right now*:
+- `--in-place` skips the copy and works, BUT it mutates the live working tree;
+  combined with the 2-min Bash-tool timeout it left orphaned cargo-mutants
+  processes mutating `electron_temp.rs` mid-run (cleaned up: file restored, no
+  orphans left). Unsafe for unattended runs in this harness.
+- Removing/replacing the `.gitmodules` device is possible but it is a
+  deliberately-placed device node I did not create — **not touched** (surface to
+  EB rather than modify).
+
+**To run R2 (next session / EB):** either (a) have EB confirm it is safe to
+replace `.gitmodules` with an empty regular file for the duration of the run
+(then copy-mode works and `run_mutation_shards.sh tier1` can go detached), or
+(b) run `--in-place` in a dedicated uninterrupted window with the tree committed
+first and `git checkout` after. Then triage survivors per R2.3 into
+test-gap / equivalent / unreachable, and run `mutmut` on the 4 Python
+limit-pipeline modules. Nothing here should be reported as a mutation *score*
+until the runs actually complete.
+
 ## Decisions / inputs needed from EB
 
 1. **P0-6** (carried from Round 1): planck2015 T_CMB convention (2.726 vs
@@ -42,6 +72,9 @@ Round 1).
 2. **R5 photon-injection digitization** (`digitization_request.md` D1/D2):
    try the Chluba-2015 arXiv tarball first; digitize the remainder. Dark-photon
    is already anchored via AxionLimits (no action).
+4. **R2 `.gitmodules` device** (see R2 section): OK to replace with an empty
+   regular file during mutation runs? It currently blocks cargo-mutants
+   copy-mode.
 3. **R4-1 threshold** and **R1-A paper-text scope**: accept the recommendations
    above? R4-1 needs a coupled-path test rerun if the threshold is changed.
 
