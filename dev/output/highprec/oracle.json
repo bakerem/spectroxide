@@ -1,0 +1,157 @@
+{
+  "part1_constants": {
+    "dps": 50,
+    "rows": [
+      {
+        "name": "ZETA_3",
+        "rust": "1.2020569031595942",
+        "oracle": "1.2020569031595942854",
+        "rel_err": "4.056e-17",
+        "digits_agree": 16.4
+      },
+      {
+        "name": "G1_PLANCK",
+        "rust": "1.6449340668482264",
+        "oracle": "1.6449340668482264365",
+        "rel_err": "1.849e-17",
+        "digits_agree": 16.7
+      },
+      {
+        "name": "G2_PLANCK",
+        "rust": "2.4041138063191885",
+        "oracle": "2.4041138063191885708",
+        "rel_err": "4.056e-17",
+        "digits_agree": 16.4
+      },
+      {
+        "name": "G3_PLANCK",
+        "rust": "6.493939402266829",
+        "oracle": "6.4939394022668291491",
+        "rel_err": "4.387e-17",
+        "digits_agree": 16.4
+      },
+      {
+        "name": "I4_PLANCK",
+        "rust": "25.975757609067315",
+        "oracle": "25.975757609067316596",
+        "rel_err": "4.387e-17",
+        "digits_agree": 16.4
+      },
+      {
+        "name": "BETA_MU",
+        "rust": "2.1922889082043158",
+        "oracle": "2.1922889082043154962",
+        "rel_err": "1.236e-16",
+        "digits_agree": 15.9
+      },
+      {
+        "name": "ALPHA_RHO",
+        "rust": "0.37020884510871604",
+        "oracle": "0.37020884510871603906",
+        "rel_err": "1.546e-17",
+        "digits_agree": 16.8
+      },
+      {
+        "name": "KAPPA_C",
+        "rust": "2.1418515045023785",
+        "oracle": "2.1418515045023791514",
+        "rel_err": "3.091e-16",
+        "digits_agree": 15.5
+      },
+      {
+        "name": "X_BALANCED",
+        "rust": "3.6015707105587516",
+        "oracle": "3.6015707105587518615",
+        "rel_err": "8.552e-17",
+        "digits_agree": 16.1
+      }
+    ]
+  },
+  "part1_stability_dps+20": [
+    [
+      "ZETA_3",
+      "0.0"
+    ],
+    [
+      "G1_PLANCK",
+      "0.0"
+    ],
+    [
+      "G2_PLANCK",
+      "0.0"
+    ],
+    [
+      "G3_PLANCK",
+      "0.0"
+    ],
+    [
+      "I4_PLANCK",
+      "0.0"
+    ],
+    [
+      "BETA_MU",
+      "0.0"
+    ],
+    [
+      "ALPHA_RHO",
+      "0.0"
+    ],
+    [
+      "KAPPA_C",
+      "0.0"
+    ],
+    [
+      "X_BALANCED",
+      "0.0"
+    ]
+  ],
+  "part2_dcbr_cancellation": {
+    "dps": 50,
+    "n_points": 1100,
+    "taylor_where_used": {
+      "raw": 0.07157890406645522,
+      "x_le_5": 0.00902209143453752,
+      "x_le_10": 0.014587418523723326,
+      "emit_weighted_abs": 0.21643731028113442
+    },
+    "full_where_used": {
+      "raw": 2.7584630135433486e-14,
+      "x_le_5": 2.7584630135433486e-14,
+      "x_le_10": 2.7584630135433486e-14,
+      "emit_weighted_abs": 1.4598192604808129e-12
+    },
+    "full_inside": {
+      "raw": 3.1635801823670216e-08,
+      "x_le_5": 3.1635801823670216e-08,
+      "x_le_10": 3.1635801823670216e-08,
+      "emit_weighted_abs": 2.2720687335225122e-12
+    },
+    "as_used_maxrel": 0.07157890406645522,
+    "as_used_maxrel_x_le_5": 0.009022091434537522,
+    "as_used_maxrel_x_le_10": 0.014587418523723326,
+    "as_used_worst": {
+      "rel": 0.07157890406645522,
+      "x": 30.0,
+      "rho_minus_1": -0.004641588833612779
+    }
+  },
+  "part3_perturbative_rho_eq": {
+    "dps": 50,
+    "grid": "log [1e-4,30], N=2000, midpoint",
+    "planck_full_noise_floor": 4.6761508941006724e-05,
+    "planck_pert": 0.0,
+    "y_eps": 1e-05,
+    "y_true_continuum": 1.3951329355018167e-05,
+    "y_pert_f64": 1.3953914948018445e-05,
+    "y_full_f64": 6.071360721904284e-05,
+    "y_pert_err_vs_true": 2.585593000278171e-09,
+    "y_full_err_vs_true": 4.6762277864024674e-05
+  },
+  "part4_kompaneets_flux": {
+    "grid": "log [1e-4,30], N=2000",
+    "max_split_flux_planck": 0.0,
+    "max_naive_flux_planck": 0.00019589085225322703,
+    "rho_minus_1_signal": 1e-05,
+    "max_ratio_naive_over_signal": 148.3872277736321
+  }
+}
