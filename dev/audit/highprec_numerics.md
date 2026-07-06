@@ -167,17 +167,31 @@ machine-checks that no undefined behaviour occurs on the exercised paths.
 
 - Toolchain: `nightly-x86_64-unknown-linux-gnu`, `miri` component added
   (`rustup +nightly component add miri`).
-- Kernel test set: `<TBD — small-N tests>` exercising every unsafe block with
-  N≈32–64 grid points and ~5 steps (pure Compton step, coupled DC/BR Newton
-  step, min-N and refinement-zone grids). `Instant::now`/file-I/O avoided or run
-  with `MIRIFLAGS="-Zmiri-disable-isolation"`.
-- CI: `miri-kernel` job (nightly) runs the selected tests; a plain `cargo test`
-  (debug) run of the same small-N tests is added so the `debug_assert!` input
-  validation executes in CI without violating the release-only rule (that rule
-  exists because the *full* suite is slow in debug — these are tiny).
+- Kernel test set (`src/kompaneets.rs`, `#[cfg(test)]`): four `miri_kernel_*`
+  tests + three `test_thomas_solve_inplace_*` tests, all tiny-N (≤48 grid
+  points, ≤5 steps), exercising every `get_unchecked` block:
+  - `miri_kernel_thomas_wide` / `test_thomas_solve_inplace_{2x2,3x3,identity}` —
+    Thomas solver forward/back-substitution.
+  - `miri_kernel_coupled_driven_no_dcbr` — K_old precompute + Newton inner loop
+    with a driven (T_e≠T_z) distortion (forces real iteration).
+  - `miri_kernel_coupled_with_dcbr` — DC/BR branch of the Newton assembly.
+  - `miri_kernel_coupled_with_source` — photon-source residual path.
+  Run with `MIRIFLAGS="-Zmiri-disable-isolation"` (avoids `Instant::now`/I-O
+  isolation faults).
+- CI: `miri-kernel` job (nightly, `.github/workflows/ci.yml`) runs
+  `cargo +nightly miri test --lib miri_kernel` and `... thomas_solve`, plus a
+  plain debug `cargo test --lib miri_kernel thomas_solve` so the
+  `debug_assert!` input validation executes in CI without violating the
+  release-only rule (that rule exists because the *full* suite is slow in
+  debug — these are tiny).
 
-**Status:** miri component installed; kernel-test selection + CI job **in
-progress** (see task R4).
+**Status: GREEN.** Ran locally 2026-07-06:
+`cargo +nightly miri test --lib miri_kernel` → **4 passed, 0 failed** (11.2 s
+under Miri after sysroot prep); `... thomas_solve` → **3 passed, 0 failed**
+(1.6 s). **Miri detected no undefined behaviour** on any exercised unsafe-kernel
+path — the `assert!` entry guards do imply the `get_unchecked` access bounds.
+(Note: Miri and cargo builds must be run one-at-a-time in this 7 GB environment;
+concurrent heavy builds OOM.)
 
 ---
 
