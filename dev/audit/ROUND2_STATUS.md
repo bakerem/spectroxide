@@ -42,28 +42,40 @@ parses the project and generates mutants (list-only, no test runs):
 `src/electron_temp.rs` → 6, `src/dark_photon.rs` → 112, `src/bremsstrahlung.rs`
 → 288.
 
-**BLOCKER (needs EB / a fix before real runs):** the repo's `.gitmodules` is a
-**`/dev/null` character device** (`crw-rw-rw- 1 nobody nogroup 1,3`, a
-submodule-disabling trick), not a regular file. cargo-mutants' default (safe)
-mode copies the whole source tree to a scratch dir and **fails to copy the
-`.gitmodules` device** ("Permission denied"). Workarounds and why each is
-unsatisfactory *right now*:
-- `--in-place` skips the copy and works, BUT it mutates the live working tree;
-  combined with the 2-min Bash-tool timeout it left orphaned cargo-mutants
-  processes mutating `electron_temp.rs` mid-run (cleaned up: file restored, no
-  orphans left). Unsafe for unattended runs in this harness.
-- Removing/replacing the `.gitmodules` device is possible but it is a
-  deliberately-placed device node I did not create — **not touched** (surface to
-  EB rather than modify).
+**BLOCKER — copy-mode (environment-level, needs root/EB):** `.gitmodules` in
+this checkout is **not a regular file but a root-owned, read-only `devtmpfs`
+bind-mount of `/dev/null`** (`crw-rw-rw- 1 nobody nogroup 1,3`;
+`/proc/mounts`: `none on …/.gitmodules type devtmpfs (ro,…)`). EB OK'd
+replacing it, but it **cannot be removed/replaced without superuser**
+(`rm` → "Device or resource busy"; `umount` → "must be superuser"). Adding it
+to `.git/info/exclude` does **not** make cargo-mutants skip it — its safe
+copy-mode still tries to copy the device and dies with "Permission denied".
+→ **The real fix is to remove the bind-mount at the environment/container
+level (EB/root), or run mutation testing in an environment without it.**
 
-**To run R2 (next session / EB):** either (a) have EB confirm it is safe to
-replace `.gitmodules` with an empty regular file for the duration of the run
-(then copy-mode works and `run_mutation_shards.sh tier1` can go detached), or
-(b) run `--in-place` in a dedicated uninterrupted window with the tree committed
-first and `git checkout` after. Then triage survivors per R2.3 into
-test-gap / equivalent / unreachable, and run `mutmut` on the 4 Python
-limit-pipeline modules. Nothing here should be reported as a mutation *score*
-until the runs actually complete.
+**`--in-place` works (POC done on the `mutation-testing` branch).** In-place
+skips the tree copy. Verified end-to-end on `electron_temp.rs`:
+
+```
+ok       Unmutated baseline in 20s build + 16s test
+TIMEOUT  theta_e_with -> f64 with 0.0    (caught: mutation breaks solver
+TIMEOUT  theta_e_with -> f64 with 1.0     convergence -> Newton hang -> killed
+TIMEOUT  theta_e_with -> f64 with -1.0    by the per-mutant timeout, which
+TIMEOUT  replace * with + in theta_e_with  counts as CAUGHT, per R2.2)
+```
+
+Baseline passes; the four `theta_e_with` mutants tested so far are all caught
+(via timeout — they make the solver non-converge). The run was stopped by the
+harness wall-clock after 4/6 mutants; `electron_temp.rs` was `git checkout`-restored.
+
+**To complete R2 (next session):** on the `mutation-testing` branch (isolates
+in-place tree mutation from `main`), run each module with `--in-place -t <~3x
+baseline>` in an uninterrupted window (or detached, alone — no concurrent builds
+or it OOMs), `git checkout` the mutated file after. `run_mutation_shards.sh`
+uses copy-mode `-f`; add `--in-place` there once confirmed, OR remove the
+`.gitmodules` mount so copy-mode (safer, parallel) works. Then triage survivors
+per R2.3 (test-gap / equivalent / unreachable) and run `mutmut` on the 4 Python
+limit-pipeline modules. **No mutation *score* until the runs complete.**
 
 ## Decisions / inputs needed from EB
 
@@ -74,11 +86,15 @@ until the runs actually complete.
 2. **R5 photon-injection digitization** (`digitization_request.md` D1/D2):
    try the Chluba-2015 arXiv tarball first; digitize the remainder. Dark-photon
    is already anchored via AxionLimits (no action).
-4. **R2 `.gitmodules` device** (see R2 section): OK to replace with an empty
-   regular file during mutation runs? It currently blocks cargo-mutants
-   copy-mode.
-3. **R4-1 threshold** and **R1-A paper-text scope**: accept the recommendations
-   above? R4-1 needs a coupled-path test rerun if the threshold is changed.
+3. **R2 `.gitmodules` bind-mount** (see R2 section): EB approved replacing it,
+   but it is a **root-owned read-only bind-mount** — needs a *root/container*
+   action to remove (I cannot). Until then R2 runs use `--in-place` on the
+   `mutation-testing` branch. Removing the mount would let the safer parallel
+   copy-mode work.
+4. **R4-1 threshold** and **R1-A paper-text scope**: EB said *don't touch the
+   paper now* — both are recorded as recommendations for later, no code/paper
+   change made. R4-1 would need a coupled-path test rerun if the threshold is
+   ever changed.
 
 ## Environment note (for the next session)
 
