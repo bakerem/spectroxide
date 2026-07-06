@@ -156,6 +156,49 @@ def run_case_A():
     return summary
 
 
+# --- Case B: decaying particle (unit mapping DERIVED, R1.4) ---------------
+# CLASS  (external/heating/injection.c:748):
+#   energy_rate = rho_cdm(z) * DM_decay_fraction * DM_decay_Gamma * exp(-Gamma t)
+# spectroxide (energy_injection.rs DecayingParticle):
+#   dE/dt = f_x[J] * gamma_x * n_H(z) * exp(-gamma_x t)
+# Both ~ (1+z)^3 exp(-Gamma t) with the SAME Gamma, so gamma_x = DM_decay_Gamma
+# directly, and the amplitude match (rho_cdm(z)=Om_cdm rho_crit (1+z)^3,
+# n_H(z)=(1-Yp) Om_b rho_crit (1+z)^3 / m_p) gives (rho_crit cancels):
+#   DM_decay_fraction = f_x[eV] * eV_J * (1-Yp) * Om_b / (m_p * Om_cdm)
+# VERIFY by matching the two heating histories d(Delta rho/rho)/dz to <0.1%
+# BEFORE comparing mu/y (directive R1.4). Only then is the mu/y comparison
+# meaningful.
+_EV_J = 1.602_176_634e-19
+_M_P = 1.672_621_923_69e-27  # kg
+
+
+def decay_fraction_for_spx(f_x_ev, y_p=0.24, omega_b=0.044, omega_cdm=None):
+    if omega_cdm is None:
+        # Om_cdm = omega_cdm / h^2 with the matched cosmology
+        omega_cdm = COSMO_CLASS["omega_cdm"] / COSMO_CLASS["h"] ** 2
+    return f_x_ev * _EV_J * (1.0 - y_p) * omega_b / (_M_P * omega_cdm)
+
+
+def run_case_decay(gamma_x=1.1e-10, f_x_ev=7.8e5):
+    """Case B — decaying particle. Paper Fig-4 values: gamma_x=1.1e-10/s,
+    f_x=7.8e5 eV. TODO(run): needs CLASS + PDE builds (serialise vs other heavy
+    builds on this 7GB box, see ROUND2_STATUS.md). Steps:
+      1. f_dec = decay_fraction_for_spx(f_x_ev); write CLASS ini with
+         DM_decay_Gamma=gamma_x, DM_decay_fraction=f_dec, sd_only_exotic=yes.
+      2. Run CLASS -> mu,y + _sd_heating.dat.
+      3. Run spectroxide `solve decaying-particle --gamma-x --f-x`, and ALSO
+         export its heating history; assert the two d(Delta rho/rho)/dz overlap
+         to <0.1% (the mapping gate). Only then compare mu,y.
+    Deep-mu-era decay (z_X ~ 1e6) is the UNAMBIGUOUS check: mu=1.401 drho, y~0.
+    """
+    f_dec = decay_fraction_for_spx(f_x_ev)
+    print(f"Case B mapping: gamma_x={gamma_x:.3e}/s, f_x={f_x_ev:.3e} eV "
+          f"-> CLASS DM_decay_fraction={f_dec:.4e}, DM_decay_Gamma={gamma_x:.3e}")
+    print("  (heating-history match gate not yet run — see run_case_decay TODO)")
+    return {"gamma_x": gamma_x, "f_x_ev": f_x_ev, "class_DM_decay_fraction": f_dec,
+            "class_DM_decay_Gamma": gamma_x, "status": "mapping_derived_run_pending"}
+
+
 def _dig(res, key):
     """Pull mu/y out of the spectroxide JSON (schema-tolerant)."""
     if key in res:
@@ -182,7 +225,9 @@ def _dig(res, key):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--case", default="A", choices=["A"])
+    ap.add_argument("--case", default="A", choices=["A", "B"])
     args = ap.parse_args()
     if args.case == "A":
         run_case_A()
+    elif args.case == "B":
+        run_case_decay()
