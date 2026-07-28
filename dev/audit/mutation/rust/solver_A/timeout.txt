@@ -1,0 +1,4 @@
+src/solver.rs:880:9: replace ThermalizationSolver::update_temperatures -> (f64, f64, f64, f64, f64, f64) with (-1.0, 1.0, -1.0, 0.0, -1.0, 0.0)
+src/solver.rs:880:9: replace ThermalizationSolver::update_temperatures -> (f64, f64, f64, f64, f64, f64) with (-1.0, 1.0, -1.0, 1.0, 1.0, 1.0)
+src/solver.rs:880:9: replace ThermalizationSolver::update_temperatures -> (f64, f64, f64, f64, f64, f64) with (-1.0, 1.0, -1.0, 1.0, 1.0, -1.0)
+src/solver.rs:880:9: replace ThermalizationSolver::update_temperatures -> (f64, f64, f64, f64, f64, f64) with (-1.0, -1.0, 0.0, 1.0, 1.0, 1.0)

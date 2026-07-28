@@ -1,0 +1,55 @@
+src/energy_injection.rs:25:5: replace vacuum_survival -> f64 with 0.0
+src/energy_injection.rs:25:5: replace vacuum_survival -> f64 with 1.0
+src/energy_injection.rs:25:5: replace vacuum_survival -> f64 with -1.0
+src/energy_injection.rs:25:15: replace * with + in vacuum_survival
+src/energy_injection.rs:25:15: replace * with / in vacuum_survival
+src/energy_injection.rs:25:6: delete - in vacuum_survival
+src/energy_injection.rs:227:15: replace - with + in interp_log_z
+src/energy_injection.rs:227:15: replace - with / in interp_log_z
+src/energy_injection.rs:253:18: replace == with != in interp_2d
+src/energy_injection.rs:256:43: replace - with / in interp_2d
+src/energy_injection.rs:366:21: delete ! in load_photon_source_table
+src/energy_injection.rs:366:45: delete ! in load_photon_source_table
+src/energy_injection.rs:373:27: replace < with > in load_photon_source_table
+src/energy_injection.rs:391:24: replace < with == in load_photon_source_table
+src/energy_injection.rs:391:24: replace < with <= in load_photon_source_table
+src/energy_injection.rs:391:28: replace + with - in load_photon_source_table
+src/energy_injection.rs:407:30: replace + with - in load_photon_source_table
+src/energy_injection.rs:452:9: replace InjectionScenario::validate -> Result<(), String> with Ok(())
+src/energy_injection.rs:458:37: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:461:41: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:482:37: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:482:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:482:45: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:485:41: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:485:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:485:53: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:494:39: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:494:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:494:49: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:506:39: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:506:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:506:49: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:509:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:514:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:514:45: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:517:41: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:517:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:517:53: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:522:29: replace > with < in InjectionScenario::validate
+src/energy_injection.rs:522:35: replace * with / in InjectionScenario::validate
+src/energy_injection.rs:529:41: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:529:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:529:53: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:541:29: replace > with < in InjectionScenario::validate
+src/energy_injection.rs:541:35: replace * with / in InjectionScenario::validate
+src/energy_injection.rs:557:41: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:557:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:557:53: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:562:39: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:562:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:562:49: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:565:41: replace || with && in InjectionScenario::validate
+src/energy_injection.rs:565:20: delete ! in InjectionScenario::validate
+src/energy_injection.rs:565:53: replace <= with > in InjectionScenario::validate
+src/energy_injection.rs:608:34: replace != with == in InjectionScenario::validate

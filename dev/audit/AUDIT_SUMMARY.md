@@ -322,6 +322,146 @@ CLASS/HyRec grid comparison possible in this environment (defers to B4
 X_e-swap); literature-anchor test tolerances are 2–5× wide (tighten once an
 external X_e table is available).
 
+## Phase 2 (2026-07-03): B3 adversarial numerics — MMS, fuzzing, error budget
+
+Gate: error budget quantified. Artifacts:
+
+- **`tests/mms_convergence.rs`** (8 tests) — method of manufactured solutions.
+  A smooth Δn_m(x, τ) = a(τ)·g(x) is made an exact solution by injecting the
+  analytic residual S = ∂Δn_m/∂τ − L[Δn_m] through the *production* source
+  path (`DcbrCoupling::photon_source` at the kernel level; a dense
+  `TabulatedPhotonSource` at the solver level — **no production code changes
+  were needed**). Measured **true errors** (not self-convergence) confirm the
+  design orders exactly:
+  - Kompaneets CN + Newton (incl. nonlinear Δn²): spatial p = 2.00 (log grid
+    and production mixed log/linear grid), temporal p = 2.01.
+  - Coupled DC/BR backward-Euler relaxation in the same Newton solve:
+    spatial p ≈ 2.0–2.3, temporal p = 0.95–0.98 → 1 (BE design order).
+  - End-to-end `ThermalizationSolver` (adaptive stepping, T_e coupling,
+    recombination t_C, source splitting under `disable_dcbr`): reproduces the
+    analytic solution to 2.1×10⁻⁴ (rel. x³-weighted L2) at N=2000,
+    dtau_max=2; splitting order 0.96. The T_e feedback is neutralised
+    analytically by building g(x) orthogonal to the two linear functionals of
+    the perturbative Δρ_eq (∫x³g dx = 0 and ∫x⁴(2n_pl+1)g dx = 0).
+- **`tests/conservation_fuzz.rs`** (3 tests, 14 randomized cases,
+  deterministic splitmix64 seeds) — property-based ledger closure:
+  - Energy: final Δρ/ρ vs independent Simpson quadrature of the heating rate;
+    all 6 randomized heat scenarios (SingleBurst/Decaying/s-wave/p-wave,
+    N=800–1600) close to 0.2–0.7% (10% budget).
+  - Photon number, pure Compton (random ICs, full production solver):
+    conserved to ≲3×10⁻⁸ over 10³–2×10³ adaptive steps — the residual is the
+    Newton stopping tolerance (1e-8·max|Δn|), 4+ orders below truncation.
+  - Photon number, monochromatic injection: closes to ≤0.1% (2% budget).
+- **P1-2 closed** — discrete photon-number ledger on the coupled Newton path:
+  pure-Compton conservation at machine precision (1.2×10⁻¹⁵ over 200 kernel
+  steps with the tightest Newton tolerance), and the per-step balance
+  ΔN = Σ w_i[dτ·em_i(neq_i − Δn_i) + S_i] holds to <10⁻⁹ with DC/BR + source
+  active (`photon_number_ledger_identity_with_dcbr_and_source`).
+- **Error budget** (`dev/scripts/error_budget.py` →
+  `dev/output/error_budget.md` + `.pdf`; inputs regenerable from the test
+  suites and `examples/temporal_error_check.rs`):
+
+  | Source | Setting | Rel. error | Method |
+  |---|---|---|---|
+  | Spatial, μ (full physics) | N=2000 | 1.8×10⁻³ | Richardson p=1.97 |
+  | Spatial, μ (full physics) | N=4000 | 4.5×10⁻⁴ | Richardson p=1.97 |
+  | Temporal, μ (production defaults) | dtau_max=10 | 2.9×10⁻³ | direct dtau refinement, p=1.00 |
+  | Temporal, y (production defaults) | dtau_max=10 | 1.4×10⁻³ | direct dtau refinement, p=1.00 |
+  | Spectrum, MMS true error | N=2000 | 9.1×10⁻⁵ | exact manufactured solution |
+  | Spectrum, MMS true error | N=4000 | 2.3×10⁻⁵ | exact manufactured solution |
+
+  Bottom line: **total discretization error on μ at production defaults
+  ≈ 0.3%**, dominated by the first-order dtau_max=10 temporal cap (halving
+  dtau_max halves it); spatial error is subdominant at N≥2000. Well inside
+  the 2–5% PDE↔Green's-function band and the ±5% energy-conservation target;
+  benchmark-pack (Part A) tolerances should be set no tighter than ~0.5% on μ
+  at default settings.
+
+### P2-1 — dy_max is not the binding temporal control at defaults (documented)
+
+The convergence-order tests drive refinement through `dy_max` with
+`dtau_max=200` (20× the production default 10). Extrapolating that sweep to
+the default dy_max=0.02 would suggest ~5% temporal error on μ — but at the
+actual defaults `dtau_max=10` binds (10 096 steps vs 581 if dy alone
+controlled, z_h=2×10⁵ burst), and the directly measured error is 0.29%.
+The dtau_max refinement is cleanly first-order (diffs halve exactly:
+3.96→1.99→1.00 ×10⁻⁸), Richardson-consistent with the dy-sweep limit
+(μ_∞ = 1.3956×10⁻⁵ from both). No code change; recorded so future
+convergence claims cite the correct control parameter.
+
+### P2-2 — number-conservation must be measured in the kernel's own weights (documented)
+
+The discrete invariant of the conservative flux form is Σ x_i²Δx_cell,i·Δn_i
+(trapezoidal cell weights, half cells at the boundaries). Measuring it with
+any other quadrature (e.g. `spectrum::delta_n_over_n`'s midpoint rule) shows
+an apparent O(dx²) "drift" (~10⁻⁴ relative at N=1200) as the spectral shape
+evolves, which is quadrature mismatch, not a conservation violation. The fuzz
+test documents this; relevant for anyone auditing conservation externally.
+
+## Phase 2b (2026-07-05): open-thread closure
+
+Remaining Part-B threads from Phases 0–2, closed this pass:
+
+- **P1-10 closed — external X_e anchor (HyRec-2).** Built HyRec-2 from
+  source and ran it on the exact default cosmology; full comparison and
+  observable-impact table in `dev/audit/xe_hyrec_comparison.md`, table
+  archived in `dev/output/hyrec2_xe_default_cosmo.dat`. Peebles+Saha agrees
+  with HyRec-2 to ≤1.9% for 200 ≤ z ≤ 1600, 5.7% in the He-recombination
+  region (Saha vs non-equilibrium He), 33% in the z ≲ 50 tail (documented
+  α_B(T_rad) convention). Ingredient-level X_e-swap (B4): P_s ≤0.9% where it
+  matters, y_γ ≤1.6%, but **γ_con/ε² moves up to +25% (ε limit −10.5%) for
+  dark-photon masses with z_res ≈ 1800–2500 (m ≈ 1.2–2.5×10⁻⁹ eV)** — the
+  Saha-He-kink d-factor sensitivity predicted by P1-4, now quantified; must
+  be stated as a validity bound on the dark-photon figure (Sect. 7).
+  `test_xe_vs_recfast_milestones` tightened from order-of-magnitude bands to
+  ±6% around exact HyRec-2 values (closes the "anchor tolerances 2–5× wide"
+  item).
+- **P1-7 closed (doc-only fixes applied).** Stale `M_y/G_y/G_μ` docstring at
+  `distortion.rs` corrected to the code's plain inner products; `band_weights`
+  precondition (grid must extend past the band) documented;
+  `decompose_distortion` now warns that out-of-span spectra (frozen z<1100
+  bumps) yield an in-band L² best fit, not a physical decomposition.
+- **P1-9 sentinel wart closed.** Python `_photon_survival_probability_numerical`
+  now uses `np.inf` (was `1e200`) for the dead x>500 bose-factor branch,
+  mirroring Rust's `f64::INFINITY` with the same rationale comment.
+- Python suite after changes: 327 passed (incl. parity + FIRAS anchors).
+
+- **P1-9 M-4 closed — Arsenadze bump-broadening audit**
+  (`dev/audit/arsenadze_broadening_audit.md`). All five helpers (`f_cs`,
+  `alpha_cs`, `beta_cs`, `broadened_bump`, `f_int`) verified verbatim against
+  the raw arXiv LaTeX source of Arsenadze et al. 2024 (arXiv:2409.12940,
+  App. green_func_y), with the log-normal parameters independently re-derived
+  from the paper's F exponent. The intensity(paper)↔occupation(code)
+  convention explains the G₂/x² prefactor; absolute normalization confirmed
+  factor-exact numerically (∫x²G/G₂ = 0.99997 at P_s=1). y_γ ≤ 0.11 across
+  the allowed y-era, inside the paper's small-y regime. Findings all LOW:
+  A-1 median-vs-mode comment (fixed in greens.py; Rust had no such comment),
+  A-2 benign pointwise jump at the y_γ=1e-6 fallback threshold (integrated
+  quantities continuous), A-3 x'y_γ ≈ 1.1 at the gated band edge where the
+  code's exact log-normal is strictly more accurate than the paper's
+  Gaussian-in-x. No published-figure impact.
+- **B4-3 complete — reference-cosmology audit**
+  (`dev/audit/reference_cosmology_audit.md`, 19 comparison sites, findings
+  RC-1…RC-5). **No wrong-cosmology comparison at a level affecting published
+  numbers.** Verified: Rust `planck2015` matches the CosmoTherm DI-file
+  headers on all seven parameters (the headers' "Om"=0.264737 is Ω_cdm, not
+  total matter); `Cosmology::default()` matches Chluba 2013's stated
+  parameters exactly, covering all ~136 literature benchmarks. RC-2: CCJ24
+  (arXiv:2409.12115) publishes no numeric cosmology; running its comparison
+  on the Chluba-2013 default vs planck2018 moves γ_con by ≤3% (≤1.5% in ε) —
+  documented, not fixable further. Doc fixes applied: RC-3 (default-cosmology
+  docstring now notes CosmoTherm's N_eff=3.04 vs the paper's 3.046), RC-4
+  (`firas.py` _T_CMB=2.726 attribution corrected — Fixsen & Mather 2002 give
+  2.725; offset absorbed by floating-T fit parameters), RC-5
+  (`data/cosmotherm/README.md` Ω_cdm mislabel). RC-1 open with P0-6:
+  `adiabatic_cooling.ipynb` uses paper-convention `planck2015` (2.7255 K)
+  against CT-convention DI data (sub-0.1% effect).
+
+Still open / blocked on EB: P0-6 (planck2015 T_CMB convention decision),
+Phase 1 memo spot-check (the Phase 1 gate), P1-8 F4 (softplus Gaunt 1.425 —
+unverifiable against published equations; documented, nothing further
+possible).
+
 ## Phase 1 conclusion
 
 All eight module audits complete (memos in dev/audit/). **Zero confirmed
@@ -335,3 +475,19 @@ existing tests. Remaining open threads feed later phases: coupled-path ΔN/N
 unit test + MMS candidate (P1-2 → B3), softplus Gaunt 1.425 provenance
 (P1-8 F4), Arsenadze bump-broadening pass (P1-9), CLASS X_e comparison
 (P1-10 → B4). EB spot-check of the memos is the Phase 1 gate.
+
+## Python API & documentation audit (2026-07-08)
+
+Report-only pass over `python/spectroxide/` (usability + doc accuracy): every doc
+code example executed, scripted signature↔docstring diff over the full public
+surface, three no-context fresh-eyes agents run against public docs only. Full
+findings in `dev/audit/python_api_audit.md`. Headlines: README's quick-start
+decaying-particle example is physically dead (`gamma_x=5e4` s⁻¹ → lifetime
+2×10⁻⁵ s; returns noise); `docs/api/greens.rst` unit comment wrong by 10⁶
+(Jy/sr vs MJy/sr — Rust and Python converters use different units); its worked
+heating example yields μ = 0.23 (nonlinear); `solver.rst` required-keys table
+wrong in two rows; `solve()` docstring names a nonexistent `intensity` property;
+`run_sweep(cosmo_params=Cosmology(...))` TypeErrors while `solve(cosmo=...)`
+accepts the dataclass. Docstring coverage otherwise excellent (2 gaps in ~120
+callables checked); zero dead API names in docs/notebooks except one stale
+executed warning in `cosmotherm_comparison.ipynb`. No fixes applied.

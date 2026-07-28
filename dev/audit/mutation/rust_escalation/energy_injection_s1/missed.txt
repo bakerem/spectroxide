@@ -1,0 +1,11 @@
+src/energy_injection.rs:736:38: replace / with % in InjectionScenario::validate
+src/energy_injection.rs:737:35: replace + with - in InjectionScenario::validate
+src/energy_injection.rs:737:35: replace + with * in InjectionScenario::validate
+src/energy_injection.rs:737:39: replace * with + in InjectionScenario::validate
+src/energy_injection.rs:737:47: replace - with + in InjectionScenario::validate
+src/energy_injection.rs:737:47: replace - with / in InjectionScenario::validate
+src/energy_injection.rs:789:39: replace + with * in InjectionScenario::heating_rate
+src/energy_injection.rs:800:39: replace + with - in InjectionScenario::heating_rate
+src/energy_injection.rs:800:39: replace + with * in InjectionScenario::heating_rate
+src/energy_injection.rs:835:48: replace + with * in InjectionScenario::heating_rate
+src/energy_injection.rs:890:44: replace + with * in InjectionScenario::photon_source_rate

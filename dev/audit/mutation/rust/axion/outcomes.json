@@ -1,0 +1,3481 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.863712967,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 45.015474873,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:5: replace kappa_ev -> f64 with 0.0",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 5
+            },
+            "end": {
+              "line": 55,
+              "column": 56
+            }
+          },
+          "replacement": "0.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_5.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.760498174,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.634600622,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:5: replace kappa_ev -> f64 with 1.0",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 5
+            },
+            "end": {
+              "line": 55,
+              "column": 56
+            }
+          },
+          "replacement": "1.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_5_001.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.812617007,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.583547149,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:5: replace kappa_ev -> f64 with -1.0",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 5
+            },
+            "end": {
+              "line": 55,
+              "column": 56
+            }
+          },
+          "replacement": "-1.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_5_002.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.709697689,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.737089037,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:49: replace * with + in kappa_ev",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 49
+            },
+            "end": {
+              "line": 55,
+              "column": 50
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_49.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.610622156,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.230543933,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:49: replace * with / in kappa_ev",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 49
+            },
+            "end": {
+              "line": 55,
+              "column": 50
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_49_001.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_49_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.713068184,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.728971473,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:26: replace * with + in kappa_ev",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 26
+            },
+            "end": {
+              "line": 55,
+              "column": 27
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_26.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_26.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.7607409389999997,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.026766623,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:26: replace * with / in kappa_ev",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 26
+            },
+            "end": {
+              "line": 55,
+              "column": 27
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_26_001.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_26_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.51028774,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.176540747,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:38: replace / with % in kappa_ev",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 38
+            },
+            "end": {
+              "line": 55,
+              "column": 39
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_55_col_38.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_38.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.611108444,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.720132815,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:55:38: replace / with * in kappa_ev",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "kappa_ev",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 49,
+                "column": 1
+              },
+              "end": {
+                "line": 56,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 55,
+              "column": 38
+            },
+            "end": {
+              "line": 55,
+              "column": 39
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_55_col_38_001.log",
+      "diff_path": "diff/src__axion.rs_line_55_col_38_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.610452505,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.36276652,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with None",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "None",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.409120937,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.722884903,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((0.0, 0.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((0.0, 0.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_001.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.610163143,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.027744061,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((0.0, 1.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((0.0, 1.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_002.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.5607866169999998,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.682207636,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((0.0, -1.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((0.0, -1.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_003.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.50929553,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.924271286,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((1.0, 0.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((1.0, 0.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_004.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_004.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.308380655,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.824658607,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((1.0, 1.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((1.0, 1.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_005.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_005.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.460945045,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.190504552,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((1.0, -1.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((1.0, -1.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_006.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_006.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.710354156,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.428738866,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((-1.0, 0.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((-1.0, 0.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_007.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_007.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.559212368,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.475617365,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((-1.0, 1.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((-1.0, 1.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_008.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_008.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.6598363430000003,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.322938642,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((-1.0, -1.0))",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 76,
+              "column": 5
+            },
+            "end": {
+              "line": 85,
+              "column": 22
+            }
+          },
+          "replacement": "Some((-1.0, -1.0))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_76_col_5_009.log",
+      "diff_path": "diff/src__axion.rs_line_76_col_5_009.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.458836422,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.620484407,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:62: replace / with % in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 62
+            },
+            "end": {
+              "line": 78,
+              "column": 63
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_62.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_62.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.811536018,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.20174976,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:62: replace / with * in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 62
+            },
+            "end": {
+              "line": 78,
+              "column": 63
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_62_001.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_62_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.561856526,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.003861758,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:46: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 46
+            },
+            "end": {
+              "line": 78,
+              "column": 47
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_46.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_46.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.561247492,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.999104979,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:46: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 46
+            },
+            "end": {
+              "line": 78,
+              "column": 47
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_46_001.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_46_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.659797902,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.108350616,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:32: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 32
+            },
+            "end": {
+              "line": 78,
+              "column": 33
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_32.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_32.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.609461543,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.001248765,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:32: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 32
+            },
+            "end": {
+              "line": 78,
+              "column": 33
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_32_001.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_32_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.660137102,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.912656371,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:53: replace + with - in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 53
+            },
+            "end": {
+              "line": 78,
+              "column": 54
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_78_col_53.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_53.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.561788526,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.071645251,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:78:53: replace + with * in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 53
+            },
+            "end": {
+              "line": 78,
+              "column": 54
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_78_col_53_001.log",
+      "diff_path": "diff/src__axion.rs_line_78_col_53_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.609187822,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 44.352180655,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:79:26: replace / with % in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 79,
+              "column": 26
+            },
+            "end": {
+              "line": 79,
+              "column": 27
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_79_col_26.log",
+      "diff_path": "diff/src__axion.rs_line_79_col_26.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.70918979,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.851712297,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:79:26: replace / with * in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 79,
+              "column": 26
+            },
+            "end": {
+              "line": 79,
+              "column": 27
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_79_col_26_001.log",
+      "diff_path": "diff/src__axion.rs_line_79_col_26_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.559106925,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.099145454,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:80:26: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 26
+            },
+            "end": {
+              "line": 80,
+              "column": 27
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_80_col_26.log",
+      "diff_path": "diff/src__axion.rs_line_80_col_26.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.560624022,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.762482207,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:80:26: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 26
+            },
+            "end": {
+              "line": 80,
+              "column": 27
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_80_col_26_001.log",
+      "diff_path": "diff/src__axion.rs_line_80_col_26_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.5601429639999997,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.109030383,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:82:28: replace + with - in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 82,
+              "column": 28
+            },
+            "end": {
+              "line": 82,
+              "column": 29
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_82_col_28.log",
+      "diff_path": "diff/src__axion.rs_line_82_col_28.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.5094268680000003,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.85204419,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:82:28: replace + with * in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 82,
+              "column": 28
+            },
+            "end": {
+              "line": 82,
+              "column": 29
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_82_col_28_001.log",
+      "diff_path": "diff/src__axion.rs_line_82_col_28_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.509797754,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.258209371,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:9: replace / with % in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 9
+            },
+            "end": {
+              "line": 84,
+              "column": 10
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_9.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.559571955,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.903217925,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:9: replace / with * in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 9
+            },
+            "end": {
+              "line": 84,
+              "column": 10
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_9_001.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.509642315,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.358142343,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:65: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 65
+            },
+            "end": {
+              "line": 83,
+              "column": 66
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_83_col_65.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_65.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.508608044,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.722309063,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:65: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 65
+            },
+            "end": {
+              "line": 83,
+              "column": 66
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_83_col_65_001.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_65_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.561148647,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 44.919777149,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:51: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 51
+            },
+            "end": {
+              "line": 83,
+              "column": 52
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_83_col_51.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_51.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.60901756,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.781858524,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:51: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 51
+            },
+            "end": {
+              "line": 83,
+              "column": 52
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_83_col_51_001.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_51_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.459940355,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.310359945,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:43: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 43
+            },
+            "end": {
+              "line": 83,
+              "column": 44
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_83_col_43.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_43.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.5093859309999997,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.931391135,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:43: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 43
+            },
+            "end": {
+              "line": 83,
+              "column": 44
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_83_col_43_001.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_43_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.811050737,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.328295987,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:35: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 35
+            },
+            "end": {
+              "line": 83,
+              "column": 36
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_83_col_35.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_35.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.509689717,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.568585287,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:83:35: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 35
+            },
+            "end": {
+              "line": 83,
+              "column": 36
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__axion.rs_line_83_col_35_001.log",
+      "diff_path": "diff/src__axion.rs_line_83_col_35_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.610149438,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.43604041,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:31: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 31
+            },
+            "end": {
+              "line": 84,
+              "column": 32
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_31.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_31.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.661035878,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.107743966,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:31: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 31
+            },
+            "end": {
+              "line": 84,
+              "column": 32
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_31_001.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_31_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.608904797,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.650931466,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:24: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 24
+            },
+            "end": {
+              "line": 84,
+              "column": 25
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_24.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.710253262,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.805290134,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:24: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 24
+            },
+            "end": {
+              "line": 84,
+              "column": 25
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_24_001.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.559563286,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.80601959,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:17: replace * with + in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 17
+            },
+            "end": {
+              "line": 84,
+              "column": 18
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_17.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.511885209,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.956023916,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/axion.rs:84:17: replace * with / in gamma_con_axion",
+          "package": "spectroxide",
+          "file": "src/axion.rs",
+          "function": {
+            "function_name": "gamma_con_axion",
+            "return_type": "-> Option<(f64, f64)>",
+            "span": {
+              "start": {
+                "line": 58,
+                "column": 1
+              },
+              "end": {
+                "line": 86,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 84,
+              "column": 17
+            },
+            "end": {
+              "line": 84,
+              "column": 18
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__axion.rs_line_84_col_17_001.log",
+      "diff_path": "diff/src__axion.rs_line_84_col_17_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.609797392,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.899784124,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=3"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 49,
+  "missed": 24,
+  "caught": 25,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-07-11T21:25:34.89409216Z",
+  "end_time": "2026-07-11T22:00:27.820509669Z",
+  "cargo_mutants_version": "27.1.0"
+}

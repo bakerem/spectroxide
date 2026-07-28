@@ -1,0 +1,1 @@
+src/bremsstrahlung.rs:238:5: replace br_precompute -> Option<BrPrecomputed> with Some(Default::default())

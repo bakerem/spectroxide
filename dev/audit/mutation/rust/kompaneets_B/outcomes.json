@@ -1,0 +1,3951 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.074747201,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 48.376384361,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:186:5: replace thomas_solve_inplace with ()",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 186,
+              "column": 5
+            },
+            "end": {
+              "line": 226,
+              "column": 6
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_186_col_5.log",
+      "diff_path": "diff/src__kompaneets.rs_line_186_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 8.885877595,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.999674135,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:204:62: replace / with % in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 204,
+              "column": 62
+            },
+            "end": {
+              "line": 204,
+              "column": 63
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_204_col_62.log",
+      "diff_path": "diff/src__kompaneets.rs_line_204_col_62.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.168666645,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.383060264,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:204:62: replace / with * in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 204,
+              "column": 62
+            },
+            "end": {
+              "line": 204,
+              "column": 63
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_204_col_62_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_204_col_62_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 11.160576652,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.509741971,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:205:35: replace /= with %= in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 205,
+              "column": 35
+            },
+            "end": {
+              "line": 205,
+              "column": 37
+            }
+          },
+          "replacement": "%=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_205_col_35.log",
+      "diff_path": "diff/src__kompaneets.rs_line_205_col_35.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.84502837,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 40.521733098,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:205:35: replace /= with *= in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 205,
+              "column": 35
+            },
+            "end": {
+              "line": 205,
+              "column": 37
+            }
+          },
+          "replacement": "*=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_205_col_35_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_205_col_35_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.475158858,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 33.198457547,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:207:23: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 207,
+              "column": 23
+            },
+            "end": {
+              "line": 207,
+              "column": 24
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_207_col_23.log",
+      "diff_path": "diff/src__kompaneets.rs_line_207_col_23.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.512810858,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 20.938381970000002,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:207:23: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 207,
+              "column": 23
+            },
+            "end": {
+              "line": 207,
+              "column": 24
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_207_col_23_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_207_col_23_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.404945411,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.696049241,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:209:40: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 209,
+              "column": 40
+            },
+            "end": {
+              "line": 209,
+              "column": 41
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_209_col_40.log",
+      "diff_path": "diff/src__kompaneets.rs_line_209_col_40.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.268374172,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 69.780865476,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:209:40: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 209,
+              "column": 40
+            },
+            "end": {
+              "line": 209,
+              "column": 41
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_209_col_40_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_209_col_40_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 7.731748913,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.68263905,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:209:66: replace * with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 209,
+              "column": 66
+            },
+            "end": {
+              "line": 209,
+              "column": 67
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_209_col_66.log",
+      "diff_path": "diff/src__kompaneets.rs_line_209_col_66.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.518636282,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 43.150313801,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:209:66: replace * with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 209,
+              "column": 66
+            },
+            "end": {
+              "line": 209,
+              "column": 67
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_209_col_66_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_209_col_66_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.146332982,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 39.353180998,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:209:90: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 209,
+              "column": 90
+            },
+            "end": {
+              "line": 209,
+              "column": 91
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_209_col_90.log",
+      "diff_path": "diff/src__kompaneets.rs_line_209_col_90.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.668208675,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 41.612560767,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:209:90: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 209,
+              "column": 90
+            },
+            "end": {
+              "line": 209,
+              "column": 91
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_209_col_90_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_209_col_90_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.562015016,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 42.141005022,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:210:66: replace / with % in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 210,
+              "column": 66
+            },
+            "end": {
+              "line": 210,
+              "column": 67
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_210_col_66.log",
+      "diff_path": "diff/src__kompaneets.rs_line_210_col_66.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.814755847,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 39.794506095,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:210:66: replace / with * in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 210,
+              "column": 66
+            },
+            "end": {
+              "line": 210,
+              "column": 67
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_210_col_66_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_210_col_66_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.668950383,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.928191601,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:213:17: replace / with % in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 213,
+              "column": 17
+            },
+            "end": {
+              "line": 213,
+              "column": 18
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_213_col_17.log",
+      "diff_path": "diff/src__kompaneets.rs_line_213_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.570242772,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.900220804,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:213:17: replace / with * in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 213,
+              "column": 17
+            },
+            "end": {
+              "line": 213,
+              "column": 18
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_213_col_17_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_213_col_17_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.6656601760000003,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.883653083,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:212:17: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 212,
+              "column": 17
+            },
+            "end": {
+              "line": 212,
+              "column": 18
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_212_col_17.log",
+      "diff_path": "diff/src__kompaneets.rs_line_212_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.9671883709999998,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 39.140237364,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:212:17: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 212,
+              "column": 17
+            },
+            "end": {
+              "line": 212,
+              "column": 18
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_212_col_17_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_212_col_17_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.535575038,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.66354883,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:212:43: replace * with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 212,
+              "column": 43
+            },
+            "end": {
+              "line": 212,
+              "column": 44
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_212_col_43.log",
+      "diff_path": "diff/src__kompaneets.rs_line_212_col_43.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.165958752,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.658893885,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:212:43: replace * with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 212,
+              "column": 43
+            },
+            "end": {
+              "line": 212,
+              "column": 44
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_212_col_43_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_212_col_43_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.068782638,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.144619277,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:212:66: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 212,
+              "column": 66
+            },
+            "end": {
+              "line": 212,
+              "column": 67
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_212_col_66.log",
+      "diff_path": "diff/src__kompaneets.rs_line_212_col_66.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.914243989,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.586252234,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:212:66: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 212,
+              "column": 66
+            },
+            "end": {
+              "line": 212,
+              "column": 67
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_212_col_66_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_212_col_66_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.265077049,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.243290138,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:216:19: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 216,
+              "column": 19
+            },
+            "end": {
+              "line": 216,
+              "column": 20
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__kompaneets.rs_line_216_col_19.log",
+      "diff_path": "diff/src__kompaneets.rs_line_216_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.666836449,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 120.038882016,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:216:19: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 216,
+              "column": 19
+            },
+            "end": {
+              "line": 216,
+              "column": 20
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__kompaneets.rs_line_216_col_19_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_216_col_19_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.017222176,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 120.039946086,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:217:44: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 217,
+              "column": 44
+            },
+            "end": {
+              "line": 217,
+              "column": 45
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_217_col_44.log",
+      "diff_path": "diff/src__kompaneets.rs_line_217_col_44.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.617605096,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.71389601,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:217:44: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 217,
+              "column": 44
+            },
+            "end": {
+              "line": 217,
+              "column": 45
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_217_col_44_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_217_col_44_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.46258516,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.274543274,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:217:70: replace * with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 217,
+              "column": 70
+            },
+            "end": {
+              "line": 217,
+              "column": 71
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_217_col_70.log",
+      "diff_path": "diff/src__kompaneets.rs_line_217_col_70.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.617548831,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 39.832787782,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:217:70: replace * with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 217,
+              "column": 70
+            },
+            "end": {
+              "line": 217,
+              "column": 71
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_217_col_70_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_217_col_70_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.944478054,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.677534981,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:217:94: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 217,
+              "column": 94
+            },
+            "end": {
+              "line": 217,
+              "column": 95
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_217_col_94.log",
+      "diff_path": "diff/src__kompaneets.rs_line_217_col_94.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.515063763,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.577129789,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:217:94: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 217,
+              "column": 94
+            },
+            "end": {
+              "line": 217,
+              "column": 95
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_217_col_94_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_217_col_94_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.362353682,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.57094064,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:91: replace / with % in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 91
+            },
+            "end": {
+              "line": 220,
+              "column": 92
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_91.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_91.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.361160499,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.809915715,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:91: replace / with * in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 91
+            },
+            "end": {
+              "line": 220,
+              "column": 92
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_91_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_91_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.36649469,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.973743765,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:36: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 36
+            },
+            "end": {
+              "line": 220,
+              "column": 37
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_36.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_36.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.929437294,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.491014399,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:36: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 36
+            },
+            "end": {
+              "line": 220,
+              "column": 37
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_36_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_36_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.7127880170000003,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.205634064,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:62: replace * with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 62
+            },
+            "end": {
+              "line": 220,
+              "column": 63
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_62.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_62.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.567776807,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.781488364,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:62: replace * with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 62
+            },
+            "end": {
+              "line": 220,
+              "column": 63
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_62_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_62_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.171895222,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.775850966,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:85: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 85
+            },
+            "end": {
+              "line": 220,
+              "column": 86
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_85.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_85.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.461348735,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.771615172,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:220:85: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 220,
+              "column": 85
+            },
+            "end": {
+              "line": 220,
+              "column": 86
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_220_col_85_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_220_col_85_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.619100594,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.473796556,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:223:24: replace - with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 223,
+              "column": 24
+            },
+            "end": {
+              "line": 223,
+              "column": 25
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_223_col_24.log",
+      "diff_path": "diff/src__kompaneets.rs_line_223_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.512220183,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.858394167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:223:24: replace - with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 223,
+              "column": 24
+            },
+            "end": {
+              "line": 223,
+              "column": 25
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_223_col_24_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_223_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.519127824,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 23.42791731,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:224:39: replace -= with += in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 224,
+              "column": 39
+            },
+            "end": {
+              "line": 224,
+              "column": 41
+            }
+          },
+          "replacement": "+=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_224_col_39.log",
+      "diff_path": "diff/src__kompaneets.rs_line_224_col_39.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.421979817,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.285827285,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:224:39: replace -= with /= in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 224,
+              "column": 39
+            },
+            "end": {
+              "line": 224,
+              "column": 41
+            }
+          },
+          "replacement": "/=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_224_col_39_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_224_col_39_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.260966231,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.962097008,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:224:65: replace * with + in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 224,
+              "column": 65
+            },
+            "end": {
+              "line": 224,
+              "column": 66
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_224_col_65.log",
+      "diff_path": "diff/src__kompaneets.rs_line_224_col_65.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.411980586,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.899096794,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:224:65: replace * with / in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 224,
+              "column": 65
+            },
+            "end": {
+              "line": 224,
+              "column": 66
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_224_col_65_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_224_col_65_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.311677738,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.130310928,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:224:88: replace + with - in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 224,
+              "column": 88
+            },
+            "end": {
+              "line": 224,
+              "column": 89
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_224_col_88.log",
+      "diff_path": "diff/src__kompaneets.rs_line_224_col_88.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.566696656,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 23.177771917,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:224:88: replace + with * in thomas_solve_inplace",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve_inplace",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 174,
+                "column": 1
+              },
+              "end": {
+                "line": 227,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 224,
+              "column": 88
+            },
+            "end": {
+              "line": 224,
+              "column": 89
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_224_col_88_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_224_col_88_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.714046047,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 34.608800217,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:231:5: replace thomas_solve -> Vec<f64> with vec![]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 229,
+                "column": 1
+              },
+              "end": {
+                "line": 236,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 231,
+              "column": 5
+            },
+            "end": {
+              "line": 235,
+              "column": 11
+            }
+          },
+          "replacement": "vec![]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_231_col_5.log",
+      "diff_path": "diff/src__kompaneets.rs_line_231_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.571532332,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.725056368,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:231:5: replace thomas_solve -> Vec<f64> with vec![0.0]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 229,
+                "column": 1
+              },
+              "end": {
+                "line": 236,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 231,
+              "column": 5
+            },
+            "end": {
+              "line": 235,
+              "column": 11
+            }
+          },
+          "replacement": "vec![0.0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_231_col_5_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_231_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.369943507,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.577781631,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:231:5: replace thomas_solve -> Vec<f64> with vec![1.0]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 229,
+                "column": 1
+              },
+              "end": {
+                "line": 236,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 231,
+              "column": 5
+            },
+            "end": {
+              "line": 235,
+              "column": 11
+            }
+          },
+          "replacement": "vec![1.0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_231_col_5_002.log",
+      "diff_path": "diff/src__kompaneets.rs_line_231_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.071145534,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.73822662,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:231:5: replace thomas_solve -> Vec<f64> with vec![-1.0]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "thomas_solve",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 229,
+                "column": 1
+              },
+              "end": {
+                "line": 236,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 231,
+              "column": 5
+            },
+            "end": {
+              "line": 235,
+              "column": 11
+            }
+          },
+          "replacement": "vec![-1.0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_231_col_5_003.log",
+      "diff_path": "diff/src__kompaneets.rs_line_231_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.412381699,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.670759216,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:296:5: replace kompaneets_step_nonlinear -> Vec<f64> with vec![]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "kompaneets_step_nonlinear",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 285,
+                "column": 1
+              },
+              "end": {
+                "line": 311,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 296,
+              "column": 5
+            },
+            "end": {
+              "line": 310,
+              "column": 11
+            }
+          },
+          "replacement": "vec![]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_296_col_5.log",
+      "diff_path": "diff/src__kompaneets.rs_line_296_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.569861102,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.330079011,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:296:5: replace kompaneets_step_nonlinear -> Vec<f64> with vec![0.0]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "kompaneets_step_nonlinear",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 285,
+                "column": 1
+              },
+              "end": {
+                "line": 311,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 296,
+              "column": 5
+            },
+            "end": {
+              "line": 310,
+              "column": 11
+            }
+          },
+          "replacement": "vec![0.0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_296_col_5_001.log",
+      "diff_path": "diff/src__kompaneets.rs_line_296_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.712822268,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.425172071,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:296:5: replace kompaneets_step_nonlinear -> Vec<f64> with vec![1.0]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "kompaneets_step_nonlinear",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 285,
+                "column": 1
+              },
+              "end": {
+                "line": 311,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 296,
+              "column": 5
+            },
+            "end": {
+              "line": 310,
+              "column": 11
+            }
+          },
+          "replacement": "vec![1.0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_296_col_5_002.log",
+      "diff_path": "diff/src__kompaneets.rs_line_296_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.511576196,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.827996706,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/kompaneets.rs:296:5: replace kompaneets_step_nonlinear -> Vec<f64> with vec![-1.0]",
+          "package": "spectroxide",
+          "file": "src/kompaneets.rs",
+          "function": {
+            "function_name": "kompaneets_step_nonlinear",
+            "return_type": "-> Vec<f64>",
+            "span": {
+              "start": {
+                "line": 285,
+                "column": 1
+              },
+              "end": {
+                "line": 311,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 296,
+              "column": 5
+            },
+            "end": {
+              "line": 310,
+              "column": 11
+            }
+          },
+          "replacement": "vec![-1.0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__kompaneets.rs_line_296_col_5_003.log",
+      "diff_path": "diff/src__kompaneets.rs_line_296_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.968013374,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 37.78074374,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks",
+            "--",
+            "--test-threads=2"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 55,
+  "missed": 0,
+  "caught": 53,
+  "timeout": 2,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-07-08T00:24:16.961668633Z",
+  "end_time": "2026-07-08T01:37:09.007040458Z",
+  "cargo_mutants_version": "27.1.0"
+}

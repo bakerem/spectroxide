@@ -1,0 +1,1 @@
+src/energy_injection.rs:737:39: replace * with / in InjectionScenario::validate

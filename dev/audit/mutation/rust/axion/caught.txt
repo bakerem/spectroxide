@@ -1,0 +1,25 @@
+src/axion.rs:55:5: replace kappa_ev -> f64 with 0.0
+src/axion.rs:55:5: replace kappa_ev -> f64 with 1.0
+src/axion.rs:55:5: replace kappa_ev -> f64 with -1.0
+src/axion.rs:55:49: replace * with + in kappa_ev
+src/axion.rs:55:49: replace * with / in kappa_ev
+src/axion.rs:55:26: replace * with + in kappa_ev
+src/axion.rs:55:26: replace * with / in kappa_ev
+src/axion.rs:55:38: replace / with % in kappa_ev
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with None
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((0.0, 0.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((0.0, 1.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((0.0, -1.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((1.0, 0.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((1.0, 1.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((1.0, -1.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((-1.0, 0.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((-1.0, 1.0))
+src/axion.rs:76:5: replace gamma_con_axion -> Option<(f64, f64)> with Some((-1.0, -1.0))
+src/axion.rs:78:53: replace + with - in gamma_con_axion
+src/axion.rs:83:65: replace * with + in gamma_con_axion
+src/axion.rs:83:51: replace * with + in gamma_con_axion
+src/axion.rs:83:43: replace * with + in gamma_con_axion
+src/axion.rs:83:43: replace * with / in gamma_con_axion
+src/axion.rs:83:35: replace * with + in gamma_con_axion
+src/axion.rs:83:35: replace * with / in gamma_con_axion

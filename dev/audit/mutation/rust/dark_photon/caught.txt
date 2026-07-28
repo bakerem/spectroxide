@@ -1,0 +1,79 @@
+src/dark_photon.rs:25:5: replace plasma_frequency_ev -> f64 with 0.0
+src/dark_photon.rs:25:5: replace plasma_frequency_ev -> f64 with 1.0
+src/dark_photon.rs:25:5: replace plasma_frequency_ev -> f64 with -1.0
+src/dark_photon.rs:25:26: replace / with % in plasma_frequency_ev
+src/dark_photon.rs:25:26: replace / with * in plasma_frequency_ev
+src/dark_photon.rs:28:73: replace / with % in plasma_frequency_ev
+src/dark_photon.rs:28:73: replace / with * in plasma_frequency_ev
+src/dark_photon.rs:28:63: replace * with + in plasma_frequency_ev
+src/dark_photon.rs:28:63: replace * with / in plasma_frequency_ev
+src/dark_photon.rs:28:56: replace * with + in plasma_frequency_ev
+src/dark_photon.rs:28:56: replace * with / in plasma_frequency_ev
+src/dark_photon.rs:28:45: replace * with + in plasma_frequency_ev
+src/dark_photon.rs:28:45: replace * with / in plasma_frequency_ev
+src/dark_photon.rs:28:22: replace * with + in plasma_frequency_ev
+src/dark_photon.rs:28:22: replace * with / in plasma_frequency_ev
+src/dark_photon.rs:29:15: replace * with + in plasma_frequency_ev
+src/dark_photon.rs:29:15: replace * with / in plasma_frequency_ev
+src/dark_photon.rs:29:22: replace * with + in plasma_frequency_ev
+src/dark_photon.rs:29:22: replace * with / in plasma_frequency_ev
+src/dark_photon.rs:37:5: replace resonance_redshift -> Option<f64> with None
+src/dark_photon.rs:37:5: replace resonance_redshift -> Option<f64> with Some(0.0)
+src/dark_photon.rs:37:5: replace resonance_redshift -> Option<f64> with Some(1.0)
+src/dark_photon.rs:37:5: replace resonance_redshift -> Option<f64> with Some(-1.0)
+src/dark_photon.rs:39:52: replace - with + in resonance_redshift
+src/dark_photon.rs:39:52: replace - with / in resonance_redshift
+src/dark_photon.rs:41:8: delete ! in resonance_redshift
+src/dark_photon.rs:41:29: delete ! in resonance_redshift
+src/dark_photon.rs:41:62: replace > with < in resonance_redshift
+src/dark_photon.rs:41:55: replace * with + in resonance_redshift
+src/dark_photon.rs:48:23: replace * with + in resonance_redshift
+src/dark_photon.rs:48:23: replace * with / in resonance_redshift
+src/dark_photon.rs:48:29: replace + with - in resonance_redshift
+src/dark_photon.rs:48:29: replace + with * in resonance_redshift
+src/dark_photon.rs:50:28: replace < with > in resonance_redshift
+src/dark_photon.rs:53:25: replace <= with > in resonance_redshift
+src/dark_photon.rs:53:17: replace * with + in resonance_redshift
+src/dark_photon.rs:65:5: replace dln_omega_pl_sq_dlna -> f64 with 0.0
+src/dark_photon.rs:65:5: replace dln_omega_pl_sq_dlna -> f64 with 1.0
+src/dark_photon.rs:65:5: replace dln_omega_pl_sq_dlna -> f64 with -1.0
+src/dark_photon.rs:72:30: replace - with + in dln_omega_pl_sq_dlna
+src/dark_photon.rs:72:30: replace - with / in dln_omega_pl_sq_dlna
+src/dark_photon.rs:73:27: replace + with * in dln_omega_pl_sq_dlna
+src/dark_photon.rs:73:16: replace * with + in dln_omega_pl_sq_dlna
+src/dark_photon.rs:73:16: replace * with / in dln_omega_pl_sq_dlna
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with None
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((0.0, 0.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((0.0, 1.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((0.0, -1.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((1.0, 0.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((1.0, 1.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((1.0, -1.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((-1.0, 0.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((-1.0, 1.0))
+src/dark_photon.rs:84:5: replace gamma_con -> Option<(f64, f64)> with Some((-1.0, -1.0))
+src/dark_photon.rs:85:62: replace / with % in gamma_con
+src/dark_photon.rs:85:62: replace / with * in gamma_con
+src/dark_photon.rs:85:46: replace * with + in gamma_con
+src/dark_photon.rs:85:46: replace * with / in gamma_con
+src/dark_photon.rs:85:32: replace * with + in gamma_con
+src/dark_photon.rs:85:32: replace * with / in gamma_con
+src/dark_photon.rs:85:53: replace + with - in gamma_con
+src/dark_photon.rs:86:26: replace / with % in gamma_con
+src/dark_photon.rs:86:26: replace / with * in gamma_con
+src/dark_photon.rs:87:26: replace * with + in gamma_con
+src/dark_photon.rs:87:26: replace * with / in gamma_con
+src/dark_photon.rs:89:69: replace / with % in gamma_con
+src/dark_photon.rs:89:69: replace / with * in gamma_con
+src/dark_photon.rs:89:62: replace * with + in gamma_con
+src/dark_photon.rs:89:62: replace * with / in gamma_con
+src/dark_photon.rs:89:55: replace * with + in gamma_con
+src/dark_photon.rs:89:55: replace * with / in gamma_con
+src/dark_photon.rs:89:45: replace * with + in gamma_con
+src/dark_photon.rs:89:45: replace * with / in gamma_con
+src/dark_photon.rs:89:35: replace * with + in gamma_con
+src/dark_photon.rs:89:35: replace * with / in gamma_con
+src/dark_photon.rs:89:85: replace * with + in gamma_con
+src/dark_photon.rs:89:85: replace * with / in gamma_con
+src/dark_photon.rs:89:74: replace * with + in gamma_con
+src/dark_photon.rs:89:74: replace * with / in gamma_con

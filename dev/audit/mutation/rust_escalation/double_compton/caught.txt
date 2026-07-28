@@ -1,0 +1,9 @@
+src/double_compton.rs:73:5: replace dc_prefactor -> f64 with 0.0
+src/double_compton.rs:73:71: replace * with / in dc_prefactor
+src/double_compton.rs:73:20: replace / with % in dc_prefactor
+src/double_compton.rs:73:20: replace / with * in dc_prefactor
+src/double_compton.rs:73:27: replace * with / in dc_prefactor
+src/double_compton.rs:74:16: replace + with * in dc_prefactor
+src/double_compton.rs:74:24: replace * with + in dc_prefactor
+src/double_compton.rs:74:24: replace * with / in dc_prefactor
+src/double_compton.rs:80:5: replace dc_emission_coefficient_fast -> f64 with -1.0

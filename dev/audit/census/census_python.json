@@ -1,45 +1,5 @@
 [
  {
-  "file": "python/tests/test_anisotropy.py",
-  "test": "test_boost_identity_g_shape",
-  "provenance": "analytic",
-  "target": "boost identity residual -xG' = Y_SZ + 3G < 1e-3",
-  "source": "exact identity (superposition of blackbodies), docstring: 'pure math'",
-  "flag": false
- },
- {
-  "file": "python/tests/test_anisotropy.py",
-  "test": "test_boost_linearity",
-  "provenance": "analytic",
-  "target": "amplitudes scale x10 with input to 1e-6",
-  "source": "linearity of boost operator (exact)",
-  "flag": false
- },
- {
-  "file": "python/tests/test_anisotropy.py",
-  "test": "test_boost_of_temperature_shift_decomposes_to_y",
-  "provenance": "analytic",
-  "target": "boosted dT*G gives y=dT, dT'=3dT, mu=0 to 2%",
-  "source": "same exact boost identity",
-  "flag": false
- },
- {
-  "file": "python/tests/test_anisotropy.py",
-  "test": "test_e_g_contributes_only_to_dt",
-  "provenance": "analytic",
-  "target": "include_e_g adds exactly +1 to b_dT, mu unchanged (=0)",
-  "source": "definition of e_G term in boost operator",
-  "flag": false
- },
- {
-  "file": "python/tests/test_anisotropy.py",
-  "test": "test_load_class_cls_fixture",
-  "provenance": "literature",
-  "target": "CLASS TT acoustic peak at 180<=l<=260; >=2000 multipoles",
-  "source": "CLASS fixture (data/class_fixtures); Planck TT first peak l~220",
-  "flag": false
- },
- {
   "file": "python/tests/test_cosmotherm.py",
   "test": "test_round_trip_identity",
   "provenance": "analytic",
@@ -126,168 +86,6 @@
   "target": "rp/rs = 1+z exactly (1e-10)",
   "source": "<sigma v> ~ v^2 ~ T ~ (1+z), exact ratio",
   "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_prefactor_matches_ah21",
-  "provenance": "literature",
-  "target": "-dQ/dz/H = 1.7095e-6 f_chi(MeV/m_chi) to 1%; q>0.999",
-  "source": "Ali-Haimoud 2021 (arXiv:2101.04070) Eq. 2.11, hand-derived constant",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_gamma_chi_p_spot_value",
-  "provenance": "analytic",
-  "target": "Gamma_chi_p = 1.2472e-12 s^-1 at z=1e5 to 2e-3",
-  "source": "hand calculation from AH21 momentum-exchange rate formula",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_mu_max_tight_coupling",
-  "provenance": "literature",
-  "target": "|mu_max| = 8.6e-5 for m_chi=0.1 MeV to 20%; q>0.99",
-  "source": "AH21 Eq. 2.20 (|mu_max|=8.6e-6 f_chi MeV/m_chi); tol covers Chluba-2013 vs AH21 visibility difference",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_ah21_fig1_benchmark",
-  "provenance": "literature",
-  "target": "z_dec in (3e6,8e6); mu in (-2e-6,-5e-7)",
-  "source": "AH21 Fig. 1 benchmark (z_dec~5e6, |mu|~1e-6)",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_q_bounded_and_dm_colder",
-  "provenance": "dimensional",
-  "target": "0<=q<=1 and T_chi<=T_gamma for 3 parameter sets",
-  "source": "physical bounds: DM never hotter than photons, deposited fraction bounded",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_n_indices_and_electron_scatterer",
-  "provenance": "dimensional",
-  "target": "q finite and >=0 for n in {-2,2,4,6}; electron-scatterer rate finite and <=0",
-  "source": "sign/finiteness from physics (DM-baryon scattering cools photons)",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_f_chi_linearity",
-  "provenance": "analytic",
-  "target": "heating rate ratio 0.5 for f_chi halved, to 1%",
-  "source": "linearity in f_chi (exact)",
-  "flag": false
- },
- {
-  "file": "python/tests/test_dm_baryon.py",
-  "test": "test_rust_python_parity",
-  "provenance": "analytic",
-  "target": "prefactor/q z-independent to 1e-12 across 3 redshifts",
-  "source": "exact z-independence of (3/2)n_chi k T_gamma/rho_gamma",
-  "flag": false,
-  "note": "Name says parity but assertion is an analytic invariance; actual Rust parity lives in src/dm_baryon.rs sharing the same AH21 targets"
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_dim_constants",
-  "provenance": "structural",
-  "target": "DIM=18, index positions, N_MOMENTS=15",
-  "source": "basis layout constants",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_load_basis",
-  "provenance": "analytic",
-  "target": "matrix shapes 18x18; eps_Theta=eps_Y0=4; eps_mu=1/1.4007; beta_m=3G2/(2G1)",
-  "source": "exact energy weights (4 for T/y) and kappa_c=1.4007 mu constant; G-integral formula",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_spectral_channels",
-  "provenance": "structural",
-  "target": "channel grid shape (970,), positive, increasing",
-  "source": "basis file channel count",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_g_bb_at_known_point",
-  "provenance": "analytic",
-  "target": "G(2) = 2e^2/(e^2-1)^2 to 1e-12",
-  "source": "closed form",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_yk_zero_matches_y0",
-  "provenance": "analytic",
-  "target": "Y_0 equals SZ shape G(x)[x coth(x/2)-4] to 1e-10",
-  "source": "closed-form SZ shape",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_yk_recursion",
-  "provenance": "analytic",
-  "target": "-x dY_{k-1}/dx = 4 Y_k to 1e-4 (finite diff)",
-  "source": "exact boost recursion O_x Y_{k-1} = 4 Y_k",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_amplitude_spectrum_linearity",
-  "provenance": "analytic",
-  "target": "unit vectors synthesize exactly G(x), M(x), Y_0(x)",
-  "source": "basis definition (exact)",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_table1_N0",
-  "provenance": "literature",
-  "target": "y=-0.02070, mu=0.8385 to 0.5%",
-  "source": "EC26 Table 1, N=0 row",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_table1_N15",
-  "provenance": "literature",
-  "target": "y=-0.02060, mu=0.8374 to 0.5%",
-  "source": "EC26 Table 1, N=15 row",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_ox_m_projection",
-  "provenance": "literature",
-  "target": "O_x M = 0.3736 Y0 + 1.9069 M to 2% via constrained Gram projection",
-  "source": "SS-II / WP-0 acceptance values (quoted in paper); mirrors constrainedRepOn in fh_matrices.wl",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_b0_mu_era_computation_50_50",
-  "provenance": "literature",
-  "target": "energy split f_y, f_mu each in [0.40,0.60]",
-  "source": "EC26 Fig. 10 anchor: O_x M ~ 1.9M+0.4Y splits energy nearly evenly",
-  "flag": false
- },
- {
-  "file": "python/tests/test_fh_basis.py",
-  "test": "test_wp3_stationary_y_audit",
-  "provenance": "regression-pin",
-  "target": "mu-overlay residual norm < 5% (computation basis); CSV finite",
-  "source": "WP-3 status-log finding ('stationary overlay tracks full solution to 0.1% in mu-slot') = code's own prior output; explicitly labelled as a re-audit",
-  "flag": false,
-  "note": "y-residual is reported but deliberately not asserted; test skips if CSV absent"
  },
  {
   "file": "python/tests/test_firas.py",
@@ -1219,6 +1017,334 @@
   "provenance": "structural",
   "target": "len(result['x']) == 100 for run_single custom grid",
   "source": "API passthrough",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_negative_h",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_zero_h",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_nan_h",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_inf_h",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_huge_h",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_negative_omega_b",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_yp_one",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_yp_negative",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_nan_t_cmb",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_zero_t_cmb",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_negative_neff",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_huge_neff",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_omega_m_less_than_omega_b",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_all_presets_valid",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_negative_zh",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_zero_zh",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_nan_delta_rho",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_backwards_z_range",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_negative_z_min",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_nz_too_small",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_length_mismatch",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_no_zh_no_dqdz",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_inf_delta_rho",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_finite_scalar_nan",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_finite_scalar_inf",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_finite_scalar_neg_inf",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_finite_scalar_normal",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_finite_scalar_none",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_require_zh_none",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_require_zh_negative",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_require_zh_valid",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_n_eff_negative",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_n_eff_too_large",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_n_eff_valid",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_cosmology_dict_nan",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_cosmology_dict_yp_one",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_cosmology_none",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_x_positive",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_adversarial_inputs.py",
+  "test": "test_validate_x_inj_zero",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_literature_curves.py",
+  "test": "test_chluba2015_photon_injection_curve",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
+  "flag": false
+ },
+ {
+  "file": "python/tests/test_literature_curves.py",
+  "test": "test_digitization_request_present",
+  "provenance": "uncharacterized",
+  "target": "(not yet characterized in census)",
+  "source": "(pending audit)",
   "flag": false
  }
 ]

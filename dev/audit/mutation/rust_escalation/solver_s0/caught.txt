@@ -1,0 +1,4 @@
+src/solver.rs:80:9: replace SolverConfig::validate -> Result<(), String> with Ok(())
+src/solver.rs:83:36: replace || with && in SolverConfig::validate
+src/solver.rs:83:50: replace < with == in SolverConfig::validate
+src/solver.rs:92:37: replace || with && in SolverConfig::validate

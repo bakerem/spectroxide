@@ -1,0 +1,188 @@
+src/solver.rs:80:12: delete ! in SolverConfig::validate
+src/solver.rs:80:54: replace <= with > in SolverConfig::validate
+src/solver.rs:83:12: delete ! in SolverConfig::validate
+src/solver.rs:83:50: replace < with > in SolverConfig::validate
+src/solver.rs:86:25: replace <= with > in SolverConfig::validate
+src/solver.rs:92:12: delete ! in SolverConfig::validate
+src/solver.rs:92:52: replace <= with > in SolverConfig::validate
+src/solver.rs:99:24: replace > with < in SolverConfig::validate
+src/solver.rs:106:12: delete ! in SolverConfig::validate
+src/solver.rs:106:52: replace <= with > in SolverConfig::validate
+src/solver.rs:109:12: delete ! in SolverConfig::validate
+src/solver.rs:109:56: replace <= with > in SolverConfig::validate
+src/solver.rs:112:33: replace < with > in SolverConfig::validate
+src/solver.rs:121:25: replace > with < in SolverConfig::validate
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (0.0, -1.0)
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (1.0, 0.0)
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (1.0, 1.0)
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (1.0, -1.0)
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (-1.0, 0.0)
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (-1.0, 1.0)
+src/solver.rs:428:5: replace dcbr_heating_with_derivative -> (f64, f64) with (-1.0, -1.0)
+src/solver.rs:435:23: replace / with % in dcbr_heating_with_derivative
+src/solver.rs:435:23: replace / with * in dcbr_heating_with_derivative
+src/solver.rs:444:25: replace / with % in dcbr_heating_with_derivative
+src/solver.rs:445:48: replace + with * in dcbr_heating_with_derivative
+src/solver.rs:502:43: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:503:29: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:503:42: replace + with * in dcbr_heating_with_derivative
+src/solver.rs:503:53: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:504:30: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:504:30: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:504:56: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:505:39: replace + with * in dcbr_heating_with_derivative
+src/solver.rs:506:37: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:506:37: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:508:31: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:508:31: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:508:48: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:508:48: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:513:29: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:514:31: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:520:60: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:520:60: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:520:44: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:520:44: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:520:30: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:520:30: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:520:38: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:520:38: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:521:69: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:521:69: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:521:51: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:521:51: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:521:35: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:521:43: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:522:70: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:522:70: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:522:52: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:522:52: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:522:36: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:522:44: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:522:44: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:526:43: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:527:53: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:528:30: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:528:56: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:530:37: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:530:37: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:532:31: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:532:31: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:532:48: replace - with + in dcbr_heating_with_derivative
+src/solver.rs:532:48: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:536:30: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:536:38: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:537:48: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:537:48: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:537:32: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:537:32: replace * with / in dcbr_heating_with_derivative
+src/solver.rs:541:22: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:543:31: replace - with / in dcbr_heating_with_derivative
+src/solver.rs:543:24: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:543:48: replace * with + in dcbr_heating_with_derivative
+src/solver.rs:663:9: replace ThermalizationSolver::set_injection -> Result<(), String> with Ok(())
+src/solver.rs:744:9: replace ThermalizationSolver::reset with ()
+src/solver.rs:781:9: replace ThermalizationSolver::x_e_at -> f64 with 0.0
+src/solver.rs:785:9: replace ThermalizationSolver::adaptive_dz -> f64 with -1.0
+src/solver.rs:796:33: replace > with == in ThermalizationSolver::adaptive_dz
+src/solver.rs:796:33: replace > with < in ThermalizationSolver::adaptive_dz
+src/solver.rs:797:74: replace * with + in ThermalizationSolver::adaptive_dz
+src/solver.rs:797:57: replace * with + in ThermalizationSolver::adaptive_dz
+src/solver.rs:797:53: replace * with / in ThermalizationSolver::adaptive_dz
+src/solver.rs:1087:22: replace += with -= in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1087:49: replace * with + in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1087:49: replace * with / in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1095:32: replace / with % in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1095:32: replace / with * in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1099:29: replace -= with += in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1099:29: replace -= with /= in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1099:40: replace * with + in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1099:40: replace * with / in ThermalizationSolver::subtract_temperature_shift
+src/solver.rs:1118:9: replace ThermalizationSolver::step_with_dz -> f64 with 0.0
+src/solver.rs:1118:29: replace - with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1118:29: replace - with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1119:32: replace - with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1119:32: replace - with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1120:28: replace - with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1137:40: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1137:40: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1183:50: replace - with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1183:50: replace - with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1184:42: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1184:77: replace + with * in ThermalizationSolver::step_with_dz
+src/solver.rs:1184:64: replace + with * in ThermalizationSolver::step_with_dz
+src/solver.rs:1186:58: replace / with % in ThermalizationSolver::step_with_dz
+src/solver.rs:1186:58: replace / with * in ThermalizationSolver::step_with_dz
+src/solver.rs:1186:49: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1186:33: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1186:33: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1190:24: replace - with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1228:47: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1234:39: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1234:39: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1239:38: replace + with - in ThermalizationSolver::step_with_dz
+src/solver.rs:1242:54: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1244:69: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1244:55: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1244:55: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1244:47: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1244:47: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1253:38: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1254:53: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1254:53: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1254:37: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1254:37: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1262:67: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1262:54: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1262:46: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1264:43: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1274:39: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1274:39: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1286:77: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1286:63: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1286:47: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1286:47: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1438:31: replace - with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1441:40: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1441:34: delete - in ThermalizationSolver::step_with_dz
+src/solver.rs:1442:69: replace * with + in ThermalizationSolver::step_with_dz
+src/solver.rs:1442:69: replace * with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1442:62: replace - with / in ThermalizationSolver::step_with_dz
+src/solver.rs:1479:25: replace += with -= in ThermalizationSolver::step_with_dz
+src/solver.rs:1479:25: replace += with *= in ThermalizationSolver::step_with_dz
+src/solver.rs:1492:9: replace ThermalizationSolver::run_with_snapshots -> &[SolverSnapshot] with Vec::leak(Vec::new())
+src/solver.rs:1573:42: replace && with || in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1573:65: replace >= with < in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1579:22: replace > with == in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1579:22: replace > with < in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1579:61: replace < with == in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1579:61: replace < with > in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1582:26: replace < with == in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1582:26: replace < with <= in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1587:35: replace >= with < in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1591:58: replace && with || in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1591:41: replace < with <= in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1593:39: replace += with -= in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1603:46: replace && with || in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1603:29: replace < with == in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1603:29: replace < with <= in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1603:56: replace <= with > in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1625:25: replace < with == in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1625:25: replace < with <= in ThermalizationSolver::run_with_snapshots
+src/solver.rs:1680:9: replace ThermalizationSolver::save_snapshot_at with ()
+src/solver.rs:1684:34: replace + with * in ThermalizationSolver::save_snapshot_at
+src/solver.rs:1684:40: replace * with + in ThermalizationSolver::save_snapshot_at
+src/solver.rs:1684:40: replace * with / in ThermalizationSolver::save_snapshot_at
+src/solver.rs:1694:23: replace += with *= in ThermalizationSolver::save_snapshot_at
+src/solver.rs:1694:51: replace * with + in ThermalizationSolver::save_snapshot_at
+src/solver.rs:1694:51: replace * with / in ThermalizationSolver::save_snapshot_at
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (0.0, 0.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (0.0, 1.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (0.0, -1.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (1.0, 0.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (1.0, 1.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (1.0, -1.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (-1.0, 0.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (-1.0, 1.0)
+src/solver.rs:1716:9: replace ThermalizationSolver::extract_mu_y_joint -> (f64, f64) with (-1.0, -1.0)
+src/solver.rs:1994:35: replace < with > in SolverBuilder::build

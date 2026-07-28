@@ -1,0 +1,3 @@
+src/energy_injection.rs:302:5: replace load_heating_table -> Result<InjectionScenario, String> with Ok(Default::default())
+src/energy_injection.rs:361:5: replace load_photon_source_table -> Result<InjectionScenario, String> with Ok(Default::default())
+src/energy_injection.rs:954:9: replace InjectionScenario::refinement_zones -> Vec<RefinementZone> with vec![Default::default()]

@@ -1,0 +1,92 @@
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![], vec![])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![], vec![0.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![], vec![1.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![], vec![-1.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![0], vec![])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![0], vec![0.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![0], vec![1.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![0], vec![-1.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![1], vec![])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![1], vec![0.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![1], vec![1.0])
+src/distortion.rs:43:5: replace band_weights -> (Vec<usize>, Vec<f64>) with (vec![1], vec![-1.0])
+src/distortion.rs:47:30: replace || with && in band_weights
+src/distortion.rs:47:22: replace < with == in band_weights
+src/distortion.rs:47:22: replace < with > in band_weights
+src/distortion.rs:47:43: replace > with < in band_weights
+src/distortion.rs:57:29: replace + with - in band_weights
+src/distortion.rs:57:45: replace - with + in band_weights
+src/distortion.rs:114:10: replace < with > in decompose_gram_schmidt
+src/distortion.rs:127:15: replace += with -= in decompose_gram_schmidt
+src/distortion.rs:127:15: replace += with *= in decompose_gram_schmidt
+src/distortion.rs:127:30: replace * with + in decompose_gram_schmidt
+src/distortion.rs:127:23: replace * with + in decompose_gram_schmidt
+src/distortion.rs:127:23: replace * with / in decompose_gram_schmidt
+src/distortion.rs:133:16: replace < with > in decompose_gram_schmidt
+src/distortion.rs:137:48: replace / with % in decompose_gram_schmidt
+src/distortion.rs:137:48: replace / with * in decompose_gram_schmidt
+src/distortion.rs:143:28: replace - with + in decompose_gram_schmidt
+src/distortion.rs:143:28: replace - with / in decompose_gram_schmidt
+src/distortion.rs:143:34: replace * with + in decompose_gram_schmidt
+src/distortion.rs:143:34: replace * with / in decompose_gram_schmidt
+src/distortion.rs:146:21: replace < with > in decompose_gram_schmidt
+src/distortion.rs:150:50: replace / with % in decompose_gram_schmidt
+src/distortion.rs:150:50: replace / with * in decompose_gram_schmidt
+src/distortion.rs:158:45: replace - with + in decompose_gram_schmidt
+src/distortion.rs:158:45: replace - with / in decompose_gram_schmidt
+src/distortion.rs:158:34: replace - with + in decompose_gram_schmidt
+src/distortion.rs:158:34: replace - with / in decompose_gram_schmidt
+src/distortion.rs:158:40: replace * with + in decompose_gram_schmidt
+src/distortion.rs:158:40: replace * with / in decompose_gram_schmidt
+src/distortion.rs:158:52: replace * with + in decompose_gram_schmidt
+src/distortion.rs:158:52: replace * with / in decompose_gram_schmidt
+src/distortion.rs:161:21: replace < with > in decompose_gram_schmidt
+src/distortion.rs:170:53: replace / with % in decompose_gram_schmidt
+src/distortion.rs:170:53: replace / with * in decompose_gram_schmidt
+src/distortion.rs:179:23: replace / with % in decompose_gram_schmidt
+src/distortion.rs:179:23: replace / with * in decompose_gram_schmidt
+src/distortion.rs:180:38: replace / with % in decompose_gram_schmidt
+src/distortion.rs:180:38: replace / with * in decompose_gram_schmidt
+src/distortion.rs:180:20: replace - with + in decompose_gram_schmidt
+src/distortion.rs:180:20: replace - with / in decompose_gram_schmidt
+src/distortion.rs:180:30: replace * with + in decompose_gram_schmidt
+src/distortion.rs:180:30: replace * with / in decompose_gram_schmidt
+src/distortion.rs:181:46: replace / with % in decompose_gram_schmidt
+src/distortion.rs:181:46: replace / with * in decompose_gram_schmidt
+src/distortion.rs:181:34: replace - with + in decompose_gram_schmidt
+src/distortion.rs:181:34: replace - with / in decompose_gram_schmidt
+src/distortion.rs:181:18: replace - with + in decompose_gram_schmidt
+src/distortion.rs:181:18: replace - with / in decompose_gram_schmidt
+src/distortion.rs:181:28: replace * with + in decompose_gram_schmidt
+src/distortion.rs:181:28: replace * with / in decompose_gram_schmidt
+src/distortion.rs:181:39: replace * with + in decompose_gram_schmidt
+src/distortion.rs:181:39: replace * with / in decompose_gram_schmidt
+src/distortion.rs:240:10: replace < with > in decompose_nonlinear_be
+src/distortion.rs:255:65: replace + with - in decompose_nonlinear_be
+src/distortion.rs:255:65: replace + with * in decompose_nonlinear_be
+src/distortion.rs:255:46: replace + with - in decompose_nonlinear_be
+src/distortion.rs:255:46: replace + with * in decompose_nonlinear_be
+src/distortion.rs:255:32: replace - with + in decompose_nonlinear_be
+src/distortion.rs:255:32: replace - with / in decompose_nonlinear_be
+src/distortion.rs:255:73: replace * with + in decompose_nonlinear_be
+src/distortion.rs:334:36: replace + with * in decompose_nonlinear_be
+src/distortion.rs:335:51: replace + with * in decompose_nonlinear_be
+src/distortion.rs:339:31: replace + with - in decompose_nonlinear_be
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (0.0, 0.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (0.0, 1.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (0.0, -1.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (1.0, 0.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (1.0, 1.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (1.0, -1.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (-1.0, 0.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (-1.0, 1.0)
+src/distortion.rs:430:5: replace firas_check -> (f64, f64) with (-1.0, -1.0)
+src/distortion.rs:431:25: replace / with % in firas_check
+src/distortion.rs:431:25: replace / with * in firas_check
+src/distortion.rs:432:24: replace / with % in firas_check
+src/distortion.rs:432:24: replace / with * in firas_check
+src/distortion.rs:442:5: replace delta_n_to_intensity_mjy -> f64 with 0.0
+src/distortion.rs:442:5: replace delta_n_to_intensity_mjy -> f64 with 1.0
+src/distortion.rs:442:5: replace delta_n_to_intensity_mjy -> f64 with -1.0
+src/distortion.rs:446:25: replace * with + in delta_n_to_intensity_mjy
+src/distortion.rs:446:15: replace * with / in delta_n_to_intensity_mjy

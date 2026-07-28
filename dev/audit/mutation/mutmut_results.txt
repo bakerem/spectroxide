@@ -1,0 +1,1791 @@
+    spectroxide.dark_photon.x_plasma_frequency_ev__mutmut_2: survived
+    spectroxide.dark_photon.x_resonance_redshift__mutmut_2: survived
+    spectroxide.dark_photon.x_resonance_redshift__mutmut_4: survived
+    spectroxide.dark_photon.x_resonance_redshift__mutmut_10: survived
+    spectroxide.dark_photon.x_resonance_redshift__mutmut_13: survived
+    spectroxide.dark_photon.x_resonance_redshift__mutmut_14: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_2: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_8: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_12: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_16: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_18: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_20: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_26: survived
+    spectroxide.dark_photon.x_dln_omega_pl_sq_dlna__mutmut_41: survived
+    spectroxide.dark_photon.x_gamma_con__mutmut_2: survived
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_1: no tests
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_2: no tests
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_3: no tests
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_4: no tests
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_5: no tests
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_6: no tests
+    spectroxide.dark_photon.x_gc_per_epsilon_sq__mutmut_7: no tests
+    spectroxide.greens_table.x__check_table_hash__mutmut_8: survived
+    spectroxide.greens_table.x__check_table_hash__mutmut_10: survived
+    spectroxide.greens_table.x__check_table_hash__mutmut_12: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_1: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_2: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_3: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_4: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_5: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_6: survived
+    spectroxide.greens_table.x__get_interpolator_class__mutmut_7: survived
+    spectroxide.greens_table.x__checkpoint_path__mutmut_1: no tests
+    spectroxide.greens_table.x__checkpoint_path__mutmut_2: no tests
+    spectroxide.greens_table.x__checkpoint_path__mutmut_3: no tests
+    spectroxide.greens_table.x__checkpoint_path__mutmut_4: no tests
+    spectroxide.greens_table.x__checkpoint_path__mutmut_5: no tests
+    spectroxide.greens_table.x__checkpoint_path__mutmut_6: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_1: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_2: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_3: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_4: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_5: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_6: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_7: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_8: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_9: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_10: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_11: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_12: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_13: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_14: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_15: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_16: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_17: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_18: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_19: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_20: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_21: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_22: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_23: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_24: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_25: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_26: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_27: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_28: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_29: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_30: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_31: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_32: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_33: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_34: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_35: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_36: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_37: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_38: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_39: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_40: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_41: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_42: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_43: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_44: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_45: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_46: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_47: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_48: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_49: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_50: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_51: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_52: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_53: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_54: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_55: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_56: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_57: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_58: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_59: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_60: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_61: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_62: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_63: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_64: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_65: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_66: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_67: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_68: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_69: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_70: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_71: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_72: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_73: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_74: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_75: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_76: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_77: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_78: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_79: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_80: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_81: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_82: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_83: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_84: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_85: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_86: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_87: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_88: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_89: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_90: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_91: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_92: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_93: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_94: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_95: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_96: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_97: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_98: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_99: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_100: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_101: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_102: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_103: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_104: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_105: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_106: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_107: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_108: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_109: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_110: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_111: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_112: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_113: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_114: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_115: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_116: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_117: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_118: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_119: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_120: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_121: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_122: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_123: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_124: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_125: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_126: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_127: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_128: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_129: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_130: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_131: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_132: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_133: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_134: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_135: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_136: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_137: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_138: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_139: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_140: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_141: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_142: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_143: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_144: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_145: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_146: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_147: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_148: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_149: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_150: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_151: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_152: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_153: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_154: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_155: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_156: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_157: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_158: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_159: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_160: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_161: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_162: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_163: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_164: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_165: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_166: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_167: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_168: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_169: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_170: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_171: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_172: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_173: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_174: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_175: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_176: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_177: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_178: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_179: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_180: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_181: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_182: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_183: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_184: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_185: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_186: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_187: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_188: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_189: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_190: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_191: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_192: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_193: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_194: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_195: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_196: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_197: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_198: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_199: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_200: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_201: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_202: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_203: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_204: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_205: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_206: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_207: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_208: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_209: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_210: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_211: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_212: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_213: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_214: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_215: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_216: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_217: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_218: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_219: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_220: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_221: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_222: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_223: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_224: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_225: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_226: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_227: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_228: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_229: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_230: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_231: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_232: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_233: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_234: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_235: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_236: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_237: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_238: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_239: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_240: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_241: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_242: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_243: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_244: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_245: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_246: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_247: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_248: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_249: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_250: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_251: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_252: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_253: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_254: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_255: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_256: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_257: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_258: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_259: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_260: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_261: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_262: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_263: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_264: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_265: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_266: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_267: no tests
+    spectroxide.greens_table.x__build_greens_table__mutmut_268: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_1: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_2: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_3: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_4: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_5: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_6: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_7: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_8: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_9: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_10: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_11: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_12: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_13: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_14: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_15: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_16: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_17: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_18: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_19: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_20: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_21: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_22: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_23: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_24: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_25: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_26: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_27: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_28: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_29: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_30: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_31: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_32: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_33: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_34: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_35: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_36: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_37: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_38: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_39: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_40: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_41: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_42: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_43: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_44: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_45: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_46: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_47: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_48: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_49: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_50: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_51: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_52: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_53: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_54: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_55: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_56: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_57: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_58: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_59: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_60: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_61: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_62: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_63: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_64: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_65: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_66: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_67: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_68: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_69: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_70: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_71: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_72: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_73: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_74: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_75: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_76: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_77: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_78: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_79: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_80: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_81: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_82: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_83: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_84: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_85: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_86: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_87: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_88: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_89: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_90: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_91: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_92: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_93: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_94: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_95: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_96: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_97: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_98: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_99: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_100: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_101: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_102: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_103: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_104: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_105: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_106: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_107: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_108: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_109: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_110: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_111: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_112: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_113: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_114: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_115: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_116: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_117: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_118: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_119: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_120: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_121: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_122: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_123: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_124: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_125: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_126: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_127: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_128: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_129: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_130: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_131: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_132: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_133: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_134: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_135: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_136: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_137: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_138: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_139: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_140: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_141: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_142: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_143: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_144: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_145: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_146: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_147: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_148: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_149: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_150: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_151: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_152: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_153: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_154: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_155: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_156: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_157: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_158: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_159: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_160: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_161: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_162: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_163: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_164: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_165: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_166: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_167: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_168: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_169: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_170: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_171: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_172: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_173: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_174: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_175: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_176: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_177: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_178: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_179: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_180: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_181: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_182: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_183: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_184: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_185: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_186: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_187: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_188: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_189: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_190: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_191: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_192: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_193: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_194: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_195: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_196: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_197: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_198: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_199: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_200: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_201: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_202: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_203: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_204: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_205: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_206: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_207: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_208: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_209: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_210: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_211: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_212: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_213: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_214: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_215: no tests
+    spectroxide.greens_table.x__build_photon_greens_table__mutmut_216: no tests
+    spectroxide.greens_table.x_load_or_build_greens_table__mutmut_4: survived
+    spectroxide.greens_table.x_load_or_build_greens_table__mutmut_7: survived
+    spectroxide.greens_table.x_load_or_build_greens_table__mutmut_12: survived
+    spectroxide.greens_table.x_load_or_build_greens_table__mutmut_13: survived
+    spectroxide.greens_table.x_load_or_build_greens_table__mutmut_14: survived
+    spectroxide.greens_table.x_load_or_build_greens_table__mutmut_15: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_2: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_4: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_7: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_10: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_12: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_13: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_14: survived
+    spectroxide.greens_table.x_load_or_build_photon_greens_table__mutmut_15: survived
+    spectroxide.firas.x__freq_cm_to_ghz__mutmut_4: survived
+    spectroxide.firas.x__freq_cm_to_ghz__mutmut_6: survived
+    spectroxide.firas.x__freq_cm_to_x__mutmut_5: survived
+    spectroxide.firas.x__freq_cm_to_x__mutmut_7: survived
+    spectroxide.firas.x__dn_to_dI_kJy__mutmut_6: survived
+    spectroxide.firas.x__dn_to_dI_kJy__mutmut_8: survived
+    spectroxide.firas.x__dn_to_dI_kJy__mutmut_18: timeout
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_1: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_5: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_7: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_9: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_10: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_11: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_12: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_13: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_14: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_23: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_24: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_25: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_26: survived
+    spectroxide.firas.x__galactic_dust_template_kJy__mutmut_27: survived
+    spectroxide.firas.xǁFIRASDataǁ__init____mutmut_18: survived
+    spectroxide.firas.xǁFIRASDataǁ__init____mutmut_40: survived
+    spectroxide.firas.xǁFIRASDataǁ__init____mutmut_47: survived
+    spectroxide.firas.xǁFIRASDataǁ__init____mutmut_54: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_null__mutmut_2: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude__mutmut_8: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude__mutmut_11: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude__mutmut_15: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude__mutmut_33: survived
+    spectroxide.firas.xǁFIRASDataǁupper_limit__mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁupper_limit__mutmut_9: survived
+    spectroxide.firas.xǁFIRASDataǁupper_limit__mutmut_14: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude_marginalised__mutmut_38: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude_marginalised__mutmut_39: survived
+    spectroxide.firas.xǁFIRASDataǁfit_amplitude_marginalised__mutmut_41: survived
+    spectroxide.firas.xǁFIRASDataǁupper_limit_mu__mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁupper_limit_mu__mutmut_3: survived
+    spectroxide.firas.xǁFIRASDataǁupper_limit_y__mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_6: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_11: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_15: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_19: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_20: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_21: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_28: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_45: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_49: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_66: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_67: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_74: survived
+    spectroxide.firas.xǁFIRASDataǁfit_distortion__mutmut_75: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_5: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_6: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_7: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_8: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_9: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_17: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_21: survived
+    spectroxide.firas.xǁFIRASDataǁpredict_kJy__mutmut_23: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_distortion__mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_distortion__mutmut_2: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_distortion__mutmut_3: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_distortion__mutmut_8: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_distortion__mutmut_12: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_1: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_2: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_3: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_4: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_5: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_6: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_7: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_8: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_9: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_10: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_11: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_12: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_13: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_14: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_15: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_16: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_17: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_18: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_19: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_20: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_21: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_22: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_23: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_24: no tests
+    spectroxide.firas.xǁFIRASDataǁchi2_from_solver__mutmut_25: no tests
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_10: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_11: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_12: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_18: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_20: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_27: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_28: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_29: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_30: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_31: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_32: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_33: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_34: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_40: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_41: survived
+    spectroxide.firas.xǁFIRASDataǁlimit_on_model__mutmut_42: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_2: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_3: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_6: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_7: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_8: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_10: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_11: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_12: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_28: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_29: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_30: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_43: survived
+    spectroxide.firas.xǁFIRASDataǁprofile_limit_floating_T__mutmut_44: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_2: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_6: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_24: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_25: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_26: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_27: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_28: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_29: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_42: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_44: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_45: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_46: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_50: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_51: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_52: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_54: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_56: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_61: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_63: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_67: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_69: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_74: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_77: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_79: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_84: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_88: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_96: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_97: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_98: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_100: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_101: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_104: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_105: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_106: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_107: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_109: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_110: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_111: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_112: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_124: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_132: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_134: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_135: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_136: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_137: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_138: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_139: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_140: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_141: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_142: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_143: survived
+    spectroxide.firas.xǁFIRASDataǁ_joint_fit_floating_T__mutmut_144: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_diagonal__mutmut_2: survived
+    spectroxide.firas.xǁFIRASDataǁchi2_diagonal__mutmut_7: survived
+    spectroxide.firas.xǁFIRASDataǁ__repr____mutmut_1: survived
+    spectroxide.firas.xǁFIRASDataǁ__repr____mutmut_2: survived
+    spectroxide.firas.xǁFIRASDataǁ__repr____mutmut_3: survived
+    spectroxide.firas.xǁFIRASDataǁ__repr____mutmut_4: survived
+    spectroxide.firas.xǁFIRASDataǁ__repr____mutmut_5: survived
+    spectroxide.firas.xǁFIRASDataǁ__repr____mutmut_6: survived
+    spectroxide.greens.x__call_vectorized__mutmut_1: survived
+    spectroxide.greens.x__call_vectorized__mutmut_2: survived
+    spectroxide.greens.x__call_vectorized__mutmut_3: survived
+    spectroxide.greens.x__call_vectorized__mutmut_4: survived
+    spectroxide.greens.x__call_vectorized__mutmut_5: survived
+    spectroxide.greens.x__call_vectorized__mutmut_6: survived
+    spectroxide.greens.x__call_vectorized__mutmut_7: survived
+    spectroxide.greens.x__call_vectorized__mutmut_8: survived
+    spectroxide.greens.x__call_vectorized__mutmut_9: survived
+    spectroxide.greens.x__call_vectorized__mutmut_10: survived
+    spectroxide.greens.x__call_vectorized__mutmut_11: survived
+    spectroxide.greens.x__call_vectorized__mutmut_12: survived
+    spectroxide.greens.x__call_vectorized__mutmut_13: survived
+    spectroxide.greens.x__call_vectorized__mutmut_14: survived
+    spectroxide.greens.x__call_vectorized__mutmut_16: survived
+    spectroxide.greens.x__call_vectorized__mutmut_17: survived
+    spectroxide.greens.x__call_vectorized__mutmut_18: survived
+    spectroxide.greens.x__call_vectorized__mutmut_19: survived
+    spectroxide.greens.x__call_vectorized__mutmut_20: survived
+    spectroxide.greens.x__call_vectorized__mutmut_21: survived
+    spectroxide.greens.x__call_vectorized__mutmut_22: survived
+    spectroxide.greens.x__call_vectorized__mutmut_23: survived
+    spectroxide.greens.x__call_vectorized__mutmut_24: survived
+    spectroxide.greens.x__call_vectorized__mutmut_25: survived
+    spectroxide.greens.x__call_vectorized__mutmut_26: survived
+    spectroxide.greens.x__call_vectorized__mutmut_27: survived
+    spectroxide.greens.x__call_vectorized__mutmut_29: survived
+    spectroxide.greens.x__call_vectorized__mutmut_30: survived
+    spectroxide.greens.x__call_vectorized__mutmut_32: survived
+    spectroxide.greens.x__call_vectorized__mutmut_33: survived
+    spectroxide.greens.x__call_vectorized__mutmut_34: survived
+    spectroxide.greens.x__call_vectorized__mutmut_35: survived
+    spectroxide.greens.x__call_vectorized__mutmut_36: survived
+    spectroxide.greens.x__call_vectorized__mutmut_37: survived
+    spectroxide.greens.x__call_vectorized__mutmut_38: survived
+    spectroxide.greens.x__call_vectorized__mutmut_39: survived
+    spectroxide.greens.x_planck__mutmut_3: survived
+    spectroxide.greens.x_planck__mutmut_5: survived
+    spectroxide.greens.x_planck__mutmut_9: survived
+    spectroxide.greens.x_planck__mutmut_12: survived
+    spectroxide.greens.x_planck__mutmut_13: survived
+    spectroxide.greens.x_planck__mutmut_14: survived
+    spectroxide.greens.x_planck__mutmut_15: survived
+    spectroxide.greens.x_planck__mutmut_18: survived
+    spectroxide.greens.x_planck__mutmut_19: survived
+    spectroxide.greens.x_planck__mutmut_20: survived
+    spectroxide.greens.x_planck__mutmut_21: survived
+    spectroxide.greens.x_planck__mutmut_22: survived
+    spectroxide.greens.x_planck__mutmut_23: survived
+    spectroxide.greens.x_planck__mutmut_24: survived
+    spectroxide.greens.x_planck__mutmut_25: survived
+    spectroxide.greens.x_planck__mutmut_26: survived
+    spectroxide.greens.x_planck__mutmut_28: survived
+    spectroxide.greens.x_g_bb__mutmut_3: survived
+    spectroxide.greens.x_g_bb__mutmut_5: survived
+    spectroxide.greens.x_g_bb__mutmut_9: survived
+    spectroxide.greens.x_g_bb__mutmut_12: survived
+    spectroxide.greens.x_g_bb__mutmut_13: survived
+    spectroxide.greens.x_g_bb__mutmut_14: survived
+    spectroxide.greens.x_g_bb__mutmut_15: survived
+    spectroxide.greens.x_g_bb__mutmut_18: survived
+    spectroxide.greens.x_g_bb__mutmut_19: survived
+    spectroxide.greens.x_g_bb__mutmut_20: survived
+    spectroxide.greens.x_g_bb__mutmut_21: survived
+    spectroxide.greens.x_g_bb__mutmut_22: survived
+    spectroxide.greens.x_g_bb__mutmut_23: survived
+    spectroxide.greens.x_g_bb__mutmut_24: survived
+    spectroxide.greens.x_g_bb__mutmut_25: survived
+    spectroxide.greens.x_g_bb__mutmut_27: survived
+    spectroxide.greens.x_mu_shape__mutmut_3: survived
+    spectroxide.greens.x_mu_shape__mutmut_5: survived
+    spectroxide.greens.x_y_shape__mutmut_3: survived
+    spectroxide.greens.x_y_shape__mutmut_5: survived
+    spectroxide.greens.x_y_shape__mutmut_9: survived
+    spectroxide.greens.x_y_shape__mutmut_11: survived
+    spectroxide.greens.x_y_shape__mutmut_13: survived
+    spectroxide.greens.x_y_shape__mutmut_14: survived
+    spectroxide.greens.x_y_shape__mutmut_15: survived
+    spectroxide.greens.x_y_shape__mutmut_16: survived
+    spectroxide.greens.x_y_shape__mutmut_17: survived
+    spectroxide.greens.x_y_shape__mutmut_18: survived
+    spectroxide.greens.x_y_shape__mutmut_19: survived
+    spectroxide.greens.x_j_bb__mutmut_3: survived
+    spectroxide.greens.x_j_bb__mutmut_5: survived
+    spectroxide.greens.x_j_bb_star__mutmut_3: survived
+    spectroxide.greens.x_j_bb_star__mutmut_5: survived
+    spectroxide.greens.x_j_mu__mutmut_3: survived
+    spectroxide.greens.x_j_mu__mutmut_5: survived
+    spectroxide.greens.x_j_y__mutmut_3: survived
+    spectroxide.greens.x_j_y__mutmut_5: survived
+    spectroxide.greens.x_greens_function__mutmut_1: survived
+    spectroxide.greens.x_greens_function__mutmut_3: survived
+    spectroxide.greens.x_greens_function__mutmut_6: survived
+    spectroxide.greens.x_greens_function__mutmut_8: survived
+    spectroxide.greens.x_distortion_from_heating__mutmut_1: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_2: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_3: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_4: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_5: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_6: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_7: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_8: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_9: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_10: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_11: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_12: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_13: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_14: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_15: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_16: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_17: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_18: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_19: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_20: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_21: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_22: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_23: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_24: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_25: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_26: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_27: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_28: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_29: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_30: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_31: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_32: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_33: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_34: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_35: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_36: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_37: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_38: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_39: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_40: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_41: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_42: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_43: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_44: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_45: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_46: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_47: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_48: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_49: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_50: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_51: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_52: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_53: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_54: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_55: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_56: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_57: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_58: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_59: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_60: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_61: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_62: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_63: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_64: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_65: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_66: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_67: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_68: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_69: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_70: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_71: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_72: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_73: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_74: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_75: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_76: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_77: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_78: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_79: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_80: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_81: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_82: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_83: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_84: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_85: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_86: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_87: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_88: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_89: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_90: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_91: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_92: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_93: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_94: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_95: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_96: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_97: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_98: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_99: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_100: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_101: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_102: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_103: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_104: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_105: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_106: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_107: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_108: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_109: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_110: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_111: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_112: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_113: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_114: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_115: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_116: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_117: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_118: no tests
+    spectroxide.greens.x_distortion_from_heating__mutmut_119: no tests
+    spectroxide.greens.x_mu_from_heating__mutmut_1: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_4: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_6: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_7: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_9: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_10: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_11: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_18: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_22: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_25: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_30: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_31: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_32: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_39: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_41: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_44: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_57: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_58: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_59: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_61: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_62: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_63: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_64: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_72: survived
+    spectroxide.greens.x_mu_from_heating__mutmut_73: survived
+    spectroxide.greens.x_y_from_heating__mutmut_1: survived
+    spectroxide.greens.x_y_from_heating__mutmut_4: survived
+    spectroxide.greens.x_y_from_heating__mutmut_6: survived
+    spectroxide.greens.x_y_from_heating__mutmut_7: survived
+    spectroxide.greens.x_y_from_heating__mutmut_9: survived
+    spectroxide.greens.x_y_from_heating__mutmut_10: survived
+    spectroxide.greens.x_y_from_heating__mutmut_11: survived
+    spectroxide.greens.x_y_from_heating__mutmut_18: survived
+    spectroxide.greens.x_y_from_heating__mutmut_22: survived
+    spectroxide.greens.x_y_from_heating__mutmut_25: survived
+    spectroxide.greens.x_y_from_heating__mutmut_30: survived
+    spectroxide.greens.x_y_from_heating__mutmut_31: survived
+    spectroxide.greens.x_y_from_heating__mutmut_32: survived
+    spectroxide.greens.x_y_from_heating__mutmut_39: survived
+    spectroxide.greens.x_y_from_heating__mutmut_41: survived
+    spectroxide.greens.x_y_from_heating__mutmut_44: survived
+    spectroxide.greens.x_y_from_heating__mutmut_57: survived
+    spectroxide.greens.x_y_from_heating__mutmut_58: survived
+    spectroxide.greens.x_y_from_heating__mutmut_59: survived
+    spectroxide.greens.x_y_from_heating__mutmut_61: survived
+    spectroxide.greens.x_y_from_heating__mutmut_62: survived
+    spectroxide.greens.x_y_from_heating__mutmut_63: survived
+    spectroxide.greens.x_y_from_heating__mutmut_64: survived
+    spectroxide.greens.x_y_from_heating__mutmut_72: survived
+    spectroxide.greens.x_x_c_dc__mutmut_3: survived
+    spectroxide.greens.x_x_c_dc__mutmut_5: survived
+    spectroxide.greens.x_x_c_br__mutmut_3: survived
+    spectroxide.greens.x_x_c_br__mutmut_5: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_3: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_5: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_9: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_10: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_11: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_12: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_25: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_27: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_34: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_38: survived
+    spectroxide.greens.x_photon_survival_probability__mutmut_40: survived
+    spectroxide.greens.x__softplus__mutmut_1: survived
+    spectroxide.greens.x__softplus__mutmut_2: survived
+    spectroxide.greens.x__softplus__mutmut_3: survived
+    spectroxide.greens.x__softplus__mutmut_5: survived
+    spectroxide.greens.x__softplus__mutmut_6: survived
+    spectroxide.greens.x__gaunt_ff_nr__mutmut_1: survived
+    spectroxide.greens.x__gaunt_ff_nr__mutmut_2: survived
+    spectroxide.greens.x__gaunt_ff_nr__mutmut_4: survived
+    spectroxide.greens.x__gaunt_ff_nr__mutmut_6: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_1: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_2: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_3: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_9: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_10: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_11: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_18: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_19: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_21: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_23: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_24: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_25: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_27: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_29: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_30: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_31: survived
+    spectroxide.greens.x__dc_high_freq_suppression__mutmut_33: survived
+    spectroxide.greens.x__dc_emission_coefficient__mutmut_7: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_1: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_2: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_4: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_5: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_6: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_10: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_16: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_19: survived
+    spectroxide.greens.x__br_emission_coefficient_with_he__mutmut_42: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_2: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_10: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_12: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_14: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_15: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_16: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_18: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_28: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_29: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_51: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_54: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_56: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_127: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_145: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_154: survived
+    spectroxide.greens.x__photon_survival_probability_numerical__mutmut_155: survived
+    spectroxide.greens.x__y_compton__mutmut_6: survived
+    spectroxide.greens.x__y_compton__mutmut_8: survived
+    spectroxide.greens.x__y_compton__mutmut_9: survived
+    spectroxide.greens.x__y_compton__mutmut_10: survived
+    spectroxide.greens.x__y_compton__mutmut_11: survived
+    spectroxide.greens.x__y_compton__mutmut_12: survived
+    spectroxide.greens.x__y_compton__mutmut_14: survived
+    spectroxide.greens.x__y_compton__mutmut_35: survived
+    spectroxide.greens.x__y_compton__mutmut_48: survived
+    spectroxide.greens.x__y_compton__mutmut_58: survived
+    spectroxide.greens.x__y_compton__mutmut_69: survived
+    spectroxide.greens.x__y_compton__mutmut_71: survived
+    spectroxide.greens.x__y_compton__mutmut_73: survived
+    spectroxide.greens.x__y_compton__mutmut_86: survived
+    spectroxide.greens.x__f_cs__mutmut_9: survived
+    spectroxide.greens.x__broadened_bump__mutmut_1: survived
+    spectroxide.greens.x__broadened_bump__mutmut_4: survived
+    spectroxide.greens.x__broadened_bump__mutmut_5: survived
+    spectroxide.greens.x__broadened_bump__mutmut_7: survived
+    spectroxide.greens.x__broadened_bump__mutmut_8: survived
+    spectroxide.greens.x__broadened_bump__mutmut_9: survived
+    spectroxide.greens.x__broadened_bump__mutmut_11: survived
+    spectroxide.greens.x__broadened_bump__mutmut_12: survived
+    spectroxide.greens.x__broadened_bump__mutmut_13: timeout
+    spectroxide.greens.x__broadened_bump__mutmut_14: survived
+    spectroxide.greens.x__broadened_bump__mutmut_16: survived
+    spectroxide.greens.x__broadened_bump__mutmut_19: survived
+    spectroxide.greens.x__broadened_bump__mutmut_21: survived
+    spectroxide.greens.x__broadened_bump__mutmut_22: survived
+    spectroxide.greens.x__broadened_bump__mutmut_23: survived
+    spectroxide.greens.x__broadened_bump__mutmut_24: survived
+    spectroxide.greens.x__broadened_bump__mutmut_25: survived
+    spectroxide.greens.x__broadened_bump__mutmut_41: survived
+    spectroxide.greens.x__broadened_bump__mutmut_42: survived
+    spectroxide.greens.x__broadened_bump__mutmut_44: survived
+    spectroxide.greens.x__broadened_bump__mutmut_47: survived
+    spectroxide.greens.x__broadened_bump__mutmut_48: survived
+    spectroxide.greens.x__broadened_bump__mutmut_49: survived
+    spectroxide.greens.x__broadened_bump__mutmut_56: survived
+    spectroxide.greens.x__broadened_bump__mutmut_67: survived
+    spectroxide.greens.x__broadened_bump__mutmut_69: survived
+    spectroxide.greens.x__broadened_bump__mutmut_75: survived
+    spectroxide.greens.x__broadened_bump__mutmut_76: survived
+    spectroxide.greens.x__broadened_bump__mutmut_77: survived
+    spectroxide.greens.x__broadened_bump__mutmut_80: survived
+    spectroxide.greens.x__broadened_bump__mutmut_81: survived
+    spectroxide.greens.x__broadened_bump__mutmut_83: survived
+    spectroxide.greens.x__broadened_bump__mutmut_84: survived
+    spectroxide.greens.x__broadened_bump__mutmut_85: survived
+    spectroxide.greens.x__broadened_bump__mutmut_86: survived
+    spectroxide.greens.x__broadened_bump__mutmut_87: survived
+    spectroxide.greens.x__broadened_bump__mutmut_88: survived
+    spectroxide.greens.x__broadened_bump__mutmut_89: survived
+    spectroxide.greens.x__broadened_bump__mutmut_90: survived
+    spectroxide.greens.x__broadened_bump__mutmut_91: survived
+    spectroxide.greens.x__broadened_bump__mutmut_93: survived
+    spectroxide.greens.x__broadened_bump__mutmut_94: survived
+    spectroxide.greens.x__broadened_bump__mutmut_95: survived
+    spectroxide.greens.x__broadened_bump__mutmut_96: survived
+    spectroxide.greens.x__broadened_bump__mutmut_97: survived
+    spectroxide.greens.x__broadened_bump__mutmut_98: survived
+    spectroxide.greens.x__broadened_bump__mutmut_102: survived
+    spectroxide.greens.x__broadened_bump__mutmut_103: survived
+    spectroxide.greens.x__broadened_bump__mutmut_104: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_1: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_3: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_5: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_7: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_8: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_9: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_11: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_16: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_18: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_55: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_56: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_57: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_59: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_60: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_61: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_84: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_85: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_86: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_87: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_88: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_89: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_105: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_107: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_108: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_134: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_139: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_175: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_176: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_177: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_178: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_179: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_180: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_181: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_182: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_183: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_184: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_185: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_186: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_187: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_188: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_189: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_190: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_191: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_192: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_193: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_194: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_195: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_196: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_197: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_198: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_199: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_200: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_201: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_202: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_203: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_206: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_207: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_208: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_209: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_210: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_211: survived
+    spectroxide.greens.x_greens_function_photon__mutmut_212: survived
+    spectroxide.greens.x_mu_from_photon_injection__mutmut_2: survived
+    spectroxide.greens.x_mu_from_photon_injection__mutmut_3: survived
+    spectroxide.greens.x_mu_from_photon_injection__mutmut_5: survived
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_1: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_2: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_3: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_4: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_5: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_6: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_7: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_8: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_9: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_10: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_11: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_12: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_13: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_14: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_15: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_16: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_17: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_18: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_19: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_20: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_21: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_22: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_23: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_24: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_25: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_26: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_27: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_28: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_29: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_30: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_31: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_32: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_33: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_34: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_35: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_36: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_37: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_38: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_39: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_40: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_41: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_42: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_43: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_44: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_45: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_46: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_47: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_48: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_49: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_50: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_51: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_52: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_53: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_54: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_55: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_56: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_57: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_58: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_59: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_60: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_61: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_62: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_63: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_64: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_65: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_66: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_67: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_68: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_69: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_70: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_71: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_72: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_73: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_74: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_75: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_76: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_77: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_78: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_79: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_80: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_81: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_82: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_83: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_84: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_85: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_86: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_87: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_88: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_89: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_90: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_91: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_92: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_93: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_94: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_95: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_96: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_97: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_98: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_99: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_100: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_101: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_102: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_103: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_104: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_105: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_106: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_107: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_108: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_109: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_110: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_111: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_112: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_113: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_114: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_115: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_116: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_117: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_118: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_119: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_120: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_121: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_122: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_123: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_124: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_125: no tests
+    spectroxide.greens.x_distortion_from_photon_injection__mutmut_126: no tests
+    spectroxide.greens.x_decompose_distortion__mutmut_6: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_7: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_8: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_9: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_10: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_11: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_12: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_13: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_14: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_15: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_16: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_21: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_22: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_23: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_24: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_25: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_26: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_27: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_28: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_29: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_30: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_31: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_32: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_33: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_34: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_35: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_36: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_37: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_38: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_39: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_40: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_41: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_42: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_43: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_44: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_45: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_46: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_47: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_48: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_49: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_50: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_51: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_52: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_53: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_54: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_55: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_56: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_57: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_58: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_59: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_60: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_61: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_62: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_63: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_64: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_65: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_66: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_67: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_68: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_69: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_70: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_71: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_72: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_73: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_74: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_75: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_76: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_77: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_78: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_79: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_80: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_81: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_82: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_83: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_84: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_85: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_86: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_87: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_88: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_89: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_90: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_91: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_92: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_93: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_94: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_95: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_96: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_97: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_98: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_99: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_100: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_101: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_102: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_103: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_104: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_105: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_106: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_107: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_108: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_109: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_110: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_111: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_112: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_113: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_114: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_115: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_116: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_117: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_118: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_119: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_120: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_121: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_122: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_123: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_124: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_125: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_126: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_127: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_128: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_129: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_130: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_131: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_132: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_133: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_134: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_135: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_136: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_137: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_138: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_139: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_140: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_141: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_142: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_143: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_144: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_145: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_146: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_147: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_148: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_149: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_150: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_151: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_152: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_153: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_154: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_155: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_156: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_157: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_158: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_159: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_160: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_161: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_162: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_163: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_164: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_165: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_166: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_167: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_168: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_169: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_170: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_171: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_172: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_173: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_174: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_175: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_176: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_177: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_178: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_179: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_180: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_181: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_182: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_183: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_184: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_185: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_186: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_187: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_188: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_189: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_190: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_191: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_192: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_193: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_194: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_195: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_196: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_197: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_198: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_199: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_200: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_201: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_202: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_203: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_204: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_205: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_206: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_207: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_208: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_209: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_210: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_211: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_212: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_213: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_214: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_215: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_216: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_217: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_218: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_219: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_220: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_221: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_222: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_223: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_224: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_225: survived
+    spectroxide.greens.x_decompose_distortion__mutmut_226: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_3: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_4: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_5: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_9: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_10: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_11: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_12: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_14: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_15: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_16: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_17: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_18: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_19: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_20: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_25: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_26: survived
+    spectroxide.greens.x__band_trap_weights__mutmut_27: survived
+    spectroxide.greens.x__energy_integrals__mutmut_25: survived
+    spectroxide.greens.x__energy_integrals__mutmut_26: survived
+    spectroxide.greens.x__energy_integrals__mutmut_27: survived
+    spectroxide.greens.x__energy_integrals__mutmut_28: survived
+    spectroxide.greens.x__energy_integrals__mutmut_30: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_9: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_11: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_14: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_16: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_32: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_33: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_34: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_35: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_36: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_37: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_38: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_39: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_40: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_41: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_42: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_43: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_44: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_45: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_46: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_47: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_48: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_49: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_50: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_51: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_52: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_53: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_54: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_55: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_56: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_57: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_58: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_59: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_68: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_69: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_77: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_84: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_85: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_93: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_105: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_106: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_107: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_108: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_116: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_133: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_135: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_136: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_137: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_139: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_140: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_141: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_142: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_143: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_144: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_145: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_146: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_147: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_148: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_149: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_150: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_151: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_152: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_153: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_164: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_165: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_167: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_168: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_170: survived
+    spectroxide.greens.x__decompose_gram_schmidt__mutmut_171: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_1: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_2: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_11: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_13: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_16: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_18: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_34: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_35: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_36: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_37: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_38: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_39: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_40: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_41: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_42: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_43: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_44: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_45: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_46: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_47: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_48: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_49: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_50: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_51: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_52: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_53: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_54: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_55: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_56: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_57: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_58: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_59: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_60: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_61: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_63: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_64: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_66: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_69: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_72: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_73: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_74: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_76: timeout
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_79: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_80: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_81: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_82: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_83: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_84: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_85: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_86: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_87: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_89: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_90: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_91: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_92: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_96: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_98: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_101: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_102: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_104: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_105: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_106: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_107: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_108: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_111: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_112: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_113: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_114: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_115: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_116: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_117: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_118: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_120: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_123: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_124: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_125: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_126: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_127: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_128: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_132: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_134: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_135: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_136: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_137: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_138: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_140: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_151: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_152: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_160: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_161: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_166: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_170: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_177: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_187: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_189: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_196: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_197: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_198: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_199: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_200: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_201: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_202: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_203: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_204: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_216: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_227: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_229: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_230: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_231: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_232: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_233: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_234: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_236: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_240: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_241: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_242: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_243: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_244: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_247: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_249: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_253: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_254: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_255: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_256: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_258: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_259: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_261: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_262: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_264: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_266: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_267: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_268: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_269: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_270: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_271: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_272: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_280: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_288: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_289: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_290: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_291: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_292: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_294: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_295: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_296: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_297: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_304: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_305: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_306: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_307: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_311: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_314: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_315: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_317: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_318: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_334: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_335: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_336: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_341: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_342: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_344: survived
+    spectroxide.greens.x__decompose_nonlinear_be__mutmut_345: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_1: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_4: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_6: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_9: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_11: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_13: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_14: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_15: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_17: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_18: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_20: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_21: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_22: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_23: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_24: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_25: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_26: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_27: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_28: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_30: survived
+    spectroxide.greens.x_delta_n_to_delta_I__mutmut_31: survived

@@ -1,0 +1,4 @@
+src/greens.rs:358:12: replace > with == in photon_survival_probability_numerical
+src/greens.rs:358:12: replace > with < in photon_survival_probability_numerical
+src/greens.rs:727:23: replace + with - in distortion_from_photon_injection
+src/greens.rs:728:23: replace + with - in distortion_from_photon_injection

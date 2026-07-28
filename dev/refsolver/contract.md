@@ -133,16 +133,31 @@ the final T_γ) into (μ, y, ΔT/T) by a **joint linear least-squares** fit over
     Δn(x) ≈ (ΔT/T) · G(x) + y · Y_SZ(x) + μ · M(x)
 
 with (G_bb(x) ≡ x eˣ/(eˣ−1)²):
-- Temperature shift:  `G(x)   = G_bb(x) / x`   (i.e. ∂n_pl/∂ln T shape),
-- Compton-y:          `Y_SZ(x)= (G_bb(x)/x) · (x·(eˣ+1)/(eˣ−1) − 4)`,
-- Chemical potential:  `M(x)  = (G_bb(x)/x) · (1/β_μ − 1/x)·(−1)` →
-  use the standard μ-shape `M(x) = G_bb(x) · (1/β_μ − 1/x)` with
-  `β_μ = 3ζ(3)/ζ(2) ≈ 2.1923`.
+- Temperature shift:  `G(x)    = G_bb(x)`,
+- Compton-y:          `Y_SZ(x) = G_bb(x) · (x·(eˣ+1)/(eˣ−1) − 4)`,
+- Chemical potential:  `M(x)    = G_bb(x) · (1/β_μ − 1/x)`,
+  with `β_μ = 3ζ(3)/ζ(2) ≈ 2.1923`.
+
+All three templates carry the **same** power of x. This matters: a temperature
+shift `T → T(1+δ)` gives `Δn = δ·(−x ∂n_pl/∂x) = δ·G_bb(x)`, so `G = G_bb`
+with no `1/x`.
 
 Solve the 3×3 normal equations with uniform weights on the `x∈[0.5,18]` grid.
 Report μ, y, ΔT/T for each case. (Use exactly these formulas so both codes
 implement the same decomposition from text; if unsure of a template's
 normalisation, state it — the *ratios* between codes are what matter.)
+
+**CORRECTION 2026-07-27 (orchestrator).** Revisions of this contract before
+today wrote `G` and `Y_SZ` with an explicit `/x` while `M` had none, so the
+three templates carried different powers of x and no combination of them could
+represent a pure-y spectrum. Measured consequence of the old text: a synthetic
+pure `y = 10⁻⁵` input decomposed to `μ = −6.20×10⁻⁵`, `y = 4.40×10⁻⁵`,
+`ΔT/T = +2.87×10⁻⁵` with fit residual 5.8×10⁻³; a pure `ΔT/T = 10⁻⁵` input
+gave a spurious `μ = +2.19×10⁻⁵ = β_μ × ΔT/T`. Pure μ was unaffected. With the
+corrected templates above, all three round-trip exactly (recovered amplitude to
+≤10⁻²⁰, residual ~10⁻¹⁶). **The spurious-μ-on-pure-y symptom recorded in
+`STATUS.md` was this spec defect, not an implementation error.** Verification
+script: `scratchpad/r3/contract_decomp.py`.
 
 ## The frozen ingredient table `dev/refsolver/inputs/history.csv`
 

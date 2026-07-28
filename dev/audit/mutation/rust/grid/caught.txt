@@ -1,0 +1,38 @@
+src/grid.rs:85:12: delete ! in GridConfig::validate
+src/grid.rs:85:50: replace <= with > in GridConfig::validate
+src/grid.rs:91:12: delete ! in GridConfig::validate
+src/grid.rs:91:50: replace <= with > in GridConfig::validate
+src/grid.rs:97:23: replace < with > in GridConfig::validate
+src/grid.rs:105:26: replace < with > in GridConfig::validate
+src/grid.rs:108:12: delete ! in GridConfig::validate
+src/grid.rs:108:64: replace < with > in GridConfig::validate
+src/grid.rs:108:91: replace >= with < in GridConfig::validate
+src/grid.rs:114:12: delete ! in GridConfig::validate
+src/grid.rs:115:34: replace <= with > in GridConfig::validate
+src/grid.rs:116:34: replace >= with < in GridConfig::validate
+src/grid.rs:177:34: replace - with + in FrequencyGrid::from_points
+src/grid.rs:177:34: replace - with / in FrequencyGrid::from_points
+src/grid.rs:177:56: replace - with + in FrequencyGrid::from_points
+src/grid.rs:177:56: replace - with / in FrequencyGrid::from_points
+src/grid.rs:177:51: replace + with - in FrequencyGrid::from_points
+src/grid.rs:177:51: replace + with * in FrequencyGrid::from_points
+src/grid.rs:178:38: replace - with + in FrequencyGrid::from_points
+src/grid.rs:178:38: replace - with / in FrequencyGrid::from_points
+src/grid.rs:178:55: replace * with + in FrequencyGrid::from_points
+src/grid.rs:178:55: replace * with / in FrequencyGrid::from_points
+src/grid.rs:178:63: replace + with - in FrequencyGrid::from_points
+src/grid.rs:178:63: replace + with * in FrequencyGrid::from_points
+src/grid.rs:178:69: replace + with - in FrequencyGrid::from_points
+src/grid.rs:178:69: replace + with * in FrequencyGrid::from_points
+src/grid.rs:179:70: replace * with + in FrequencyGrid::from_points
+src/grid.rs:179:70: replace * with / in FrequencyGrid::from_points
+src/grid.rs:179:65: replace * with + in FrequencyGrid::from_points
+src/grid.rs:179:65: replace * with / in FrequencyGrid::from_points
+src/grid.rs:323:31: replace + with - in FrequencyGrid::log_uniform
+src/grid.rs:323:31: replace + with * in FrequencyGrid::log_uniform
+src/grid.rs:323:64: replace / with % in FrequencyGrid::log_uniform
+src/grid.rs:323:64: replace / with * in FrequencyGrid::log_uniform
+src/grid.rs:323:53: replace * with + in FrequencyGrid::log_uniform
+src/grid.rs:323:53: replace * with / in FrequencyGrid::log_uniform
+src/grid.rs:323:42: replace - with + in FrequencyGrid::log_uniform
+src/grid.rs:323:42: replace - with / in FrequencyGrid::log_uniform

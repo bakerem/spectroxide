@@ -1,0 +1,211 @@
+{
+ "z_end": 200.0,
+ "grid": "production(4000)",
+ "dtau_max": 3,
+ "recipe": "contract section 5, corrected 2026-07-27",
+ "results": [
+  {
+   "tag": "heat_z2e6",
+   "cmd": "solve single-burst --z-h 2e+06 --delta-rho 0.001 --sigma-z 80000 --z-start 2.56e+06 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_heat_z2e6.json",
+   "wall_s": 128.4,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": 0.0006641639629749353,
+    "y": 3.4599751362475017e-06,
+    "dT_over_T": 0.0001829544257933278,
+    "resid_rms_frac": 0.00012345524304509898
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": 0.0006658798432782396,
+    "y": 2.259217831076997e-06
+   },
+   "drho": 0.001196100959943041,
+   "rho_e_final": 0.859794173429166,
+   "steps": 177105.0,
+   "photon_number_ledger": null,
+   "case": "heat_z2e6",
+   "delta_rho_input": 0.001,
+   "mu_over_drho": 0.5552741659922781,
+   "y_over_drho": 0.0028927116122474043
+  },
+  {
+   "tag": "heat_z2e6_lin",
+   "cmd": "solve single-burst --z-h 2e+06 --delta-rho 1e-05 --sigma-z 80000 --z-start 2.56e+06 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_heat_z2e6_lin.json",
+   "wall_s": 137.5,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": 4.786143449461464e-06,
+    "y": 1.8874305859678946e-08,
+    "dT_over_T": 1.6573913966844087e-06,
+    "resid_rms_frac": 0.00010934631600729728
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": 4.789161961781177e-06,
+    "y": 1.378730719646696e-08
+   },
+   "drho": 9.984430569559366e-06,
+   "rho_e_final": 0.8595356020590113,
+   "steps": 177105.0,
+   "photon_number_ledger": null,
+   "case": "heat_z2e6",
+   "delta_rho_input": 1e-05,
+   "mu_over_drho": 0.47936068222593553,
+   "y_over_drho": 0.0018903737902913685
+  },
+  {
+   "tag": "heat_z2e5",
+   "cmd": "solve single-burst --z-h 200000 --delta-rho 0.001 --sigma-z 8000 --z-start 256000 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_heat_z2e5.json",
+   "wall_s": 13.0,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": 0.0013847758613031002,
+    "y": 8.7325459541714e-05,
+    "dT_over_T": 6.526534281264237e-05,
+    "resid_rms_frac": 0.001098543298421217
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": 0.001402101715804558,
+    "y": 6.532033072114576e-05
+   },
+   "drho": 0.001004836358906561,
+   "rho_e_final": 0.8597890354774629,
+   "steps": 17250.0,
+   "photon_number_ledger": null,
+   "case": "heat_z2e5",
+   "delta_rho_input": 0.001,
+   "mu_over_drho": 1.378110822751259,
+   "y_over_drho": 0.08690515502120115
+  },
+  {
+   "tag": "heat_z2e5_lin",
+   "cmd": "solve single-burst --z-h 200000 --delta-rho 1e-05 --sigma-z 8000 --z-start 256000 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_heat_z2e5_lin.json",
+   "wall_s": 12.6,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": 1.380774488907643e-05,
+    "y": 8.424923288807797e-07,
+    "dT_over_T": 6.311873779937348e-07,
+    "resid_rms_frac": 0.0010738217956410326
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": 1.392390014806278e-05,
+    "y": 6.438092567296973e-07
+   },
+   "drho": 9.98978251386042e-06,
+   "rho_e_final": 0.8592120780967417,
+   "steps": 17250.0,
+   "photon_number_ledger": null,
+   "case": "heat_z2e5",
+   "delta_rho_input": 1e-05,
+   "mu_over_drho": 1.3821867362896783,
+   "y_over_drho": 0.08433540246865791
+  },
+  {
+   "tag": "heat_z5e3",
+   "cmd": "solve single-burst --z-h 5000 --delta-rho 0.001 --sigma-z 200 --z-start 6400 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_heat_z5e3.json",
+   "wall_s": 0.2,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": 1.5398020083012375e-06,
+    "y": 0.0002646022623772866,
+    "dT_over_T": 1.2742469284738599e-06,
+    "resid_rms_frac": 4.015106640100589e-05
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": 1.622782420206407e-06,
+    "y": 0.0002644580776991674
+   },
+   "drho": 0.0009970921376871976,
+   "rho_e_final": 0.8603363999298365,
+   "steps": 275.0,
+   "photon_number_ledger": null,
+   "case": "heat_z5e3",
+   "delta_rho_input": 0.001,
+   "mu_over_drho": 0.0015442925985484964,
+   "y_over_drho": 0.2653739332365453
+  },
+  {
+   "tag": "heat_z5e3_lin",
+   "cmd": "solve single-burst --z-h 5000 --delta-rho 1e-05 --sigma-z 200 --z-start 6400 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_heat_z5e3_lin.json",
+   "wall_s": 0.2,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": 2.8261425726507313e-09,
+    "y": 2.515614325834645e-06,
+    "dT_over_T": 1.9036387572609297e-08,
+    "resid_rms_frac": 4.346038990389452e-05
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": 3.875435305552601e-09,
+    "y": 2.513800480123426e-06
+   },
+   "drho": 9.977601024867932e-06,
+   "rho_e_final": 0.8592698685338912,
+   "steps": 275.0,
+   "photon_number_ledger": null,
+   "case": "heat_z5e3",
+   "delta_rho_input": 1e-05,
+   "mu_over_drho": 0.0002832487053357738,
+   "y_over_drho": 0.25212616936323556
+  },
+  {
+   "tag": "adiabatic",
+   "cmd": "solve single-burst --z-h 1e6 --delta-rho 0 --sigma-z 4e4 --z-start 3e6 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_adiabatic.json",
+   "wall_s": 149.9,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": -2.259691170602622e-09,
+    "y": -1.0439757289348054e-09,
+    "dT_over_T": -4.3552238257891895e-10,
+    "resid_rms_frac": 0.0015006053947307272
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": -2.299325373506091e-09,
+    "y": -9.756918495045982e-10
+   },
+   "drho": -4.778370458541767e-09,
+   "rho_e_final": 0.8592017054985142,
+   "steps": 207664.0,
+   "photon_number_ledger": null,
+   "case": "adiabatic",
+   "delta_rho_input": 0.0
+  },
+  {
+   "tag": "photon_x0.1_z3e5",
+   "cmd": "solve monochromatic-photon --x-inj 0.1 --delta-n-over-n 1e-3 --z-h 3e5 --sigma-x 0.005 --z-start 3.84e5 --z-end 200.0 --production-grid --dtau-max 3 --format json --output /tmp/claude-1000/-home-bakerem-spectroxide/a8f26f8a-2fdb-422a-beeb-ac5247f95ae3/scratchpad/r3/raw_photon_x0.1_z3e5.json",
+   "wall_s": 39.1,
+   "z_final": 200.0,
+   "contract_recipe": {
+    "mu": -0.001702404214489135,
+    "y": 4.5863734058634994e-05,
+    "dT_over_T": 0.0003475314017969227,
+    "resid_rms_frac": 0.0004456335759736208
+   },
+   "n_fit_points": 431,
+   "spectroxide_own": {
+    "mu": -0.001688296871112849,
+    "y": 3.289347039827933e-05
+   },
+   "drho": 4.723051560454918e-05,
+   "rho_e_final": 0.8588277822157556,
+   "steps": 42692.0,
+   "photon_number_ledger": {
+    "input_dN_over_N": 0.001,
+    "final_dN_over_N": 0.0009235353452243995,
+    "ratio": 0.9235353452243995
+   },
+   "case": "photon_x0.1_z3e5",
+   "delta_n_over_n_input": 0.001,
+   "mu_over_dN_over_N": -1.702404214489135
+  }
+ ],
+ "zend_equivalence": "z_end=200 vs z=1: |dmu|<0.001%, |dy|<=0.007% (measured, zend_sensitivity.json)",
+ "known_reference_side_limitation": "F-R2/F-R3-2: coupled DC-BR Newton NaNs at z~32 for drho>=1e-3, hence z_end=200 not 1"
+}

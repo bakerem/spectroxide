@@ -1,0 +1,351 @@
+MISSED   src/energy_injection.rs:25:5: replace vacuum_survival -> f64 with 0.0 in 3s build + 46s test
+MISSED   src/energy_injection.rs:25:5: replace vacuum_survival -> f64 with 1.0 in 3s build + 46s test
+MISSED   src/energy_injection.rs:25:5: replace vacuum_survival -> f64 with -1.0 in 2s build + 46s test
+MISSED   src/energy_injection.rs:25:15: replace * with + in vacuum_survival in 2s build + 46s test
+MISSED   src/energy_injection.rs:25:15: replace * with / in vacuum_survival in 3s build + 45s test
+MISSED   src/energy_injection.rs:25:6: delete - in vacuum_survival in 4s build + 47s test
+MISSED   src/energy_injection.rs:225:48: replace - with + in interp_log_z in 2s build + 45s test
+MISSED   src/energy_injection.rs:225:48: replace - with / in interp_log_z in 3s build + 44s test
+MISSED   src/energy_injection.rs:227:15: replace - with + in interp_log_z in 3s build + 46s test
+MISSED   src/energy_injection.rs:227:15: replace - with / in interp_log_z in 3s build + 46s test
+MISSED   src/energy_injection.rs:239:27: replace || with && in interp_2d in 4s build + 47s test
+MISSED   src/energy_injection.rs:242:28: replace > with >= in interp_2d in 2s build + 51s test
+MISSED   src/energy_injection.rs:245:27: replace > with >= in interp_2d in 2s build + 48s test
+MISSED   src/energy_injection.rs:251:38: replace - with + in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:251:38: replace - with / in interp_2d in 2s build + 43s test
+MISSED   src/energy_injection.rs:253:18: replace == with != in interp_2d in 2s build + 43s test
+MISSED   src/energy_injection.rs:256:20: replace - with + in interp_2d in 2s build + 43s test
+MISSED   src/energy_injection.rs:256:20: replace - with / in interp_2d in 2s build + 45s test
+MISSED   src/energy_injection.rs:256:43: replace - with + in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:256:43: replace - with / in interp_2d in 2s build + 43s test
+MISSED   src/energy_injection.rs:260:40: replace && with || in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:260:24: replace < with <= in interp_2d in 3s build + 48s test
+MISSED   src/energy_injection.rs:260:20: replace + with * in interp_2d in 2s build + 47s test
+MISSED   src/energy_injection.rs:260:59: replace > with >= in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:268:37: replace - with + in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:268:37: replace - with / in interp_2d in 2s build + 43s test
+MISSED   src/energy_injection.rs:270:18: replace == with != in interp_2d in 2s build + 42s test
+MISSED   src/energy_injection.rs:273:20: replace - with + in interp_2d in 2s build + 45s test
+MISSED   src/energy_injection.rs:273:20: replace - with / in interp_2d in 2s build + 47s test
+MISSED   src/energy_injection.rs:273:42: replace - with + in interp_2d in 3s build + 47s test
+MISSED   src/energy_injection.rs:273:42: replace - with / in interp_2d in 3s build + 48s test
+MISSED   src/energy_injection.rs:277:39: replace && with || in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:277:24: replace < with <= in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:277:20: replace + with * in interp_2d in 2s build + 49s test
+MISSED   src/energy_injection.rs:277:57: replace > with >= in interp_2d in 3s build + 45s test
+MISSED   src/energy_injection.rs:287:17: replace + with * in interp_2d in 2s build + 46s test
+MISSED   src/energy_injection.rs:292:36: replace + with - in interp_2d in 2s build + 44s test
+MISSED   src/energy_injection.rs:292:73: replace + with - in interp_2d in 2s build + 45s test
+MISSED   src/energy_injection.rs:311:28: replace || with && in load_heating_table in 2s build + 48s test
+MISSED   src/energy_injection.rs:317:13: replace && with || in load_heating_table in 4s build + 48s test
+MISSED   src/energy_injection.rs:323:24: replace < with > in load_heating_table in 2s build + 45s test
+MISSED   src/energy_injection.rs:366:42: replace && with || in load_photon_source_table in 2s build + 44s test
+MISSED   src/energy_injection.rs:366:21: delete ! in load_photon_source_table in 2s build + 46s test
+MISSED   src/energy_injection.rs:366:45: delete ! in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:373:27: replace < with == in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:373:27: replace < with > in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:373:27: replace < with <= in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:391:24: replace < with == in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:391:24: replace < with > in load_photon_source_table in 3s build + 47s test
+MISSED   src/energy_injection.rs:391:24: replace < with <= in load_photon_source_table in 2s build + 45s test
+MISSED   src/energy_injection.rs:391:28: replace + with - in load_photon_source_table in 3s build + 45s test
+MISSED   src/energy_injection.rs:391:28: replace + with * in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:407:30: replace + with - in load_photon_source_table in 3s build + 46s test
+MISSED   src/energy_injection.rs:407:30: replace + with * in load_photon_source_table in 2s build + 45s test
+MISSED   src/energy_injection.rs:452:9: replace InjectionScenario::validate -> Result<(), String> with Ok(()) in 4s build + 44s test
+MISSED   src/energy_injection.rs:458:37: replace || with && in InjectionScenario::validate in 4s build + 44s test
+MISSED   src/energy_injection.rs:461:41: replace || with && in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:466:29: replace > with == in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:466:29: replace > with >= in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:466:35: replace * with + in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:482:37: replace || with && in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:482:20: delete ! in InjectionScenario::validate in 3s build + 46s test
+MISSED   src/energy_injection.rs:482:45: replace <= with > in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:485:41: replace || with && in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:485:20: delete ! in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:485:53: replace <= with > in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:494:39: replace || with && in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:494:20: delete ! in InjectionScenario::validate in 2s build + 47s test
+MISSED   src/energy_injection.rs:494:49: replace <= with > in InjectionScenario::validate in 3s build + 45s test
+MISSED   src/energy_injection.rs:506:39: replace || with && in InjectionScenario::validate in 2s build + 46s test
+MISSED   src/energy_injection.rs:506:20: delete ! in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:506:49: replace <= with > in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:509:20: delete ! in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:514:37: replace || with && in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:514:20: delete ! in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:514:45: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:517:41: replace || with && in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:517:20: delete ! in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:517:53: replace <= with > in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:522:29: replace > with == in InjectionScenario::validate in 2s build + 46s test
+MISSED   src/energy_injection.rs:522:29: replace > with < in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:522:29: replace > with >= in InjectionScenario::validate in 2s build + 47s test
+MISSED   src/energy_injection.rs:522:35: replace * with + in InjectionScenario::validate in 2s build + 46s test
+MISSED   src/energy_injection.rs:522:35: replace * with / in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:529:41: replace || with && in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:529:20: delete ! in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:529:53: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:541:29: replace > with == in InjectionScenario::validate in 3s build + 43s test
+MISSED   src/energy_injection.rs:541:29: replace > with < in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:541:29: replace > with >= in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:541:35: replace * with + in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:541:35: replace * with / in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:557:41: replace || with && in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:557:20: delete ! in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:557:53: replace <= with > in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:562:39: replace || with && in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:562:20: delete ! in InjectionScenario::validate in 2s build + 42s test
+MISSED   src/energy_injection.rs:562:49: replace <= with > in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:565:41: replace || with && in InjectionScenario::validate in 2s build + 41s test
+MISSED   src/energy_injection.rs:565:20: delete ! in InjectionScenario::validate in 2s build + 40s test
+MISSED   src/energy_injection.rs:565:53: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:573:41: replace || with && in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:573:20: delete ! in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:573:53: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:578:38: replace || with && in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:578:20: delete ! in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:578:47: replace <= with > in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:588:42: replace || with && in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:588:20: delete ! in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:588:55: replace <= with > in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:593:39: replace || with && in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:593:20: delete ! in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:593:49: replace <= with > in InjectionScenario::validate in 3s build + 44s test
+MISSED   src/energy_injection.rs:596:38: replace || with && in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:596:20: delete ! in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:596:47: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:608:34: replace != with == in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:618:24: delete ! in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:623:24: delete ! in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:627:31: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:638:35: replace <= with > in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:638:48: replace - with + in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:638:48: replace - with / in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:736:38: replace / with % in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:736:38: replace / with * in InjectionScenario::validate in 3s build + 47s test
+MISSED   src/energy_injection.rs:737:35: replace + with - in InjectionScenario::validate in 2s build + 43s test
+MISSED   src/energy_injection.rs:737:35: replace + with * in InjectionScenario::validate in 2s build + 47s test
+MISSED   src/energy_injection.rs:737:39: replace * with + in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:737:39: replace * with / in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:737:47: replace - with + in InjectionScenario::validate in 2s build + 44s test
+MISSED   src/energy_injection.rs:737:47: replace - with / in InjectionScenario::validate in 2s build + 42s test
+MISSED   src/energy_injection.rs:739:24: delete ! in InjectionScenario::validate in 2s build + 45s test
+MISSED   src/energy_injection.rs:777:38: replace * with + in InjectionScenario::heating_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:777:38: replace * with / in InjectionScenario::heating_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:778:67: replace / with % in InjectionScenario::heating_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:778:67: replace / with * in InjectionScenario::heating_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:778:44: replace * with + in InjectionScenario::heating_rate in 2s build + 46s test
+MISSED   src/energy_injection.rs:778:44: replace * with / in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:778:38: replace * with + in InjectionScenario::heating_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:778:38: replace * with / in InjectionScenario::heating_rate in 2s build + 46s test
+MISSED   src/energy_injection.rs:778:28: replace * with + in InjectionScenario::heating_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:778:28: replace * with / in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:778:56: replace * with / in InjectionScenario::heating_rate in 3s build + 48s test
+MISSED   src/energy_injection.rs:778:47: delete - in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:788:38: replace * with + in InjectionScenario::heating_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:788:38: replace * with / in InjectionScenario::heating_rate in 2s build + 46s test
+MISSED   src/energy_injection.rs:789:52: replace / with % in InjectionScenario::heating_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:789:52: replace / with * in InjectionScenario::heating_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:789:32: replace * with + in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:789:32: replace * with / in InjectionScenario::heating_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:789:26: replace * with + in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:789:26: replace * with / in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:789:39: replace + with * in InjectionScenario::heating_rate in 3s build + 45s test
+MISSED   src/energy_injection.rs:799:38: replace * with + in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:799:38: replace * with / in InjectionScenario::heating_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:800:52: replace / with % in InjectionScenario::heating_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:800:52: replace / with * in InjectionScenario::heating_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:800:32: replace * with + in InjectionScenario::heating_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:800:32: replace * with / in InjectionScenario::heating_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:800:26: replace * with + in InjectionScenario::heating_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:800:26: replace * with / in InjectionScenario::heating_rate in 3s build + 43s test
+MISSED   src/energy_injection.rs:800:39: replace + with - in InjectionScenario::heating_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:800:39: replace + with * in InjectionScenario::heating_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:835:48: replace + with * in InjectionScenario::heating_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:885:13: delete match arm InjectionScenario::DecayingParticlePhoton{x_inj_0, f_inj, gamma_x,} in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:872:51: replace / with % in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:872:51: replace / with * in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:872:32: delete - in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:872:68: replace * with + in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:872:68: replace * with / in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:872:58: replace * with + in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:872:58: replace * with / in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:890:37: replace / with % in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:890:37: replace / with * in InjectionScenario::photon_source_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:890:44: replace + with - in InjectionScenario::photon_source_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:890:44: replace + with * in InjectionScenario::photon_source_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:891:36: replace * with + in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:891:36: replace * with / in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:36: replace || with && in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:894:28: replace < with == in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:28: replace < with > in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:28: replace < with <= in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:894:57: replace > with == in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:57: replace > with < in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:57: replace > with >= in InjectionScenario::photon_source_rate in 3s build + 43s test
+MISSED   src/energy_injection.rs:894:42: replace - with + in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:42: replace - with / in InjectionScenario::photon_source_rate in 3s build + 42s test
+MISSED   src/energy_injection.rs:894:63: replace * with + in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:894:63: replace * with / in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:900:21: replace / with % in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:900:21: replace / with * in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:899:53: replace / with % in InjectionScenario::photon_source_rate in 2s build + 46s test
+MISSED   src/energy_injection.rs:899:53: replace / with * in InjectionScenario::photon_source_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:899:32: delete - in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:899:36: replace - with + in InjectionScenario::photon_source_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:899:36: replace - with / in InjectionScenario::photon_source_rate in 3s build + 49s test
+MISSED   src/energy_injection.rs:899:70: replace * with + in InjectionScenario::photon_source_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:899:70: replace * with / in InjectionScenario::photon_source_rate in 3s build + 46s test
+MISSED   src/energy_injection.rs:899:60: replace * with + in InjectionScenario::photon_source_rate in 2s build + 48s test
+MISSED   src/energy_injection.rs:899:60: replace * with / in InjectionScenario::photon_source_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:900:32: replace * with + in InjectionScenario::photon_source_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:900:32: replace * with / in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:900:39: replace * with + in InjectionScenario::photon_source_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:900:39: replace * with / in InjectionScenario::photon_source_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:921:66: replace / with % in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:921:66: replace / with * in InjectionScenario::photon_source_rate in 2s build + 48s test
+MISSED   src/energy_injection.rs:921:56: replace * with + in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:921:56: replace * with / in InjectionScenario::photon_source_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:921:45: replace * with + in InjectionScenario::photon_source_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:921:45: replace * with / in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:921:35: replace * with + in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:921:35: replace * with / in InjectionScenario::photon_source_rate in 2s build + 45s test
+MISSED   src/energy_injection.rs:921:27: replace * with + in InjectionScenario::photon_source_rate in 3s build + 44s test
+MISSED   src/energy_injection.rs:921:27: replace * with / in InjectionScenario::photon_source_rate in 2s build + 43s test
+MISSED   src/energy_injection.rs:921:71: replace * with + in InjectionScenario::photon_source_rate in 3s build + 51s test
+MISSED   src/energy_injection.rs:921:71: replace * with / in InjectionScenario::photon_source_rate in 2s build + 44s test
+MISSED   src/energy_injection.rs:954:9: replace InjectionScenario::refinement_zones -> Vec<RefinementZone> with vec![] in 3s build + 44s test
+MISSED   src/energy_injection.rs:955:13: delete match arm InjectionScenario::MonochromaticPhotonInjection{x_inj, sigma_x, ..} in InjectionScenario::refinement_zones in 3s build + 43s test
+MISSED   src/energy_injection.rs:964:13: delete match arm InjectionScenario::DecayingParticlePhoton{x_inj_0, ..} in InjectionScenario::refinement_zones in 3s build + 47s test
+MISSED   src/energy_injection.rs:957:38: replace * with + in InjectionScenario::refinement_zones in 3s build + 47s test
+MISSED   src/energy_injection.rs:957:38: replace * with / in InjectionScenario::refinement_zones in 2s build + 46s test
+MISSED   src/energy_injection.rs:971:37: replace * with + in InjectionScenario::refinement_zones in 3s build + 45s test
+MISSED   src/energy_injection.rs:971:37: replace * with / in InjectionScenario::refinement_zones in 3s build + 45s test
+MISSED   src/energy_injection.rs:973:36: replace * with + in InjectionScenario::refinement_zones in 2s build + 45s test
+MISSED   src/energy_injection.rs:973:36: replace * with / in InjectionScenario::refinement_zones in 2s build + 44s test
+MISSED   src/energy_injection.rs:973:44: replace + with - in InjectionScenario::refinement_zones in 2s build + 44s test
+MISSED   src/energy_injection.rs:973:44: replace + with * in InjectionScenario::refinement_zones in 3s build + 46s test
+MISSED   src/energy_injection.rs:974:35: replace * with + in InjectionScenario::refinement_zones in 3s build + 49s test
+MISSED   src/energy_injection.rs:974:35: replace * with / in InjectionScenario::refinement_zones in 3s build + 47s test
+MISSED   src/energy_injection.rs:974:43: replace - with + in InjectionScenario::refinement_zones in 2s build + 45s test
+MISSED   src/energy_injection.rs:974:43: replace - with / in InjectionScenario::refinement_zones in 2s build + 47s test
+MISSED   src/energy_injection.rs:996:39: replace * with + in InjectionScenario::characteristic_redshift in 2s build + 44s test
+MISSED   src/energy_injection.rs:996:39: replace * with / in InjectionScenario::characteristic_redshift in 2s build + 45s test
+MISSED   src/energy_injection.rs:999:33: replace + with - in InjectionScenario::characteristic_redshift in 3s build + 45s test
+MISSED   src/energy_injection.rs:999:33: replace + with * in InjectionScenario::characteristic_redshift in 2s build + 46s test
+MISSED   src/energy_injection.rs:999:39: replace * with + in InjectionScenario::characteristic_redshift in 2s build + 45s test
+MISSED   src/energy_injection.rs:999:39: replace * with / in InjectionScenario::characteristic_redshift in 3s build + 44s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with None in 3s build + 43s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((0.0, 0.0)) in 3s build + 45s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((0.0, 1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((0.0, -1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((1.0, 0.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((1.0, 1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((1.0, -1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((-1.0, 0.0)) in 2s build + 47s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((-1.0, 1.0)) in 3s build + 48s test
+MISSED   src/energy_injection.rs:1012:9: replace InjectionScenario::dark_photon_params -> Option<(f64, f64)> with Some((-1.0, -1.0)) in 3s build + 45s test
+MISSED   src/energy_injection.rs:1013:13: delete match arm InjectionScenario::DarkPhotonResonance{epsilon, m_ev} in InjectionScenario::dark_photon_params in 3s build + 50s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with None in 3s build + 45s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((0.0, 0.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((0.0, 1.0)) in 2s build + 43s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((0.0, -1.0)) in 2s build + 43s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((1.0, 0.0)) in 2s build + 43s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((1.0, 1.0)) in 2s build + 45s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((1.0, -1.0)) in 2s build + 45s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((-1.0, 0.0)) in 2s build + 47s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((-1.0, 1.0)) in 2s build + 45s test
+MISSED   src/energy_injection.rs:1025:9: replace InjectionScenario::axion_params -> Option<(f64, f64)> with Some((-1.0, -1.0)) in 2s build + 45s test
+MISSED   src/energy_injection.rs:1026:13: delete match arm InjectionScenario::AxionResonance{g_agamma, b_rms, m_ev,} in InjectionScenario::axion_params in 2s build + 44s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with None in 2s build + 44s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((0.0, 0.0)) in 2s build + 43s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((0.0, 1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((0.0, -1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((1.0, 0.0)) in 2s build + 45s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((1.0, 1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((1.0, -1.0)) in 2s build + 44s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((-1.0, 0.0)) in 2s build + 43s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((-1.0, 1.0)) in 2s build + 45s test
+MISSED   src/energy_injection.rs:1042:9: replace InjectionScenario::resonance_params -> Option<(f64, f64)> with Some((-1.0, -1.0)) in 3s build + 47s test
+MISSED   src/energy_injection.rs:1053:9: replace InjectionScenario::initial_delta_n -> Option<Vec<f64>> with None in 3s build + 47s test
+MISSED   src/energy_injection.rs:1054:13: delete match arm InjectionScenario::DarkPhotonResonance{..} in InjectionScenario::initial_delta_n in 3s build + 45s test
+MISSED   src/energy_injection.rs:1065:13: delete match arm InjectionScenario::AxionResonance{..} in InjectionScenario::initial_delta_n in 3s build + 46s test
+MISSED   src/energy_injection.rs:1059:37: replace - with + in InjectionScenario::initial_delta_n in 3s build + 53s test
+MISSED   src/energy_injection.rs:1059:37: replace - with / in InjectionScenario::initial_delta_n in 5s build + 47s test
+MISSED   src/energy_injection.rs:1059:51: replace / with % in InjectionScenario::initial_delta_n in 3s build + 47s test
+MISSED   src/energy_injection.rs:1059:51: replace / with * in InjectionScenario::initial_delta_n in 2s build + 46s test
+MISSED   src/energy_injection.rs:1059:40: delete - in InjectionScenario::initial_delta_n in 2s build + 44s test
+MISSED   src/energy_injection.rs:1060:28: replace * with + in InjectionScenario::initial_delta_n in 2s build + 43s test
+MISSED   src/energy_injection.rs:1060:28: replace * with / in InjectionScenario::initial_delta_n in 2s build + 43s test
+MISSED   src/energy_injection.rs:1060:25: delete - in InjectionScenario::initial_delta_n in 2s build + 43s test
+MISSED   src/energy_injection.rs:1074:37: replace - with + in InjectionScenario::initial_delta_n in 2s build + 44s test
+MISSED   src/energy_injection.rs:1074:37: replace - with / in InjectionScenario::initial_delta_n in 2s build + 44s test
+MISSED   src/energy_injection.rs:1074:51: replace * with + in InjectionScenario::initial_delta_n in 2s build + 43s test
+MISSED   src/energy_injection.rs:1074:51: replace * with / in InjectionScenario::initial_delta_n in 2s build + 41s test
+MISSED   src/energy_injection.rs:1074:40: delete - in InjectionScenario::initial_delta_n in 2s build + 43s test
+MISSED   src/energy_injection.rs:1075:28: replace * with + in InjectionScenario::initial_delta_n in 2s build + 45s test
+MISSED   src/energy_injection.rs:1075:28: replace * with / in InjectionScenario::initial_delta_n in 2s build + 45s test
+MISSED   src/energy_injection.rs:1075:25: delete - in InjectionScenario::initial_delta_n in 3s build + 44s test
+MISSED   src/energy_injection.rs:1090:9: replace InjectionScenario::suggested_x_min -> Option<f64> with None in 3s build + 45s test
+MISSED   src/energy_injection.rs:1090:9: replace InjectionScenario::suggested_x_min -> Option<f64> with Some(1.0) in 2s build + 48s test
+MISSED   src/energy_injection.rs:1091:13: delete match arm InjectionScenario::MonochromaticPhotonInjection{x_inj, ..} in InjectionScenario::suggested_x_min in 3s build + 49s test
+MISSED   src/energy_injection.rs:1101:13: delete match arm InjectionScenario::DecayingParticlePhoton{x_inj_0, ..} in InjectionScenario::suggested_x_min in 3s build + 47s test
+MISSED   src/energy_injection.rs:1094:40: replace / with % in InjectionScenario::suggested_x_min in 2s build + 46s test
+MISSED   src/energy_injection.rs:1094:40: replace / with * in InjectionScenario::suggested_x_min in 2s build + 45s test
+MISSED   src/energy_injection.rs:1095:30: replace < with == in InjectionScenario::suggested_x_min in 2s build + 45s test
+MISSED   src/energy_injection.rs:1095:30: replace < with > in InjectionScenario::suggested_x_min in 2s build + 46s test
+MISSED   src/energy_injection.rs:1095:30: replace < with <= in InjectionScenario::suggested_x_min in 3s build + 46s test
+MISSED   src/energy_injection.rs:1102:42: replace / with % in InjectionScenario::suggested_x_min in 2s build + 45s test
+MISSED   src/energy_injection.rs:1102:42: replace / with * in InjectionScenario::suggested_x_min in 2s build + 43s test
+MISSED   src/energy_injection.rs:1103:30: replace < with == in InjectionScenario::suggested_x_min in 2s build + 43s test
+MISSED   src/energy_injection.rs:1103:30: replace < with > in InjectionScenario::suggested_x_min in 2s build + 43s test
+MISSED   src/energy_injection.rs:1103:30: replace < with <= in InjectionScenario::suggested_x_min in 2s build + 44s test
+MISSED   src/energy_injection.rs:1123:43: replace > with >= in InjectionScenario::warn_strong_distortion in 2s build + 44s test
+MISSED   src/energy_injection.rs:1137:41: replace > with >= in InjectionScenario::warn_strong_distortion in 2s build + 43s test
+MISSED   src/energy_injection.rs:1167:9: replace InjectionScenario::warn_dark_photon_range -> Vec<String> with vec![] in 3s build + 45s test
+MISSED   src/energy_injection.rs:1167:9: replace InjectionScenario::warn_dark_photon_range -> Vec<String> with vec![String::new()] in 3s build + 44s test
+MISSED   src/energy_injection.rs:1167:9: replace InjectionScenario::warn_dark_photon_range -> Vec<String> with vec!["xyzzy".into()] in 2s build + 46s test
+MISSED   src/energy_injection.rs:1178:30: replace < with == in InjectionScenario::warn_dark_photon_range in 4s build + 44s test
+MISSED   src/energy_injection.rs:1178:30: replace < with > in InjectionScenario::warn_dark_photon_range in 2s build + 44s test
+MISSED   src/energy_injection.rs:1178:30: replace < with <= in InjectionScenario::warn_dark_photon_range in 2s build + 44s test
+MISSED   src/energy_injection.rs:1184:37: replace > with == in InjectionScenario::warn_dark_photon_range in 2s build + 45s test
+MISSED   src/energy_injection.rs:1184:37: replace > with < in InjectionScenario::warn_dark_photon_range in 3s build + 45s test
+MISSED   src/energy_injection.rs:1184:37: replace > with >= in InjectionScenario::warn_dark_photon_range in 2s build + 44s test
+MISSED   src/energy_injection.rs:1201:9: replace InjectionScenario::warn_axion_range -> Vec<String> with vec![] in 3s build + 43s test
+MISSED   src/energy_injection.rs:1201:9: replace InjectionScenario::warn_axion_range -> Vec<String> with vec![String::new()] in 3s build + 43s test
+MISSED   src/energy_injection.rs:1201:9: replace InjectionScenario::warn_axion_range -> Vec<String> with vec!["xyzzy".into()] in 2s build + 43s test
+MISSED   src/energy_injection.rs:1212:30: replace < with == in InjectionScenario::warn_axion_range in 3s build + 43s test
+MISSED   src/energy_injection.rs:1212:30: replace < with > in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1212:30: replace < with <= in InjectionScenario::warn_axion_range in 2s build + 44s test
+MISSED   src/energy_injection.rs:1218:37: replace > with == in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1218:37: replace > with < in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1218:37: replace > with >= in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1229:30: replace < with == in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1229:30: replace < with > in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1229:30: replace < with <= in InjectionScenario::warn_axion_range in 2s build + 43s test
+MISSED   src/energy_injection.rs:1252:9: replace InjectionScenario::warn_tabulated_coverage -> Vec<String> with vec![] in 3s build + 43s test
+MISSED   src/energy_injection.rs:1252:9: replace InjectionScenario::warn_tabulated_coverage -> Vec<String> with vec![String::new()] in 3s build + 43s test
+MISSED   src/energy_injection.rs:1252:9: replace InjectionScenario::warn_tabulated_coverage -> Vec<String> with vec!["xyzzy".into()] in 2s build + 43s test
+MISSED   src/energy_injection.rs:1254:13: delete match arm InjectionScenario::TabulatedHeating{z_table, ..} in InjectionScenario::warn_tabulated_coverage in 3s build + 43s test
+MISSED   src/energy_injection.rs:1255:13: delete match arm InjectionScenario::TabulatedPhotonSource{z_table, ..} in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1264:43: replace - with + in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1264:43: replace - with / in InjectionScenario::warn_tabulated_coverage in 2s build + 44s test
+MISSED   src/energy_injection.rs:1266:18: replace < with == in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1266:18: replace < with > in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1266:18: replace < with <= in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1266:26: replace * with + in InjectionScenario::warn_tabulated_coverage in 2s build + 45s test
+MISSED   src/energy_injection.rs:1266:26: replace * with / in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1273:20: replace > with == in InjectionScenario::warn_tabulated_coverage in 2s build + 43s test
+MISSED   src/energy_injection.rs:1273:20: replace > with < in InjectionScenario::warn_tabulated_coverage in 3s build + 47s test
+MISSED   src/energy_injection.rs:1273:20: replace > with >= in InjectionScenario::warn_tabulated_coverage in 3s build + 43s test
+MISSED   src/energy_injection.rs:1273:28: replace * with + in InjectionScenario::warn_tabulated_coverage in 2s build + 41s test
+MISSED   src/energy_injection.rs:1273:28: replace * with / in InjectionScenario::warn_tabulated_coverage in 2s build + 42s test
+MISSED   src/energy_injection.rs:1292:9: replace InjectionScenario::warn_stimulated_emission -> Vec<String> with vec![] in 3s build + 41s test
+MISSED   src/energy_injection.rs:1292:9: replace InjectionScenario::warn_stimulated_emission -> Vec<String> with vec![String::new()] in 3s build + 40s test
+MISSED   src/energy_injection.rs:1292:9: replace InjectionScenario::warn_stimulated_emission -> Vec<String> with vec!["xyzzy".into()] in 2s build + 46s test
+MISSED   src/energy_injection.rs:1294:28: replace / with % in InjectionScenario::warn_stimulated_emission in 8s build + 43s test
+MISSED   src/energy_injection.rs:1294:28: replace / with * in InjectionScenario::warn_stimulated_emission in 2s build + 42s test
+MISSED   src/energy_injection.rs:1294:48: replace - with + in InjectionScenario::warn_stimulated_emission in 2s build + 41s test
+MISSED   src/energy_injection.rs:1294:48: replace - with / in InjectionScenario::warn_stimulated_emission in 2s build + 41s test
+MISSED   src/energy_injection.rs:1295:34: replace + with - in InjectionScenario::warn_stimulated_emission in 2s build + 41s test
+MISSED   src/energy_injection.rs:1295:34: replace + with * in InjectionScenario::warn_stimulated_emission in 2s build + 43s test

@@ -1,0 +1,220 @@
+src/bremsstrahlung.rs:24:5: replace / with %
+src/bremsstrahlung.rs:24:5: replace / with *
+src/bremsstrahlung.rs:23:72: replace * with +
+src/bremsstrahlung.rs:23:72: replace * with /
+src/bremsstrahlung.rs:23:54: replace * with +
+src/bremsstrahlung.rs:23:54: replace * with /
+src/bremsstrahlung.rs:23:36: replace * with +
+src/bremsstrahlung.rs:23:36: replace * with /
+src/bremsstrahlung.rs:24:35: replace * with +
+src/bremsstrahlung.rs:24:35: replace * with /
+src/bremsstrahlung.rs:24:12: replace * with +
+src/bremsstrahlung.rs:24:12: replace * with /
+src/bremsstrahlung.rs:52:5: replace gaunt_ff_nr -> f64 with 0.0
+src/bremsstrahlung.rs:52:5: replace gaunt_ff_nr -> f64 with 1.0
+src/bremsstrahlung.rs:52:5: replace gaunt_ff_nr -> f64 with -1.0
+src/bremsstrahlung.rs:52:16: replace < with == in gaunt_ff_nr
+src/bremsstrahlung.rs:52:16: replace < with > in gaunt_ff_nr
+src/bremsstrahlung.rs:55:39: replace * with + in gaunt_ff_nr
+src/bremsstrahlung.rs:55:39: replace * with / in gaunt_ff_nr
+src/bremsstrahlung.rs:61:5: replace gaunt_ff_nr_fast -> f64 with 0.0
+src/bremsstrahlung.rs:61:5: replace gaunt_ff_nr_fast -> f64 with 1.0
+src/bremsstrahlung.rs:61:5: replace gaunt_ff_nr_fast -> f64 with -1.0
+src/bremsstrahlung.rs:61:10: replace < with == in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:61:10: replace < with > in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:72: replace + with - in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:72: replace + with * in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:21: replace * with + in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:21: replace * with / in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:53: replace + with - in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:53: replace + with * in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:30: replace / with % in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:30: replace / with * in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:35: replace * with + in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:64:35: replace * with / in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:65:9: replace + with - in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:65:9: replace + with * in gaunt_ff_nr_fast
+src/bremsstrahlung.rs:75:5: replace gaunt_ff_nr_fast_preln -> f64 with 0.0
+src/bremsstrahlung.rs:75:5: replace gaunt_ff_nr_fast_preln -> f64 with 1.0
+src/bremsstrahlung.rs:75:5: replace gaunt_ff_nr_fast_preln -> f64 with -1.0
+src/bremsstrahlung.rs:75:13: replace < with > in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:75:15: delete - in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:78:38: replace < with == in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:78:38: replace < with > in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:65: replace + with - in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:65: replace + with * in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:21: replace * with + in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:21: replace * with / in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:46: replace + with - in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:46: replace + with * in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:39: replace - with + in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:79:39: replace - with / in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:80:9: replace + with - in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:80:9: replace + with * in gaunt_ff_nr_fast_preln
+src/bremsstrahlung.rs:91:5: replace softplus -> f64 with 0.0
+src/bremsstrahlung.rs:91:5: replace softplus -> f64 with 1.0
+src/bremsstrahlung.rs:91:5: replace softplus -> f64 with -1.0
+src/bremsstrahlung.rs:91:12: replace > with < in softplus
+src/bremsstrahlung.rs:93:19: replace < with == in softplus
+src/bremsstrahlung.rs:93:19: replace < with > in softplus
+src/bremsstrahlung.rs:93:21: delete - in softplus
+src/bremsstrahlung.rs:96:14: replace + with - in softplus
+src/bremsstrahlung.rs:96:14: replace + with * in softplus
+src/bremsstrahlung.rs:130:5: replace br_emission_coefficient -> f64 with 0.0
+src/bremsstrahlung.rs:130:5: replace br_emission_coefficient -> f64 with 1.0
+src/bremsstrahlung.rs:130:5: replace br_emission_coefficient -> f64 with -1.0
+src/bremsstrahlung.rs:130:16: replace < with > in br_emission_coefficient
+src/bremsstrahlung.rs:130:31: replace < with > in br_emission_coefficient
+src/bremsstrahlung.rs:134:23: replace / with % in br_emission_coefficient
+src/bremsstrahlung.rs:134:23: replace / with * in br_emission_coefficient
+src/bremsstrahlung.rs:137:61: replace / with % in br_emission_coefficient
+src/bremsstrahlung.rs:137:42: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:137:42: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:137:36: delete - in br_emission_coefficient
+src/bremsstrahlung.rs:137:48: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:137:45: delete - in br_emission_coefficient
+src/bremsstrahlung.rs:160:34: replace / with % in br_emission_coefficient
+src/bremsstrahlung.rs:160:34: replace / with * in br_emission_coefficient
+src/bremsstrahlung.rs:160:25: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:160:25: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:161:27: replace / with % in br_emission_coefficient
+src/bremsstrahlung.rs:166:35: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:166:35: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:167:27: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:167:27: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:168:46: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:168:26: replace - with + in br_emission_coefficient
+src/bremsstrahlung.rs:168:26: replace - with / in br_emission_coefficient
+src/bremsstrahlung.rs:170:59: replace + with * in br_emission_coefficient
+src/bremsstrahlung.rs:170:36: replace + with - in br_emission_coefficient
+src/bremsstrahlung.rs:170:36: replace + with * in br_emission_coefficient
+src/bremsstrahlung.rs:170:29: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:170:29: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:170:52: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:170:52: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:170:42: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:170:42: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:170:68: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:172:32: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:172:32: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:172:18: replace * with + in br_emission_coefficient
+src/bremsstrahlung.rs:172:18: replace * with / in br_emission_coefficient
+src/bremsstrahlung.rs:190:5: replace br_emission_coefficient_with_he -> f64 with 0.0
+src/bremsstrahlung.rs:190:5: replace br_emission_coefficient_with_he -> f64 with 1.0
+src/bremsstrahlung.rs:190:5: replace br_emission_coefficient_with_he -> f64 with -1.0
+src/bremsstrahlung.rs:190:16: replace < with > in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:190:31: replace < with > in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:194:23: replace / with % in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:194:23: replace / with * in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:61: replace / with % in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:61: replace / with * in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:42: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:42: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:36: delete - in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:48: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:48: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:195:45: delete - in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:201:35: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:201:35: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:202:27: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:202:27: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:203:46: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:203:46: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:203:26: replace - with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:203:26: replace - with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:60: replace + with - in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:60: replace + with * in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:36: replace + with - in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:36: replace + with * in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:29: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:29: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:52: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:52: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:42: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:42: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:69: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:205:69: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:207:32: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:207:32: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:207:18: replace * with + in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:207:18: replace * with / in br_emission_coefficient_with_he
+src/bremsstrahlung.rs:238:5: replace br_precompute -> Option<BrPrecomputed> with None
+src/bremsstrahlung.rs:238:24: replace || with && in br_precompute
+src/bremsstrahlung.rs:238:16: replace < with == in br_precompute
+src/bremsstrahlung.rs:238:16: replace < with > in br_precompute
+src/bremsstrahlung.rs:238:31: replace < with == in br_precompute
+src/bremsstrahlung.rs:238:31: replace < with > in br_precompute
+src/bremsstrahlung.rs:241:23: replace / with % in br_precompute
+src/bremsstrahlung.rs:241:23: replace / with * in br_precompute
+src/bremsstrahlung.rs:242:57: replace / with % in br_precompute
+src/bremsstrahlung.rs:242:57: replace / with * in br_precompute
+src/bremsstrahlung.rs:242:36: replace * with + in br_precompute
+src/bremsstrahlung.rs:242:36: replace * with / in br_precompute
+src/bremsstrahlung.rs:242:51: delete - in br_precompute
+src/bremsstrahlung.rs:242:70: replace * with + in br_precompute
+src/bremsstrahlung.rs:242:70: replace * with / in br_precompute
+src/bremsstrahlung.rs:242:64: replace * with + in br_precompute
+src/bremsstrahlung.rs:242:64: replace * with / in br_precompute
+src/bremsstrahlung.rs:246:34: replace * with + in br_precompute
+src/bremsstrahlung.rs:246:34: replace * with / in br_precompute
+src/bremsstrahlung.rs:247:26: replace * with + in br_precompute
+src/bremsstrahlung.rs:247:26: replace * with / in br_precompute
+src/bremsstrahlung.rs:248:45: replace * with + in br_precompute
+src/bremsstrahlung.rs:248:45: replace * with / in br_precompute
+src/bremsstrahlung.rs:248:25: replace - with + in br_precompute
+src/bremsstrahlung.rs:248:25: replace - with / in br_precompute
+src/bremsstrahlung.rs:249:30: replace * with + in br_precompute
+src/bremsstrahlung.rs:249:30: replace * with / in br_precompute
+src/bremsstrahlung.rs:258:5: replace br_emission_coefficient_fast -> f64 with 0.0
+src/bremsstrahlung.rs:258:5: replace br_emission_coefficient_fast -> f64 with 1.0
+src/bremsstrahlung.rs:258:5: replace br_emission_coefficient_fast -> f64 with -1.0
+src/bremsstrahlung.rs:258:24: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:258:24: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:258:21: delete - in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:68: replace + with - in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:68: replace + with * in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:40: replace + with - in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:40: replace + with * in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:33: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:33: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:60: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:60: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:46: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:46: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:81: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:263:81: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:265:32: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:265:32: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:265:21: replace * with + in br_emission_coefficient_fast
+src/bremsstrahlung.rs:265:21: replace * with / in br_emission_coefficient_fast
+src/bremsstrahlung.rs:274:5: replace br_emission_coefficient_fast_preln -> f64 with 0.0
+src/bremsstrahlung.rs:274:5: replace br_emission_coefficient_fast_preln -> f64 with 1.0
+src/bremsstrahlung.rs:274:5: replace br_emission_coefficient_fast_preln -> f64 with -1.0
+src/bremsstrahlung.rs:274:24: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:274:24: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:274:21: delete - in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:68: replace + with - in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:68: replace + with * in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:40: replace + with - in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:40: replace + with * in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:33: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:33: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:60: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:60: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:46: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:46: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:81: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:278:81: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:280:32: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:280:32: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:280:21: replace * with + in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:280:21: replace * with / in br_emission_coefficient_fast_preln
+src/bremsstrahlung.rs:302:5: replace br_heating_integral -> f64 with 1.0
+src/bremsstrahlung.rs:302:5: replace br_heating_integral -> f64 with -1.0
+src/bremsstrahlung.rs:309:39: replace - with + in br_heating_integral
+src/bremsstrahlung.rs:310:49: replace - with + in br_heating_integral
+src/bremsstrahlung.rs:311:26: replace * with / in br_heating_integral
+src/bremsstrahlung.rs:311:52: replace - with + in br_heating_integral
+src/bremsstrahlung.rs:319:26: replace - with / in br_heating_integral
+src/bremsstrahlung.rs:320:35: replace * with + in br_heating_integral
+src/bremsstrahlung.rs:320:28: replace * with / in br_heating_integral

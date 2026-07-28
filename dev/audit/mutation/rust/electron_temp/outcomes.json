@@ -1,0 +1,450 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.656808293,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.830805158,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/electron_temp.rs:39:9: replace ElectronTemperature::theta_e_with -> f64 with 0.0",
+          "package": "spectroxide",
+          "file": "src/electron_temp.rs",
+          "function": {
+            "function_name": "ElectronTemperature::theta_e_with",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 34,
+                "column": 5
+              },
+              "end": {
+                "line": 40,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 39,
+              "column": 9
+            },
+            "end": {
+              "line": 39,
+              "column": 33
+            }
+          },
+          "replacement": "0.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__electron_temp.rs_line_39_col_9.log",
+      "diff_path": "diff/src__electron_temp.rs_line_39_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 12.31056201,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 90.011820576,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/electron_temp.rs:39:9: replace ElectronTemperature::theta_e_with -> f64 with 1.0",
+          "package": "spectroxide",
+          "file": "src/electron_temp.rs",
+          "function": {
+            "function_name": "ElectronTemperature::theta_e_with",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 34,
+                "column": 5
+              },
+              "end": {
+                "line": 40,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 39,
+              "column": 9
+            },
+            "end": {
+              "line": 39,
+              "column": 33
+            }
+          },
+          "replacement": "1.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__electron_temp.rs_line_39_col_9_001.log",
+      "diff_path": "diff/src__electron_temp.rs_line_39_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.11485062,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 90.020072197,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/electron_temp.rs:39:9: replace ElectronTemperature::theta_e_with -> f64 with -1.0",
+          "package": "spectroxide",
+          "file": "src/electron_temp.rs",
+          "function": {
+            "function_name": "ElectronTemperature::theta_e_with",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 34,
+                "column": 5
+              },
+              "end": {
+                "line": 40,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 39,
+              "column": 9
+            },
+            "end": {
+              "line": 39,
+              "column": 33
+            }
+          },
+          "replacement": "-1.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__electron_temp.rs_line_39_col_9_002.log",
+      "diff_path": "diff/src__electron_temp.rs_line_39_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.361356363,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 90.025687838,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/electron_temp.rs:39:20: replace * with + in ElectronTemperature::theta_e_with",
+          "package": "spectroxide",
+          "file": "src/electron_temp.rs",
+          "function": {
+            "function_name": "ElectronTemperature::theta_e_with",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 34,
+                "column": 5
+              },
+              "end": {
+                "line": 40,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 39,
+              "column": 20
+            },
+            "end": {
+              "line": 39,
+              "column": 21
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__electron_temp.rs_line_39_col_20.log",
+      "diff_path": "diff/src__electron_temp.rs_line_39_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.614348101,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 90.018199574,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/electron_temp.rs:39:20: replace * with / in ElectronTemperature::theta_e_with",
+          "package": "spectroxide",
+          "file": "src/electron_temp.rs",
+          "function": {
+            "function_name": "ElectronTemperature::theta_e_with",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 34,
+                "column": 5
+              },
+              "end": {
+                "line": 40,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 39,
+              "column": 20
+            },
+            "end": {
+              "line": 39,
+              "column": 21
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__electron_temp.rs_line_39_col_20_001.log",
+      "diff_path": "diff/src__electron_temp.rs_line_39_col_20_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.371874645,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 90.007123741,
+          "process_status": "Timeout",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/electron_temp.rs:50:9: replace ElectronTemperature::update_equilibrium with ()",
+          "package": "spectroxide",
+          "file": "src/electron_temp.rs",
+          "function": {
+            "function_name": "ElectronTemperature::update_equilibrium",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 42,
+                "column": 5
+              },
+              "end": {
+                "line": 51,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 50,
+              "column": 9
+            },
+            "end": {
+              "line": 50,
+              "column": 64
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__electron_temp.rs_line_50_col_9.log",
+      "diff_path": "diff/src__electron_temp.rs_line_50_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.614231683,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 53.646637483,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--lib",
+            "--test",
+            "greens_function_checks"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 6,
+  "missed": 1,
+  "caught": 0,
+  "timeout": 5,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-07-06T18:58:33.955935361Z",
+  "end_time": "2026-07-06T19:07:51.611812629Z",
+  "cargo_mutants_version": "27.1.0"
+}

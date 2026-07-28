@@ -1,0 +1,12 @@
+src/double_compton.rs:37:39: replace / with * in dc_gaunt_factor
+src/double_compton.rs:37:46: replace + with - in dc_gaunt_factor
+src/double_compton.rs:39:11: replace * with / in dc_gaunt_factor
+src/double_compton.rs:51:10: replace > with >= in dc_high_freq_suppression
+src/double_compton.rs:74:9: replace / with % in dc_prefactor
+src/double_compton.rs:74:9: replace / with * in dc_prefactor
+src/double_compton.rs:73:27: replace * with + in dc_prefactor
+src/double_compton.rs:74:16: replace + with - in dc_prefactor
+src/double_compton.rs:80:5: replace dc_emission_coefficient_fast -> f64 with 0.0
+src/double_compton.rs:80:5: replace dc_emission_coefficient_fast -> f64 with 1.0
+src/double_compton.rs:80:12: replace * with + in dc_emission_coefficient_fast
+src/double_compton.rs:80:12: replace * with / in dc_emission_coefficient_fast

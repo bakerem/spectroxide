@@ -1,0 +1,1847 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.989819882,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 879.704041119,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:37:39: replace / with * in dc_gaunt_factor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_gaunt_factor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 23,
+                "column": 1
+              },
+              "end": {
+                "line": 40,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 37,
+              "column": 39
+            },
+            "end": {
+              "line": 37,
+              "column": 40
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_37_col_39.log",
+      "diff_path": "diff/src__double_compton.rs_line_37_col_39.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.537781516,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 882.774581776,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:37:46: replace + with - in dc_gaunt_factor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_gaunt_factor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 23,
+                "column": 1
+              },
+              "end": {
+                "line": 40,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 37,
+              "column": 46
+            },
+            "end": {
+              "line": 37,
+              "column": 47
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_37_col_46.log",
+      "diff_path": "diff/src__double_compton.rs_line_37_col_46.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.186713834,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 883.185676682,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:39:11: replace * with / in dc_gaunt_factor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_gaunt_factor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 23,
+                "column": 1
+              },
+              "end": {
+                "line": 40,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 39,
+              "column": 11
+            },
+            "end": {
+              "line": 39,
+              "column": 12
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_39_col_11.log",
+      "diff_path": "diff/src__double_compton.rs_line_39_col_11.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.071462029,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 876.452849054,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:51:10: replace > with >= in dc_high_freq_suppression",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_high_freq_suppression",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 42,
+                "column": 1
+              },
+              "end": {
+                "line": 55,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 51,
+              "column": 10
+            },
+            "end": {
+              "line": 51,
+              "column": 11
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_51_col_10.log",
+      "diff_path": "diff/src__double_compton.rs_line_51_col_10.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.274444143,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 846.159070531,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:73:5: replace dc_prefactor -> f64 with 0.0",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 73,
+              "column": 5
+            },
+            "end": {
+              "line": 74,
+              "column": 34
+            }
+          },
+          "replacement": "0.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_73_col_5.log",
+      "diff_path": "diff/src__double_compton.rs_line_73_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.818889003,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 171.355122807,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:74:9: replace / with % in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 9
+            },
+            "end": {
+              "line": 74,
+              "column": 10
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_74_col_9.log",
+      "diff_path": "diff/src__double_compton.rs_line_74_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.461703135,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 896.602257452,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:74:9: replace / with * in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 9
+            },
+            "end": {
+              "line": 74,
+              "column": 10
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_74_col_9_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_74_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.6121351170000002,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 899.752493611,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:73:71: replace * with / in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 73,
+              "column": 71
+            },
+            "end": {
+              "line": 73,
+              "column": 72
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_73_col_71.log",
+      "diff_path": "diff/src__double_compton.rs_line_73_col_71.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.615994332,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 165.610246471,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:73:20: replace / with % in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 73,
+              "column": 20
+            },
+            "end": {
+              "line": 73,
+              "column": 21
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_73_col_20.log",
+      "diff_path": "diff/src__double_compton.rs_line_73_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.311668361,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 171.986886401,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:73:20: replace / with * in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 73,
+              "column": 20
+            },
+            "end": {
+              "line": 73,
+              "column": 21
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_73_col_20_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_73_col_20_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.311263929,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 179.91321254,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:73:27: replace * with + in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 73,
+              "column": 27
+            },
+            "end": {
+              "line": 73,
+              "column": 28
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_73_col_27.log",
+      "diff_path": "diff/src__double_compton.rs_line_73_col_27.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.680513628,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 869.605588484,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:73:27: replace * with / in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 73,
+              "column": 27
+            },
+            "end": {
+              "line": 73,
+              "column": 28
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_73_col_27_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_73_col_27_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.779497472,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 185.646945797,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:74:16: replace + with - in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 16
+            },
+            "end": {
+              "line": 74,
+              "column": 17
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_74_col_16.log",
+      "diff_path": "diff/src__double_compton.rs_line_74_col_16.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.281338795,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 874.722030298,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:74:16: replace + with * in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 16
+            },
+            "end": {
+              "line": 74,
+              "column": 17
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_74_col_16_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_74_col_16_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.180869021,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 192.906037115,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:74:24: replace * with + in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 24
+            },
+            "end": {
+              "line": 74,
+              "column": 25
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_74_col_24.log",
+      "diff_path": "diff/src__double_compton.rs_line_74_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.663319976,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 160.0363451,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:74:24: replace * with / in dc_prefactor",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_prefactor",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 69,
+                "column": 1
+              },
+              "end": {
+                "line": 75,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 24
+            },
+            "end": {
+              "line": 74,
+              "column": 25
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_74_col_24_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_74_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.516622434,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 162.17810914,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:80:5: replace dc_emission_coefficient_fast -> f64 with 0.0",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_emission_coefficient_fast",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 77,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 41
+            }
+          },
+          "replacement": "0.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_80_col_5.log",
+      "diff_path": "diff/src__double_compton.rs_line_80_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.665787548,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 881.231312521,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:80:5: replace dc_emission_coefficient_fast -> f64 with 1.0",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_emission_coefficient_fast",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 77,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 41
+            }
+          },
+          "replacement": "1.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_80_col_5_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_80_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.464108213,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 861.942742431,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:80:5: replace dc_emission_coefficient_fast -> f64 with -1.0",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_emission_coefficient_fast",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 77,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 41
+            }
+          },
+          "replacement": "-1.0",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__double_compton.rs_line_80_col_5_002.log",
+      "diff_path": "diff/src__double_compton.rs_line_80_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.616310655,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 863.700586396,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:80:12: replace * with + in dc_emission_coefficient_fast",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_emission_coefficient_fast",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 77,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 12
+            },
+            "end": {
+              "line": 80,
+              "column": 13
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_80_col_12.log",
+      "diff_path": "diff/src__double_compton.rs_line_80_col_12.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.543697927,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 877.671568134,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/double_compton.rs:80:12: replace * with / in dc_emission_coefficient_fast",
+          "package": "spectroxide",
+          "file": "src/double_compton.rs",
+          "function": {
+            "function_name": "dc_emission_coefficient_fast",
+            "return_type": "-> f64",
+            "span": {
+              "start": {
+                "line": 77,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 12
+            },
+            "end": {
+              "line": 80,
+              "column": 13
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__double_compton.rs_line_80_col_12_001.log",
+      "diff_path": "diff/src__double_compton.rs_line_80_col_12_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.562270285,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 872.629336246,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 21,
+  "missed": 12,
+  "caught": 9,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-07-12T02:31:33.253901228Z",
+  "end_time": "2026-07-12T06:20:33.429836553Z",
+  "cargo_mutants_version": "27.1.0"
+}

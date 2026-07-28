@@ -1,0 +1,577 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.816150398,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 998.942515743,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/solver.rs:80:9: replace SolverConfig::validate -> Result<(), String> with Ok(())",
+          "package": "spectroxide",
+          "file": "src/solver.rs",
+          "function": {
+            "function_name": "SolverConfig::validate",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 75,
+                "column": 5
+              },
+              "end": {
+                "line": 130,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 9
+            },
+            "end": {
+              "line": 129,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__solver.rs_line_80_col_9.log",
+      "diff_path": "diff/src__solver.rs_line_80_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 9.842433995,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 61.736839657,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/solver.rs:80:38: replace || with && in SolverConfig::validate",
+          "package": "spectroxide",
+          "file": "src/solver.rs",
+          "function": {
+            "function_name": "SolverConfig::validate",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 75,
+                "column": 5
+              },
+              "end": {
+                "line": 130,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 38
+            },
+            "end": {
+              "line": 80,
+              "column": 40
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__solver.rs_line_80_col_38.log",
+      "diff_path": "diff/src__solver.rs_line_80_col_38.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.92312095,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 922.806006793,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/solver.rs:83:36: replace || with && in SolverConfig::validate",
+          "package": "spectroxide",
+          "file": "src/solver.rs",
+          "function": {
+            "function_name": "SolverConfig::validate",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 75,
+                "column": 5
+              },
+              "end": {
+                "line": 130,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 36
+            },
+            "end": {
+              "line": 83,
+              "column": 38
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__solver.rs_line_83_col_36.log",
+      "diff_path": "diff/src__solver.rs_line_83_col_36.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 20.518859214,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 83.720954904,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/solver.rs:83:50: replace < with == in SolverConfig::validate",
+          "package": "spectroxide",
+          "file": "src/solver.rs",
+          "function": {
+            "function_name": "SolverConfig::validate",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 75,
+                "column": 5
+              },
+              "end": {
+                "line": 130,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 50
+            },
+            "end": {
+              "line": 83,
+              "column": 51
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__solver.rs_line_83_col_50.log",
+      "diff_path": "diff/src__solver.rs_line_83_col_50.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.169376253,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 67.87157533,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/solver.rs:83:50: replace < with <= in SolverConfig::validate",
+          "package": "spectroxide",
+          "file": "src/solver.rs",
+          "function": {
+            "function_name": "SolverConfig::validate",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 75,
+                "column": 5
+              },
+              "end": {
+                "line": 130,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 50
+            },
+            "end": {
+              "line": 83,
+              "column": 51
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__solver.rs_line_83_col_50_001.log",
+      "diff_path": "diff/src__solver.rs_line_83_col_50_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.235317934,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 984.854159898,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/solver.rs:92:37: replace || with && in SolverConfig::validate",
+          "package": "spectroxide",
+          "file": "src/solver.rs",
+          "function": {
+            "function_name": "SolverConfig::validate",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 75,
+                "column": 5
+              },
+              "end": {
+                "line": 130,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 92,
+              "column": 37
+            },
+            "end": {
+              "line": 92,
+              "column": 39
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__solver.rs_line_92_col_37.log",
+      "diff_path": "diff/src__solver.rs_line_92_col_37.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 65.592176173,
+          "process_status": "Success",
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=spectroxide@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 121.974045207,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/bakerem/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=spectroxide@0.1.0",
+            "--release",
+            "--test",
+            "a_adversarial_inputs",
+            "--test",
+            "b_mms_convergence",
+            "--test",
+            "d_conservation_fuzz",
+            "--test",
+            "e_science_suite",
+            "--test",
+            "f_convergence_order",
+            "--test",
+            "g_cosmotherm_comparison",
+            "--test",
+            "h_cli_integration",
+            "--test",
+            "i_coverage_gaps",
+            "--test",
+            "j_heat_injection",
+            "--",
+            "--test-threads=4"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 6,
+  "missed": 2,
+  "caught": 4,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-07-13T18:29:13.09959945Z",
+  "end_time": null,
+  "cargo_mutants_version": "27.1.0"
+}

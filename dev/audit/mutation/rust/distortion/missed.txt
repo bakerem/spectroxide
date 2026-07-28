@@ -1,0 +1,269 @@
+src/distortion.rs:47:22: replace < with <= in band_weights
+src/distortion.rs:47:43: replace > with == in band_weights
+src/distortion.rs:47:43: replace > with >= in band_weights
+src/distortion.rs:50:23: replace == with != in band_weights
+src/distortion.rs:52:21: replace == with != in band_weights
+src/distortion.rs:53:23: replace - with + in band_weights
+src/distortion.rs:53:23: replace - with / in band_weights
+src/distortion.rs:54:21: replace == with != in band_weights
+src/distortion.rs:54:26: replace - with + in band_weights
+src/distortion.rs:54:26: replace - with / in band_weights
+src/distortion.rs:55:27: replace - with + in band_weights
+src/distortion.rs:55:27: replace - with / in band_weights
+src/distortion.rs:55:22: replace - with + in band_weights
+src/distortion.rs:55:22: replace - with / in band_weights
+src/distortion.rs:55:38: replace - with + in band_weights
+src/distortion.rs:55:38: replace - with / in band_weights
+src/distortion.rs:57:17: replace * with + in band_weights
+src/distortion.rs:57:17: replace * with / in band_weights
+src/distortion.rs:57:34: replace - with + in band_weights
+src/distortion.rs:57:34: replace - with / in band_weights
+src/distortion.rs:57:29: replace + with * in band_weights
+src/distortion.rs:57:45: replace - with / in band_weights
+src/distortion.rs:114:10: replace < with == in decompose_gram_schmidt
+src/distortion.rs:114:10: replace < with <= in decompose_gram_schmidt
+src/distortion.rs:127:30: replace * with / in decompose_gram_schmidt
+src/distortion.rs:133:16: replace < with == in decompose_gram_schmidt
+src/distortion.rs:133:16: replace < with <= in decompose_gram_schmidt
+src/distortion.rs:146:21: replace < with == in decompose_gram_schmidt
+src/distortion.rs:146:21: replace < with <= in decompose_gram_schmidt
+src/distortion.rs:161:21: replace < with == in decompose_gram_schmidt
+src/distortion.rs:161:21: replace < with <= in decompose_gram_schmidt
+src/distortion.rs:186:72: replace - with + in decompose_gram_schmidt
+src/distortion.rs:186:72: replace - with / in decompose_gram_schmidt
+src/distortion.rs:186:54: replace - with + in decompose_gram_schmidt
+src/distortion.rs:186:54: replace - with / in decompose_gram_schmidt
+src/distortion.rs:186:34: replace - with + in decompose_gram_schmidt
+src/distortion.rs:186:34: replace - with / in decompose_gram_schmidt
+src/distortion.rs:186:39: replace * with + in decompose_gram_schmidt
+src/distortion.rs:186:39: replace * with / in decompose_gram_schmidt
+src/distortion.rs:186:58: replace * with + in decompose_gram_schmidt
+src/distortion.rs:186:58: replace * with / in decompose_gram_schmidt
+src/distortion.rs:186:82: replace * with + in decompose_gram_schmidt
+src/distortion.rs:186:82: replace * with / in decompose_gram_schmidt
+src/distortion.rs:240:10: replace < with == in decompose_nonlinear_be
+src/distortion.rs:240:10: replace < with <= in decompose_nonlinear_be
+src/distortion.rs:255:54: replace * with + in decompose_nonlinear_be
+src/distortion.rs:255:54: replace * with / in decompose_nonlinear_be
+src/distortion.rs:255:73: replace * with / in decompose_nonlinear_be
+src/distortion.rs:261:37: replace - with + in decompose_nonlinear_be
+src/distortion.rs:261:37: replace - with / in decompose_nonlinear_be
+src/distortion.rs:262:15: replace += with -= in decompose_nonlinear_be
+src/distortion.rs:262:15: replace += with *= in decompose_nonlinear_be
+src/distortion.rs:262:24: replace * with + in decompose_nonlinear_be
+src/distortion.rs:262:24: replace * with / in decompose_nonlinear_be
+src/distortion.rs:262:20: replace * with + in decompose_nonlinear_be
+src/distortion.rs:262:20: replace * with / in decompose_nonlinear_be
+src/distortion.rs:270:39: replace + with - in decompose_nonlinear_be
+src/distortion.rs:270:39: replace + with * in decompose_nonlinear_be
+src/distortion.rs:270:47: replace / with % in decompose_nonlinear_be
+src/distortion.rs:270:47: replace / with * in decompose_nonlinear_be
+src/distortion.rs:284:37: replace - with + in decompose_nonlinear_be
+src/distortion.rs:284:37: replace - with / in decompose_nonlinear_be
+src/distortion.rs:287:26: replace + with - in decompose_nonlinear_be
+src/distortion.rs:287:26: replace + with * in decompose_nonlinear_be
+src/distortion.rs:288:39: replace < with == in decompose_nonlinear_be
+src/distortion.rs:288:39: replace < with > in decompose_nonlinear_be
+src/distortion.rs:288:39: replace < with <= in decompose_nonlinear_be
+src/distortion.rs:289:22: replace / with % in decompose_nonlinear_be
+src/distortion.rs:289:22: replace / with * in decompose_nonlinear_be
+src/distortion.rs:289:17: delete - in decompose_nonlinear_be
+src/distortion.rs:289:29: replace * with + in decompose_nonlinear_be
+src/distortion.rs:289:29: replace * with / in decompose_nonlinear_be
+src/distortion.rs:292:29: replace / with % in decompose_nonlinear_be
+src/distortion.rs:292:29: replace / with * in decompose_nonlinear_be
+src/distortion.rs:292:17: delete - in decompose_nonlinear_be
+src/distortion.rs:292:23: replace + with - in decompose_nonlinear_be
+src/distortion.rs:292:23: replace + with * in decompose_nonlinear_be
+src/distortion.rs:292:35: replace * with + in decompose_nonlinear_be
+src/distortion.rs:292:35: replace * with / in decompose_nonlinear_be
+src/distortion.rs:300:24: replace += with -= in decompose_nonlinear_be
+src/distortion.rs:300:24: replace += with *= in decompose_nonlinear_be
+src/distortion.rs:300:38: replace * with + in decompose_nonlinear_be
+src/distortion.rs:300:38: replace * with / in decompose_nonlinear_be
+src/distortion.rs:300:34: replace * with + in decompose_nonlinear_be
+src/distortion.rs:300:34: replace * with / in decompose_nonlinear_be
+src/distortion.rs:302:31: replace += with -= in decompose_nonlinear_be
+src/distortion.rs:302:31: replace += with *= in decompose_nonlinear_be
+src/distortion.rs:302:50: replace * with + in decompose_nonlinear_be
+src/distortion.rs:302:50: replace * with / in decompose_nonlinear_be
+src/distortion.rs:302:41: replace * with + in decompose_nonlinear_be
+src/distortion.rs:302:41: replace * with / in decompose_nonlinear_be
+src/distortion.rs:316:54: replace + with - in decompose_nonlinear_be
+src/distortion.rs:316:54: replace + with * in decompose_nonlinear_be
+src/distortion.rs:316:37: replace * with + in decompose_nonlinear_be
+src/distortion.rs:316:37: replace * with / in decompose_nonlinear_be
+src/distortion.rs:316:44: replace + with - in decompose_nonlinear_be
+src/distortion.rs:316:44: replace + with * in decompose_nonlinear_be
+src/distortion.rs:318:41: replace - with + in decompose_nonlinear_be
+src/distortion.rs:318:41: replace - with / in decompose_nonlinear_be
+src/distortion.rs:318:31: replace * with + in decompose_nonlinear_be
+src/distortion.rs:318:31: replace * with / in decompose_nonlinear_be
+src/distortion.rs:318:51: replace * with + in decompose_nonlinear_be
+src/distortion.rs:318:51: replace * with / in decompose_nonlinear_be
+src/distortion.rs:319:23: delete - in decompose_nonlinear_be
+src/distortion.rs:319:43: replace - with + in decompose_nonlinear_be
+src/distortion.rs:319:43: replace - with / in decompose_nonlinear_be
+src/distortion.rs:319:33: replace * with + in decompose_nonlinear_be
+src/distortion.rs:319:33: replace * with / in decompose_nonlinear_be
+src/distortion.rs:319:53: replace * with + in decompose_nonlinear_be
+src/distortion.rs:319:53: replace * with / in decompose_nonlinear_be
+src/distortion.rs:320:41: replace - with + in decompose_nonlinear_be
+src/distortion.rs:320:41: replace - with / in decompose_nonlinear_be
+src/distortion.rs:320:31: replace * with + in decompose_nonlinear_be
+src/distortion.rs:320:31: replace * with / in decompose_nonlinear_be
+src/distortion.rs:320:51: replace * with + in decompose_nonlinear_be
+src/distortion.rs:320:51: replace * with / in decompose_nonlinear_be
+src/distortion.rs:321:53: replace + with - in decompose_nonlinear_be
+src/distortion.rs:321:53: replace + with * in decompose_nonlinear_be
+src/distortion.rs:321:37: replace + with - in decompose_nonlinear_be
+src/distortion.rs:321:37: replace + with * in decompose_nonlinear_be
+src/distortion.rs:321:31: replace * with + in decompose_nonlinear_be
+src/distortion.rs:321:31: replace * with / in decompose_nonlinear_be
+src/distortion.rs:321:47: replace * with + in decompose_nonlinear_be
+src/distortion.rs:321:47: replace * with / in decompose_nonlinear_be
+src/distortion.rs:321:63: replace * with + in decompose_nonlinear_be
+src/distortion.rs:321:63: replace * with / in decompose_nonlinear_be
+src/distortion.rs:322:26: replace < with == in decompose_nonlinear_be
+src/distortion.rs:322:26: replace < with > in decompose_nonlinear_be
+src/distortion.rs:322:26: replace < with <= in decompose_nonlinear_be
+src/distortion.rs:323:24: replace *= with += in decompose_nonlinear_be
+src/distortion.rs:323:24: replace *= with /= in decompose_nonlinear_be
+src/distortion.rs:326:23: delete - in decompose_nonlinear_be
+src/distortion.rs:326:43: replace - with + in decompose_nonlinear_be
+src/distortion.rs:326:43: replace - with / in decompose_nonlinear_be
+src/distortion.rs:326:33: replace * with + in decompose_nonlinear_be
+src/distortion.rs:326:33: replace * with / in decompose_nonlinear_be
+src/distortion.rs:326:53: replace * with + in decompose_nonlinear_be
+src/distortion.rs:326:53: replace * with / in decompose_nonlinear_be
+src/distortion.rs:327:41: replace - with + in decompose_nonlinear_be
+src/distortion.rs:327:41: replace - with / in decompose_nonlinear_be
+src/distortion.rs:327:31: replace * with + in decompose_nonlinear_be
+src/distortion.rs:327:31: replace * with / in decompose_nonlinear_be
+src/distortion.rs:327:51: replace * with + in decompose_nonlinear_be
+src/distortion.rs:327:51: replace * with / in decompose_nonlinear_be
+src/distortion.rs:328:23: delete - in decompose_nonlinear_be
+src/distortion.rs:328:43: replace - with + in decompose_nonlinear_be
+src/distortion.rs:328:43: replace - with / in decompose_nonlinear_be
+src/distortion.rs:328:33: replace * with + in decompose_nonlinear_be
+src/distortion.rs:328:33: replace * with / in decompose_nonlinear_be
+src/distortion.rs:328:53: replace * with + in decompose_nonlinear_be
+src/distortion.rs:328:53: replace * with / in decompose_nonlinear_be
+src/distortion.rs:329:41: replace - with + in decompose_nonlinear_be
+src/distortion.rs:329:41: replace - with / in decompose_nonlinear_be
+src/distortion.rs:329:31: replace * with + in decompose_nonlinear_be
+src/distortion.rs:329:31: replace * with / in decompose_nonlinear_be
+src/distortion.rs:329:51: replace * with + in decompose_nonlinear_be
+src/distortion.rs:329:51: replace * with / in decompose_nonlinear_be
+src/distortion.rs:330:23: delete - in decompose_nonlinear_be
+src/distortion.rs:330:43: replace - with + in decompose_nonlinear_be
+src/distortion.rs:330:43: replace - with / in decompose_nonlinear_be
+src/distortion.rs:330:33: replace * with + in decompose_nonlinear_be
+src/distortion.rs:330:33: replace * with / in decompose_nonlinear_be
+src/distortion.rs:330:53: replace * with + in decompose_nonlinear_be
+src/distortion.rs:330:53: replace * with / in decompose_nonlinear_be
+src/distortion.rs:331:41: replace - with + in decompose_nonlinear_be
+src/distortion.rs:331:41: replace - with / in decompose_nonlinear_be
+src/distortion.rs:331:31: replace * with + in decompose_nonlinear_be
+src/distortion.rs:331:31: replace * with / in decompose_nonlinear_be
+src/distortion.rs:331:51: replace * with + in decompose_nonlinear_be
+src/distortion.rs:331:51: replace * with / in decompose_nonlinear_be
+src/distortion.rs:333:68: replace / with % in decompose_nonlinear_be
+src/distortion.rs:333:68: replace / with * in decompose_nonlinear_be
+src/distortion.rs:333:52: replace + with - in decompose_nonlinear_be
+src/distortion.rs:333:52: replace + with * in decompose_nonlinear_be
+src/distortion.rs:333:37: replace + with - in decompose_nonlinear_be
+src/distortion.rs:333:37: replace + with * in decompose_nonlinear_be
+src/distortion.rs:333:28: replace * with + in decompose_nonlinear_be
+src/distortion.rs:333:28: replace * with / in decompose_nonlinear_be
+src/distortion.rs:333:43: replace * with + in decompose_nonlinear_be
+src/distortion.rs:333:43: replace * with / in decompose_nonlinear_be
+src/distortion.rs:333:58: replace * with + in decompose_nonlinear_be
+src/distortion.rs:333:58: replace * with / in decompose_nonlinear_be
+src/distortion.rs:334:67: replace / with % in decompose_nonlinear_be
+src/distortion.rs:334:67: replace / with * in decompose_nonlinear_be
+src/distortion.rs:334:51: replace + with - in decompose_nonlinear_be
+src/distortion.rs:334:51: replace + with * in decompose_nonlinear_be
+src/distortion.rs:334:36: replace + with - in decompose_nonlinear_be
+src/distortion.rs:334:27: replace * with + in decompose_nonlinear_be
+src/distortion.rs:334:27: replace * with / in decompose_nonlinear_be
+src/distortion.rs:334:42: replace * with + in decompose_nonlinear_be
+src/distortion.rs:334:42: replace * with / in decompose_nonlinear_be
+src/distortion.rs:334:57: replace * with + in decompose_nonlinear_be
+src/distortion.rs:334:57: replace * with / in decompose_nonlinear_be
+src/distortion.rs:335:67: replace / with % in decompose_nonlinear_be
+src/distortion.rs:335:67: replace / with * in decompose_nonlinear_be
+src/distortion.rs:335:51: replace + with - in decompose_nonlinear_be
+src/distortion.rs:335:36: replace + with - in decompose_nonlinear_be
+src/distortion.rs:335:36: replace + with * in decompose_nonlinear_be
+src/distortion.rs:335:27: replace * with + in decompose_nonlinear_be
+src/distortion.rs:335:27: replace * with / in decompose_nonlinear_be
+src/distortion.rs:335:42: replace * with + in decompose_nonlinear_be
+src/distortion.rs:335:42: replace * with / in decompose_nonlinear_be
+src/distortion.rs:335:57: replace * with + in decompose_nonlinear_be
+src/distortion.rs:335:57: replace * with / in decompose_nonlinear_be
+src/distortion.rs:337:29: replace + with - in decompose_nonlinear_be
+src/distortion.rs:337:29: replace + with * in decompose_nonlinear_be
+src/distortion.rs:338:35: replace + with - in decompose_nonlinear_be
+src/distortion.rs:338:35: replace + with * in decompose_nonlinear_be
+src/distortion.rs:339:31: replace + with * in decompose_nonlinear_be
+src/distortion.rs:341:25: replace < with == in decompose_nonlinear_be
+src/distortion.rs:341:25: replace < with > in decompose_nonlinear_be
+src/distortion.rs:341:25: replace < with <= in decompose_nonlinear_be
+src/distortion.rs:346:34: replace * with + in decompose_nonlinear_be
+src/distortion.rs:346:34: replace * with / in decompose_nonlinear_be
+src/distortion.rs:350:20: replace *= with += in decompose_nonlinear_be
+src/distortion.rs:350:20: replace *= with /= in decompose_nonlinear_be
+src/distortion.rs:352:12: delete ! in decompose_nonlinear_be
+src/distortion.rs:357:17: replace < with == in decompose_nonlinear_be
+src/distortion.rs:357:17: replace < with > in decompose_nonlinear_be
+src/distortion.rs:357:17: replace < with <= in decompose_nonlinear_be
+src/distortion.rs:357:23: replace * with + in decompose_nonlinear_be
+src/distortion.rs:357:23: replace * with / in decompose_nonlinear_be
+src/distortion.rs:364:34: replace - with + in decompose_nonlinear_be
+src/distortion.rs:364:34: replace - with / in decompose_nonlinear_be
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, 0.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, 0.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, 0.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, 1.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, 1.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, 1.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, -1.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, -1.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (0.0, -1.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, 0.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, 0.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, 0.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, 1.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, 1.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, 1.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, -1.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, -1.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (1.0, -1.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, 0.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, 0.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, 0.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, 1.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, 1.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, 1.0, -1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, -1.0, 0.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, -1.0, 1.0)
+src/distortion.rs:404:5: replace decompose -> (f64, f64, f64) with (-1.0, -1.0, -1.0)
+src/distortion.rs:417:5: replace decomposition_band_count -> usize with 0
+src/distortion.rs:417:5: replace decomposition_band_count -> usize with 1
+src/distortion.rs:442:56: replace / with % in delta_n_to_intensity_mjy
+src/distortion.rs:442:56: replace / with * in delta_n_to_intensity_mjy
+src/distortion.rs:442:48: replace * with + in delta_n_to_intensity_mjy
+src/distortion.rs:442:48: replace * with / in delta_n_to_intensity_mjy
+src/distortion.rs:442:16: replace * with + in delta_n_to_intensity_mjy
+src/distortion.rs:442:16: replace * with / in delta_n_to_intensity_mjy
+src/distortion.rs:444:9: replace / with % in delta_n_to_intensity_mjy
+src/distortion.rs:444:9: replace / with * in delta_n_to_intensity_mjy
+src/distortion.rs:443:53: replace * with + in delta_n_to_intensity_mjy
+src/distortion.rs:443:53: replace * with / in delta_n_to_intensity_mjy
+src/distortion.rs:443:25: replace * with + in delta_n_to_intensity_mjy
+src/distortion.rs:443:25: replace * with / in delta_n_to_intensity_mjy
+src/distortion.rs:444:38: replace * with + in delta_n_to_intensity_mjy
+src/distortion.rs:444:38: replace * with / in delta_n_to_intensity_mjy
+src/distortion.rs:446:25: replace * with / in delta_n_to_intensity_mjy
+src/distortion.rs:446:15: replace * with + in delta_n_to_intensity_mjy

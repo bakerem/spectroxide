@@ -1,0 +1,2 @@
+src/solver.rs:80:38: replace || with && in SolverConfig::validate
+src/solver.rs:83:50: replace < with <= in SolverConfig::validate

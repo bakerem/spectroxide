@@ -1,0 +1,3 @@
+src/grid.rs:171:9: replace FrequencyGrid::from_points -> Self with Default::default()
+src/grid.rs:319:9: replace FrequencyGrid::log_uniform -> Self with Default::default()
+src/grid.rs:333:9: replace FrequencyGrid::uniform -> Self with Default::default()

@@ -130,3 +130,85 @@ deliverables. No row requires a paper-text caveat in lieu of an anchor.
 - **R5 (lit curves):** rows 2, 6, 8 → digitized-curve (ii)/(iii) regression.
 - **R2 (mutation):** upgrades the *test suite's* credibility for all rows (does
   a given anchor test actually catch a planted bug), not a specific figure.
+
+## R2 close-out: anchors added 2026-07-26
+
+R2 was expected to grade the anchors, not add any. In practice it found three
+places where a claim in the tables above was anchored *in an audit memo* but not
+in any test, which means nothing would catch a regression. Those are now tests
+(details and measured numbers in `mutation_audit.md` §New tests added):
+
+| Matrix entry | Was | Now |
+|---|---|---|
+| in-text "DC/BR ≈ 17 at z=10⁶, x=0.1" | **(ii)** derived in P1-8, **asserted nowhere**; the one DC/BR test ran at x=1 with a ±2.5× window | **(ii)** asserted at the derived point, ±20% (`test_dc_br_ratio_at_p18_reference_point`) |
+| in-text z_th ≈ 1.98×10⁶ | **(ii)** literature; `Z_MU` appeared only as a constant and in Green's-function tests — the PDE's own DC rate was never checked against it | **(i)+(ii)** PDE-side check at z_h = 3×10⁶ where μ is exponentially sensitive to K_DC (`science_deep_thermalization_pde_z3e6`, 1.3% agreement) |
+| in-text "He X_e error ≲10% at z~1600–2000" | **(iii)** HyRec-2, but measured only in `xe_hyrec_comparison.md`; the X_e milestone test covered z = 1100/800/200, all H-dominated | **(iii)** asserted at z = 5000/2500/2300/2000/1800 (`test_xe_vs_hyrec_helium_epoch`) — matters for row 8, where the ε limit moves −10.5% in the He window |
+| rows 6/7 photon internals | **(iv)** internal only: `tau_ff_survival` and the Arsenadze broadening helpers were bound-checked or absent from `tests/` entirely | **(i)** added: free-free ν⁻² Rayleigh–Jeans scaling (measured slope −2.160 vs −2.15 predicted) and the Zeldovich–Sunyaev broadening variance σ²(ln x) → 2y_γ |
+
+This does **not** close the rows 6/7 gap — the photon channel still has no
+independent-code **(iii)** anchor, and R5's cancellation leaves R3 as the only
+route to one. It does mean the internals feeding those rows now have analytic
+anchors rather than bounds. Independently, the mutation campaign reached the
+same conclusion as this matrix by a different route: the photon Green's-function
+path was the least-pinned code in the repository, which raises R3's priority.
+
+## Physics-check audit close-out: anchors added 2026-07-27
+
+A follow-up pass (`PHYSICS_CHECKS_STATUS_2026-07-26.md`) asked which *exact
+identities* the physics obeys that no test asserted. Nine landed in
+`tests/physics_identities.rs`; the three that move rows in the tables above:
+
+| Matrix entry | Was | Now |
+|---|---|---|
+| rows 6/7 (photon) — the X_e·n_e·σ_T·c/[H(1+z)] integrand behind y_γ and P_s | **(iv)** internal only: no test computed the Thomson depth at all | **(ii)** τ_T = 1 at z = 1090.69 vs Planck 2018 z_* = 1089.92 ± 0.25 (0.07%); band ±12 covers the reionization convention (±7) and a 15% integrand error (`test_thomson_optical_depth_and_last_scattering`) |
+| in-text α_th = 5/2 | **(i)** analytic, asserted nowhere; the exponent lived only inside the Chluba `J_bb*` fit and `Z_MU` | **(i)+(ii)** fitted from the PDE alone: α_th = 2.4199 over z_h ∈ [2,3]×10⁶ vs the fit's own local slope 2.4700 (`test_thermalization_exponent_five_halves`, `#[ignore]`d, 339 s) |
+| in-text μ = (3/κ_c)Δρ, β_μ, and the y-mode energy Δρ/ρ = 4y | **(i)** the *constants* κ_c, β_μ were machine-checked (R4); the coded **shapes** M, Y, G_bb were not tied to them | **(i)** six exact moment identities on the shape functions: ∫x²M = ∫x²Y = 0, ∫x³M = (κ_c/3)G₃, ∫x³Y = ∫x³G_bb = 4G₃, ∫x²G_bb = 3G₂, all to ≥12 digits (`test_distortion_shape_moment_identities`) |
+
+Also new, not tied to a published row but to the machinery under it: the exact
+Kompaneets first/second moment identities and the H-theorem dissipation rate
+(the only anchors on the drift flux φ(2n_pl+1)Δn and on the *relative* weight of
+drift vs diffusion — conservation laws hold for any antisymmetric flux split),
+the standard Compton/adiabatic T_e balance, the DC/BR crossover redshift, and
+the first quantification of the artificial-grid-boundary systematic (≤0.27% on
+μ and y, versus 0.5–0.9% from the N = 4000→4400 resolution step).
+
+## R5 cancellation and R3 close-out (2026-07-27)
+
+Two workstream outcomes change rows in the tables above. The row text still
+names R5 as a planned upgrade in places; **R5 was cancelled by EB on
+2026-07-11** and nothing in it will land. Read the tables with this section.
+
+**R5 (cancelled).** It would have upgraded rows 2, 6 and 8 with digitized
+published curves. Consequences:
+- Row 2 (visibility) needed no digitization anyway — the comparison is against
+  Chluba 2013's closed-form fitting formulas, already coefficient-verified in
+  P1-9. No loss.
+- Row 6 loses its planned class-(ii) curve anchor (Chluba 2015 / Bolliet+2020).
+- Row 8 loses the like-for-like AxionLimits `COBEFIRAS_*.txt` comparison. This
+  one required **no digitization** — the curves ship machine-readable in
+  `dev/AxionLimits/limit_data/DarkPhoton/` — so it is revivable independently of
+  R5 at low cost, and it is the only route that would settle the unresolved ~22%
+  γ_con offset. Recorded as the cheapest available upgrade, not as work in
+  progress.
+
+**R3 (landed, with a scoped claim).** All five contract cases agree with the
+clean-room Chang–Cooper solver to 0.32–0.87% on the dominant component, inside
+the contract's 2–5% bands (table in `ROUND2_STATUS.md`). But the claim is
+**independent discretisation, not independent code**: the specification is
+shared and is a demonstrated common-mode channel (findings F-R3-1, F-R3-3), and
+project CLAUDE.md leaks the reference flux splitting into subagent context. So:
+
+| Row | Was | Now |
+|---|---|---|
+| 1, 3 (heat bursts, adiabatic) | **(iii)** CosmoTherm | unchanged **(iii)**; R3 adds an independent-discretisation cross-check (0.32–0.52%) |
+| 6 (photon injection) | **(ii)** Chluba15 + **(iv)** PDE↔GF, flagged GAP | **(ii)** + independent-discretisation cross-check at 0.87%, **caveated** — the two codes deliver 27% different Δρ for the same nominal ΔN/N (windowed vs instantaneous deposition), so the agreement is not yet demonstrably meaningful. Still **no class (iii)**. |
+| 7 (FIRAS photon limit) | **GAP → R3** | **(i)+(ii)** only. Materially stronger than when this matrix was written — the R2 close-out added the free-free ν⁻² scaling and the σ²(ln x) → 2y_γ broadening variance, and the sensitivity-directed pass added value anchors on x_c at the O(1)-sensitivity point (T-PS-1/2/3). But class (iii) never arrived and, with R5 cancelled, has no planned route. |
+
+**Statement for the paper:** rows 6 and 7 are anchored at class (i)+(ii) plus an
+independent-discretisation cross-check, and carry no independent-code anchor.
+Say that plainly rather than implying (iii). If an external photon comparison is
+required, the viable route is vector-path extraction from the Chluba 2015 figure
+PDFs — verified to be pure vector artwork (zero embedded rasters) in the arXiv
+source tarball of 1506.06582, which ships no `.dat` files. The curves are
+dashed multi-curve plots, so separating them where they cross is real work
+(~1 day), but it is exact extraction rather than hand digitization.

@@ -1,0 +1,2 @@
+src/kompaneets.rs:216:19: replace - with + in thomas_solve_inplace
+src/kompaneets.rs:216:19: replace - with / in thomas_solve_inplace

@@ -1,0 +1,16 @@
+src/greens.rs:174:23: replace - with + in distortion_from_heating
+src/greens.rs:188:22: replace == with != in distortion_from_heating
+src/greens.rs:188:32: replace == with != in distortion_from_heating
+src/greens.rs:189:17: replace * with + in distortion_from_heating
+src/greens.rs:189:17: replace * with / in distortion_from_heating
+src/greens.rs:198:47: replace * with + in distortion_from_heating
+src/greens.rs:198:40: replace * with + in distortion_from_heating
+src/greens.rs:198:40: replace * with / in distortion_from_heating
+src/greens.rs:205:67: replace + with * in distortion_from_heating
+src/greens.rs:205:44: replace + with - in distortion_from_heating
+src/greens.rs:254:23: replace - with + in mu_y_from_heating
+src/greens.rs:265:17: replace * with + in mu_y_from_heating
+src/greens.rs:265:17: replace * with / in mu_y_from_heating
+src/greens.rs:273:43: replace * with / in mu_y_from_heating
+src/greens.rs:273:31: replace * with / in mu_y_from_heating
+src/greens.rs:274:19: replace * with / in mu_y_from_heating
