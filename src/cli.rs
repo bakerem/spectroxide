@@ -642,6 +642,7 @@ pub fn print_help() {
     eprintln!("  monochromatic-photon  --x-inj, --delta-n-over-n, --z-h");
     eprintln!("  decaying-particle-photon --x-inj-0, --f-inj, --gamma-x");
     eprintln!("  dark-photon-resonance --epsilon, --m-ev");
+    #[cfg(feature = "axion")]
     eprintln!("  axion-resonance       --g-agamma, --b-rms, --m-ev");
     eprintln!("  tabulated-heating     --heating-table PATH (CSV: z,dq_dz)");
     eprintln!("  tabulated-photon      --photon-table PATH (CSV: z,x1,...,xN)");
@@ -682,6 +683,7 @@ pub fn print_help() {
     eprintln!("  spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5");
     eprintln!("  spectroxide solve decaying-particle --f-x 1e5 --gamma-x 2e5");
     eprintln!("  spectroxide solve dark-photon-resonance --epsilon 1e-9 --m-ev 1e-7");
+    #[cfg(feature = "axion")]
     eprintln!("  spectroxide solve axion-resonance --g-agamma 1e-10 --b-rms 1 --m-ev 1e-7");
     eprintln!("  spectroxide greens --z-h 2e5");
     eprintln!("  spectroxide info --cosmology planck2018");
@@ -785,6 +787,7 @@ pub fn build_injection_scenario(
             let m_ev = get_required("--m-ev")?;
             Ok(InjectionScenario::DarkPhotonResonance { epsilon, m_ev })
         }
+        #[cfg(feature = "axion")]
         "axion-resonance" => {
             let g_agamma = get_required("--g-agamma")?;
             let b_rms = get_required("--b-rms")?;
@@ -812,7 +815,7 @@ pub fn build_injection_scenario(
              Valid: single-burst, \
              decaying-particle, decaying-particle-photon, \
              annihilating-dm, annihilating-dm-pwave, monochromatic-photon, \
-             dark-photon-resonance, axion-resonance, \
+             dark-photon-resonance, \
              tabulated-heating, tabulated-photon"
         )),
     }
@@ -1061,10 +1064,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     // Resonant conversion: hard-error if NWA gives no resonance in the
     // supported redshift band. Without this the solver runs to mu=y=0 and
     // looks like a "successful" null result.
-    if matches!(
-        injection,
-        InjectionScenario::DarkPhotonResonance { .. } | InjectionScenario::AxionResonance { .. }
-    ) && injection.resonance_params(&cosmo).is_none()
+    if injection.is_impulsive_resonance() && injection.resonance_params(&cosmo).is_none()
     {
         return Err(
             "Resonant conversion: no resonance redshift z_res in [50, 3e6] for the given \
@@ -1859,7 +1859,8 @@ mod tests {
     #[test]
     fn test_build_injection_all_types() {
         // Each (type_name, args, expected_variant_check)
-        let cases: Vec<(&str, Vec<(&str, &str)>, fn(&InjectionScenario) -> bool)> = vec![
+        #[allow(unused_mut)]
+        let mut cases: Vec<(&str, Vec<(&str, &str)>, fn(&InjectionScenario) -> bool)> = vec![
             ("single-burst", vec![("--z-h", "2e5")], |i| {
                 matches!(i, InjectionScenario::SingleBurst { .. })
             }),
@@ -1897,12 +1898,15 @@ mod tests {
                 vec![("--epsilon", "1e-9"), ("--m-ev", "1e-7")],
                 |i| matches!(i, InjectionScenario::DarkPhotonResonance { .. }),
             ),
-            (
-                "axion-resonance",
-                vec![("--g-agamma", "1e-10"), ("--b-rms", "1"), ("--m-ev", "1e-7")],
-                |i| matches!(i, InjectionScenario::AxionResonance { .. }),
-            ),
         ];
+
+        // Only a valid subcommand when the `axion` feature is enabled.
+        #[cfg(feature = "axion")]
+        cases.push((
+            "axion-resonance",
+            vec![("--g-agamma", "1e-10"), ("--b-rms", "1"), ("--m-ev", "1e-7")],
+            |i| matches!(i, InjectionScenario::AxionResonance { .. }),
+        ));
 
         for (type_name, arg_pairs, check) in &cases {
             let args = make_args(arg_pairs);

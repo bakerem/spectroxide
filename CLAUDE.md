@@ -26,6 +26,8 @@ cd python && pip install -e ".[notebook]" # Install with jupyter too
 
 **Key constraints**: Zero production Rust dependencies (pure std library). Only dev-dependency is `approx` for float comparison in tests.
 
+**Cargo features**: `axion` (off by default) gates resonant axion–photon conversion — `src/axion.rs`, `InjectionScenario::AxionResonance`, the `solve axion-resonance` subcommand, and four tests in `heat_injection.rs`. It is excluded from the release because the accompanying replication study has an unresolved 3–10× discrepancy vs Cyr, Chluba & Manoj (2024) at m_a < 10⁻¹¹ eV. Build/test it with `--features axion`. **Both configurations must build, test and pass clippy** — check the `not(feature)` arm when touching `InjectionScenario` matches, `axion_params`, or `warn_axion_range` (the latter two are defined in both configurations, returning `None`/empty when off, so call sites need no `cfg`).
+
 ## Scope
 
 This fork handles **heat injection** and **monochromatic photon injection** into the CMB photon-baryon plasma from post-recombination (z ~ 100) through the thermalization era (z ~ few × 10⁶). At z > 1100, injected energy is Comptonized into μ/y-type spectral distortions. At z < 1100, Compton scattering is inefficient (X_e ~ 10⁻⁴), so distortions are "locked-in" at their injection frequency with no μ/y redistribution. The heat-injection Green's function (`greens_function`, `distortion_from_heating`) uses the Chluba 2013 visibility fits and is **not** cosmology-aware. For photon injection (`greens_function_photon`), a `cosmo=` keyword feeds the photon survival probability `P_s` (DC+BR optical-depth integral) and the Compton-y broadening `y_γ = ∫ θ_e σ_T n_e c / H dz` of the surviving bump. It computes the resulting spectral distortions (μ, y, temperature shift) via both the PDE solver and the Green's function. Electron injection is not handled.
@@ -47,8 +49,9 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 - `cosmology.rs` — Flat ΛCDM background: H(z), densities, Thomson time. Default params: Y_p=0.24, Ω_b=0.044, h=0.71.
 - `spectrum.rs` — Planck/Bose-Einstein distributions, spectral shapes M(x), Y_SZ(x), G_bb(x).
 - `grid.rs` — Non-uniform frequency grid: log-spaced at low x (where DC/BR diverge), linear at high x. Supports `RefinementZone` for adaptive local refinement near injection features.
-- `energy_injection.rs` — Injection scenarios: SingleBurst, DecayingParticle, AnnihilatingDM, AnnihilatingDMPWave, MonochromaticPhotonInjection, DecayingParticlePhoton, DarkPhotonResonance, TabulatedHeating, TabulatedPhotonSource, Custom.
+- `energy_injection.rs` — Injection scenarios: SingleBurst, DecayingParticle, AnnihilatingDM, AnnihilatingDMPWave, MonochromaticPhotonInjection, DecayingParticlePhoton, DarkPhotonResonance, TabulatedHeating, TabulatedPhotonSource, Custom, plus AxionResonance behind the `axion` feature.
 - `dark_photon.rs` — NWA helpers for γ↔A' (plasma_frequency_ev, resonance_redshift, gamma_con). Used by `InjectionScenario::DarkPhotonResonance`, which installs the impulsive Δn IC at z_res; the solver auto-sets z_start = z_res.
+- `axion.rs` — **behind the off-by-default `axion` feature.** NWA helpers for γ↔a (Cyr, Chluba & Manoj 2024): Wien-tail depletion, P(x) = 1 − exp(−γ_con x), κ = g_aγγ B_rms. Reuses `dark_photon::{resonance_redshift, dln_omega_pl_sq_dlna}`. Monopole (m_γ² ≈ ω_pl²) treatment only.
 
 **Solver layer**:
 - `solver.rs` — Main PDE integrator. Couples Kompaneets + DC/BR in a joint Newton iteration with adaptive redshift stepping. The core type is `ThermalizationSolver`. `full_te=true` (full quasi-stationary T_e with DC/BR heating integrals) is the default and should stay on; `set_injection()` does not auto-disable it. The simple mode (ρ_e = ρ_eq + δρ_inj without H_dcbr) remains available via `set_full_te(false)` but is treated as an unnecessary approximation given the < 0.5% overhead.
@@ -70,6 +73,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 - `solver.py` — `run_sweep()` calls the Rust binary via subprocess; `run_single()` uses pure-Python Green's function. Shared helpers: `_build_common_solver_args()`, `_run_rust_binary()`.
 - `cosmotherm.py` — CosmoTherm data loaders: DI files, Green's function database. Not re-exported at top level.
 - `dark_photon.py` — Pure-Python NWA helpers (γ_con, z_res, ω_pl). Mirrors `src/dark_photon.rs`.
+- `axion.py` — Pure-Python NWA helpers for γ↔a. Mirrors `src/axion.rs`. Importable regardless (calls no Rust), but its PDE path needs the binary built `--features axion`; marked experimental and not re-exported at top level.
 - `firas.py` — FIRAS monopole + 43×43 covariance matrix; χ² fitting utilities for spectral distortions.
 - `greens_table.py` — Precomputed Green's function tables for fast convolution.
 - `plot_params.py` — Plot parameter constants. Not re-exported at top level.
@@ -78,7 +82,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 ### Integration tests (tests/)
 
-- `heat_injection.rs` — 201 integration tests: mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
+- `heat_injection.rs` — 201 integration tests (197 in the default build; 4 axion tests behind `--features axion`): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 17 tests: edge cases, invalid inputs, boundary conditions.
 - `coverage_gaps.rs` — 14 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement).
 - `cosmotherm_comparison.rs` — 7 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ).

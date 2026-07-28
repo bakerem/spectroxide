@@ -2185,6 +2185,7 @@ fn test_dark_photon_conservation_sum_rule() {
 ///   γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [m_a² H(z_res) · 3]
 /// gives γ_con ≈ 0.21 (order unity — the paper's interesting regime). Target is
 /// derived from the formula, not read off code output (CLAUDE.md #9).
+#[cfg(feature = "axion")]
 #[test]
 fn test_axion_gamma_con_benchmark() {
     let cosmo = Cosmology::default();
@@ -2204,6 +2205,7 @@ fn test_axion_gamma_con_benchmark() {
 /// Axion vs dark photon: the resonance redshift depends only on m = ω_pl, so
 /// both channels share it; only the coupling prefactor and frequency weighting
 /// differ.
+#[cfg(feature = "axion")]
 #[test]
 fn test_axion_resonance_matches_dark_photon_z_res() {
     let cosmo = Cosmology::default();
@@ -2222,6 +2224,7 @@ fn test_axion_resonance_matches_dark_photon_z_res() {
 /// numerator. The dark photon, with 1/x, depletes the Rayleigh–Jeans tail
 /// instead. Verify the relative depletion |Δn/n_pl| increases with x for the
 /// axion and decreases for the dark photon.
+#[cfg(feature = "axion")]
 #[test]
 fn test_axion_depletes_wien_tail_opposite_to_dark_photon() {
     let cosmo = Cosmology::default();
@@ -2280,6 +2283,7 @@ fn test_axion_depletes_wien_tail_opposite_to_dark_photon() {
 
 /// Axion coupling scaling: γ_con ∝ (g_aγγ B_rms)². Doubling either quadruples
 /// the conversion parameter (and hence the small-γ_con depletion).
+#[cfg(feature = "axion")]
 #[test]
 fn test_axion_gamma_con_coupling_scaling() {
     let cosmo = Cosmology::default();

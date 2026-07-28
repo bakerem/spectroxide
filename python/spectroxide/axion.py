@@ -1,6 +1,14 @@
 """Helpers for resonant axion-photon (γ ↔ a) conversion in the narrow-width
 (Landau-Zener) approximation.
 
+.. warning::
+   **Not part of the released feature set.** The Rust side lives behind the
+   off-by-default ``axion`` Cargo feature, so the PDE path below only works if
+   the binary was built with ``cargo build --release --features axion``. These
+   pure-Python helpers are importable regardless (they call no Rust), but the
+   accompanying replication study has an unresolved 3-10x discrepancy against
+   Cyr, Chluba & Manoj (2024) at m_a < 1e-11 eV. Treat as experimental.
+
 Mirrors :mod:`spectroxide.dark_photon`. The PDE solver handles axion
 conversions through the initial-condition path: pass
 ``injection={"type": "axion_resonance", "g_agamma": g, "b_rms": B, "m_ev": m}``

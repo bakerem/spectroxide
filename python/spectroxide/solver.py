@@ -1369,8 +1369,11 @@ def solve(
         ``"type"`` key; supported types are ``"single_burst"``,
         ``"decaying_particle"``, ``"annihilating_dm"``,
         ``"annihilating_dm_pwave"``, ``"monochromatic_photon"``,
-        ``"decaying_particle_photon"``, ``"dark_photon_resonance"``, and
-        ``"axion_resonance"``.
+        ``"decaying_particle_photon"``, and ``"dark_photon_resonance"``.
+        ``"axion_resonance"`` is also accepted, but only if the Rust binary was
+        built with the off-by-default ``axion`` Cargo feature
+        (``cargo build --release --features axion``); otherwise the binary
+        rejects it as an unknown injection type.
         Remaining keys are scenario parameters, e.g.::
 
             {"type": "single_burst", "z_h": 2e5}
@@ -1380,7 +1383,8 @@ def solve(
 
             {"type": "dark_photon_resonance", "epsilon": 1e-9, "m_ev": 1e-7}
 
-        and for axions (``g_agamma`` in GeV⁻¹, ``b_rms`` in nG)::
+        and for axions (``g_agamma`` in GeV⁻¹, ``b_rms`` in nG; requires the
+        ``axion`` feature, see above)::
 
             {"type": "axion_resonance", "g_agamma": 1e-10, "b_rms": 1, "m_ev": 1e-7}
 

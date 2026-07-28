@@ -1,3 +1,11 @@
+:orphan:
+
+.. note::
+   Axion support is behind the off-by-default ``axion`` Cargo feature and is
+   **not part of the released feature set**. Build with ``--features axion``
+   to enable it. This page is kept for that configuration and is intentionally
+   excluded from the documentation tree.
+
 Axion helpers (``spectroxide.axion``)
 =====================================
 

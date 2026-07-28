@@ -88,14 +88,6 @@ science targets are computed by the PDE solver above.
       resonant γ↔A' conversion; the route to reproduce the dark-photon
       constraint numbers.
 
-   .. grid-item-card:: Axion
-      :link: axion
-      :link-type: doc
-
-      ``spectroxide.axion`` — NWA helpers for resonant γ↔a axion–photon
-      conversion (Cyr, Chluba & Manoj 2024); Wien-tail depletion with
-      κ = g_aγγ B_rms.
-
    .. grid-item-card:: CosmoTherm interface
       :link: cosmotherm
       :link-type: doc
@@ -122,6 +114,5 @@ science targets are computed by the PDE solver above.
    firas
    cosmology
    dark_photon
-   axion
    cosmotherm
    style

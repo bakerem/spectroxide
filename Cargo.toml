@@ -19,6 +19,15 @@ categories = ["science", "simulation"]
 
 [dependencies]
 
+[features]
+default = []
+# Resonant axion-photon (γ↔a) conversion. Off by default: the physics is
+# implemented (src/axion.rs, InjectionScenario::AxionResonance) but the
+# accompanying replication study has an unresolved 3-10x discrepancy against
+# Cyr, Chluba & Manoj (2024) at m_a < 1e-11 eV, so it is excluded from the
+# released feature set. Build with `--features axion` to enable.
+axion = []
+
 [dev-dependencies]
 approx = "0.5"
 criterion = { version = "0.5", features = ["html_reports"] }

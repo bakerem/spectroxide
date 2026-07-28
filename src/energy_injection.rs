@@ -165,6 +165,9 @@ pub enum InjectionScenario {
     /// (m_γ² ≈ ω_pl²); frequency-dependent atomic corrections are not modeled.
     ///
     /// Reference: Cyr, Chluba & Manoj (2024), arXiv:2411.13701, Eqs. 2, 3.
+    ///
+    /// Behind the off-by-default `axion` feature; see `Cargo.toml`.
+    #[cfg(feature = "axion")]
     AxionResonance {
         /// Axion–photon coupling g_aγγ, in GeV⁻¹.
         g_agamma: f64,
@@ -439,6 +442,7 @@ impl InjectionScenario {
             InjectionScenario::MonochromaticPhotonInjection { .. } => "monochromatic-photon",
             InjectionScenario::DecayingParticlePhoton { .. } => "decaying-particle-photon",
             InjectionScenario::DarkPhotonResonance { .. } => "dark-photon-resonance",
+            #[cfg(feature = "axion")]
             InjectionScenario::AxionResonance { .. } => "axion-resonance",
             InjectionScenario::TabulatedHeating { .. } => "tabulated-heating",
             InjectionScenario::TabulatedPhotonSource { .. } => "tabulated-photon",
@@ -580,6 +584,7 @@ impl InjectionScenario {
                 }
                 Ok(())
             }
+            #[cfg(feature = "axion")]
             InjectionScenario::AxionResonance {
                 g_agamma,
                 b_rms,
@@ -819,6 +824,7 @@ impl InjectionScenario {
                 0.0
             }
 
+            #[cfg(feature = "axion")]
             InjectionScenario::AxionResonance { .. } => {
                 // Axion resonance is applied as an initial condition at z_res
                 // via `initial_delta_n`, not as a bulk heating rate.
@@ -1021,6 +1027,7 @@ impl InjectionScenario {
     ///
     /// Returns `Some((γ_con, z_res))` for `AxionResonance`, `None` otherwise
     /// (or if the resonance falls outside the supported redshift range).
+    #[cfg(feature = "axion")]
     pub fn axion_params(&self, cosmo: &Cosmology) -> Option<(f64, f64)> {
         match self {
             InjectionScenario::AxionResonance {
@@ -1029,6 +1036,28 @@ impl InjectionScenario {
                 m_ev,
             } => crate::axion::gamma_con_axion(*g_agamma, *b_rms, *m_ev, cosmo),
             _ => None,
+        }
+    }
+
+    /// Axion NWA parameters — always `None` without the `axion` feature.
+    ///
+    /// Kept present in both configurations so `resonance_params` and the
+    /// solver/CLI warning paths need no `cfg` of their own.
+    #[cfg(not(feature = "axion"))]
+    pub fn axion_params(&self, _cosmo: &Cosmology) -> Option<(f64, f64)> {
+        None
+    }
+
+    /// True for scenarios that install an impulsive depletion IC at `z_res`:
+    /// `DarkPhotonResonance`, plus `AxionResonance` when the `axion` feature is
+    /// enabled. Callers use this to distinguish "resonant scenario whose
+    /// resonance was not found" from "non-resonant scenario".
+    pub fn is_impulsive_resonance(&self) -> bool {
+        match self {
+            InjectionScenario::DarkPhotonResonance { .. } => true,
+            #[cfg(feature = "axion")]
+            InjectionScenario::AxionResonance { .. } => true,
+            _ => false,
         }
     }
 
@@ -1062,6 +1091,7 @@ impl InjectionScenario {
                     .collect();
                 Some(dn)
             }
+            #[cfg(feature = "axion")]
             InjectionScenario::AxionResonance { .. } => {
                 let (gamma_con, _z_res) = self.axion_params(cosmo)?;
                 // Axion conversion probability P(x) = 1 - exp(-γ_con·x):
@@ -1197,6 +1227,17 @@ impl InjectionScenario {
 
     /// Warn when the axion NWA resonance falls outside the validated redshift
     /// range. Mirrors [`Self::warn_dark_photon_range`].
+    ///
+    /// Without the `axion` feature this always returns an empty `Vec`, so the
+    /// solver and CLI warning paths need no `cfg` of their own.
+    #[cfg(not(feature = "axion"))]
+    pub fn warn_axion_range(&self, _cosmo: &Cosmology) -> Vec<String> {
+        Vec::new()
+    }
+
+    /// Warn when the axion NWA resonance falls outside the validated redshift
+    /// range. Mirrors [`Self::warn_dark_photon_range`].
+    #[cfg(feature = "axion")]
     pub fn warn_axion_range(&self, cosmo: &Cosmology) -> Vec<String> {
         let mut warnings = Vec::new();
         if let InjectionScenario::AxionResonance { m_ev, .. } = self {

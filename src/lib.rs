@@ -56,6 +56,10 @@
 /// `physics-hash` CLI subcommand for runtime access.
 pub const PHYSICS_HASH: &str = env!("PHYSICS_HASH");
 
+/// Resonant axion–photon conversion. Behind the off-by-default `axion` feature
+/// (see `Cargo.toml`): the physics is implemented and tested, but it is not part
+/// of the released feature set. Enable with `--features axion`.
+#[cfg(feature = "axion")]
 pub mod axion;
 pub mod bremsstrahlung;
 pub mod cli;
