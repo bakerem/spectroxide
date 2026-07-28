@@ -97,9 +97,10 @@ print(f"mu = {result.mu:.3e}, y = {result.y:.3e}")
 # Full spectrum is in result.x, result.delta_n
 x, delta_n = result.x, result.delta_n
 
-# Decaying particle
+# Decaying particle (gamma_x is the decay rate Gamma_X in 1/s;
+# gamma_x = 1e-10 => lifetime ~1e10 s, decay peaks near z ~ 5e4)
 result = solve(
-    injection={"type": "decaying_particle", "f_x": 5e5, "gamma_x": 5e4},
+    injection={"type": "decaying_particle", "f_x": 5e5, "gamma_x": 1e-10},
     z_start=5e6, z_end=1e3,
 )
 
@@ -164,7 +165,7 @@ let snapshots = solver.run_with_snapshots(&[1e3]);
 cargo run --release --bin spectroxide
 
 # Specific injection scenarios (solve subcommand)
-cargo run --release --bin spectroxide -- solve decaying-particle --f-x 5e5 --gamma-x 5e4
+cargo run --release --bin spectroxide -- solve decaying-particle --f-x 5e5 --gamma-x 1e-10
 cargo run --release --bin spectroxide -- solve annihilating-dm --f-ann 1e-22
 cargo run --release --bin spectroxide -- solve dark-photon-resonance --epsilon 1e-7 --m-ev 1e-5
 # Sweep over injection redshifts
@@ -191,18 +192,29 @@ Additional notebooks in [`notebooks/physics/`](notebooks/physics/) (photon injec
 
 ## Injection scenarios
 
-| Scenario | Key parameters |
-|----------|---------------|
-| `SingleBurst` | $z_h$, $\Delta\rho/\rho$ |
-| `DecayingParticle` | $f_X$, $\Gamma_X$ |
-| `DecayingParticlePhoton` | $x_{\rm inj,0}$, $f_{\rm inj}$, $\Gamma_X$ |
-| `AnnihilatingDM` | $f_{\rm ann}$ |
-| `AnnihilatingDMPWave` | $f_{\rm ann}$ |
-| `MonochromaticPhotonInjection` | $x_{\rm inj}$, $\Delta N/N$, $z_h$ |
-| `DarkPhotonResonance` | $\epsilon$, $m_{A'}$ (eV) |
-| `TabulatedHeating` | CSV file |
-| `TabulatedPhotonSource` | CSV file |
-| `Custom` | user-defined function |
+The Python `solve(injection={"type": ...})` dict uses the snake_case `type`
+key in the middle column (not the Rust CamelCase name in the first column).
+
+| Scenario (Rust) | Python `"type"` key | Key parameters |
+|----------|----------|---------------|
+| `SingleBurst` | `"single_burst"` | $z_h$, $\Delta\rho/\rho$ |
+| `DecayingParticle` | `"decaying_particle"` | $f_X$, $\Gamma_X$ |
+| `DecayingParticlePhoton` | `"decaying_particle_photon"` | $x_{\rm inj,0}$, $f_{\rm inj}$, $\Gamma_X$ |
+| `AnnihilatingDM` | `"annihilating_dm"` | $f_{\rm ann}$ |
+| `AnnihilatingDMPWave` | `"annihilating_dm_pwave"` | $f_{\rm ann}$ |
+| `MonochromaticPhotonInjection` | `"monochromatic_photon"` | $x_{\rm inj}$, $\Delta N/N$, $z_h$ |
+| `DarkPhotonResonance` | `"dark_photon_resonance"` | $\epsilon$, $m_{A'}$ (eV) |
+| `TabulatedHeating` | (`dq_dz=` callable) | CSV file |
+| `TabulatedPhotonSource` | (`photon_source=` callable) | CSV file |
+| `Custom` | (`dq_dz=` callable) | user-defined function |
+
+Units: $f_X$ [eV] is the energy released **per baryon** ($\Gamma_X$ [1/s] the
+decay rate); $f_{\rm ann}$ [eV/s] is energy per baryon per second;
+$\Delta N/N$ is the fractional photon-number injection.
+
+To recover the scalar $(\mu, y, \Delta T/T)$ decomposition from any
+distortion $\Delta n(x)$, use `decompose_distortion(x, delta_n)` (a `solve`
+result exposes these directly as `result.mu` / `result.y`).
 
 
 

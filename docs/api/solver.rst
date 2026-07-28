@@ -66,7 +66,7 @@ For the physics behind each scenario and full derivations, see the
    * - ``"type"``
      - Required keys
    * - ``"single_burst"``
-     - ``z_h``, ``sigma_z``
+     - ``z_h`` (``sigma_z`` optional)
    * - ``"decaying_particle"``
      - ``f_x`` [eV], ``gamma_x`` [1/s]
    * - ``"annihilating_dm"``
@@ -74,11 +74,15 @@ For the physics behind each scenario and full derivations, see the
    * - ``"annihilating_dm_pwave"``
      - ``f_ann`` [eV/s]
    * - ``"monochromatic_photon"``
-     - ``x_inj``, ``delta_n_over_n``, ``z_h``, ``sigma_z``, ``sigma_x``
+     - ``x_inj``, ``delta_n_over_n``, ``z_h`` (``sigma_x`` optional)
    * - ``"decaying_particle_photon"``
      - ``x_inj_0``, ``f_inj``, ``gamma_x`` [1/s]
    * - ``"dark_photon_resonance"``
      - ``epsilon``, ``m_ev`` [eV]
+
+``f_x`` is the energy released per baryon; ``sigma_z``/``sigma_x`` are the
+Gaussian widths of the burst in redshift/frequency and default to
+narrow values when omitted.
 
 Each parameter name is mapped to the corresponding Rust CLI flag
 ``--<kebab-case>`` (e.g. ``f_x → --f-x``, ``delta_n_over_n →
@@ -248,8 +252,13 @@ Result container
 ----------------
 
 Structured return value from :func:`solve`. Bundles the frequency grid,
-distortion ``Δn(x)``, scalar μ/y/ΔT/T components, and a convenience
-property converting to intensity units.
+distortion ``Δn(x)``, scalar ``μ`` and ``y``, and a convenience property
+converting to intensity units. Note ``accumulated_delta_t`` is a
+PDE-only diagnostic (the temperature shift absorbed from photon-number
+non-conservation), **not** a full ΔT/T fit component and typically 0.0;
+for the ``(μ, y, ΔT/T)`` decomposition of ``Δn`` call
+:func:`spectroxide.greens.decompose_distortion` on ``result.x,
+result.delta_n``.
 
 .. autosummary::
    :nosignatures:

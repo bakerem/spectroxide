@@ -656,37 +656,82 @@ mod tests {
     /// Peebles 3-level atom with fudge factor F=1.125 (Chluba & Thomas 2011)
     /// agrees with RECFAST (Seager, Sasselov & Scott 1999) to ~1-5%.
     ///
-    /// For the default cosmology (T_CMB=2.726, Ω_b=0.044, h=0.71, Y_p=0.24):
-    ///   X_e(1100) ≈ 0.14 (RECFAST: 0.142 for similar params)
-    ///   X_e(800)  ≈ 3e-3 (RECFAST: 0.0034)
-    ///   X_e(200)  ≈ 3e-4 (freeze-out)
+    /// Anchors are HyRec-2 (github.com/nanoomlee/HyRec-2, run 2026-07-05) on
+    /// the exact default cosmology (T_CMB=2.726, Ω_b=0.044, Ω_m=0.26, h=0.71,
+    /// Y_p=0.24, N_eff=3.046); table + input archived in
+    /// dev/output/hyrec2_xe_default_cosmo.dat. HyRec values:
+    ///   X_e(1100) = 0.14324,  X_e(800) = 3.4785e-3,  X_e(200) = 3.2685e-4.
+    /// Measured Peebles-TLA↔HyRec disagreement is ≤ 1.9% for 200 ≤ z ≤ 1600
+    /// (see dev/audit/xe_hyrec_comparison.md); the ±6% band gives ~3× slack.
+    /// The post-freeze-out tail (z ≲ 50) diverges up to 33% — a documented
+    /// α_B(T_rad) convention with negligible observable impact — and is
+    /// deliberately not anchored here.
     #[test]
     fn test_xe_vs_recfast_milestones() {
         let cosmo = Cosmology::default();
 
-        let xe_1100 = ionization_fraction(1100.0, &cosmo);
-        let xe_800 = ionization_fraction(800.0, &cosmo);
-        let xe_200 = ionization_fraction(200.0, &cosmo);
-        eprintln!("X_e(1100) = {xe_1100:.4}  [RECFAST: ~0.14]");
-        eprintln!("X_e(800)  = {xe_800:.4e}  [RECFAST: ~3e-3]");
-        eprintln!("X_e(200)  = {xe_200:.4e}  [freeze-out: ~3e-4]");
+        let anchors = [(1100.0, 0.14324), (800.0, 3.4785e-3), (200.0, 3.2685e-4)];
+        for (z, xe_hyrec) in anchors {
+            let xe = ionization_fraction(z, &cosmo);
+            let rel = xe / xe_hyrec - 1.0;
+            eprintln!("X_e({z}) = {xe:.4e}  [HyRec-2: {xe_hyrec:.4e}, rel {rel:+.2e}]");
+            assert!(
+                rel.abs() < 0.06,
+                "X_e({z}) = {xe:.4e} deviates {rel:+.2e} from HyRec-2 {xe_hyrec:.4e} (band ±6%)"
+            );
+        }
+    }
 
-        // z=1100: mid-recombination, RECFAST gives ~0.14
-        assert!(
-            xe_1100 > 0.10 && xe_1100 < 0.20,
-            "X_e(1100) = {xe_1100:.4}, RECFAST expects ~0.14 ± 0.03"
-        );
+    /// X_e through the **helium** recombination epoch, against the same HyRec-2
+    /// run (R2 mutation audit, fix B4).
+    ///
+    /// The milestone test above probes only z = 1100/800/200 — all hydrogen-
+    /// dominated — so the He Saha machinery (`saha_he_i`, `saha_he_ii`) had no
+    /// direct value anchor and 15 of its mutants survived the sweep. This is not
+    /// a cosmetic gap: `xe_hyrec_comparison.md` measures the ε(m_A′) dark-photon
+    /// limit shifting by −10.5% (γ_con by +25%) for resonances landing in the
+    /// He window z ≈ 1800–2500, so X_e there feeds a published figure directly.
+    ///
+    /// HyRec-2 values read from dev/output/hyrec2_xe_default_cosmo.dat (same run
+    /// and cosmology as above). Bands follow the measured per-band disagreement
+    /// in xe_hyrec_comparison.md with ~1.5× slack: ≤0.14% for 3000–5000 (He²⁺/He⁺
+    /// Saha, where both codes are in equilibrium) and 5.7% at z≈2300 (our Saha vs
+    /// HyRec's non-equilibrium He⁺→He⁰ — HyRec recombines later, the expected
+    /// direction).
+    #[test]
+    fn test_xe_vs_hyrec_helium_epoch() {
+        let cosmo = Cosmology::default();
 
-        // z=800: mostly recombined, RECFAST gives ~3e-3
-        assert!(
-            xe_800 > 5e-4 && xe_800 < 0.01,
-            "X_e(800) = {xe_800:.4e}, RECFAST expects ~3e-3"
-        );
+        // (z, HyRec-2 X_e, band)
+        let anchors = [
+            (5000.0, 1.0796046866, 0.01),
+            (2500.0, 1.0715093554, 0.08),
+            (2300.0, 1.0628359322, 0.08),
+            (2000.0, 1.0373070723, 0.08),
+            (1800.0, 1.0064061811, 0.08),
+        ];
+        for (z, xe_hyrec, band) in anchors {
+            let xe = ionization_fraction(z, &cosmo);
+            let rel = xe / xe_hyrec - 1.0;
+            eprintln!("X_e({z}) = {xe:.6e}  [HyRec-2: {xe_hyrec:.6e}, rel {rel:+.2e}]");
+            assert!(
+                rel.abs() < band,
+                "X_e({z}) = {xe:.6e} deviates {rel:+.2e} from HyRec-2 {xe_hyrec:.6e} \
+                 (band ±{:.0}%)",
+                band * 100.0
+            );
+        }
 
-        // z=200: freeze-out, should be ~2-4 × 10^-4
-        assert!(
-            xe_200 > 1e-4 && xe_200 < 2e-3,
-            "X_e(200) = {xe_200:.4e}, expected freeze-out ~3e-4"
-        );
+        // He²⁺ → He⁺ must be complete before H recombination: X_e falls
+        // monotonically across the window and stays above the H-only floor.
+        let mut prev = f64::INFINITY;
+        for &z in &[5000.0, 3000.0, 2500.0, 2300.0, 2000.0, 1800.0] {
+            let xe = ionization_fraction(z, &cosmo);
+            assert!(
+                xe < prev,
+                "X_e must decrease through He recombination: X_e({z}) = {xe:.6e} ≥ previous {prev:.6e}"
+            );
+            prev = xe;
+        }
     }
 }

@@ -907,6 +907,445 @@ mod tests {
         );
     }
 
+    /// Value anchors on the **low-z** τ_ff integral (R2 mutation audit, fix P2).
+    ///
+    /// `photon_survival_probability_numerical` short-circuits to the analytic
+    /// μ-era form above z = 5×10⁴, so only z_h < 5×10⁴ exercises
+    /// `tau_ff_survival` — the branch that sets the FIRAS photon-injection
+    /// limits in this fork's post-recombination regime. Every pre-audit test of
+    /// it was a bound (0 ≤ P_s ≤ 1, "≈1 at large x"), and all 34 of its mutants
+    /// survived the full suite. These are value/shape anchors instead.
+    ///
+    /// The scaling anchor is textbook, not read off the code: in the
+    /// Rayleigh–Jeans limit the free-free absorption coefficient goes as ν⁻²
+    /// times the Gaunt factor, and the DC term carries the same x⁻² since
+    /// H_dc(x→0) → 1. Concretely the integrand is
+    /// [K_DC + K_BR](eˣ−1)/x³ → [K_DC + K_BR]/x², and K_BR's only small-x
+    /// dependence is the logarithmic Gaunt factor. So
+    ///   d ln τ_ff / d ln x  →  −2 − 1/ln(1/x)  ≈ −2.15 near x ~ 10⁻³.
+    #[test]
+    fn test_tau_ff_free_free_scaling() {
+        let cosmo = Cosmology::default();
+        let z_h = 1.0e4; // below the 5e4 branch switch, BR-dominated
+
+        let tau = |x: f64| -photon_survival_probability_numerical(x, z_h, &cosmo).ln();
+
+        // Locate τ = 1 by bisection so the slope window sits where τ is O(1-100)
+        // — above the noise floor and below the τ > 500 saturation clamp.
+        let (mut lo, mut hi) = (1e-8, 10.0); // τ(lo) ≫ 1, τ(hi) ≪ 1
+        assert!(tau(lo) > 1.0 && tau(hi) < 1.0, "bisection bracket invalid");
+        for _ in 0..80 {
+            let mid = (lo * hi).sqrt();
+            if tau(mid) > 1.0 {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        let x_1 = (lo * hi).sqrt();
+        assert!(
+            x_1 > 1e-7 && x_1 < 1.0,
+            "τ_ff = 1 crossing at z=1e4 should sit at small x, got x_1 = {x_1:.3e}"
+        );
+
+        // Local log-slope one octave and two octaves below the crossing
+        // (τ ≈ 4 and τ ≈ 16 for a −2 power law: safely unsaturated).
+        let (xa, xb) = (x_1 / 2.0, x_1 / 4.0);
+        let (ta, tb) = (tau(xa), tau(xb));
+        assert!(
+            ta.is_finite() && tb.is_finite() && ta > 1.0 && tb < 400.0,
+            "slope window unusable: τ({xa:.3e}) = {ta:.3e}, τ({xb:.3e}) = {tb:.3e}"
+        );
+        let slope = (tb / ta).ln() / (xb / xa).ln();
+        eprintln!("τ_ff(x=1) at z=1e4: x_1 = {x_1:.4e}, local slope = {slope:.3}");
+        assert!(
+            (-2.6..=-1.9).contains(&slope),
+            "free-free absorption must scale as x^-2 (RJ limit, log-corrected \
+             Gaunt): measured d ln τ/d ln x = {slope:.3}, expected ≈ −2.15"
+        );
+
+        // Monotone in x (soft photons absorbed preferentially) and bounded.
+        let mut prev = -1.0;
+        for &x in &[1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 0.1, 1.0, 10.0] {
+            let ps = photon_survival_probability_numerical(x, z_h, &cosmo);
+            assert!((0.0..=1.0).contains(&ps), "P_s({x}) = {ps} out of [0,1]");
+            assert!(ps > prev, "P_s must increase with x: P_s({x}) = {ps} ≤ {prev}");
+            prev = ps;
+        }
+        assert!(
+            photon_survival_probability_numerical(100.0, z_h, &cosmo) > 1.0 - 1e-9,
+            "hard photons must survive unabsorbed"
+        );
+
+        // Monotone in z_h: a photon injected earlier has more time to be absorbed.
+        let x_probe = x_1 * 2.0;
+        let mut prev = 2.0;
+        for &z in &[300.0, 1e3, 3e3, 1e4, 3e4, 4.9e4] {
+            let ps = photon_survival_probability_numerical(x_probe, z, &cosmo);
+            assert!(
+                ps < prev,
+                "P_s must decrease with z_h at fixed x: P_s(z={z:.0e}) = {ps:.6e} ≥ {prev:.6e}"
+            );
+            prev = ps;
+        }
+
+        // Below the z_end = 200 floor the integral is skipped entirely.
+        assert_eq!(
+            photon_survival_probability_numerical(x_probe, 150.0, &cosmo),
+            1.0
+        );
+
+        // Branch comparison at the z = 5×10⁴ switch. The two forms carry
+        // different x-scalings — raw τ_ff ∝ x⁻² (free-free, RJ) against the
+        // analytic quasi-stationary τ = x_c/x ∝ x⁻¹ — so they cross where
+        // absorption becomes marginal. The documented invariant ("the raw
+        // integral overestimates absorption because it ignores Compton
+        // upscattering") applies in the absorption region; above the crossing
+        // both are ≈1 and the comparison is meaningless. Assert it only where
+        // absorption is actually operative.
+        let z_edge = 4.9e4;
+        for &x in &[3e-4, 1e-3, 3e-3] {
+            let ps_num = photon_survival_probability_numerical(x, z_edge, &cosmo);
+            let ps_ana = photon_survival_probability(x, z_edge);
+            assert!(
+                ps_ana < 0.1,
+                "x={x} is not in the absorption region at z={z_edge:.1e} \
+                 (P_ana = {ps_ana:.3e}); pick a smaller x for this check"
+            );
+            assert!(
+                ps_num <= ps_ana,
+                "in the absorption region the raw τ_ff integral must absorb at \
+                 least as much as the analytic form at x={x}: numerical \
+                 {ps_num:.4e} > analytic {ps_ana:.4e}"
+            );
+        }
+        // ...and the crossing exists: above it the raw integral is the milder one.
+        for &x in &[3e-2, 0.1, 0.3] {
+            let ps_num = photon_survival_probability_numerical(x, z_edge, &cosmo);
+            let ps_ana = photon_survival_probability(x, z_edge);
+            assert!(
+                ps_num > ps_ana,
+                "above the crossing the raw integral should be the milder one at \
+                 x={x}: numerical {ps_num:.4e} ≤ analytic {ps_ana:.4e}"
+            );
+        }
+    }
+
+    /// The heating convolution must reduce to the single-burst Green's function
+    /// (R2 mutation audit, fix B3).
+    ///
+    /// For a narrow normalised heating history at z_h,
+    ///   ∫ dz (dQ/dz) G_th(x, z) → G_th(x, z_h) · Δρ/ρ,
+    /// and likewise (μ, y) → ((3/κ_c) J_μ J_bb*, J_y/4) · Δρ/ρ. This is the
+    /// defining property of a Green's function, and it pins the convolution's
+    /// normalisation and its ln(1+z) Jacobian (`dz_dln = 1+z`) against
+    /// `greens_function`, which `greens_function_checks` anchors to the Chluba
+    /// 2013 limits.
+    ///
+    /// 25 mutants in `distortion_from_heating`/`mu_y_from_heating` survived the
+    /// full suite: the pre-audit tests check only *linearity* in Δρ/ρ, which is
+    /// invariant under any overall rescaling of the integrand, and these two
+    /// functions are not covered by the Rust↔Python parity fixture (only the
+    /// scalar `greens_function` is).
+    ///
+    /// The heating bump is Gaussian in ln(1+z) with σ = 0.005, integrated over
+    /// ±8σ at fixed points-per-σ, so the only error is the finite-width
+    /// smearing (σ²/2)·G″/G. The worst case is y at z_h = 5×10⁵, where
+    /// J_y ∝ (1+z)^{−2.58} deep in the μ-era gives G″/G ≈ 2.58² = 6.7 and hence
+    /// ≈8×10⁻⁵ — comfortably inside the 5×10⁻⁴ band. (At σ = 0.02 that term is
+    /// 1.3×10⁻³, which is what the first version of this test measured; the fix
+    /// is to narrow the burst, not to widen the tolerance.)
+    #[test]
+    fn test_heating_convolution_reduces_to_greens_function() {
+        let drho = 1e-5_f64;
+        let x_grid = [0.3_f64, 0.7, 1.5, 3.0, 6.0, 10.0];
+        let sigma = 0.005_f64;
+
+        for &z_h in &[1e4_f64, 1e5, 5e5, 2e6] {
+            let ln0 = (1.0 + z_h).ln();
+            // dQ/dz such that ∫ dQ/dz dz = drho, since dz = (1+z) d ln(1+z).
+            let dq = |z: f64| {
+                let u = ((1.0 + z).ln() - ln0) / sigma;
+                drho * (-0.5 * u * u).exp()
+                    / (sigma * (2.0 * std::f64::consts::PI).sqrt())
+                    / (1.0 + z)
+            };
+            let z_lo = (ln0 - 8.0 * sigma).exp() - 1.0;
+            let z_hi = (ln0 + 8.0 * sigma).exp() - 1.0;
+            let n_z = 4001;
+
+            let dn = distortion_from_heating(&x_grid, dq, z_lo, z_hi, n_z);
+            for (i, &x) in x_grid.iter().enumerate() {
+                let want = greens_function(x, z_h) * drho;
+                let rel = (dn[i] - want).abs() / want.abs();
+                assert!(
+                    rel < 5e-4,
+                    "narrow-burst convolution must reproduce G_th at z_h={z_h:.0e}, \
+                     x={x}: got {:.6e}, G_th·Δρ = {want:.6e}, rel {rel:.2e}",
+                    dn[i]
+                );
+            }
+
+            let (mu, y) = mu_y_from_heating(dq, z_lo, z_hi, n_z);
+            let mu_want =
+                (3.0 / KAPPA_C) * visibility_j_mu(z_h) * visibility_j_bb_star(z_h) * drho;
+            let y_want = visibility_j_y(z_h) / 4.0 * drho;
+            assert!(
+                (mu - mu_want).abs() / mu_want.abs() < 5e-4,
+                "narrow-burst μ at z_h={z_h:.0e}: got {mu:.6e}, expected {mu_want:.6e}"
+            );
+            assert!(
+                (y - y_want).abs() / y_want.abs() < 5e-4,
+                "narrow-burst y at z_h={z_h:.0e}: got {y:.6e}, expected {y_want:.6e}"
+            );
+        }
+    }
+
+    /// Compton-broadening helpers: transcription and moment identities
+    /// (R2 mutation audit, fix P3).
+    ///
+    /// `f_cs`, `alpha_cs`, `beta_cs` and `broadened_bump` appeared nowhere in
+    /// `tests/` — they were verified once by hand against Arsenadze et al.
+    /// (2025) App. D (`dev/audit/arsenadze_broadening_audit.md`, no bugs found)
+    /// but had no regression anchor, and all 34 of their mutants survived the
+    /// suite. A hand audit does not survive a refactor; these identities do.
+    #[test]
+    fn test_compton_broadening_identities() {
+        // --- f(x) = e^{-x}(1 + x²/2), Arsenadze Eq. D14 -------------------
+        assert!((f_cs(0.0) - 1.0).abs() < 1e-15, "f(0) must be 1");
+        for &x in &[0.25_f64, 1.0, 2.0, 5.0] {
+            let expected = (-x).exp() * (1.0 + x * x / 2.0);
+            assert!(
+                (f_cs(x) - expected).abs() / expected < 1e-14,
+                "f_cs({x}) = {} != {expected}",
+                f_cs(x)
+            );
+        }
+        // f decreases then rises: e^{-x}(1+x²/2) has a minimum at x = 1+√... ;
+        // all that matters here is 0 < f < 1 away from the origin.
+        for &x in &[0.5, 1.0, 2.0, 4.0] {
+            assert!((0.0..1.0).contains(&f_cs(x)), "f({x}) = {} ∉ (0,1)", f_cs(x));
+        }
+
+        // --- α, β limits, Arsenadze Eq. D13 -------------------------------
+        // x' → 0: f → 1 ⟹ α → (3−2)/√1 = 1 and β → 1.
+        let yg = 0.05;
+        assert!(
+            (alpha_cs(1e-8, yg) - 1.0).abs() < 1e-6,
+            "α(x'→0) must → 1, got {}",
+            alpha_cs(1e-8, yg)
+        );
+        assert!(
+            (beta_cs(1e-8, yg) - 1.0).abs() < 1e-6,
+            "β(x'→0) must → 1, got {}",
+            beta_cs(1e-8, yg)
+        );
+        // x' → ∞: f → 0 ⟹ α → 3/√(1+x'y).
+        for &x_inj in &[20.0, 50.0] {
+            let expected = 3.0 / (1.0 + x_inj * yg).sqrt();
+            assert!(
+                (alpha_cs(x_inj, yg) - expected).abs() / expected < 1e-6,
+                "α(x'={x_inj}) must → 3/√(1+x'y) = {expected}, got {}",
+                alpha_cs(x_inj, yg)
+            );
+        }
+        // Both are strictly positive and β ≤ 1 for any physical (x', y).
+        for &x_inj in &[0.1, 1.0, 5.0, 20.0] {
+            for &y in &[1e-4, 1e-2, 0.1, 1.0] {
+                assert!(alpha_cs(x_inj, y) > 0.0, "α must be positive");
+                let b = beta_cs(x_inj, y);
+                assert!(b > 0.0 && b <= 1.0, "β({x_inj},{y}) = {b} ∉ (0,1]");
+            }
+        }
+
+        // --- bump moments, Arsenadze Eq. D15-D16 --------------------------
+        // The bump is a log-normal PDF in x, so ∫ bump dx = 1 identically and
+        // its first moment must reproduce the separately returned energy ratio
+        // f_int: ⟨x⟩ = x' · f_int. Integrate in ln x (trapezoid; the integrand
+        // is a smooth Gaussian there, so convergence is spectral).
+        for &x_inj in &[0.5_f64, 2.0] {
+            for &y in &[1e-3_f64, 1e-2, 0.1] {
+                let n = 80_001;
+                let (lo, hi) = (x_inj.ln() - 4.0, x_inj.ln() + 4.0);
+                let h = (hi - lo) / (n - 1) as f64;
+                let (mut norm, mut mean, mut mean_ln, mut mean_ln2) = (0.0, 0.0, 0.0, 0.0);
+                let mut f_int_ret = 0.0;
+                for i in 0..n {
+                    let u = lo + i as f64 * h;
+                    let x = u.exp();
+                    let (bump, f_int) = broadened_bump(x, x_inj, y);
+                    f_int_ret = f_int;
+                    // weight: dx = x du, trapezoid endpoints halved
+                    let w = if i == 0 || i == n - 1 { 0.5 } else { 1.0 } * h * x;
+                    norm += w * bump;
+                    mean += w * bump * x;
+                    mean_ln += w * bump * u;
+                    mean_ln2 += w * bump * u * u;
+                }
+                assert!(
+                    (norm - 1.0).abs() < 1e-6,
+                    "bump must be a normalised PDF at x'={x_inj}, y={y}: ∫ = {norm:.9}"
+                );
+                let mean_expected = x_inj * f_int_ret;
+                assert!(
+                    (mean - mean_expected).abs() / mean_expected < 1e-6,
+                    "⟨x⟩ must equal x'·f_int at x'={x_inj}, y={y}: {mean:.9e} vs \
+                     {mean_expected:.9e}"
+                );
+
+                // Width: σ²(ln x) = 2 β y_γ, which → 2 y_γ as x' y_γ → 0 —
+                // the Zeldovich–Sunyaev Compton-diffusion variance in log
+                // frequency. This is the class-(i) anchor on the broadening.
+                let var_ln = mean_ln2 - mean_ln * mean_ln;
+                let var_expected = 2.0 * beta_cs(x_inj, y) * y;
+                assert!(
+                    (var_ln - var_expected).abs() / var_expected < 1e-5,
+                    "σ²(ln x) must be 2βy_γ at x'={x_inj}, y={y}: {var_ln:.9e} vs \
+                     {var_expected:.9e}"
+                );
+            }
+        }
+
+        // Small-y_γ limit: β → 1 so σ² → 2 y_γ exactly.
+        let y_small = 1e-5;
+        for &x_inj in &[0.1, 1.0] {
+            let var = 2.0 * beta_cs(x_inj, y_small) * y_small;
+            assert!(
+                (var / (2.0 * y_small) - 1.0).abs() < 1e-3,
+                "σ² must approach the Zeldovich-Sunyaev value 2y_γ as y_γ→0: \
+                 got {var:.4e} vs {:.4e}",
+                2.0 * y_small
+            );
+        }
+
+        // Broadening grows monotonically with y_γ at fixed x'.
+        let mut prev = 0.0;
+        for &y in &[1e-4, 1e-3, 1e-2, 0.1, 0.5] {
+            let var = 2.0 * beta_cs(1.0, y) * y;
+            assert!(var > prev, "σ² must increase with y_γ: {var} ≤ {prev}");
+            prev = var;
+        }
+    }
+
+    /// Characterisation test for the bump's **first** moment (finding F-PC-1,
+    /// `dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`).
+    ///
+    /// `test_compton_broadening_identities` pins the *variance* to the exact
+    /// Zeldovich–Sunyaev value 2βy_γ, but its ⟨x⟩ = x′·f_int check is internal
+    /// self-consistency (log-normal moment vs the returned normalisation), not a
+    /// physics anchor. The physics anchor is the linearised Kompaneets first
+    /// moment. With Δn = n − n_pl and T_e = T_z,
+    ///
+    ///   ∂Δn/∂y = x⁻²∂ₓ[x⁴(∂ₓΔn + coth(x/2)·Δn)]   (the Planck identity kills
+    ///                                               the n_pl part exactly)
+    ///
+    /// whose number-weighted moments obey d⟨xᵏ⟩/dy = k(k+3)⟨xᵏ⟩ − k⟨xᵏ⁺¹coth(x/2)⟩.
+    /// For a narrow bump at x′ that gives
+    ///
+    ///   d⟨x⟩/dy = x′[4 − x′coth(x′/2)],    zero at x′ = 3.8300,
+    ///
+    /// i.e. the drift vanishes exactly at the Y_SZ zero crossing (same
+    /// transcendental equation as `test_y_sz_zero_crossing_from_transcendental_equation`).
+    /// Matching this requires f(x′) = x′/(e^{x′}−1); Arsenadze et al. use
+    /// e^{−x′}(1+x′²/2), which is exact only at x′ → 0 and x′ → ∞.
+    ///
+    /// **We keep the published form.** Swapping in the exact f changes the
+    /// photon Green's function by ≤0.83% in L2 (measured at z_h = 3×10⁴, where
+    /// y_γ = 0.039 maximises the effect), ≲0.05% at z_h ≤ 2×10³, ~0 at
+    /// z_h ≥ 2×10⁵ where the √(1+x′y_γ) suppression takes over, and μ by
+    /// <0.001% everywhere. This test therefore locks in the *deviation* so that
+    /// a future edit to `f_cs` is visible rather than silent.
+    #[test]
+    fn test_broadened_bump_first_moment_vs_kompaneets() {
+        // y → 0 limit of d⟨x⟩/dy for the coded bump: ⟨x⟩ = x′·f_int and
+        // d/dy[e^{(α+β)y}/(1+x′y)]|₀ = α(x′,0) + β(x′,0) − x′ = 4 − 2f(x′) − x′.
+        let drift_code = |x: f64| x * (alpha_cs(x, 0.0) + beta_cs(x, 0.0) - x);
+        let drift_exact = |x: f64| x * (4.0 - x * (x / 2.0).cosh() / (x / 2.0).sinh());
+
+        // The analytic y→0 derivative must agree with a finite difference of
+        // f_int itself, or the identification above is wrong.
+        for &x in &[0.2_f64, 1.0, 3.0, 6.0] {
+            let y = 1e-5;
+            let (_, f_int) = broadened_bump(x, x, y);
+            let fd = x * (f_int - 1.0) / y;
+            assert!(
+                (fd - drift_code(x)).abs() < 1e-3 * drift_code(x).abs().max(1.0),
+                "α+β−x′ must be the y→0 drift of f_int at x′={x}: {:.6} vs FD {fd:.6}",
+                drift_code(x)
+            );
+        }
+
+        // Both forms are exact in the two limits: x′→0 (Rayleigh–Jeans, where
+        // stimulated scattering halves the drift, 4 → 2) and x′→∞ (Wien).
+        assert!(
+            (drift_code(1e-6) / 1e-6 - 2.0).abs() < 1e-5,
+            "x′→0 drift must be 2x′ (not 4x′ — induced scattering): {:.8}",
+            drift_code(1e-6) / 1e-6
+        );
+        for &x in &[30.0_f64, 60.0] {
+            assert!(
+                (drift_code(x) / drift_exact(x) - 1.0).abs() < 1e-6,
+                "x′→∞ drift must match 4x′−x′²: {:.6} vs {:.6}",
+                drift_code(x),
+                drift_exact(x)
+            );
+        }
+
+        // In between, the published f is an interpolation. Bound the deviation
+        // of the *fractional* drift (1/x′)d⟨x⟩/dy = 4 − 2f − x′, which is the
+        // scale-free measure; relative error is unbounded near the fixed point
+        // where the exact drift passes through zero.
+        let (mut worst, mut worst_x) = (0.0_f64, 0.0_f64);
+        for i in 0..=3000 {
+            let x = 0.01 * 10f64.powf(3.0 * i as f64 / 3000.0); // 0.01 → 10
+            let dev = (drift_code(x) - drift_exact(x)).abs() / x;
+            if dev > worst {
+                worst = dev;
+                worst_x = x;
+            }
+        }
+        eprintln!(
+            "max |Δ(1/x′)d⟨x⟩/dy| = {worst:.4} at x′ = {worst_x:.3} \
+             (recorded 0.2358 at x′ = 2.79; peak absolute Δd⟨x⟩/dy is 0.744 at x′ = 3.56)"
+        );
+        assert!(
+            worst < 0.24,
+            "Arsenadze f(x′) deviates from the exact Kompaneets fractional drift \
+             by {worst:.4} at x′ = {worst_x:.3} (recorded 0.2358); a larger value \
+             means f_cs, alpha_cs or beta_cs changed"
+        );
+
+        // Fixed points: the drift zero sits at 3.5889 for the published form
+        // against the exact 3.8300 (the Y_SZ zero crossing).
+        let bisect = |f: &dyn Fn(f64) -> f64| {
+            let (mut lo, mut hi) = (2.0_f64, 6.0_f64);
+            for _ in 0..200 {
+                let m = 0.5 * (lo + hi);
+                if f(m) > 0.0 {
+                    lo = m;
+                } else {
+                    hi = m;
+                }
+            }
+            0.5 * (lo + hi)
+        };
+        let x0_code = bisect(&drift_code);
+        let x0_exact = bisect(&drift_exact);
+        eprintln!(
+            "bump drift fixed point: coded {x0_code:.4} vs exact Kompaneets \
+             {x0_exact:.4} (Y_SZ zero crossing 3.8310)"
+        );
+        assert!(
+            (x0_exact - 3.8300).abs() < 1e-3,
+            "exact drift must vanish at the Y_SZ zero crossing: {x0_exact:.6}"
+        );
+        assert!(
+            (x0_code - 3.5889).abs() < 1e-3,
+            "coded drift fixed point moved from the recorded 3.5889 to \
+             {x0_code:.6} — f_cs/alpha_cs/beta_cs changed, see F-PC-1"
+        );
+    }
+
     #[test]
     fn test_mu_from_photon_injection_sign_flip() {
         // At high x_inj > x₀ with P_s ≈ 1: positive μ (like energy injection)
@@ -970,12 +1409,20 @@ mod tests {
                 "J_bb*({z:.0e}) = {jbb} out of [0,1]"
             );
             assert!(jy >= 0.0 && jy <= 1.0, "J_y({z:.0e}) = {jy} out of [0,1]");
-            // J_T = 1 - J_mu*J_bb* - J_y can go negative (up to ~-15%) in the
-            // transition region (z ~ 5e4) where independently fitted J_y + J_mu*J_bb*
-            // slightly exceeds 1. This is absorbed into the unobservable temperature shift.
+            // J_T is the Chluba (2013) temperature-shift branching, J_T = 1 − J_bb*,
+            // so it is pinned exactly by J_bb* and confined to [0,1]. (The old
+            // assertion allowed [-0.2, 1] with a comment describing the *other*
+            // convention J_T = 1 − J_μJ_bb* − J_y, which is not what is
+            // implemented; the window was wide enough that replacing the whole
+            // function with the constant 0 or 1 passed — R2 mutation audit, A3.)
+            let jt_expected = 1.0 - jbb;
             assert!(
-                jt >= -0.2 && jt <= 1.0,
-                "J_T({z:.0e}) = {jt} out of [-0.2,1]"
+                (jt - jt_expected).abs() < 1e-14,
+                "J_T({z:.0e}) = {jt} must equal 1 − J_bb* = {jt_expected}"
+            );
+            assert!(
+                (0.0..=1.0).contains(&jt),
+                "J_T({z:.0e}) = {jt} out of [0,1]"
             );
         }
 

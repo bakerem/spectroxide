@@ -15,6 +15,9 @@
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294 [Eq. 10-13]
 
 use crate::constants::*;
+// planck is only used by the cfg(test) dc_rhs helper and the unit tests since
+// the production dc_heating_integral was removed (R2 mutation audit).
+#[cfg(test)]
 use crate::spectrum::planck;
 
 /// DC Gaunt factor in the soft photon limit with relativistic corrections.
@@ -30,11 +33,22 @@ use crate::spectrum::planck;
 /// (injection-driven heating); however CS2012 parametrises DC through θ_z
 /// and the difference is <1% for θ_z ≲ 10⁻³ even when |ρ_e−1| ~ 0.1.
 pub fn dc_gaunt_factor(x: f64, theta_z: f64) -> f64 {
-    let i4_pl = I4_PLANCK;
-    let relativistic_correction = 1.0 / (1.0 + 14.16 * theta_z);
-    let h_dc = dc_high_freq_suppression(x);
-    i4_pl * relativistic_correction * h_dc
+    I4_PLANCK * dc_relativistic_correction(theta_z) * dc_high_freq_suppression(x)
 }
+
+/// Leading-order relativistic correction to the DC Gaunt factor,
+/// (1 + 14.16 θ_z)⁻¹ (Chluba, Sazonov & Sunyaev 2007).
+///
+/// Single source of truth: [`dc_gaunt_factor`] and [`dc_prefactor`] both call
+/// this, so the correction cannot drift between the diagnostic path and the
+/// solver hot loop (R2 mutation audit, fix A1).
+#[inline]
+pub fn dc_relativistic_correction(theta_z: f64) -> f64 {
+    1.0 / (1.0 + 14.16 * theta_z)
+}
+
+/// (4α/3π), the numerical prefactor of the DC emission coefficient.
+const DC_ALPHA_COEFF: f64 = 4.0 * ALPHA_FS / (3.0 * std::f64::consts::PI);
 
 /// High-frequency suppression factor for DC emission.
 ///
@@ -59,16 +73,20 @@ pub fn dc_high_freq_suppression(x: f64) -> f64 {
 ///   dn/dτ|_DC = (K_DC / x³) [n_eq - n]
 ///
 /// where n_eq is the equilibrium distribution (Planck at the electron temperature).
+/// Delegates to [`dc_prefactor`] × [`dc_high_freq_suppression`] so that this
+/// function and the solver hot loop share one implementation of K_DC. Before
+/// the R2 mutation audit these were two hand-maintained copies of the same
+/// arithmetic and only *this* one was covered by the DC/BR literature anchor,
+/// leaving the production prefactor unpinned (fix A1).
 pub fn dc_emission_coefficient(x: f64, theta_z: f64) -> f64 {
-    4.0 * ALPHA_FS / (3.0 * std::f64::consts::PI) * theta_z * theta_z * dc_gaunt_factor(x, theta_z)
+    dc_emission_coefficient_fast(x, dc_prefactor(theta_z))
 }
 
 /// Precompute the x-independent DC prefactor: (4α/3π) θ_z² × I₄^pl / (1 + 14.16 θ_z)
 ///
 /// The only x-dependent part remaining is H_dc(x) = exp(-2x) × polynomial.
 pub fn dc_prefactor(theta_z: f64) -> f64 {
-    4.0 * ALPHA_FS / (3.0 * std::f64::consts::PI) * theta_z * theta_z * I4_PLANCK
-        / (1.0 + 14.16 * theta_z)
+    DC_ALPHA_COEFF * theta_z * theta_z * I4_PLANCK * dc_relativistic_correction(theta_z)
 }
 
 /// Fast DC emission coefficient using precomputed x-independent prefactor.
@@ -108,30 +126,13 @@ pub fn dc_rhs(x: &[f64], delta_n: &[f64], theta_z: f64, theta_e: f64) -> Vec<f64
     rhs
 }
 
-/// DC emission rate integrated over frequency (for electron temperature equation).
-///
-/// H_DC = (1/(4 G₃ θ_z)) ∫ [1 − n(e^{x_e} − 1)] K_DC(x)/x³ · x³ dx
-///
-/// This enters the electron temperature evolution as a cooling term.
-pub fn dc_heating_integral(x_grid: &[f64], delta_n: &[f64], theta_z: f64, theta_e: f64) -> f64 {
-    let phi = theta_z / theta_e;
-    let mut integral = 0.0;
-
-    for i in 1..x_grid.len() {
-        let dx = x_grid[i] - x_grid[i - 1];
-        let x_mid = 0.5 * (x_grid[i] + x_grid[i - 1]);
-        let dn_mid = 0.5 * (delta_n[i] + delta_n[i - 1]);
-        let n_mid = planck(x_mid) + dn_mid;
-        let x_e = x_mid * phi;
-
-        let k_dc = dc_emission_coefficient(x_mid, theta_z);
-        // Integrand: [1 - n (e^{x_e} - 1)] K_DC dx
-        let factor = 1.0 - n_mid * x_e.exp_m1();
-        integral += factor * k_dc * dx;
-    }
-
-    integral / (4.0 * G3_PLANCK * theta_z)
-}
+// NOTE: the standalone `dc_heating_integral` was removed (2026-07-06, R2
+// mutation audit). It duplicated the DC-heating logic that the production solver
+// actually uses — `dcbr_heating_with_derivative` in solver.rs — but was called
+// by no production path (only a single test exercising the trivial Planck→0
+// case, which could not catch scaling/normalization mutations). Mutation testing
+// flagged 41 surviving mutants on this dead duplicate; removing it eliminates the
+// duplicate-divergence hazard. The live DC heating term lives in solver.rs.
 
 #[cfg(test)]
 mod tests {
@@ -177,6 +178,65 @@ mod tests {
             max_rhs < 1e-12,
             "DC RHS should be zero for Planck spectrum: max = {max_rhs}"
         );
+    }
+
+    /// Detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
+    ///
+    /// DC emission and absorption must cancel identically when the photon field
+    /// is a Planck spectrum at the **electron** temperature, for any ρ_e. In the
+    /// code's normalisation x = hν/kT_z that spectrum is
+    ///   n_eq(x) = 1/(exp(x·φ) − 1),  φ ≡ θ_z/θ_e = 1/ρ_e.
+    ///
+    /// The Planck test above only covers ρ_e = 1, where φ = 1 and any error in
+    /// the φ convention — the exact inversion CLAUDE.md pitfall #1 warns about —
+    /// is invisible. This also brackets the |ρ_e − 1| = 0.01 switch where the
+    /// solver changes to the Taylor branch (pitfall #5).
+    ///
+    /// Scale-free assertion: the equilibrium residual is compared against the
+    /// residual of a 1%-off-equilibrium spectrum, so no absolute tolerance has
+    /// to be guessed.
+    #[test]
+    fn test_dc_detailed_balance_at_shifted_electron_temperature() {
+        let x: Vec<f64> = (1..200).map(|i| 0.05 * i as f64).collect();
+        let theta_z_val = 4.6e-4;
+
+        for &rho_e in &[0.9, 0.99, 0.999, 1.0, 1.001, 1.01, 1.1] {
+            let theta_e = theta_z_val * rho_e;
+            let phi = theta_z_val / theta_e;
+
+            let n_eq: Vec<f64> = x.iter().map(|&xi| 1.0 / (xi * phi).exp_m1()).collect();
+            let dn_eq: Vec<f64> = x
+                .iter()
+                .zip(&n_eq)
+                .map(|(&xi, &neq)| neq - planck(xi))
+                .collect();
+            // 1% above equilibrium: the source term becomes −0.01 K_DC/x³.
+            let dn_off: Vec<f64> = x
+                .iter()
+                .zip(&n_eq)
+                .map(|(&xi, &neq)| 1.01 * neq - planck(xi))
+                .collect();
+
+            let rhs_eq = dc_rhs(&x, &dn_eq, theta_z_val, theta_e);
+            let rhs_off = dc_rhs(&x, &dn_off, theta_z_val, theta_e);
+
+            for (i, &xi) in x.iter().enumerate() {
+                assert!(
+                    rhs_eq[i].abs() < 1e-10 * rhs_off[i].abs(),
+                    "DC detailed balance broken at ρ_e={rho_e}, x={xi}: \
+                     equilibrium residual {:.3e} vs 1%-departure {:.3e}",
+                    rhs_eq[i],
+                    rhs_off[i]
+                );
+                // Sign: an over-populated spectrum must be driven down.
+                assert!(
+                    rhs_off[i] < 0.0,
+                    "DC must absorb an over-populated spectrum at ρ_e={rho_e}, \
+                     x={xi}: rhs = {:.3e}",
+                    rhs_off[i]
+                );
+            }
+        }
     }
 
     #[test]
@@ -318,11 +378,114 @@ mod tests {
             "K_DC = {k_dc:.4e} outside physically reasonable range [1e-14, 1e-7]"
         );
 
-        // Match hand calculation to within 10%
+        // The hand expression above is an independent transcription of CS2012
+        // Eq. 13, so this is an identity, not an approximation: match to
+        // round-off. (Was 10% before the R2 mutation audit — loose enough that
+        // a 1.5× error in the DC normalisation passed.)
         let rel_err = (k_dc - hand).abs() / hand;
         assert!(
-            rel_err < 0.10,
-            "K_DC = {k_dc:.4e} differs from hand estimate {hand:.4e} by {rel_err:.2e}"
+            rel_err < 1e-12,
+            "K_DC = {k_dc:.6e} differs from hand estimate {hand:.6e} by {rel_err:.2e}"
+        );
+    }
+
+    /// K_DC must be one implementation, not two (R2 mutation audit, fix A1).
+    ///
+    /// `dc_emission_coefficient` (used by `greens.rs` and `kompaneets.rs`) and
+    /// `dc_prefactor` × `dc_high_freq_suppression` (the solver hot loop, which
+    /// hoists the prefactor out of the grid loop) must agree exactly. They were
+    /// separate copies of the same arithmetic until this audit; only the former
+    /// was covered by the DC/BR literature anchor, so mutations to the latter —
+    /// including one that scaled the DC rate by 1.53× — passed the whole suite.
+    ///
+    /// Mirrors the equivalent BR check (`test_br_fast_matches_reference`).
+    #[test]
+    fn test_dc_prefactor_matches_emission_coefficient() {
+        for &z in &[1e4, 1e5, 1e6, 3e6, 1e7] {
+            let theta = crate::constants::theta_z(z);
+            let pre = dc_prefactor(theta);
+            for &x in &[1e-3, 0.01, 0.1, 1.0, 5.0, 20.0] {
+                let slow = dc_emission_coefficient(x, theta);
+                let fast = dc_emission_coefficient_fast(x, pre);
+                assert_eq!(
+                    slow, fast,
+                    "K_DC paths diverge at z={z:.0e}, x={x}: slow={slow:.17e}, fast={fast:.17e}"
+                );
+            }
+        }
+    }
+
+    /// The DC relativistic correction (1 + 14.16 θ_z)⁻¹ must actually be applied.
+    ///
+    /// Every pre-audit Gaunt test passed `theta_z = 0.0`, where the correction is
+    /// identically 1, so `/`→`*` and `+`→`-` inside it were unobservable. Probe
+    /// it where it matters: at z = 10⁷, 14.16 θ_z ≈ 6.5%.
+    ///
+    /// Reference: Chluba, Sazonov & Sunyaev (2007), A&A 468, 785.
+    #[test]
+    fn test_dc_relativistic_correction_applied() {
+        for &z in &[1e6, 3e6, 1e7] {
+            let theta = crate::constants::theta_z(z);
+            let expected = 1.0 / (1.0 + 14.16 * theta);
+            assert!(expected < 1.0, "correction must suppress at z={z:.0e}");
+
+            let corr = dc_relativistic_correction(theta);
+            assert!(
+                (corr - expected).abs() / expected < 1e-14,
+                "dc_relativistic_correction({theta:.4e}) = {corr:.12}, expected {expected:.12}"
+            );
+
+            // It must reach both consumers: the Gaunt factor and the prefactor.
+            // Ratios against the θ_z→0 limit isolate the correction exactly.
+            let gaunt_ratio = dc_gaunt_factor(1.0, theta) / dc_gaunt_factor(1.0, 0.0);
+            assert!(
+                (gaunt_ratio - expected).abs() / expected < 1e-12,
+                "dc_gaunt_factor at z={z:.0e} carries correction {gaunt_ratio:.12}, \
+                 expected {expected:.12}"
+            );
+
+            // dc_prefactor ∝ θ_z² × correction, so divide the θ_z² scaling out.
+            let pre_ratio = dc_prefactor(theta) / (DC_ALPHA_COEFF * theta * theta * I4_PLANCK);
+            assert!(
+                (pre_ratio - expected).abs() / expected < 1e-12,
+                "dc_prefactor at z={z:.0e} carries correction {pre_ratio:.12}, \
+                 expected {expected:.12}"
+            );
+        }
+
+        // At z = 10⁷ the correction is a 6% effect — large enough that flipping
+        // the sign or the division is a >12% error in the DC rate.
+        let theta_hi = crate::constants::theta_z(1e7);
+        assert!(
+            dc_relativistic_correction(theta_hi) < 0.94,
+            "correction at z=1e7 should be ≲0.94, got {}",
+            dc_relativistic_correction(theta_hi)
+        );
+    }
+
+    /// Absolute value of K_DC, derived by hand from CS2012 Eq. 13 rather than
+    /// read off code output (CLAUDE.md pitfall #9).
+    ///
+    /// At z = 10⁶ (θ_z = 4.5971×10⁻⁴), x = 1:
+    ///   4α/3π      = 3.09709×10⁻³
+    ///   θ_z²       = 2.11332×10⁻⁷
+    ///   I₄ = 4π⁴/15 = 25.975758
+    ///   H_dc(1) = e⁻²(1 + 3/2 + 29/24 + 11/16 + 5/12) = 0.1353353 × 4.8125 = 0.651302
+    ///   (1+14.16 θ_z)⁻¹ = 0.9935326
+    ///   ⟹ K_DC = 1.1002×10⁻⁸
+    ///
+    /// This is the anchor on the DC *normalisation* that the suite lacked: the
+    /// pre-audit tests constrained it only to within a factor ~1.5.
+    #[test]
+    fn test_dc_emission_coefficient_absolute_value_z1e6() {
+        let theta = crate::constants::theta_z(1e6);
+        let k_dc = dc_emission_coefficient(1.0, theta);
+        let derived = 1.1002e-8;
+        let rel_err = (k_dc - derived).abs() / derived;
+        assert!(
+            rel_err < 5e-4,
+            "K_DC(x=1, z=1e6) = {k_dc:.6e}, hand-derived {derived:.6e}, \
+             rel err {rel_err:.2e} (limit 5e-4)"
         );
     }
 

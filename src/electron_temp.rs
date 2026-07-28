@@ -121,4 +121,36 @@ mod tests {
             "|ρ_eq−1| must be discretization error: N=5000 → {e_coarse:.2e}, N=20000 → {e_fine:.2e}"
         );
     }
+
+    /// `update_equilibrium` must recover a *non-unity* temperature ratio.
+    ///
+    /// Analytic anchor: a Planck spectrum sampled at a shifted temperature,
+    /// n(x) = n_pl(x/a) = 1/(e^{x/a}−1), is the Bose-Einstein stationary state
+    /// at temperature a·T_z, so its Compton-equilibrium ratio is exactly `a`.
+    /// Proof: dn/dx = −(1/a) n(1+n), hence n(1+n) = −a dn/dx and
+    ///   I₄ = ∫x⁴ n(1+n)dx = a·4∫x³ n dx = 4a G₃  (integrate by parts, x⁴n→0),
+    /// so ρ_eq = I₄/(4G₃) = a.
+    ///
+    /// This is the discriminating check the ρ_eq=1 tests above lack: they feed
+    /// spectra whose equilibrium ratio equals the `Default` value 1.0, so a
+    /// no-op `update_equilibrium` passes them. Here a = 1.05 ≠ 1, so a no-op
+    /// (leaving rho_e = 1.0) fails. (Mutation-audit R2 survivor closure.)
+    #[test]
+    fn test_equilibrium_recovers_shifted_temperature() {
+        let grid = FrequencyGrid::log_uniform(1e-4, 50.0, 10000);
+        let a = 1.05;
+        let n_shifted: Vec<f64> = grid.x.iter().map(|&x| planck(x / a)).collect();
+
+        let mut te = ElectronTemperature::default();
+        te.update_equilibrium(&grid.x, &n_shifted);
+
+        // Analytic target ρ_eq = a; tolerance covers the O(dx²) quadrature
+        // floor (~1e-4 here) with margin, while |a − 1| = 0.05 ≫ tol so a
+        // no-op update is unambiguously rejected.
+        assert!(
+            (te.rho_e - a).abs() < 2e-3,
+            "ρ_eq must recover the shifted-Planck temperature a={a}, got {:.8}",
+            te.rho_e
+        );
+    }
 }

@@ -264,9 +264,14 @@ fn energy_conservation_photon_injection_x1() {
         "PhotonInjection x=1: drho={:.6e}, expected={expected_drho:.6e}, err={err:.2e}",
         s.delta_rho_over_rho
     );
+    // The scenario's source is G₂·gauss(x)/x², so ∫x³Δn dx / G₃ = α_ρ x_inj ΔN/N
+    // is exact for it — no finite-σ_x correction (unlike the x_inj²-normalised
+    // helper in tests/heat_injection.rs; see dev/audit/energy_conservation_audit.md).
+    // Measured err = 3.4e-4; tolerance 2e-3 leaves 6× for the first-order
+    // temporal residual to grow with z_h.
     assert!(
-        err < 0.10,
-        "Photon injection energy conservation at x=1: err = {err:.2e} > 10%"
+        err < 2e-3,
+        "Photon injection energy conservation at x=1: err = {err:.2e} > 0.2%"
     );
 }
 
@@ -310,9 +315,11 @@ fn energy_conservation_tabulated_heating() {
         "TabulatedHeating: drho={:.6e}, expected={drho:.6e}, err={err:.2e}",
         s.delta_rho_over_rho
     );
+    // Measured err = 1.7e-3 (the trapezoidal table interpolation plus the
+    // first-order temporal residual); tolerance 5e-3 keeps 3× margin.
     assert!(
-        err < 0.05,
-        "TabulatedHeating energy conservation: err = {err:.2e} > 5%"
+        err < 5e-3,
+        "TabulatedHeating energy conservation: err = {err:.2e} > 0.5%"
     );
 }
 

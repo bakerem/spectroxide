@@ -167,12 +167,13 @@ Three-component Green's function and convolutions over a heating history
 
 .. code-block:: python
 
-   from spectroxide.greens import mu_from_heating, y_from_heating
-
-   # Decaying dark-matter-like heating: dQ/dz ∝ exp(-Γt(z))
    import numpy as np
-   from spectroxide.greens import cosmic_time
-   dq_dz = lambda z: 1e-7 * np.exp(-1e-15 * cosmic_time(z))
+   from spectroxide import mu_from_heating, y_from_heating, cosmic_time
+
+   # Decaying dark-matter-like heating: dQ/dz ∝ exp(-Γt(z)).
+   # The prefactor is chosen so that ∫dQ/dz dz ≈ Δρ/ρ ~ 1e-5, i.e. the
+   # linear regime the Green's function assumes (μ, y ≪ 1).
+   dq_dz = lambda z: 2e-12 * np.exp(-1e-15 * cosmic_time(z))
 
    mu = mu_from_heating(dq_dz, z_min=1e3, z_max=5e6)
    y  = y_from_heating(dq_dz,  z_min=1e3, z_max=5e6)
@@ -234,7 +235,12 @@ Decomposition utilities
 -----------------------
 
 Decompose an arbitrary Δn(x) into (μ, y, ΔT/T) components and convert
-to intensity units (MJy/sr).
+to intensity units (Jy/sr).
+
+.. note::
+   The Python :func:`delta_n_to_delta_I` returns **Jy/sr**, whereas the
+   Rust ``distortion.rs`` converter returns **MJy/sr** (a factor of 10⁶).
+   Mind the difference when comparing across languages.
 
 .. autosummary::
    :nosignatures:
@@ -246,8 +252,9 @@ to intensity units (MJy/sr).
 
    from spectroxide.greens import decompose_distortion, delta_n_to_delta_I
 
-   mu, y, dT_T = decompose_distortion(x, dn)
-   dI = delta_n_to_delta_I(x, dn)            # intensity in MJy/sr
+   d = decompose_distortion(x, dn)           # dict: mu, y, dT, drho, ...
+   mu, y, dT = d["mu"], d["y"], d["dT"]
+   nu_ghz, dI = delta_n_to_delta_I(x, dn)    # nu in GHz, dI in Jy/sr
 
 :func:`decompose_distortion` is the entry point — it dispatches via a
 ``method=`` keyword to the non-linear blackbody-temperature solve

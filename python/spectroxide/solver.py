@@ -183,6 +183,11 @@ def _build_cosmo_args(cosmo_params):
     if cosmo_params is None:
         return []
 
+    # Accept a Cosmology dataclass directly (mirror solve()'s normalization)
+    # so run_sweep / run_photon_sweep / table builders behave like solve().
+    if isinstance(cosmo_params, Cosmology):
+        cosmo_params = cosmo_params.to_dict()
+
     # Validate via Cosmology before launching a subprocess.
     if isinstance(cosmo_params, dict):
         _cosmo_fields = {"h", "omega_b", "omega_m", "y_p", "t_cmb", "n_eff"}
@@ -235,6 +240,8 @@ _INJECTION_PARAM_MAP = {
     "gamma_con": "--gamma-con",
     "epsilon": "--epsilon",
     "m_ev": "--m-ev",
+    "g_agamma": "--g-agamma",
+    "b_rms": "--b-rms",
 }
 
 
@@ -1344,7 +1351,7 @@ def solve(
     Dispatches between the Rust PDE solver, the analytic Green's function,
     and the precomputed Green's-function table. Returns a structured
     :class:`SolverResult` with frequency grid, distortion, ``μ``, ``y``,
-    and an ``intensity`` property.
+    and a ``delta_I`` property (intensity in Jy/sr).
 
     For multi-redshift sweeps use :func:`run_sweep` (single-burst energy
     injection) or :func:`run_photon_sweep` / :func:`run_photon_sweep_batch`
@@ -1354,12 +1361,16 @@ def solve(
     Parameters
     ----------
     injection : Mapping, optional
-        PDE injection scenario.  Required when ``method="pde"`` unless
-        ``dq_dz`` or ``photon_source`` is given.  Must contain a
+        PDE injection scenario.  **PDE-only** (``method="pde"``): it is
+        ignored by ``method="greens_function"`` and, except for the
+        ``"x_inj"`` key, by ``method="table"``; for those modes pass
+        ``z_h=`` or ``dq_dz=`` instead.  Required when ``method="pde"``
+        unless ``dq_dz`` or ``photon_source`` is given.  Must contain a
         ``"type"`` key; supported types are ``"single_burst"``,
         ``"decaying_particle"``, ``"annihilating_dm"``,
         ``"annihilating_dm_pwave"``, ``"monochromatic_photon"``,
-        ``"decaying_particle_photon"``, and ``"dark_photon_resonance"``.
+        ``"decaying_particle_photon"``, ``"dark_photon_resonance"``, and
+        ``"axion_resonance"``.
         Remaining keys are scenario parameters, e.g.::
 
             {"type": "single_burst", "z_h": 2e5}
@@ -1369,7 +1380,11 @@ def solve(
 
             {"type": "dark_photon_resonance", "epsilon": 1e-9, "m_ev": 1e-7}
 
-        triggers the Rust solver to compute ``γ_con`` and ``z_res``
+        and for axions (``g_agamma`` in GeV⁻¹, ``b_rms`` in nG)::
+
+            {"type": "axion_resonance", "g_agamma": 1e-10, "b_rms": 1, "m_ev": 1e-7}
+
+        both trigger the Rust solver to compute ``γ_con`` and ``z_res``
         internally and install the impulsive depletion IC at ``z_res``.
     cosmo : Cosmology, Mapping, or None, optional
         Cosmological parameters.  Accepts a :class:`Cosmology` dataclass
@@ -1518,6 +1533,13 @@ def solve(
         )
 
     if method == "greens_function":
+        if injection is not None:
+            raise ValueError(
+                "injection= is PDE-only and is ignored by "
+                "method='greens_function'. For the Green's function, pass "
+                "z_h= (single burst) or dq_dz= (custom heating) directly, "
+                "e.g. solve(method='greens_function', z_h=2e5)."
+            )
         result = run_single(
             z_h=z_h,
             delta_rho=delta_rho,
@@ -1634,6 +1656,12 @@ def solve(
     r = data["results"][0]
     x_arr = np.asarray(r["x"])
     dn = np.asarray(r["delta_n"])
+    # The Rust output populates z_h for energy-injection bursts but not for
+    # monochromatic photon injection; fall back to the injection dict so a
+    # fixed-z_h burst reports its redshift (see SolverResult.z_h docstring).
+    z_h_out = r.get("z_h")
+    if z_h_out is None and injection is not None:
+        z_h_out = injection.get("z_h")
     return SolverResult(
         x=x_arr,
         delta_n=dn,
@@ -1641,7 +1669,7 @@ def solve(
         y=r.get("pde_y", r.get("gf_y", 0.0)),
         delta_rho_over_rho=r.get("drho", 0.0),
         method="pde",
-        z_h=r.get("z_h"),
+        z_h=z_h_out,
         rho_e=r.get("rho_e"),
         accumulated_delta_t=r.get("accumulated_delta_t"),
     )

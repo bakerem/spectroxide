@@ -33,7 +33,7 @@ dependencies = ["numpy", "scipy"]
 [project.optional-dependencies]
 plot = ["matplotlib"]
 notebook = ["matplotlib", "jupyter"]
-dev = ["matplotlib", "jupyter"]
+dev = ["matplotlib", "jupyter", "pytest", "mutmut"]
 doc = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
@@ -61,3 +61,27 @@ Issues = "https://github.com/bakerem/spectroxide/issues"
 
 [tool.setuptools.packages.find]
 include = ["spectroxide*"]
+
+# Mutation testing (Workstream R2.5, dev/PLAN_VALIDATION_ROUND2). mutmut 3.6.0.
+# Scoped to the four modules that produce the paper's published FIRAS/photon
+# limits — the limit-proximate Python that Rust-only mutation testing misses.
+# mutmut copies source to python/mutants/ and runs there; the real tree is safe.
+# Run: cd python && mutmut run --max-children 2   (base miniforge env).
+[tool.mutmut]
+source_paths = ["spectroxide"]
+only_mutate = [
+    "spectroxide/firas.py",
+    "spectroxide/greens.py",
+    "spectroxide/dark_photon.py",
+    "spectroxide/greens_table.py",
+]
+# Deterministic, fast, limit-relevant tests. Kept off the plotting/notebook and
+# slow-subprocess suites so per-mutant time stays low (R2.5).
+pytest_add_cli_args_test_selection = [
+    "tests/test_firas.py",
+    "tests/test_greens.py",
+    "tests/test_greens_table.py",
+    "tests/test_parity.py",
+]
+# Mutate the whole of each target module, not just git-changed lines.
+use_git_change_detection = false

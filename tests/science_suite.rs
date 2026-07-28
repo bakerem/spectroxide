@@ -199,6 +199,93 @@ fn science_deep_thermalization_pde() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// Thermalization deep in the exponential regime: z_h = 3×10⁶ (R2 audit, P1).
+//
+// This is the anchor on the DC emission *normalisation*, which the R2 mutation
+// campaign showed the suite did not have: scaling K_DC by 1.535× passed every
+// existing test, including science_deep_thermalization_pde above.
+//
+// The reason is not a loose tolerance, it is where that test sits. With
+//   μ ∝ exp(−τ),  τ = (z_h/z_th)^{5/2} ∝ √K_DC
+// the logarithmic sensitivity is
+//   ∂ln μ / ∂ln K_DC = −τ/2.
+// At z_h = 10⁶, τ ≈ 0.18, so a 53% error in K_DC moves μ by only ~4% — inside
+// the 5% PDE↔GF band. Every other PDE thermalization test sits at z_h ≤ 10⁶;
+// the z_h = 5×10⁶ cases are Green's-function-only and by construction cannot
+// test the code's own DC rate.
+//
+// At z_h = 3×10⁶, τ ≈ 2.8 and ∂ln μ/∂ln K_DC ≈ −1.4: the same 1.535× error is
+// a factor ~2 in μ, far outside any sane band. This test therefore pins K_DC to
+// roughly (tolerance/1.4), and gives the paper's z_th ≈ 1.98×10⁶ a direct
+// PDE-side check — previously Z_MU appeared only as a constant and in
+// Green's-function tests.
+//
+// Reference: Chluba (2013) J_bb*, J_μ; Sunyaev & Zeldovich thermalization.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn science_deep_thermalization_pde_z3e6() {
+    let z_h = 3.0e6;
+    let drho = 1.0e-5;
+    let cosmo = Cosmology::default();
+    let grid_config = GridConfig::production();
+    let mut solver = ThermalizationSolver::new(cosmo, grid_config);
+    solver
+        .set_injection(InjectionScenario::SingleBurst {
+            z_h,
+            delta_rho_over_rho: drho,
+            sigma_z: z_h * 0.01,
+        })
+        .unwrap();
+    solver.set_config(SolverConfig {
+        z_start: z_h * 1.5,
+        z_end: 500.0,
+        ..SolverConfig::default()
+    });
+    solver.run_with_snapshots(&[500.0]);
+    let snap = solver.snapshots.last().unwrap();
+
+    let j_bb = greens::visibility_j_bb_star(z_h);
+    let j_mu = greens::visibility_j_mu(z_h);
+    let mu_gf = (3.0 / constants::KAPPA_C) * j_bb * j_mu * drho;
+
+    // Deep in the exponential tail: τ = (3/1.98)^{5/2} ≈ 2.8, so J_bb* ≈ 0.05.
+    assert!(
+        j_bb > 0.01 && j_bb < 0.15,
+        "z_h=3e6 must be deep in the thermalization tail: J_bb* = {j_bb:.4}"
+    );
+
+    let err = rel_err(snap.mu, mu_gf);
+    eprintln!(
+        "z_h=3e6: μ/Δρ = {:.5}, GF target = {:.5}, J_bb* = {j_bb:.4}, err = {:.1}%",
+        snap.mu / drho,
+        mu_gf / drho,
+        err * 100.0
+    );
+
+    // Measured error: 1.3%. Limit 8% (~6× measured, in line with this file's
+    // convention and with the extra platform sensitivity of an exponential
+    // tail). Via ∂lnμ/∂lnK_DC ≈ −1.4 this bounds the DC emission
+    // normalisation to ≈6% — against a factor ~1.5 before this test existed.
+    assert!(
+        err < 0.08,
+        "Deep-tail thermalization: PDE μ={:.4e} vs GF μ={mu_gf:.4e}, err={:.1}% \
+         (limit 8%). At this z_h, ∂lnμ/∂lnK_DC ≈ −1.4, so this also bounds the \
+         DC emission normalisation to ≈6%.",
+        snap.mu,
+        err * 100.0
+    );
+
+    // Suppression must be real and in the right direction: an order of
+    // magnitude below the unsuppressed μ-era value.
+    let mu_over_drho = snap.mu / drho;
+    assert!(
+        mu_over_drho < 0.2 && mu_over_drho > 0.01,
+        "μ/Δρ at z_h=3e6 should be ~0.07 (1.401 × J_bb*): got {mu_over_drho:.4}"
+    );
+}
+
 // (science_energy_conservation_single_burst removed: strictly subsumed by
 // test_heat_energy_conservation_sweep_tight in heat_injection.rs, which sweeps
 // 7 redshifts including {1e4, 5e4, 2e5} at 2% tolerance — tighter than this

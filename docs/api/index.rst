@@ -80,6 +80,30 @@ science targets are computed by the PDE solver above.
       ``PLANCK2015_COSMO`` / ``PLANCK2018_COSMO`` presets that other
       modules pull from.
 
+   .. grid-item-card:: Dark photon
+      :link: dark_photon
+      :link-type: doc
+
+      ``spectroxide.dark_photon`` — NWA helpers (ω_pl, z_res, γ_con) for
+      resonant γ↔A' conversion; the route to reproduce the dark-photon
+      constraint numbers.
+
+   .. grid-item-card:: Axion
+      :link: axion
+      :link-type: doc
+
+      ``spectroxide.axion`` — NWA helpers for resonant γ↔a axion–photon
+      conversion (Cyr, Chluba & Manoj 2024); Wien-tail depletion with
+      κ = g_aγγ B_rms.
+
+   .. grid-item-card:: CosmoTherm interface
+      :link: cosmotherm
+      :link-type: doc
+
+      ``spectroxide.cosmotherm`` — loaders for CosmoTherm ``DI`` files
+      and the Green's-function database, plus heating-rate models used
+      for cross-validation.
+
    .. grid-item-card:: Plotting
       :link: style
       :link-type: doc
@@ -97,4 +121,7 @@ science targets are computed by the PDE solver above.
    greens_table
    firas
    cosmology
+   dark_photon
+   axion
+   cosmotherm
    style

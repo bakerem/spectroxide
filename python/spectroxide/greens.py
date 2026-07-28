@@ -656,6 +656,10 @@ def y_from_heating(
 # constants live in ``spectroxide.cosmology``. Re-imported here so legacy
 # ``from spectroxide.greens import hubble`` / ``cosmic_time`` / ``DEFAULT_COSMO``
 # / ``_C_LIGHT`` etc. keep working.
+# DEPRECATED back-compat shim: prefer the canonical path
+# ``from spectroxide import cosmic_time`` (or ``spectroxide.cosmology``).
+# Remove once no in-repo docs/notebooks import cosmology names through
+# ``spectroxide.greens`` (grep: `spectroxide.greens import .*cosmic_time`).
 from .cosmology import (  # noqa: E402,F401
     DEFAULT_COSMO,
     COSMOTHERM_GF_COSMO,
@@ -883,7 +887,10 @@ def _photon_survival_probability_numerical(x, z_h, cosmo):
     log_z_end = np.log(z_end)
     d_log_z = (log_z_h - log_z_end) / n_steps
 
-    bose_factor = np.expm1(x) if x <= 500.0 else 1e200
+    # Overflow at x > 500 → +inf propagates through `rate` and triggers the
+    # tau > 500 → 0 saturation below (mirrors Rust tau_ff_survival; a large
+    # finite sentinel would pass finite-checks elsewhere).
+    bose_factor = np.expm1(x) if x <= 500.0 else np.inf
     inv_x3 = 1.0 / (x * x * x)
     f_he = cosmo["y_p"] / (4.0 * (1.0 - cosmo["y_p"]))
 
@@ -1049,9 +1056,10 @@ def _broadened_bump(x_obs, x_inj, yg):
 
     denom = 1.0 + x_inj * yg
     # Log-normal parameters
-    # Mode (peak) at x_peak = x_inj * exp(alpha*yg) / denom
+    # Median at x_med = x_inj * exp(alpha*yg) / denom (the mode sits at
+    # x_med * exp(-sigma_ln^2), lower by O(y_γ); negligible for y_γ ≪ 1)
     # Mean at x_mean = x_inj * exp((alpha+beta)*yg) / denom = x_inj * f_int
-    mu_ln = np.log(x_inj) + alpha * yg - np.log(denom)  # = ln(x_peak)
+    mu_ln = np.log(x_inj) + alpha * yg - np.log(denom)  # = ln(x_med)
     sigma_ln_sq = 2.0 * beta * yg
     sigma_ln = np.sqrt(max(sigma_ln_sq, 1e-30))
 

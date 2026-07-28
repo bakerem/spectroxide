@@ -138,9 +138,30 @@ jobs:
           assert fg.keys() == cg.keys(), (
               f"group mismatch: {fg.keys() ^ cg.keys()}"
           )
+          stale = []
           for key, g in fg.items():
               assert g["inputs"] == cg[key]["inputs"], f"stale inputs in {key}"
-          print(f"{len(fg)} groups, inputs in sync")
+              # Outputs too: without this the committed golden file can drift
+              # silently from Rust, and a Rust-side regression is only visible
+              # in the Python-vs-fresh comparison below (R2 mutation audit, A5).
+              for i, (fv, cv) in enumerate(zip(g["values"], cg[key]["values"])):
+                  for j, (a, b) in enumerate(zip(fv, cv)):
+                      if a is None or b is None:
+                          if a is not b:
+                              stale.append(f"{key}[{i}][{j}]: {b} -> {a}")
+                          continue
+                      scale = max(abs(a), abs(b))
+                      if abs(a - b) > 1e-9 * scale + 1e-300:
+                          stale.append(f"{key}[{i}][{j}]: {b:.17g} -> {a:.17g}")
+          if stale:
+              raise SystemExit(
+                  "committed parity fixture is stale (Rust output changed); "
+                  "regenerate with `cargo run --release --example "
+                  "generate_parity_fixtures -- python/tests/data/parity_fixtures.json`\n"
+                  + "\n".join(stale[:20])
+                  + (f"\n... and {len(stale) - 20} more" if len(stale) > 20 else "")
+              )
+          print(f"{len(fg)} groups, inputs and values in sync")
           EOF
       - name: Run parity tests against fresh fixture
         run: |

@@ -642,6 +642,7 @@ pub fn print_help() {
     eprintln!("  monochromatic-photon  --x-inj, --delta-n-over-n, --z-h");
     eprintln!("  decaying-particle-photon --x-inj-0, --f-inj, --gamma-x");
     eprintln!("  dark-photon-resonance --epsilon, --m-ev");
+    eprintln!("  axion-resonance       --g-agamma, --b-rms, --m-ev");
     eprintln!("  tabulated-heating     --heating-table PATH (CSV: z,dq_dz)");
     eprintln!("  tabulated-photon      --photon-table PATH (CSV: z,x1,...,xN)");
     eprintln!();
@@ -681,6 +682,7 @@ pub fn print_help() {
     eprintln!("  spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5");
     eprintln!("  spectroxide solve decaying-particle --f-x 1e5 --gamma-x 2e5");
     eprintln!("  spectroxide solve dark-photon-resonance --epsilon 1e-9 --m-ev 1e-7");
+    eprintln!("  spectroxide solve axion-resonance --g-agamma 1e-10 --b-rms 1 --m-ev 1e-7");
     eprintln!("  spectroxide greens --z-h 2e5");
     eprintln!("  spectroxide info --cosmology planck2018");
 }
@@ -783,6 +785,16 @@ pub fn build_injection_scenario(
             let m_ev = get_required("--m-ev")?;
             Ok(InjectionScenario::DarkPhotonResonance { epsilon, m_ev })
         }
+        "axion-resonance" => {
+            let g_agamma = get_required("--g-agamma")?;
+            let b_rms = get_required("--b-rms")?;
+            let m_ev = get_required("--m-ev")?;
+            Ok(InjectionScenario::AxionResonance {
+                g_agamma,
+                b_rms,
+                m_ev,
+            })
+        }
         "tabulated-heating" => {
             let path = args
                 .get("--heating-table")
@@ -800,6 +812,7 @@ pub fn build_injection_scenario(
              Valid: single-burst, \
              decaying-particle, decaying-particle-photon, \
              annihilating-dm, annihilating-dm-pwave, monochromatic-photon, \
+             dark-photon-resonance, axion-resonance, \
              tabulated-heating, tabulated-photon"
         )),
     }
@@ -1011,6 +1024,7 @@ fn validate_and_collect_warnings(
     warnings.extend(injection.warn_strong_distortion());
     warnings.extend(injection.warn_tabulated_coverage(config.z_start, config.z_end));
     warnings.extend(injection.warn_dark_photon_range(cosmo));
+    warnings.extend(injection.warn_axion_range(cosmo));
     Ok(warnings)
 }
 
@@ -1034,26 +1048,28 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     let n_grid = opts.solver.n_points.unwrap_or(2000);
     let effective_dy_max = opts.solver.dy_max.unwrap_or(SolverConfig::default().dy_max);
     let effective_dtau_max = opts.solver.dtau_max.unwrap_or(10.0);
-    // For dark photon resonance, start at z_res if z_start isn't set
-    // explicitly by the user. The IC Δn(x) is installed by the solver at
-    // z_start via InjectionScenario::initial_delta_n.
-    let default_z_start = match injection.dark_photon_params(&cosmo) {
+    // For resonant conversion scenarios (dark photon, axion), start at z_res if
+    // z_start isn't set explicitly by the user. The IC Δn(x) is installed by
+    // the solver at z_start via InjectionScenario::initial_delta_n.
+    let default_z_start = match injection.resonance_params(&cosmo) {
         Some((_, z_res)) => z_res,
         None => 5e6,
     };
     let z_start = opts.solver.z_start.unwrap_or(default_z_start);
     let z_end = opts.solver.z_end;
 
-    // DarkPhotonResonance: hard-error if NWA gives no resonance in the
+    // Resonant conversion: hard-error if NWA gives no resonance in the
     // supported redshift band. Without this the solver runs to mu=y=0 and
     // looks like a "successful" null result.
-    if matches!(injection, InjectionScenario::DarkPhotonResonance { .. })
-        && injection.dark_photon_params(&cosmo).is_none()
+    if matches!(
+        injection,
+        InjectionScenario::DarkPhotonResonance { .. } | InjectionScenario::AxionResonance { .. }
+    ) && injection.resonance_params(&cosmo).is_none()
     {
         return Err(
-            "DarkPhotonResonance: no resonance redshift z_res in [50, 3e6] for the given \
-             (epsilon, m_ev). The plasma frequency never crosses the dark-photon mass in the \
-             supported band, so no conversion occurs. Adjust m_ev or extend the supported range."
+            "Resonant conversion: no resonance redshift z_res in [50, 3e6] for the given \
+             parameters. The plasma frequency never crosses the particle mass in the supported \
+             band, so no conversion occurs. Adjust the mass or extend the supported range."
                 .to_string(),
         );
     }
@@ -1875,6 +1891,16 @@ mod tests {
                     ("--gamma-x", "1e4"),
                 ],
                 |i| matches!(i, InjectionScenario::DecayingParticlePhoton { .. }),
+            ),
+            (
+                "dark-photon-resonance",
+                vec![("--epsilon", "1e-9"), ("--m-ev", "1e-7")],
+                |i| matches!(i, InjectionScenario::DarkPhotonResonance { .. }),
+            ),
+            (
+                "axion-resonance",
+                vec![("--g-agamma", "1e-10"), ("--b-rms", "1"), ("--m-ev", "1e-7")],
+                |i| matches!(i, InjectionScenario::AxionResonance { .. }),
             ),
         ];
 

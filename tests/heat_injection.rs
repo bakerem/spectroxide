@@ -2174,6 +2174,122 @@ fn test_dark_photon_conservation_sum_rule() {
     eprintln!("  Visibility sum = {sum_vis:.6e} (1 = perfect energy conservation)");
 }
 
+// ---- Axion-photon resonant conversion (Cyr, Chluba & Manoj 2024) ----
+
+/// Axion γ_con benchmark against an independently hand-evaluated Eq. 3a.
+///
+/// For (g_aγγ, B_rms, m_a) = (1e-10 GeV⁻¹, 1 nG, 1e-7 eV) the resonance sits at
+/// z_res ≈ 3.21e4 in the fully-ionized era (X_e≈1 ⇒ |d ln ω_pl²/d ln a| = 3).
+/// Plugging κ = 1.95e-30 eV (Eq. 3b), T_CMB(z_res) = kT₀(1+z_res), and the
+/// radiation-era H(z_res) into
+///   γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [m_a² H(z_res) · 3]
+/// gives γ_con ≈ 0.21 (order unity — the paper's interesting regime). Target is
+/// derived from the formula, not read off code output (CLAUDE.md #9).
+#[test]
+fn test_axion_gamma_con_benchmark() {
+    let cosmo = Cosmology::default();
+    let (gc, z_res) =
+        spectroxide::axion::gamma_con_axion(1e-10, 1.0, 1e-7, &cosmo).expect("no resonance");
+    eprintln!("Axion γ_con benchmark: γ_con = {gc:.4e}, z_res = {z_res:.4e}");
+    assert!(
+        (z_res - 3.21e4).abs() / 3.21e4 < 0.05,
+        "z_res = {z_res:.3e}, expected ~3.21e4 (±5%)"
+    );
+    assert!(
+        (gc - 0.214).abs() / 0.214 < 0.15,
+        "γ_con = {gc:.4e}, expected ~0.214 (±15%) from hand-evaluated Eq. 3a"
+    );
+}
+
+/// Axion vs dark photon: the resonance redshift depends only on m = ω_pl, so
+/// both channels share it; only the coupling prefactor and frequency weighting
+/// differ.
+#[test]
+fn test_axion_resonance_matches_dark_photon_z_res() {
+    let cosmo = Cosmology::default();
+    for m_ev in [3e-8, 1e-7, 1e-6, 1e-5] {
+        let (_g_ax, z_ax) = spectroxide::axion::gamma_con_axion(1e-10, 1.0, m_ev, &cosmo).unwrap();
+        let (z_dp, _) = find_resonance_z(m_ev, &cosmo);
+        assert!(
+            (z_ax - z_dp).abs() / z_dp < 1e-3,
+            "m={m_ev:.1e}: axion z_res={z_ax:.4e} vs dark-photon z_res={z_dp:.4e}"
+        );
+    }
+}
+
+/// The defining physics difference: the axion IC depletes the **Wien tail**
+/// (high x) preferentially, because P(x) = 1 − exp(−γ_con·x) with x in the
+/// numerator. The dark photon, with 1/x, depletes the Rayleigh–Jeans tail
+/// instead. Verify the relative depletion |Δn/n_pl| increases with x for the
+/// axion and decreases for the dark photon.
+#[test]
+fn test_axion_depletes_wien_tail_opposite_to_dark_photon() {
+    let cosmo = Cosmology::default();
+    let x_grid = [0.3_f64, 1.0, 3.0, 8.0];
+
+    // Choose a mass with a resonance in-band; z_res is shared by both channels.
+    let m_ev = 1e-6;
+
+    // Weak coupling so γ_con ≈ 0.22 (unsaturated: P(x) sweeps 0.06→0.83 across
+    // the grid rather than pinning at 1, so the x-dependence is visible).
+    let axion = InjectionScenario::AxionResonance {
+        g_agamma: 1e-10,
+        b_rms: 1.0,
+        m_ev,
+    };
+    let dark = InjectionScenario::DarkPhotonResonance { epsilon: 1e-6, m_ev };
+
+    let dn_ax = axion.initial_delta_n(&x_grid, &cosmo).expect("axion IC");
+    let dn_dp = dark.initial_delta_n(&x_grid, &cosmo).expect("dark photon IC");
+
+    // Relative depletion p(x) = |Δn/n_pl| = 1 - exp(-γ_con x) (axion),
+    // 1 - exp(-γ_con/x) (dark photon).
+    let rel = |dn: &[f64]| -> Vec<f64> {
+        x_grid
+            .iter()
+            .zip(dn)
+            .map(|(&x, &d)| (d / spectroxide::spectrum::planck(x)).abs())
+            .collect()
+    };
+    let p_ax = rel(&dn_ax);
+    let p_dp = rel(&dn_dp);
+    eprintln!("Axion  rel depletion by x {x_grid:?}: {p_ax:?}");
+    eprintln!("DarkPh rel depletion by x {x_grid:?}: {p_dp:?}");
+
+    // Axion: monotonically increasing with x (Wien-tail preference).
+    for w in p_ax.windows(2) {
+        assert!(
+            w[1] > w[0],
+            "Axion depletion must increase with x: {:?}",
+            p_ax
+        );
+    }
+    // Dark photon: monotonically decreasing with x (Rayleigh–Jeans preference).
+    for w in p_dp.windows(2) {
+        assert!(
+            w[1] < w[0],
+            "Dark photon depletion must decrease with x: {:?}",
+            p_dp
+        );
+    }
+    // All depletions are physical (a fraction in [0,1]).
+    for &p in p_ax.iter().chain(p_dp.iter()) {
+        assert!((0.0..=1.0).contains(&p), "depletion fraction out of range: {p}");
+    }
+}
+
+/// Axion coupling scaling: γ_con ∝ (g_aγγ B_rms)². Doubling either quadruples
+/// the conversion parameter (and hence the small-γ_con depletion).
+#[test]
+fn test_axion_gamma_con_coupling_scaling() {
+    let cosmo = Cosmology::default();
+    let (g0, _) = spectroxide::axion::gamma_con_axion(1e-11, 1.0, 1e-6, &cosmo).unwrap();
+    let (g_g, _) = spectroxide::axion::gamma_con_axion(2e-11, 1.0, 1e-6, &cosmo).unwrap();
+    let (g_b, _) = spectroxide::axion::gamma_con_axion(1e-11, 2.0, 1e-6, &cosmo).unwrap();
+    assert!((g_g / g0 - 4.0).abs() < 1e-9, "g scaling: {}", g_g / g0);
+    assert!((g_b / g0 - 4.0).abs() < 1e-9, "B scaling: {}", g_b / g0);
+}
+
 /// Dark photon: verify plasma frequency formula against independent computation.
 ///
 /// The plasma frequency is:
@@ -4698,46 +4814,17 @@ fn test_nc_energy_y_era_and_high_z_mu() {
 
 // Section 21: Diagnostics, full T_e, and DC/BR rate tests
 
-/// BR heating integral returns ~0 for Planck spectrum with T_e = T_z
-#[test]
-fn test_br_heating_integral_planck_zero() {
-    use spectroxide::bremsstrahlung::br_heating_integral;
-    use spectroxide::constants::theta_z;
+// test_br_heating_integral_planck_zero removed (R2 mutation audit, F-R2-2):
+// it exercised the now-deleted standalone br_heating_integral (a non-production
+// duplicate of solver::dcbr_heating_with_derivative). Like the dc case below,
+// the Planck→0 assertion could not catch scaling/normalization mutations. See
+// the note in src/bremsstrahlung.rs.
 
-    let x: Vec<f64> = (1..500).map(|i| 0.001 + 0.06 * i as f64).collect();
-    let delta_n = vec![0.0; x.len()];
-    let tz = theta_z(1e6);
-    let cosmo = Cosmology::default();
-    let n_h = cosmo.n_h(1e6);
-    let n_he = cosmo.n_he(1e6);
-    let x_e = 1.0;
-    let n_e = cosmo.n_e(1e6, x_e);
-
-    let h_br = br_heating_integral(&x, &delta_n, tz, tz, n_h, n_he, n_e, x_e, 1.0, 1.0);
-    eprintln!("BR heating integral for Planck: {h_br:.4e}");
-    assert!(
-        h_br.abs() < 1e-10,
-        "BR heating integral should be ~0 for Planck: {h_br}"
-    );
-}
-
-/// DC heating integral returns ~0 for Planck spectrum with T_e = T_z
-#[test]
-fn test_dc_heating_integral_planck_zero() {
-    use spectroxide::constants::theta_z;
-    use spectroxide::double_compton::dc_heating_integral;
-
-    let x: Vec<f64> = (1..500).map(|i| 0.001 + 0.06 * i as f64).collect();
-    let delta_n = vec![0.0; x.len()];
-    let tz = theta_z(1e6);
-
-    let h_dc = dc_heating_integral(&x, &delta_n, tz, tz);
-    eprintln!("DC heating integral for Planck: {h_dc:.4e}");
-    assert!(
-        h_dc.abs() < 1e-10,
-        "DC heating integral should be ~0 for Planck: {h_dc}"
-    );
-}
+// test_dc_heating_integral_planck_zero removed (2026-07-06, R2 mutation audit):
+// it exercised the now-deleted standalone dc_heating_integral (a non-production
+// duplicate of solver::dcbr_heating_with_derivative). The Planck→0 case it
+// checked could not catch scaling/normalization mutations. See the note in
+// src/double_compton.rs.
 
 /// Lambda expansion correction << 1 at z=1e6 (deep Compton coupling)
 #[test]
@@ -5455,10 +5542,13 @@ fn test_photon_survival_regime_structure() {
     let xc_mid = greens::x_c(2.0e5);
     let xc_high = greens::x_c(2.0e6);
     eprintln!("x_c: z=1e4→{xc_low:.4e}, z=2e5→{xc_mid:.4e}, z=2e6→{xc_high:.4e}");
-    // At z=2e5, x_c should be smaller than at the extremes (dominated by neither)
+    // At z=2e5, x_c is smaller than at BOTH extremes: it sits in the interior
+    // minimum where neither process dominates. (Was a disjunction, which either
+    // half satisfied on its own — finding F-PC-2.)
     assert!(
-        xc_mid < xc_low || xc_mid < xc_high,
-        "x_c should have a non-trivial z-dependence from DC/BR competition"
+        xc_mid < xc_low && xc_mid < xc_high,
+        "x_c must have an interior minimum from DC/BR competition: \
+         x_c(1e4)={xc_low:.4e}, x_c(2e5)={xc_mid:.4e}, x_c(2e6)={xc_high:.4e}"
     );
 }
 
@@ -5936,9 +6026,28 @@ fn test_annihilation_swave_low_x_spectral_shape() {
 
 // Section 29: Brutally hard photon injection tests
 
+/// Helper: the Gaussian photon-injection initial condition on a given grid.
+///
+/// Amplitude is normalised with `x_inj²`, so the array's exact moments are
+/// ΔN/N = dn_over_n·(1 + σ²/x²) and Δρ/ρ = α_ρ x (dn_over_n)(1 + 3σ²/x²) —
+/// not the σ → 0 values. Tests that need the injected energy must use those
+/// (see `test_photon_injection_energy_conservation_tight`).
+fn photon_injection_ic(x_grid: &[f64], x_inj: f64, dn_over_n: f64, sigma_x: f64) -> Vec<f64> {
+    let amplitude =
+        dn_over_n * G2_PLANCK / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
+    x_grid
+        .iter()
+        .map(|&x| amplitude * (-(x - x_inj).powi(2) / (2.0 * sigma_x * sigma_x)).exp())
+        .collect()
+}
+
 /// Helper: set up a Gaussian photon injection initial condition on a solver.
 /// Returns the solver with delta_n set to a Gaussian at x_inj with given sigma
 /// and total ΔN/N = dn_over_n.
+///
+/// Note `set_initial_delta_n` stashes the array and only installs it on the
+/// next `run_with_snapshots`, so `solver.delta_n` is still zero on return;
+/// call [`photon_injection_ic`] directly if the IC array itself is needed.
 fn setup_photon_injection(
     cosmo: &Cosmology,
     grid_config: &GridConfig,
@@ -5949,14 +6058,7 @@ fn setup_photon_injection(
     z_end: f64,
 ) -> ThermalizationSolver {
     let mut solver = ThermalizationSolver::new(cosmo.clone(), grid_config.clone());
-    let amplitude =
-        dn_over_n * G2_PLANCK / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
-    let initial_dn: Vec<f64> = solver
-        .grid
-        .x
-        .iter()
-        .map(|&x| amplitude * (-(x - x_inj).powi(2) / (2.0 * sigma_x * sigma_x)).exp())
-        .collect();
+    let initial_dn = photon_injection_ic(&solver.grid.x, x_inj, dn_over_n, sigma_x);
     solver.set_initial_delta_n(initial_dn);
     solver.set_config(SolverConfig {
         z_start,
@@ -6004,7 +6106,25 @@ fn delta_n_over_n(x_grid: &[f64], delta_n: &[f64]) -> f64 {
 /// DC/BR processes also redistribute but should conserve total
 /// energy to within the G_bb energy correction accuracy.
 ///
-/// Test: Δρ/ρ(final) = α_ρ × x_inj × ΔN/N to < 1%.
+/// **Two assertions, not one** (see `dev/audit/energy_conservation_audit.md`).
+/// `setup_photon_injection` normalises the Gaussian amplitude with `x_inj²`
+/// rather than the exact second moment, so the initial condition carries
+///
+///   Δρ/ρ = α_ρ x₀ (ΔN/N)(1 + 3σ²/x₀²),   ΔN/N|exact = (ΔN/N)(1 + σ²/x₀²)
+///
+/// (both verified symbolically and against the finite grid domain). With
+/// σ = 0.05 x₀ that is +0.750% above α_ρ x₀ ΔN/N at every x_inj here — so the
+/// naive target is biased by 0.75% and cannot resolve a genuine sub-percent
+/// leak. Note this affects the *test helper* only: the production
+/// `MonochromaticPhotonInjection` scenario normalises as G₂·gauss(x)/x², whose
+/// second and third moments are exact.
+///
+/// So we pin the IC against its analytic energy (5×10⁻⁴; measured ≤1.8×10⁻⁵)
+/// and then assert conservation of *that* energy through the evolution (0.5%;
+/// measured +0.096%, −0.102%, −0.074%, +0.077%, +0.334% for x_inj = 1.5, 3.6,
+/// 5.0, 8.0, 12.0). The x_inj = 12 residual is first-order temporal error of
+/// the coupled T_e/DC-BR step: it falls to +0.120% at dtau_max = 2 and +0.093%
+/// at dtau_max = 1, while N = 2000 → 4000 only moves it to +0.298%.
 ///
 /// This is brutal because any energy leak in the Kompaneets solver,
 /// energy correction, or DC/BR coupling will fail this.
@@ -6036,22 +6156,40 @@ fn test_photon_injection_energy_conservation_tight() {
             z_h,
             500.0,
         );
+
+        // Energy the IC actually carries, measured on the grid it lives on,
+        // vs its analytic value including the finite-width term.
+        let ic = photon_injection_ic(&solver.grid.x, x_inj, dn_over_n_val, sigma_x);
+        let drho_ic = delta_rho_over_rho(&solver.grid.x, &ic);
+        let r = sigma_x / x_inj;
+        let drho_ic_exact = ALPHA_RHO * x_inj * dn_over_n_val * (1.0 + 3.0 * r * r);
+        let ic_err = (drho_ic / drho_ic_exact - 1.0).abs();
+        eprintln!(
+            "IC energy x_inj={x_inj}: Δρ/ρ={drho_ic:.6e}, analytic={drho_ic_exact:.6e}, \
+             err={ic_err:.2e} (naive α_ρ x ΔN/N target would be low by {:.3}%)",
+            3.0 * r * r * 100.0
+        );
+        assert!(
+            ic_err < 5e-4,
+            "IC energy at x_inj={x_inj} does not match α_ρ x (ΔN/N)(1+3σ²/x²): \
+             {drho_ic:.6e} vs {drho_ic_exact:.6e}, err={ic_err:.2e}"
+        );
+
         solver.run_with_snapshots(&[500.0]);
         let last = solver.snapshots.last().unwrap();
 
         let drho = delta_rho_over_rho(&solver.grid.x, &last.delta_n);
-        let expected = ALPHA_RHO * x_inj * dn_over_n_val;
-        let rel_err = (drho - expected).abs() / expected.abs();
+        let rel_err = (drho / drho_ic - 1.0).abs();
 
         eprintln!(
-            "Energy conservation x_inj={x_inj}: Δρ/ρ={drho:.6e}, expected={expected:.6e}, err={:.2}%",
+            "Energy conservation x_inj={x_inj}: Δρ/ρ={drho:.6e}, IC={drho_ic:.6e}, err={:.3}%",
             rel_err * 100.0
         );
 
         assert!(
-            rel_err < 0.03,
+            rel_err < 0.005,
             "Energy conservation violated at x_inj={x_inj}: Δρ/ρ={drho:.6e}, \
-             expected={expected:.6e}, rel_err={:.2}%",
+             IC carried {drho_ic:.6e}, rel_err={:.3}%",
             rel_err * 100.0
         );
     }
@@ -7245,9 +7383,21 @@ fn test_heat_y_era_pure_y_parameter() {
 // ----- 30.3: ENERGY CONSERVATION SWEEP (TIGHT) -----
 
 /// Energy conservation: Δρ/ρ measured from the PDE output should match the
-/// injected value to <2% across all eras (y, transition, μ).
+/// injected value to <0.6% across all eras (y, transition, μ).
 ///
 /// This is tighter than the existing sweep test and covers more redshifts.
+///
+/// Measured at the shipped defaults (N = 2000, dtau_max = 10, dy_max = 0.02):
+/// −0.09%, −0.08%, −0.08%, −0.17%, −0.20%, −0.27%, −0.43% at z_h = 3e3 … 5e5.
+/// One-sided and growing with z_h because it is the first-order-in-Δτ residual
+/// of the coupled T_e / DC-BR step, generated inside the injection window
+/// (`dev/audit/energy_conservation_audit.md`): DC/BR off removes ~60% of it at
+/// z_h = 1e5, dtau_max = 2 removes ~85%, and grid or dy_max refinement removes
+/// none of it. Of the quoted deficit, 0.015–0.03 pp is the physical
+/// adiabatic-cooling distortion (−1.5 to −2.9 × 10⁻⁹ against the injected
+/// 10⁻⁵), which this test does not subtract.
+///
+/// Tolerance 0.6% = 1.4× the worst measured point.
 #[test]
 fn test_heat_energy_conservation_sweep_tight() {
     let cosmo = Cosmology::default();
@@ -7284,8 +7434,8 @@ fn test_heat_energy_conservation_sweep_tight() {
         );
 
         assert!(
-            rel_err < 0.02,
-            "Energy conservation at z_h={z_h}: err = {:.2}% > 2%",
+            rel_err < 0.006,
+            "Energy conservation at z_h={z_h}: err = {:.2}% > 0.6%",
             rel_err * 100.0
         );
     }
@@ -9626,20 +9776,27 @@ fn test_pb2009_bose_einstein_temperature() {
 ///                     — that is an aspirational target; our IMEX (CN+BE) is
 ///                     O(Δτ²) + O(Δτ) mixed and does not reach it.
 /// Expected:           Δρ_out / Δρ_in = 1 exactly
-/// Oracle uncertainty: method-limited (IMEX scheme residual on default grid)
-/// Tolerance:          1.5% on default grid; 0.5% on production grid.
+/// Oracle uncertainty: method-limited (first-order temporal residual of the
+///                     coupled T_e/DC-BR step)
+/// Tolerance:          0.5% on both grids, plus grid-independence to 0.1 pp.
 ///
-/// Previous version asserted 1.5% with a comment claiming "P&B: <0.05%" as
-/// the oracle, then tolerated 30× that bound. The 0.05% number is not
-/// achievable with our scheme, so it's not the right oracle. Replaced with
-/// a two-grid check: tighter on production, reasonable on default.
+/// The residual is **temporal, not spatial**
+/// (`dev/audit/energy_conservation_audit.md`): measured −0.297% on the default
+/// grid and −0.319% on the production grid, i.e. refining the grid makes it
+/// marginally *worse*, while refining dtau_max fixes it (on this scenario with
+/// z_start = 3e5: −0.284% at dtau_max = 10 → −0.060% at dtau_max = 2). An
+/// earlier version of this test read the two grids as "tighter on production",
+/// which the numbers do not support — so the second leg now asserts what is
+/// actually true, that the two grids agree, which is the signature of a
+/// time-discretization residual. The dtau_max convergence order itself is
+/// pinned by `tests/convergence_order.rs`.
 #[test]
 fn test_pb2009_energy_conservation() {
     let cosmo = Cosmology::default();
     let delta_rho = 1e-5;
     let z_h = 2e5;
 
-    // Default grid (2000 pts): 1.5% tolerance.
+    // Default grid (2000 pts): 0.5% tolerance (measured −0.297%).
     let mut solver_default = ThermalizationSolver::new(cosmo.clone(), GridConfig::default());
     solver_default
         .set_injection(InjectionScenario::SingleBurst {
@@ -9656,13 +9813,14 @@ fn test_pb2009_energy_conservation() {
         err_default * 100.0
     );
     assert!(
-        err_default < 0.015,
-        "Default-grid energy conservation: err = {:.3}% (tol 1.5%)",
+        err_default < 0.005,
+        "Default-grid energy conservation: err = {:.3}% (tol 0.5%)",
         err_default * 100.0
     );
 
-    // Production grid (4000 pts): tighten to 0.5%. If this fails, the scheme
-    // regressed — not just a grid-resolution story.
+    // Production grid (4000 pts): same bound, and the two must agree — the
+    // residual is a time-discretization term, so doubling the grid must not
+    // move it. If they diverge, a genuinely spatial error has appeared.
     let mut solver_prod = ThermalizationSolver::new(cosmo, GridConfig::production());
     solver_prod
         .set_injection(InjectionScenario::SingleBurst {
@@ -9682,6 +9840,15 @@ fn test_pb2009_energy_conservation() {
         err_prod < 0.005,
         "Production-grid energy conservation: err = {:.3}% (tol 0.5%)",
         err_prod * 100.0
+    );
+    // Grid-independence: measured |0.319% − 0.297%| = 0.022 pp.
+    assert!(
+        (err_prod - err_default).abs() < 1e-3,
+        "Energy residual should be grid-independent (it is temporal): \
+         default {:.3}% vs production {:.3}%, difference {:.3} pp > 0.1 pp",
+        err_default * 100.0,
+        err_prod * 100.0,
+        (err_prod - err_default).abs() * 100.0
     );
 }
 
@@ -10802,14 +10969,66 @@ fn test_dc_br_ratio_pinned_z1e6() {
     let ratio = k_dc / k_br;
     eprintln!("DC/BR at z=1e6, x=1: {ratio:.2}");
 
-    // First-principles estimate: DC/BR ~ (α θ_z² n_γ) / (α λ_e³ n_ion θ_e^{-7/2})
-    // At z=1e6: θ_z ≈ 4.6e-4, n_γ/n_b ≈ 1.6e9, λ_e³ n_ion ~ small
-    // Empirically verified: ratio ≈ 15-20 with BRpack Gaunt factor.
-    // Tighter bound than the 5-100 range in the existing test.
+    // NOTE (R2 mutation audit, 2026-07-26): the "ratio ≈ 15-20" claim that used
+    // to sit here is the value at **x = 0.1** (the P1-8 reference point), not at
+    // x = 1 where this test runs. The measured x = 1 ratio is 42.5, i.e. it sat
+    // 18% below this test's own upper bound — asymmetric and misleading. The
+    // ±2.5× window is *not* tightened here because the x = 1 centre has never
+    // been independently derived, and narrowing it to the code's own output
+    // would be exactly the calibration CLAUDE.md pitfall #9 warns about.
+    // This test is therefore a coarse guard against the two catastrophic
+    // failure modes below; the quantitative anchor is
+    // test_dc_br_ratio_at_p18_reference_point.
     assert!(
         ratio > 8.0 && ratio < 50.0,
-        "DC/BR at z=1e6 should be ~15-20, got {ratio:.1}. \
+        "DC/BR at z=1e6, x=1 should be ~40, got {ratio:.1}. \
          If O(1e11): /n_e bug is back. If O(1): BR overestimated."
+    );
+}
+
+// ---------------------------------------------------------------------------
+// 37.2b: DC/BR ratio at the *independently derived* reference point.
+//
+// The Round-1 audit (P1-8) derived DC/BR = 17.06 at z=1e6, x=0.1 by hand and
+// checked it against Danese & de Zotti; the coverage matrix lists it as the
+// class-(ii) literature anchor for the DC/BR balance. No test asserted it —
+// test_dc_br_ratio_pinned_z1e6 above runs at x=1 with a ±2.5× window, which the
+// R2 mutation audit showed is wide enough to pass a 1.5× error in the DC
+// normalisation. This pins the anchor point itself.
+//
+// Reference: Danese & de Zotti (1982); dev/audit/AUDIT_SUMMARY.md P1-8.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_dc_br_ratio_at_p18_reference_point() {
+    use spectroxide::bremsstrahlung::br_emission_coefficient;
+    use spectroxide::double_compton::dc_emission_coefficient;
+
+    let cosmo = Cosmology::default();
+    let z = 1.0e6;
+    let theta = spectroxide::constants::theta_z(z);
+    let x = 0.1;
+
+    let k_dc = dc_emission_coefficient(x, theta);
+    let k_br = br_emission_coefficient(
+        x,
+        theta,
+        theta,
+        cosmo.n_h(z),
+        cosmo.n_he(z),
+        cosmo.n_e(z, 1.0),
+        1.0,
+        &cosmo,
+    );
+    let ratio = k_dc / k_br;
+    eprintln!("DC/BR at z=1e6, x=0.1: {ratio:.3} (P1-8 derived 17.06)");
+
+    let derived = 17.06;
+    let rel_err = (ratio - derived).abs() / derived;
+    assert!(
+        rel_err < 0.20,
+        "DC/BR at z=1e6, x=0.1 = {ratio:.3}, independently derived {derived} \
+         (P1-8), rel err {rel_err:.3} (limit 20%)"
     );
 }
 

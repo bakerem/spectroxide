@@ -150,6 +150,30 @@ pub enum InjectionScenario {
         m_ev: f64,
     },
 
+    /// Resonant axion–photon (γ ↔ a) conversion in the narrow-width
+    /// (Landau–Zener) approximation.
+    ///
+    /// Applied as an **initial condition** at the resonance redshift, exactly
+    /// like [`Self::DarkPhotonResonance`]:
+    /// Δn(x) = -[1 - exp(-γ_con·x)] × n_pl(x) at z_start = z_res, where
+    /// γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [m_a² H(z_res) |d ln ω_pl²/d ln a|]
+    /// and κ = g_aγγ B_rms.
+    ///
+    /// The **x** in the conversion probability (as opposed to the dark
+    /// photon's 1/x) means high-frequency (Wien-tail) photons convert
+    /// preferentially into axions. Monopole / plasma-frequency treatment only
+    /// (m_γ² ≈ ω_pl²); frequency-dependent atomic corrections are not modeled.
+    ///
+    /// Reference: Cyr, Chluba & Manoj (2024), arXiv:2411.13701, Eqs. 2, 3.
+    AxionResonance {
+        /// Axion–photon coupling g_aγγ, in GeV⁻¹.
+        g_agamma: f64,
+        /// Comoving RMS transverse magnetic field today B_rms⁰, in nG.
+        b_rms: f64,
+        /// Axion mass m_a, in eV.
+        m_ev: f64,
+    },
+
     /// Tabulated heating rate loaded from a file.
     ///
     /// The z_table and rate_table are sorted ascending in z.
@@ -415,6 +439,7 @@ impl InjectionScenario {
             InjectionScenario::MonochromaticPhotonInjection { .. } => "monochromatic-photon",
             InjectionScenario::DecayingParticlePhoton { .. } => "decaying-particle-photon",
             InjectionScenario::DarkPhotonResonance { .. } => "dark-photon-resonance",
+            InjectionScenario::AxionResonance { .. } => "axion-resonance",
             InjectionScenario::TabulatedHeating { .. } => "tabulated-heating",
             InjectionScenario::TabulatedPhotonSource { .. } => "tabulated-photon",
 
@@ -549,6 +574,24 @@ impl InjectionScenario {
                     return Err(format!(
                         "epsilon must be positive and finite, got {epsilon}"
                     ));
+                }
+                if !m_ev.is_finite() || *m_ev <= 0.0 {
+                    return Err(format!("m_ev must be positive and finite, got {m_ev}"));
+                }
+                Ok(())
+            }
+            InjectionScenario::AxionResonance {
+                g_agamma,
+                b_rms,
+                m_ev,
+            } => {
+                if !g_agamma.is_finite() || *g_agamma <= 0.0 {
+                    return Err(format!(
+                        "g_agamma must be positive and finite, got {g_agamma}"
+                    ));
+                }
+                if !b_rms.is_finite() || *b_rms <= 0.0 {
+                    return Err(format!("b_rms must be positive and finite, got {b_rms}"));
                 }
                 if !m_ev.is_finite() || *m_ev <= 0.0 {
                     return Err(format!("m_ev must be positive and finite, got {m_ev}"));
@@ -776,6 +819,12 @@ impl InjectionScenario {
                 0.0
             }
 
+            InjectionScenario::AxionResonance { .. } => {
+                // Axion resonance is applied as an initial condition at z_res
+                // via `initial_delta_n`, not as a bulk heating rate.
+                0.0
+            }
+
             InjectionScenario::TabulatedHeating {
                 z_table,
                 rate_table,
@@ -968,6 +1017,32 @@ impl InjectionScenario {
         }
     }
 
+    /// Axion NWA parameters (γ_con, z_res), if applicable.
+    ///
+    /// Returns `Some((γ_con, z_res))` for `AxionResonance`, `None` otherwise
+    /// (or if the resonance falls outside the supported redshift range).
+    pub fn axion_params(&self, cosmo: &Cosmology) -> Option<(f64, f64)> {
+        match self {
+            InjectionScenario::AxionResonance {
+                g_agamma,
+                b_rms,
+                m_ev,
+            } => crate::axion::gamma_con_axion(*g_agamma, *b_rms, *m_ev, cosmo),
+            _ => None,
+        }
+    }
+
+    /// Impulsive-resonance NWA parameters (γ_con, z_res) for whichever resonant
+    /// channel applies (dark photon or axion), or `None` for other scenarios.
+    ///
+    /// Both resonant scenarios install a depletion IC at `z_start = z_res`; the
+    /// solver and CLI use this to auto-set `z_start` and to hard-error when no
+    /// resonance exists in the supported band.
+    pub fn resonance_params(&self, cosmo: &Cosmology) -> Option<(f64, f64)> {
+        self.dark_photon_params(cosmo)
+            .or_else(|| self.axion_params(cosmo))
+    }
+
     /// Initial-condition perturbation Δn(x) to be installed at `z_start`.
     ///
     /// Scenarios that deposit their distortion as an impulsive event (notably
@@ -982,6 +1057,21 @@ impl InjectionScenario {
                     .iter()
                     .map(|&x| {
                         let p = 1.0 - (-gamma_con / x).exp();
+                        -p * planck(x)
+                    })
+                    .collect();
+                Some(dn)
+            }
+            InjectionScenario::AxionResonance { .. } => {
+                let (gamma_con, _z_res) = self.axion_params(cosmo)?;
+                // Axion conversion probability P(x) = 1 - exp(-γ_con·x):
+                // the x in the numerator depletes the Wien tail preferentially,
+                // opposite to the dark photon's 1/x (Cyr, Chluba & Manoj 2024,
+                // Eq. 2).
+                let dn: Vec<f64> = x_grid
+                    .iter()
+                    .map(|&x| {
+                        let p = 1.0 - (-gamma_con * x).exp();
                         -p * planck(x)
                     })
                     .collect();
@@ -1097,6 +1187,52 @@ impl InjectionScenario {
                              range (z ≲ 3×10⁶). Kompaneets Fokker-Planck has O(θ_e²) \
                              corrections that grow above this; results may have percent-level \
                              systematic errors."
+                        ));
+                    }
+                }
+            }
+        }
+        warnings
+    }
+
+    /// Warn when the axion NWA resonance falls outside the validated redshift
+    /// range. Mirrors [`Self::warn_dark_photon_range`].
+    pub fn warn_axion_range(&self, cosmo: &Cosmology) -> Vec<String> {
+        let mut warnings = Vec::new();
+        if let InjectionScenario::AxionResonance { m_ev, .. } = self {
+            match self.axion_params(cosmo) {
+                None => {
+                    warnings.push(format!(
+                        "AxionResonance: no plasma-frequency resonance for m_ev={m_ev:.3e} \
+                         in the searched band z ∈ [10, 3×10⁷]. The depletion IC will be zero \
+                         and the run produces no distortion from this channel."
+                    ));
+                }
+                Some((_g, z_res)) => {
+                    if z_res < 50.0 {
+                        warnings.push(format!(
+                            "AxionResonance: z_res={z_res:.3e} is below the validated \
+                             range (z ≳ 50). Recombination history and Compton coupling \
+                             are not trusted at such low z; treat results as indicative."
+                        ));
+                    } else if z_res > 3.0e6 {
+                        warnings.push(format!(
+                            "AxionResonance: z_res={z_res:.3e} is above the validated \
+                             range (z ≲ 3×10⁶). Kompaneets Fokker-Planck has O(θ_e²) \
+                             corrections that grow above this; results may have percent-level \
+                             systematic errors."
+                        ));
+                    }
+                    // Monopole treatment: atomic m_γ² corrections (Cyr, Chluba
+                    // & Manoj 2024, Sec. II B) are neglected. Flag the regime
+                    // where they matter (near/after recombination).
+                    if z_res < 2.0e3 {
+                        warnings.push(format!(
+                            "AxionResonance: z_res={z_res:.3e} is near/after recombination, \
+                             where frequency-dependent atomic contributions to the photon mass \
+                             m_γ²(ω,z) (HI/HeI/HeII) become important. This monopole \
+                             (m_γ²≈ω_pl²) treatment does not model them; the conversion \
+                             redshift and probability may be inaccurate for m_a ≲ few×10⁻¹⁰ eV."
                         ));
                     }
                 }
@@ -1655,6 +1791,78 @@ mod tests {
             0.0,
             "Outside x range should return 0"
         );
+    }
+
+    /// `interp_2d` must be *exact* on bilinear data (R2 mutation audit, fix B2).
+    ///
+    /// Bilinear interpolation reproduces any f(z,x) = a + b z + c x + d z x
+    /// identically on a rectilinear grid, so this is an identity check, not a
+    /// tolerance check — which is what makes it a tight anchor. The pre-audit
+    /// test above uses a single 2×2 cell with f01 = f11 = 0 and one interior
+    /// point; 26 of the 28 `interp_2d` mutants survived it (and the full suite).
+    ///
+    /// The grid is deliberately non-uniform and non-square (4 z × 5 x) and the
+    /// coefficients are all distinct and nonzero, so index confusion, a z↔x
+    /// transposition, or a t ↔ (1−t) weight flip all change the result.
+    #[test]
+    fn test_interp_2d_exact_on_bilinear_data() {
+        let z_table = [100.0, 250.0, 900.0, 2000.0];
+        let x_grid = [0.05, 0.2, 1.0, 3.5, 9.0];
+
+        // f(z,x) = 2 + 3e-3 z + 5 x + 7e-3 z x
+        let f = |z: f64, x: f64| 2.0 + 3.0e-3 * z + 5.0 * x + 7.0e-3 * z * x;
+
+        let source_2d: Vec<Vec<f64>> = z_table
+            .iter()
+            .map(|&z| x_grid.iter().map(|&x| f(z, x)).collect())
+            .collect();
+
+        let check = |z: f64, x: f64, label: &str| {
+            let got = interp_2d(z, x, &z_table, &x_grid, &source_2d);
+            let want = f(z, x);
+            let rel = (got - want).abs() / want.abs();
+            assert!(
+                rel < 1e-12,
+                "{label}: interp_2d({z}, {x}) = {got:.15e}, exact bilinear {want:.15e}, \
+                 rel {rel:.2e}"
+            );
+        };
+
+        // Every grid node must be reproduced exactly.
+        for &z in &z_table {
+            for &x in &x_grid {
+                check(z, x, "node");
+            }
+        }
+
+        // Interior of every cell, at asymmetric fractions so that
+        // t ≠ 1−t and t_z ≠ t_x.
+        for iz in 0..z_table.len() - 1 {
+            for ix in 0..x_grid.len() - 1 {
+                for &(fz, fx) in &[(0.23, 0.61), (0.77, 0.19), (0.5, 0.5)] {
+                    let z = z_table[iz] + fz * (z_table[iz + 1] - z_table[iz]);
+                    let x = x_grid[ix] + fx * (x_grid[ix + 1] - x_grid[ix]);
+                    check(z, x, "cell interior");
+                }
+            }
+        }
+
+        // Edges: vary one coordinate along a fixed boundary of the other.
+        for &fz in &[0.1, 0.9] {
+            let z = z_table[0] + fz * (z_table[1] - z_table[0]);
+            check(z, x_grid[0], "low-x edge");
+            check(z, x_grid[x_grid.len() - 1], "high-x edge");
+        }
+
+        // Out of range in either coordinate returns exactly 0.
+        assert_eq!(interp_2d(99.0, 1.0, &z_table, &x_grid, &source_2d), 0.0);
+        assert_eq!(interp_2d(2001.0, 1.0, &z_table, &x_grid, &source_2d), 0.0);
+        assert_eq!(interp_2d(500.0, 0.04, &z_table, &x_grid, &source_2d), 0.0);
+        assert_eq!(interp_2d(500.0, 9.1, &z_table, &x_grid, &source_2d), 0.0);
+
+        // Degenerate inputs must not panic.
+        assert_eq!(interp_2d(500.0, 1.0, &[], &x_grid, &source_2d), 0.0);
+        assert_eq!(interp_2d(500.0, 1.0, &z_table, &[], &source_2d), 0.0);
     }
 
     #[test]

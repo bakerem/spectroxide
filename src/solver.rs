@@ -1527,18 +1527,19 @@ impl ThermalizationSolver {
             ));
         }
 
-        // DarkPhotonResonance installs its IC at z_start; warn users whose
-        // z_start doesn't match the NWA resonance redshift (the builder
-        // auto-corrects, but `set_config` on a bare solver bypasses that).
-        let dp_z_res = self
+        // Resonant conversion scenarios (dark photon, axion) install their IC
+        // at z_start; warn users whose z_start doesn't match the NWA resonance
+        // redshift (the builder auto-corrects, but `set_config` on a bare
+        // solver bypasses that).
+        let res_z_res = self
             .injection
             .as_ref()
-            .and_then(|inj| inj.dark_photon_params(&self.cosmo))
+            .and_then(|inj| inj.resonance_params(&self.cosmo))
             .map(|(_g, z_res)| z_res);
-        if let Some(z_res) = dp_z_res {
+        if let Some(z_res) = res_z_res {
             if (self.config.z_start - z_res).abs() > 1e-6 * z_res {
                 self.diag.warnings.push(format!(
-                    "DarkPhotonResonance: z_start={:.3e} ≠ NWA resonance z_res={:.3e}; the \
+                    "Resonant conversion: z_start={:.3e} ≠ NWA resonance z_res={:.3e}; the \
                      depletion IC is installed at z_start, not z_res. Prefer SolverBuilder, \
                      which sets z_start = z_res automatically.",
                     self.config.z_start, z_res
@@ -1955,17 +1956,17 @@ impl SolverBuilder {
 
         let defaults = SolverConfig::default();
 
-        // For DarkPhotonResonance the impulsive Δn depletion happens at the
-        // NWA resonance z_res; evolving from a higher z_start is unphysical
-        // (the conversion hasn't occurred yet) and evolving from lower misses
-        // it entirely. Default z_start to z_res when the user didn't supply
-        // an explicit value.
-        let dp_z_res = self
+        // For resonant conversion scenarios (dark photon, axion) the impulsive
+        // Δn depletion happens at the NWA resonance z_res; evolving from a
+        // higher z_start is unphysical (the conversion hasn't occurred yet) and
+        // evolving from lower misses it entirely. Default z_start to z_res when
+        // the user didn't supply an explicit value.
+        let res_z_res = self
             .injection
             .as_ref()
-            .and_then(|inj| inj.dark_photon_params(&self.cosmo))
+            .and_then(|inj| inj.resonance_params(&self.cosmo))
             .map(|(_gamma, z_res)| z_res);
-        let resolved_z_start = match (self.z_start, dp_z_res) {
+        let resolved_z_start = match (self.z_start, res_z_res) {
             (Some(z), _) => z,
             (None, Some(z_res)) => z_res,
             (None, None) => defaults.z_start,
@@ -2002,13 +2003,13 @@ impl SolverBuilder {
             }
 
             // Warn if the caller explicitly asked for a z_start that doesn't
-            // coincide with the dark-photon resonance: the NWA IC is installed
-            // there, so mismatched z_start accumulates spurious pre-resonance
-            // thermalisation (or skips the resonance entirely).
-            if let (Some(z_user), Some(z_res)) = (self.z_start, dp_z_res) {
+            // coincide with the resonance (dark photon / axion): the NWA IC is
+            // installed there, so mismatched z_start accumulates spurious
+            // pre-resonance thermalisation (or skips the resonance entirely).
+            if let (Some(z_user), Some(z_res)) = (self.z_start, res_z_res) {
                 if (z_user - z_res).abs() > 1e-6 * z_res {
                     deferred_warnings.push(format!(
-                        "DarkPhotonResonance: z_start={z_user:.3e} differs from NWA resonance \
+                        "Resonant conversion: z_start={z_user:.3e} differs from NWA resonance \
                          redshift z_res={z_res:.3e}; μ/y will include spurious evolution between \
                          these redshifts. Omit z_start to auto-set it to z_res."
                     ));
@@ -2022,6 +2023,9 @@ impl SolverBuilder {
                 deferred_warnings.push(warning);
             }
             for warning in inj.warn_dark_photon_range(&self.cosmo) {
+                deferred_warnings.push(warning);
+            }
+            for warning in inj.warn_axion_range(&self.cosmo) {
                 deferred_warnings.push(warning);
             }
         }

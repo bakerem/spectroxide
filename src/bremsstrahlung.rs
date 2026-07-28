@@ -16,6 +16,7 @@
 //! - Chluba, Ravenni & Bolliet (2020), MNRAS 492, 177 (BRpack)
 
 use crate::constants::*;
+#[cfg(test)]
 use crate::spectrum::planck;
 
 /// Precomputed constant: α λ_e³ / (2π √(6π))
@@ -280,48 +281,14 @@ pub fn br_emission_coefficient_fast_preln(x: f64, ln_x: f64, pre: &BrPrecomputed
     pre.base_factor * exp_xphi * species_sum
 }
 
-/// BR emission rate integrated over frequency (for electron temperature equation).
-///
-/// H_BR = (1/(4 G₃ θ_z)) ∫ [1 − n(e^{x_e} − 1)] K_BR(x)/x³ · x³ dx
-///      = (1/(4 G₃ θ_z)) ∫ [1 − n(e^{x_e} − 1)] K_BR(x) dx
-///
-/// This enters the electron temperature evolution as a cooling term,
-/// analogous to dc_heating_integral() in double_compton.rs.
-pub fn br_heating_integral(
-    x_grid: &[f64],
-    delta_n: &[f64],
-    theta_z: f64,
-    theta_e: f64,
-    n_h: f64,
-    n_he: f64,
-    n_e: f64,
-    x_e_frac: f64,
-    y_he_ii: f64,
-    y_he_i: f64,
-) -> f64 {
-    if theta_e < 1e-30 || n_e < 1e-30 {
-        return 0.0;
-    }
-    let phi = theta_z / theta_e;
-    let mut integral = 0.0;
-
-    for i in 1..x_grid.len() {
-        let dx = x_grid[i] - x_grid[i - 1];
-        let x_mid = 0.5 * (x_grid[i] + x_grid[i - 1]);
-        let dn_mid = 0.5 * (delta_n[i] + delta_n[i - 1]);
-        let n_mid = planck(x_mid) + dn_mid;
-        let x_e = x_mid * phi;
-
-        let k_br = br_emission_coefficient_with_he(
-            x_mid, theta_e, theta_z, n_h, n_he, n_e, x_e_frac, y_he_ii, y_he_i,
-        );
-        // Integrand: [1 - n (e^{x_e} - 1)] K_BR dx
-        let factor = 1.0 - n_mid * x_e.exp_m1();
-        integral += factor * k_br * dx;
-    }
-
-    integral / (4.0 * crate::constants::G3_PLANCK * theta_z)
-}
+// NOTE: `br_heating_integral` was removed (F-R2-2, mutation-audit R2). It was a
+// non-production standalone duplicate of the BR contribution to the electron
+// temperature equation; production code computes DC+BR heating jointly in
+// `solver::dcbr_heating_with_derivative`. It had no production callers (only its
+// own test + one `heat_injection` test). Deleting it removes 48 mutants that
+// survived the lean subset only because their sole exerciser lived in the
+// excluded `heat_injection` suite. Mirrors the earlier `dc_heating_integral`
+// removal (F-R2-1). See dev/audit/mutation_audit.md.
 
 /// Compute the BR contribution to the photon equation RHS (test-only).
 ///
@@ -439,22 +406,82 @@ mod tests {
         );
     }
 
+    /// Detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
+    ///
+    /// BR emission and absorption must cancel identically for a Planck spectrum
+    /// at the **electron** temperature, n_eq(x) = 1/(exp(x·φ) − 1) with
+    /// φ = θ_z/θ_e, at any ρ_e. The test above only covers ρ_e = 1, where φ = 1
+    /// and a wrong φ convention is unobservable. Mirrors
+    /// `double_compton::test_dc_detailed_balance_at_shifted_electron_temperature`.
     #[test]
-    fn test_br_heating_integral_zero_for_planck() {
-        // For Planck spectrum with T_e = T_z, BR heating integral should vanish
-        let x: Vec<f64> = (1..500).map(|i| 0.001 + 0.06 * i as f64).collect();
-        let delta_n = vec![0.0; x.len()];
-        let theta = 4.6e-4; // z ~ 1e6
-        let n_h = 1e12;
+    fn test_br_detailed_balance_at_shifted_electron_temperature() {
+        let x: Vec<f64> = (1..100).map(|i| 0.05 * i as f64).collect();
+        let theta_z_val = 1e-5;
+        let n_h = 1e6;
         let n_he = 0.08 * n_h;
         let n_e = n_h;
+        let cosmo = crate::cosmology::Cosmology::default();
 
-        let h_br = br_heating_integral(&x, &delta_n, theta, theta, n_h, n_he, n_e, 1.0, 1.0, 1.0);
-        assert!(
-            h_br.abs() < 1e-10,
-            "BR heating integral should be ~0 for Planck: H_BR = {h_br}"
-        );
+        for &rho_e in &[0.9, 0.99, 1.0, 1.01, 1.1] {
+            let theta_e = theta_z_val * rho_e;
+            let phi = theta_z_val / theta_e;
+
+            let n_eq: Vec<f64> = x.iter().map(|&xi| 1.0 / (xi * phi).exp_m1()).collect();
+            let dn_eq: Vec<f64> = x
+                .iter()
+                .zip(&n_eq)
+                .map(|(&xi, &neq)| neq - planck(xi))
+                .collect();
+            let dn_off: Vec<f64> = x
+                .iter()
+                .zip(&n_eq)
+                .map(|(&xi, &neq)| 1.01 * neq - planck(xi))
+                .collect();
+
+            let rhs_eq = br_rhs(
+                &x,
+                &dn_eq,
+                theta_z_val,
+                theta_e,
+                n_h,
+                n_he,
+                n_e,
+                1.0,
+                &cosmo,
+            );
+            let rhs_off = br_rhs(
+                &x,
+                &dn_off,
+                theta_z_val,
+                theta_e,
+                n_h,
+                n_he,
+                n_e,
+                1.0,
+                &cosmo,
+            );
+
+            for (i, &xi) in x.iter().enumerate() {
+                assert!(
+                    rhs_eq[i].abs() < 1e-10 * rhs_off[i].abs(),
+                    "BR detailed balance broken at ρ_e={rho_e}, x={xi}: \
+                     equilibrium residual {:.3e} vs 1%-departure {:.3e}",
+                    rhs_eq[i],
+                    rhs_off[i]
+                );
+                assert!(
+                    rhs_off[i] < 0.0,
+                    "BR must absorb an over-populated spectrum at ρ_e={rho_e}, \
+                     x={xi}: rhs = {:.3e}",
+                    rhs_off[i]
+                );
+            }
+        }
     }
+
+    // test_br_heating_integral_zero_for_planck removed with br_heating_integral
+    // (F-R2-2). Its Planck-vanishing property is covered for the production DC+BR
+    // heating path by the solver's electron-temperature tests.
 
     #[test]
     fn test_br_rhs_nonzero_for_te_ne_tz() {

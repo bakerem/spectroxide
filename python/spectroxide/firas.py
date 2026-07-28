@@ -61,7 +61,11 @@ from .greens import (
 _H_PLANCK = 6.62607015e-34  # J s
 _K_BOLTZMANN = 1.380649e-23  # J/K
 _C_LIGHT = 2.99792458e8  # m/s
-_T_CMB = 2.726  # K (Fixsen & Mather 2002)
+# NOTE: 2.726 K is this package's CosmoTherm-convention default, NOT the
+# FIRAS-calibration value — Fixsen & Mather (2002) give T0 = 2.725 K, and the
+# monopole residuals in data/firas are defined w.r.t. 2.725 K. The 0.037%
+# offset is absorbed by the floating-T / ΔT fit parameters in every fit here.
+_T_CMB = 2.726  # K
 
 _DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
@@ -484,6 +488,11 @@ class FIRASData:
     ) -> float:
         """FIRAS upper limit on ``|μ|`` using the full covariance matrix.
 
+        With the default ``marginalise_y=True`` this returns ≈1.6e-4, which
+        is ~1.8× looser than the module constant :data:`MU_FIRAS_95` = 9e-5
+        (Fixsen 1996); pass ``marginalise_y=False`` to reproduce the
+        literature limit. See the warning below.
+
         Marginalises over ``G_bb`` (unobservable temperature shift).
         Optionally also marginalises over ``y`` and over the galactic
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
@@ -739,6 +748,34 @@ class FIRASData:
         """
         return self.chi2(self.predict_kJy(mu, y, delta_t, extra_dn))
 
+    def chi2_from_solver(self, result) -> float:
+        """``χ²`` of a solver distortion against the FIRAS residuals.
+
+        Bridges the gap between the PDE/Green's-function output and the
+        FIRAS likelihood: interpolates ``result.delta_n`` from the solver's
+        ``x`` grid onto the 43 FIRAS frequencies, converts ``Δn → ΔI`` in
+        kJy/sr with the same ``ΔI = (2 h ν³ / c²) Δn`` convention used for
+        the internal templates, and evaluates the full-covariance ``χ²``.
+
+        Parameters
+        ----------
+        result : SolverResult or object with ``.x`` and ``.delta_n``
+            Distortion on a dimensionless ``x = h ν / (k_B T₀)`` grid.
+            The FIRAS band (``x ≈ 0.3–12``) must lie inside the solver
+            grid; points outside are clamped to the grid edges by the
+            interpolation.
+
+        Returns
+        -------
+        float
+            ``χ² = (r − m)ᵀ C⁻¹ (r − m)`` with the interpolated model.
+        """
+        x_grid = np.asarray(result.x, dtype=np.float64)
+        dn_grid = np.asarray(result.delta_n, dtype=np.float64)
+        dn_firas = np.interp(self.x, x_grid, dn_grid)
+        model_kJy = _dn_to_dI_kJy(self.x, dn_firas, self.t_cmb)
+        return self.chi2(model_kJy)
+
     # ------------------------------------------------------------------
     # Constraint on an arbitrary model spectrum
     # ------------------------------------------------------------------
@@ -856,6 +893,10 @@ class FIRASData:
             If True (default), profile over a galactic dust normalization G₀
             with shape ν²·B_ν(T_dust). The dust template is independent of
             the trial T_CMB.
+        use_diagonal : bool
+            If True, replace the full 43×43 covariance with diagonal noise
+            (``1/σ²``), matching the Chluba, Cyr & Johnson 2024
+            prescription. Default False (use the full covariance).
 
         Returns
         -------
@@ -993,6 +1034,16 @@ class FIRASData:
         """Chi-squared using only diagonal errors (no correlations).
 
         Useful for comparing the impact of off-diagonal correlations.
+
+        Parameters
+        ----------
+        model_kJy : array_like, shape (43,)
+            Model prediction for the residual spectrum in **kJy/sr**.
+
+        Returns
+        -------
+        float
+            ``χ² = Σ_i ((r_i − m_i) / σ_i)²`` using only diagonal errors.
         """
         r = self.residual_kJy - np.asarray(model_kJy)
         return float(np.sum((r / self.sigma_kJy) ** 2))

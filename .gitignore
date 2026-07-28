@@ -86,3 +86,44 @@ dev/AxionLimits/
 # Review artifacts
 review_report.md
 *.zip
+
+# ---------------------------------------------------------------------------
+# Stray environment/dotfiles that land in the checkout, not repo content.
+# (This checkout has host dotfiles bind-mounted at the repo root.)
+/.bash_profile
+/.bashrc
+/.profile
+/.zshrc
+/.zprofile
+/.gitconfig
+/.ripgreprc
+/.mcp.json
+/.idea
+/.gitmodules
+/arsen_dl
+**/.claude/
+**/.pytest_cache/
+
+# Axion / Bryce-2411 replication study — WIP, deliberately untracked.
+# Open 3-10x FIRAS-limit discrepancy at m_a < 1e-11 eV; the axion *module*
+# (src/axion.rs, python/spectroxide/axion.py) IS tracked, this is the
+# replication study built on top of it.
+/dev/bryce2411/
+/dev/scripts/bryce2411_red_sensitivity.py
+/data/bryce_axions.csv
+/data/bryce_dp_data.csv
+/dev/output/*axion*.npz
+/dev/output/bryce2411_*.npz
+/dev/output/blue_pde_*.npz
+/dev/output/green_pde_*.npz
+/dev/output/red_pde_*.npz
+/dev/output/ref_pixels.npz
+/notebooks/figures/axion_*.pdf
+/notebooks/figures/combined_dp_axion_ours.pdf
+/notebooks/physics/axion_dp_distortion_replication.ipynb
+/notebooks/physics/bryce2411_replication.ipynb
+
+# Regenerable analysis scratch / separate workstreams
+/dev/output/wp3_transfer/
+/data/rotti2022_planck_mu/
+/notebooks/data/

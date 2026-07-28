@@ -34,6 +34,11 @@ pub struct DistortionParams {
 }
 
 /// Collect trapezoidal weights and indices for grid points within [x_min, x_max].
+///
+/// Precondition: the supplied grid should extend beyond [x_min, x_max] on both
+/// sides. The half-weight rule at the ends keys off the *parent array's* edges,
+/// so a grid pre-trimmed to exactly the band would get full (double) weight at
+/// the band edges. All current call sites pass grids spanning past [0.5, 18].
 fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>) {
     let n = x_grid.len();
     let mut idx = Vec::new();
@@ -76,9 +81,9 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
 ///   Δn ≈ μ M + y Y_SZ + (ΔT/T) G,
 /// giving
 ///   ΔT/T = a_T / |G⊥|
-///   μ    = (a_μ − ΔT/T · G_μ)           / |M⊥|
-///   y    = (a_y − ΔT/T · G_y − μ · M_y) / |Y_SZ|
-/// with M_y = M·e_y·|Y_SZ|, G_y = G·e_y·|Y_SZ|, G_μ = G·e_μ·|M⊥|.
+///   μ    = (a_μ − ΔT/T · g_μ)           / |M⊥|
+///   y    = (a_y − ΔT/T · g_y − μ · m_y) / |Y_SZ|
+/// with the plain projections m_y = ⟨M, e_y⟩, g_y = ⟨G, e_y⟩, g_μ = ⟨G, e_μ⟩.
 pub fn decompose_gram_schmidt(
     x_grid: &[f64],
     delta_n: &[f64],
@@ -384,6 +389,12 @@ pub fn decompose_nonlinear_be(
 /// NOT Chluba's orthogonalised "M-shape" μ. The relation is μ_BF = μ_M to
 /// leading order; at μ ≳ 0.1 (rare in practice) the nonlinear BE shape
 /// diverges from linear M(x) and the methods materially differ.
+///
+/// Domain of validity: for spectra with support outside span{M, Y_SZ, G_bb} —
+/// e.g. frozen/locked-in photon-injection bumps from z < 1100 that never
+/// Comptonized — the returned (μ, y, ΔT/T) is the in-band L² best fit, not a
+/// physical decomposition. Inspect `residual` before interpreting the triple
+/// in that regime.
 pub fn decompose_distortion(x_grid: &[f64], delta_n: &[f64]) -> DistortionParams {
     decompose_nonlinear_be(x_grid, delta_n, DEFAULT_DECOMP_X_MIN, DEFAULT_DECOMP_X_MAX)
 }

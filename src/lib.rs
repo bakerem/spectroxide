@@ -56,6 +56,7 @@
 /// `physics-hash` CLI subcommand for runtime access.
 pub const PHYSICS_HASH: &str = env!("PHYSICS_HASH");
 
+pub mod axion;
 pub mod bremsstrahlung;
 pub mod cli;
 pub mod constants;

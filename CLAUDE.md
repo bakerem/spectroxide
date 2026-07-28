@@ -65,6 +65,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 ### Python package (python/spectroxide/)
 
 - `__init__.py` — Public API. `strip_gbb*` and `apply_style/C/SINGLE_COL/DOUBLE_COL` are re-exported at top level. Additional utilities via submodule import (`from spectroxide.cosmotherm import ...`, `from spectroxide.plot_params import ...`).
+- `cosmology.py` — Flat ΛCDM background (`Cosmology` dataclass, three presets, `hubble`/`cosmic_time`/`ionization_fraction`). Mirrors `src/cosmology.rs`. Source of 11 top-level exports.
 - `greens.py` — Pure Python port of Rust Green's function (NumPy vectorized). All visibility/spectral functions.
 - `solver.py` — `run_sweep()` calls the Rust binary via subprocess; `run_single()` uses pure-Python Green's function. Shared helpers: `_build_common_solver_args()`, `_run_rust_binary()`.
 - `cosmotherm.py` — CosmoTherm data loaders: DI files, Green's function database. Not re-exported at top level.
@@ -85,6 +86,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
 - `cli_integration.rs` — 4 tests: CLI end-to-end.
 - `science_suite.rs` — 5 tests: end-to-end physics validation.
+- `physics_identities.rs` — 11 tests + 1 ignored: closed-form and published identities added by the physics-check audit (`dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`): Thomson depth vs Planck z_*, exact moments of the G_bb/M/Y shapes, Kompaneets first/second moment identities and H-theorem, quasi-stationary T_e energy return, DC/BR crossover redshift, grid-boundary independence, T_e Compton/adiabatic balance, α_th = 5/2 (ignored, ~7 min), plus the sensitivity-directed photon anchors T-PS-1/2/3 (P_s(x_c) = 1/e, x_c vs Chluba 2015 Eq. 25, μ at x_inj = x_c).
 
 ### Notebooks (notebooks/)
 

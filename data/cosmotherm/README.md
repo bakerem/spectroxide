@@ -19,7 +19,10 @@ ASCII two-column files: `nu [GHz]` and `DI [Jy/sr]`. Lines starting with `#` are
 
 ```
 Y_p = 0.2467, T_CMB = 2.726 K
-Omega_m = 0.264737, Omega_b = 0.049169, h = 0.6727
+Omega_cdm = 0.264737, Omega_b = 0.049169, h = 0.6727
+(the DI-file headers label 0.264737 as "Om", but it is the CDM fraction —
+it matches Planck-2015 Omega_cdm to 6 digits; total matter is Omega_cdm +
+Omega_b = 0.313906)
 N_eff = 3.046, Omega_k = 0
 A_s = 2.207e-9, n_s = 0.9645, n_run = 0
 ```
