@@ -56,6 +56,15 @@ texput.*
 # Executed notebook snapshots (regenerate by running notebooks)
 *_executed.ipynb
 
+# Large regenerable inputs kept on disk only
+# CLASS thermodynamics output (regenerate: run CLASS on the committed .ini,
+# which sets 'write thermodynamics = yes'; read by class_sd_compare.py --subtract-cooling)
+dev/output/class_sd/*__thermodynamics.dat
+# CLASS matter-power byproduct of the sd runs; read by nothing
+dev/output/class_sd/*__pk.dat
+# Notebook compute cache (injection_width_resolution.ipynb)
+notebooks/physics/.injection_width_cache.pkl
+
 # Debug/diagnostic output
 tau_ff_*.txt
 tau_ff_*.csv
