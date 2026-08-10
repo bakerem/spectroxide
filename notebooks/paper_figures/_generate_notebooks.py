@@ -126,9 +126,12 @@ def build_all():
     write_notebook("visibility_functions", [
         ("markdown",
          "# Visibility Functions: Literature vs PDE-Fitted Parameters\n\n"
-         "Generates `pde_visibility_fit.pdf` (Figure 1 in paper).\n\n"
-         "Compares Chluba (2013) parameterizations of J_bb*, J_mu, J_y "
-         "with our PDE-derived fits. Bottom panel shows fractional residuals."),
+         "Generates `pde_visibility_fit.pdf` (Figure 2 in paper).\n\n"
+         "Compares Chluba (2013, 2015) parameterizations of J_bb*, J_mu, J_y "
+         "with the adopted all-7 spectral fit to spectroxide PDE spectra "
+         "(x^3-weighted, adiabatic-cooling baseline subtracted; see "
+         "dev/scripts/fit_visibility_conservation.py). "
+         "Bottom panel shows residuals vs literature."),
         ("code", _SETUP + vis_code),
     ])
 
@@ -571,6 +574,50 @@ def build_all():
          "```"),
         ("code", _SETUP + "\n" + conv_code),
     ])
+
+    # ------------------------------------------------------------------
+    # 11. MMS convergence — from dev/scripts/mms_convergence_figure.py
+    # ------------------------------------------------------------------
+    def _script_to_code(path):
+        code = ""
+        in_docstring = False
+        for line in Path(path).read_text().splitlines(True):
+            stripped = line.strip()
+            if stripped.startswith('"""'):
+                if not in_docstring and not (stripped.endswith('"""') and len(stripped) > 3):
+                    in_docstring = True
+                elif in_docstring:
+                    in_docstring = False
+                continue
+            if in_docstring or line.startswith("#!/"):
+                continue
+            if "import sys" in line or "sys.path.insert" in line:
+                continue
+            if "Path(__file__)" in line and "FIG_DIR" in line:
+                continue
+            code += line
+        return code
+
+    mms_code = _script_to_code(root / "dev" / "scripts" / "mms_convergence_figure.py")
+    mms_code = mms_code.replace(
+        'DATA_FILE = Path(__file__).resolve().parents[2] / "dev" / "data" / "mms_convergence_data.txt"',
+        "DATA_FILE = PROJECT_ROOT / 'dev' / 'data' / 'mms_convergence_data.txt'"
+    )
+    write_notebook("mms_convergence", [
+        ("markdown",
+         "# MMS Convergence\n\n"
+         "Generates `mms_convergence.pdf` (Appendix B, verification with "
+         "manufactured solutions).\n\n"
+         "Parses the MMS| ladder lines emitted by the spectroxide test suite. "
+         "The committed data file `dev/data/mms_convergence_data.txt` is used "
+         "by default; regenerate it with:\n"
+         "```bash\n"
+         "cargo test --release --test mms_convergence -- --nocapture 2> mms_run.log\n"
+         "grep -E '^MMS\\|' mms_run.log > dev/data/mms_convergence_data.txt\n"
+         "```"),
+        ("code", _SETUP + "\n" + mms_code),
+    ])
+
 
 
 if __name__ == "__main__":

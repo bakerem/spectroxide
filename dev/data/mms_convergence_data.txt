@@ -1,0 +1,24 @@
+MMS|coupled_dcbr|spatial|N=400|rel_l2=1.121080e-4
+MMS|pure_kompaneets|spatial|N=400|rel_l2=1.381017e-4
+MMS|production_grid|spatial|N=500|rel_l2=1.435383e-3
+MMS|pure_kompaneets|spatial|N=800|rel_l2=3.449989e-5
+MMS|coupled_dcbr|spatial|N=800|rel_l2=2.740826e-5
+MMS|coupled_dcbr|temporal diffs: [0.011280297166341673, 0.005859318450110137, 0.0029961312598475367, 0.0015162462614377002], orders: [0.9450003076469656, 0.967632032273093, 0.9825967411908199]
+MMS|production_grid|spatial|N=1000|rel_l2=3.645693e-4
+MMS|pure_kompaneets|temporal diffs: [3.264863925803503e-5, 8.090040331955554e-6, 2.018029869088067e-6], orders: [2.012804063677289, 2.0031993669670056]
+  finest true rel error: 7.183e-7
+MMS|pure_kompaneets|spatial|N=1600|rel_l2=8.616144e-6
+MMS|coupled_dcbr|spatial|N=1600|rel_l2=6.288655e-6
+MMS|production_grid|spatial|N=2000|rel_l2=9.139226e-5
+MMS|solver_level|dtau_max=8|rel_l2=4.282251e-4
+MMS|pure_kompaneets|spatial|N=3200|rel_l2=2.150983e-6
+  spatial orders: [2.001067867356189, 2.0014773239234778, 2.002046136290199]
+MMS|coupled_dcbr|spatial|N=3200|rel_l2=1.275997e-6
+  spatial orders: [2.0322064837991127, 2.123787466645135, 2.301126964728527]
+LEDGER|dcbr_source|identity held to <1e-9 (relative) for 100 steps
+LEDGER|pure_compton|rel_drift=1.232e-15 over 200 steps
+MMS|solver_level|dtau_max=4|rel_l2=2.811909e-4
+MMS|production_grid|spatial|N=4000|rel_l2=2.284890e-5
+  spatial orders: [1.977170917172994, 1.996049072316723, 1.9999469828760819]
+MMS|solver_level|dtau_max=2|rel_l2=2.072102e-4
+  splitting diffs: 1.499e-4, 7.684e-5, order 0.96
