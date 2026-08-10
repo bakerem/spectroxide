@@ -38,7 +38,11 @@ data = run_sweep(
     z_injections=z_heat,
     n_points=8000,
     number_conserving=True,
-    timeout=1200,
+    timeout=12000,
+    # The residual energy deficit is a first-order-in-dtau temporal error, so
+    # dtau_max is the only knob that moves it. Keep it pinned here: the
+    # published figure was made with dtau_max=3.
+    dtau_max=3,
 )
 
 z_h = np.array([r["z_h"] for r in data["results"]])
@@ -68,12 +72,16 @@ print("Photon injection energy conservation")
 print("=" * 60)
 
 x_inj_values = [0.5, 3.0, 8.0]
+# Set the colours explicitly: relying on the ambient prop_cycle makes the
+# figure depend on ~/.config/matplotlib/matplotlibrc, which silently recoloured
+# the published version.
+x_inj_colors = [C["blue"], C["orange"], C["teal"]]
 delta_n_over_n = 1e-5
-z_injections = np.geomspace(3e3, 2e6, 15).tolist()
+z_injections = np.geomspace(3e3, 2e6, 10).tolist()
 
 fig, ax = plt.subplots(figsize=(SINGLE_COL, 3.0))
 
-for x_inj in x_inj_values:
+for x_inj, color in zip(x_inj_values, x_inj_colors):
     drho_inj = ALPHA_RHO * x_inj * delta_n_over_n
 
     print(f"\nx_inj = {x_inj}, drho_inj = {drho_inj:.4e}")
@@ -83,7 +91,8 @@ for x_inj in x_inj_values:
         z_injections=z_injections,
         n_points=8000,
         number_conserving=True,
-        timeout=3600,
+        timeout=36000,
+        dtau_max=3,
     )
 
     zh_arr = []
@@ -101,7 +110,8 @@ for x_inj in x_inj_values:
     zh_arr = np.array(zh_arr)
     energy_pct = np.array(energy_pct)
 
-    ax.plot(zh_arr, energy_pct, "o-", ms=2.5, lw=0.8, label=f"$x_{{\\rm inj}} = {x_inj}$")
+    ax.plot(zh_arr, energy_pct, "o-", ms=2.5, lw=0.8, color=color,
+            label=f"$x_{{\\rm inj}} = {x_inj}$")
 
 ax.axhline(0.0, color="k", lw=0.5, ls="-")
 ax.set_xlabel(r"Injection redshift $z_h$")

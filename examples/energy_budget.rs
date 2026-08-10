@@ -14,9 +14,11 @@
 //!     α_ρ x₀ (ΔN/N)(1 + 3σ²/x₀²), not α_ρ x₀ (ΔN/N).
 //!
 //! Usage: `cargo run --release --example energy_budget [mode]`
-//! with mode ∈ {all, quad, heat, photon, pb2009, figure, steps}. Default `all`;
-//! `steps` (per-step localisation) and `figure` (deep-μ end at the paper
-//! figure's settings) are excluded from `all` because they are slow.
+//! with mode ∈ {all, quad, heat, photon, pb2009, figure, joint, deepmu, steps}.
+//! Default `all`; `steps` (per-step localisation), `figure` (deep-μ end at the
+//! paper figure's settings), `joint` and `deepmu` (joint dtau×N refinement,
+//! closing the audit's "survives Δτ→0" open item) are excluded from `all`
+//! because they are slow.
 
 use spectroxide::constants::{ALPHA_RHO, G2_PLANCK, G3_PLANCK, KAPPA_C};
 use spectroxide::prelude::*;
@@ -311,6 +313,125 @@ fn mode_figure() {
     println!();
 }
 
+/// Joint (dtau_max × N) refinement. The audit's open item claims a positive
+/// residual "survives Δτ→0 and is not the x-grid", but its tables refine one
+/// knob at a time and the two move the error in opposite directions — the
+/// joint limit was never taken. This mode takes it, for the two cases where
+/// the residual was reported: heat at z_h = 5e5 and photon IC at x_inj = 12.
+fn mode_joint() {
+    let drho_inj = 1e-5;
+    println!("== joint dtau_max × N refinement, heat z_h = 5e5 (err_net, baseline-subtracted)");
+    for &(n_points, dtau_max) in &[
+        (2000_usize, 10.0_f64),
+        (2000, 2.0),
+        (2000, 1.0),
+        (4000, 10.0),
+        (4000, 2.0),
+        (4000, 1.0),
+        (8000, 1.0),
+    ] {
+        let cfg = HeatCfg {
+            label: "",
+            n_points,
+            dtau_max,
+            dy_max: 0.02,
+            no_dcbr: false,
+        };
+        let o = run_heat(&cfg, 5e5, drho_inj);
+        let b = run_heat(&cfg, 5e5, 0.0);
+        println!(
+            "  N={n_points:5} dtau={dtau_max:4}:  err_net={:+7.3}%  mu={:.5e}  steps={}",
+            ((o.drho - b.drho) / drho_inj - 1.0) * 100.0,
+            o.mu,
+            o.steps
+        );
+    }
+    println!();
+    println!("== joint refinement, photon Gaussian IC x_inj = 12 (out/IC-1)");
+    let dn_over_n = 1e-5;
+    let x_inj = 12.0_f64;
+    let sigma_x = 0.05 * x_inj;
+    for &(n_points, dtau_max) in &[
+        (2000_usize, 1.0_f64),
+        (2000, 0.2),
+        (4000, 1.0),
+        (4000, 0.2),
+        (8000, 0.2),
+    ] {
+        let grid = GridConfig {
+            n_points,
+            ..GridConfig::default()
+        };
+        let amp = dn_over_n * G2_PLANCK
+            / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
+        let mut s = ThermalizationSolver::new(Cosmology::default(), grid);
+        let ic: Vec<f64> = s
+            .grid
+            .x
+            .iter()
+            .map(|&x| amp * (-(x - x_inj).powi(2) / (2.0 * sigma_x * sigma_x)).exp())
+            .collect();
+        let drho_ic = drho_trapz(&s.grid.x, &ic);
+        s.set_initial_delta_n(ic);
+        s.set_config(SolverConfig {
+            z_start: 3.0e5,
+            z_end: 500.0,
+            dtau_max,
+            ..SolverConfig::default()
+        });
+        s.run_with_snapshots(&[500.0]);
+        let last = s.snapshots.last().unwrap();
+        let drho_out = drho_trapz(&s.grid.x, &last.delta_n);
+        println!(
+            "  N={n_points:5} dtau={dtau_max:4}:  out/IC-1={:+7.3}%  steps={}",
+            (drho_out / drho_ic - 1.0) * 100.0,
+            s.step_count
+        );
+    }
+    println!();
+}
+
+/// Deep-μ joint refinement at the paper-figure settings (z_h = 3e6,
+/// σ_z = 0.04 z_h), where the audit reported the largest Δτ→0-surviving
+/// residual (+0.32% at N=4000, dtau=1.5). Slow: ~1M-step runs.
+fn mode_deepmu() {
+    let drho = 1e-5;
+    let z_h = 3e6_f64;
+    let sigma = z_h * 0.04;
+    println!("== deep-μ joint refinement (z_h = 3e6, figure settings)");
+    for &(n_points, dtau_max) in &[(4000_usize, 1.5_f64), (8000, 3.0), (8000, 1.5)] {
+        let mut s = ThermalizationSolver::new(
+            Cosmology::default(),
+            GridConfig {
+                n_points,
+                ..GridConfig::default()
+            },
+        );
+        s.set_injection(InjectionScenario::SingleBurst {
+            z_h,
+            sigma_z: sigma,
+            delta_rho_over_rho: drho,
+        })
+        .unwrap();
+        s.set_config(SolverConfig {
+            z_start: z_h + 7.0 * sigma,
+            z_end: 500.0,
+            dtau_max,
+            ..SolverConfig::default()
+        });
+        let (e, mu) = {
+            let snaps = s.run_with_snapshots(&[500.0]);
+            (snaps[0].delta_rho_over_rho, snaps[0].mu)
+        };
+        println!(
+            "  N={n_points:5} dtau={dtau_max:4}:  dev={:+7.3}%  mu={mu:.5e}  steps={}",
+            (e / drho - 1.0) * 100.0,
+            s.step_count
+        );
+    }
+    println!();
+}
+
 /// Abramowitz & Stegun 7.1.26 (|ε| < 1.5e-7); no external crates by design.
 fn erf(x: f64) -> f64 {
     let sign = x.signum();
@@ -384,6 +505,8 @@ fn main() {
         "photon" => mode_photon(),
         "pb2009" => mode_pb2009(),
         "figure" => mode_figure(),
+        "joint" => mode_joint(),
+        "deepmu" => mode_deepmu(),
         "steps" => mode_steps(),
         "all" => {
             mode_quad();

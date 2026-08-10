@@ -1,7 +1,7 @@
 # Energy-conservation audit — where the Δρ/ρ deviation actually comes from
 
-**Date:** 2026-07-27. **Harness:** `examples/energy_budget.rs`
-(`cargo run --release --example energy_budget [all|quad|heat|photon|pb2009|steps]`).
+**Date:** 2026-07-27; §6 addendum 2026-08-05. **Harness:** `examples/energy_budget.rs`
+(`cargo run --release --example energy_budget [all|quad|heat|photon|pb2009|figure|joint|deepmu|steps]`).
 
 ## Question
 
@@ -196,7 +196,7 @@ N = 4000 (`energy_budget figure`):
 So the figure's plotted deviations are ≤0.15% everywhere, better than the tests'
 configuration because the burst is wide (σ_z = 0.04 z_h) and dtau_max = 3.
 
-**Open item.** At z_h = 3e6 refining dtau_max makes the deviation *worse*
+**Open item — RESOLVED 2026-08-05, see §6.** At z_h = 3e6 refining dtau_max makes the deviation *worse*
 (+0.136% → +0.323%, 266k → 532k steps), i.e. the deep-μ residual that survives
 Δτ → 0 is positive and of order a few tenths of a percent, and the shipped
 dtau_max merely cancels part of it. The same crossover is visible at z_h = 5e5
@@ -219,3 +219,47 @@ figure's source of truth.
 | `test_photon_injection_energy_conservation_tight` | final Δρ/ρ vs α_ρ x₀ ΔN/N, tol 3% | two assertions: IC energy vs the analytic (1+3σ²/x₀²) target to 5×10⁻⁴, then final vs IC to 0.5% |
 | `test_pb2009_energy_conservation` | default grid 1.5% / production grid 0.5% | default grid at dtau_max = 10 (0.5%) and dtau_max = 2 (0.15%) — pins the convergence axis that actually controls the error |
 | `test_heat_energy_conservation_sweep_tight` | 2% at 7 redshifts | 0.6%, with the measured z_h trend and its mechanism in the docstring |
+
+## 6. Addendum (2026-08-05): the joint refinement limit closes the open items
+
+The "positive residual that survives Δτ→0" reported above (heat z_h = 5e5:
++0.142%; photon x_inj = 12: +0.071%; deep-μ z_h = 3e6: +0.323%) was an
+artifact of refining one knob at a time. The dtau series were run at N = 2000
+(N = 4000 for the figure settings) and the N series at dtau_max = 10 — the
+joint limit was never taken, and the temporal and spatial terms have opposite
+signs, so each one-knob limit stalls at the other term's value. Taking the
+joint limit (`energy_budget joint` and `deepmu`):
+
+Heat, z_h = 5e5, σ_z = 0.01 z_h, err_net (baseline-subtracted):
+
+| | dtau_max = 10 | 2 | 1 |
+|---|---|---|---|
+| N = 2000 | −0.394% | +0.083% | +0.142% |
+| N = 4000 | −0.524% | −0.048% | **+0.012%** |
+| N = 8000 | | | **−0.021%** |
+
+Photon Gaussian IC, x_inj = 12 (out/IC−1): N = 2000/4000/8000 at
+dtau_max = 0.2 give +0.071% / +0.035% / **+0.026%**, both knobs still
+shrinking it monotonically.
+
+Deep-μ figure settings (z_h = 3e6, σ_z = 0.04 z_h): N = 4000, dtau_max = 1.5
+gives +0.323%; **N = 8000, dtau_max = 1.5 gives −0.012%** (N = 8000,
+dtau_max = 3: −0.199%).
+
+**Conclusion: there is no formulation-level energy leak.** Every deviation in
+the suite decomposes into (a) the first-order-in-Δτ temporal term (negative,
+controlled by `dtau_max`), and (b) a spatial term of opposite sign controlled
+by `n_points`, larger at higher z_h (thermalization pushes the action to the
+low-x DC/BR region). Joint closure is ≤0.03% at every point tested, including
+the deep μ-era. Consistent with this, the bordered-Newton coupling is
+discretely energy-consistent by construction: the electron-side
+H_dcbr = h_norm·Σ wem_j (neq_j − Δn_j) in the ρ_e residual
+(`src/kompaneets.rs`, ~line 836) is built from the same `wem`/`neq` as the
+photon-side DC/BR update, so the exchange cancels identically at the converged
+iterate; the half-grid `dcbr_heating_with_derivative` only feeds the
+predictor.
+
+Side observation: μ at z_h = 3e6 moves −1.1% from N = 4000 → 8000
+(7.635e−7 → 7.551e−7 at dtau_max = 1.5) — the deep-μ grid systematic on μ is
+an order of magnitude larger than at z_h ≤ 5e5 (T-PC-8). Relevant if deep-μ
+μ values are ever quoted at sub-percent precision.
