@@ -33,7 +33,7 @@ Flagged audit gaps (code-derived target without a pin label): **1**
 
 - `tests/heat_injection.rs::test_photon_survival_post_recombination` — x_c(500)<1 and P_s(3,500)>0.5 — explicitly documented as fitting-formula artifact accommodation; harmless because J_Compton ~ 0
 - `tests/heat_injection.rs::test_dc_br_ratio_pinned_z1e6` — DC/BR at z=1e6, x=1 in (8, 50) — test name and comment label it as pinned; failure messages diagnose known bug modes
-- `src/dark_photon.rs::gamma_con_matches_chluba_cyr` — z_res ~ 3.21e4 (5%) and gamma_con/eps^2 ~ 9.3e10 (20%) — test name claims literature but the amplitude target is measured code output guarding drift; note the still-unresolved ~22% gamma_con discrepancy vs an external comparison (memory: axion_DP_distortion)
+- `src/dark_photon.rs::gamma_con_matches_chluba_cyr` — z_res ~ 3.21e4 (5%) and gamma_con/eps^2 ~ 9.3e10 (20%) — test name claims literature but the amplitude target is measured code output guarding drift; note the ~22% discrepancy vs an external comparison (memory: axion_DP_distortion) — as of 2026-07-07/30 that discrepancy is NOT in gamma_con: direct Landau-Zener ODE integration reproduces the NWA to 1.2% at the adiabaticity boundary (dev/audit/gamma_con_lz_check.md), so it lives in the downstream frozen-vs-thermalized treatment. The 20% band on this test's amplitude target is still measured code output, not a literature number, and is unaffected by that result
 - `python/tests/test_fh_basis.py::test_wp3_stationary_y_audit` — mu-overlay residual norm < 5% (computation basis); CSV finite — y-residual is reported but deliberately not asserted; test skips if CSV absent
 
 ## Full table

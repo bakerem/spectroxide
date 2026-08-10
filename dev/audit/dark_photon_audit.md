@@ -98,6 +98,27 @@ The thermal-averaging convention is NOT a viable 22% source at leading order (G3
 Net: the discrepancy is a cross-code/reference convention issue, not a defect in
 dark_photon.{rs,py}.
 
+### Narrowed 2026-07-07/30 — the offset is not in γ_con at all
+`dev/scripts/gamma_con_landau_zener.py` integrates the two-level γ–A′ mixing ODE
+directly through the resonance on the actual ω_pl(z) profile (m = 10⁻⁷ eV,
+z_res = 3.21×10⁴) and compares to the code's NWA P = 1 − exp(−ε²γ_con). Worst
+disagreement **1.2%**, and it occurs *at the adiabaticity boundary* ε²γ_con = 1 —
+precisely where a 22%-class formulation error would have to show up:
+
+| regime | ε²γ_con | P_NWA | rel err vs numeric |
+|---|---|---|---|
+| non-adiabatic | 2.5×10⁻³ | 2.50×10⁻³ | 7.3×10⁻³ |
+| **boundary** | 1 | 0.632 | **1.2×10⁻²** |
+| adiabatic | 9 | 0.9999 | 4.3×10⁻⁴ |
+
+This is a stronger statement than the derivation above: the derivation shows our
+γ_con matches CCJ24's *formula*; the ODE integration shows the formula matches the
+*underlying dynamics*. **Candidates (a)–(c) are therefore all dead as explanations
+of the size of the offset** — none of them can move a quantity that is itself
+correct to 1.2%. What remains is the **frozen-vs-thermalized treatment** of the
+converted photons downstream of the resonance, not the conversion rate.
+Record: `dev/audit/gamma_con_lz_check.md`.
+
 ## Cross-language parity
 Rust and Python are formula-identical (same prefactor, same d expression, same γ_con,
 same P(x)); parity harness (python/tests/test_parity.py) covers drift. Confirmed by

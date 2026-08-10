@@ -62,9 +62,13 @@ Notes:
   Saha simplification leaks tens of % into a published-figure ingredient, and
   it is confined to masses with z_res ≈ 1800–2500 (roughly
   1.2e-9 ≲ m ≲ 2.5e-9 eV). Feeds the rewritten Sect. 7 per-simplification
-  validity bounds and remains a candidate contributor to the unresolved ~22%
-  cross-code γ_con offset (though that offset is broad-band, this effect is
-  mass-localized).
+  validity bounds. ~~remains a candidate contributor to the unresolved ~22%
+  cross-code γ_con offset~~ — **ruled out 2026-07-07/30**: the offset is
+  broad-band while this effect is mass-localized (already noted), and the
+  Landau–Zener integration now confirms γ_con itself to 1.2% at the adiabaticity
+  boundary (`gamma_con_lz_check.md`), so no X_e-driven d-factor sensitivity can
+  produce it. This finding stands on its own for Sect. 7; it is not evidence
+  about the offset.
 - PDE (Rust) results: μ-era thermalization runs at z ≳ 1e5 where hydrogen and
   helium are fully ionized and both codes agree to <0.2% — Peebles/Saha
   detail is irrelevant there. The y-era PDE sees X_e only through weak
