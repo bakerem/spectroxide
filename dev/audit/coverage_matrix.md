@@ -108,6 +108,9 @@ The **heat-injection** half is already (iii)-anchored via CosmoTherm DI/GF
 tables (Figs 3, 4, 5) and gets a second independent code from **R1 (CLASS `sd`)**
 and a third from **R3** (Chang–Cooper). CLASS `sd` handles heating only — it
 does **not** anchor photon/dark-photon (stated so R1 is not oversold).
+**Update 2026-07-30: the R1 leg is withdrawn** (Case A retracted for an
+adiabatic-cooling double count); the second independent code for heat injection
+is R3, not CLASS.
 
 Figures 10 and 11 are intrinsic numerical self-diagnostics; class (iv) is the
 correct and sufficient anchor for them (they *are* the conservation/convergence
@@ -122,7 +125,12 @@ deliverables. No row requires a paper-text caveat in lieu of an anchor.
 
 - **R1 (CLASS `sd`):** rows 1, 2, 4, T1 (heat μ/y transfer, decay, s-wave) →
   add independent-code (iii); row 3 gets an indirect-CosmoTherm cross-check via
-  CLASS `exact`.
+  CLASS `exact`. **⚠ Status 2026-07-30: delivers nothing yet.** Case A is
+  retracted (adiabatic-cooling double count — see `class_sd_comparison.md`) and
+  Cases B–D were never run. Treat every "R1 adds (iii)" cell in the tables above
+  as *planned*, not landed. With R5 cancelled, that leaves **R3 as the only
+  independent-code anchor actually in hand** beyond the shipped CosmoTherm
+  tables.
 - **R3 (refsolver):** rows 1, 3 (heat bursts + adiabatic) and **row 6** (the
   only independent-code photon check) → add (iii).
 - **R4 (oracles):** the analytic in-text constants (κ_c, β_μ, x₀, G_n, κ_γ) →
@@ -187,9 +195,12 @@ published curves. Consequences:
 - Row 8 loses the like-for-like AxionLimits `COBEFIRAS_*.txt` comparison. This
   one required **no digitization** — the curves ship machine-readable in
   `dev/AxionLimits/limit_data/DarkPhoton/` — so it is revivable independently of
-  R5 at low cost, and it is the only route that would settle the unresolved ~22%
-  γ_con offset. Recorded as the cheapest available upgrade, not as work in
-  progress.
+  R5 at low cost. Recorded as the cheapest available upgrade, not as work in
+  progress. (It is **no longer** "the only route that would settle the ~22%
+  γ_con offset": the Landau–Zener integration has since excluded γ_con itself as
+  the source to 1.2% at the adiabaticity boundary — `gamma_con_lz_check.md` — so
+  what an AxionLimits comparison would now test is the downstream
+  frozen-vs-thermalized treatment, which is where the offset actually lives.)
 
 **R3 (landed, with a scoped claim).** All five contract cases agree with the
 clean-room Chang–Cooper solver to 0.32–0.87% on the dominant component, inside

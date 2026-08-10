@@ -221,11 +221,19 @@ exists to catch.
 normalisation, which is *not* a thermal average — blackbody weighting is
 carried spectrally by P(x) in the IC). The unresolved ~22% γ_con offset vs
 the reference figure (see memory/axion-dp work) is therefore not a defect in
-our formula; remaining candidates are the reference's cosmology parameters or
+our formula. **Closed further 2026-07-07/30:** direct integration of the γ–A′
+mixing ODE through the resonance reproduces the NWA to 1.2% *at the adiabaticity
+boundary* ε²γ_con = 1, where a 22%-class error would have to live
+(`dev/audit/gamma_con_lz_check.md`). γ_con is therefore excluded as the source
+outright, and the offset must lie in the **frozen-vs-thermalized treatment** of
+the converted photons downstream of the resonance. The candidates listed below
+are retained only as historical record; they can no longer account for the size
+of the offset. ~~remaining candidates are the reference's cosmology parameters or
 d-factor evaluation for resonances near recombination, where d is
 finite-difference-sensitive on X_e (only region where tens-of-% cross-code
-spread is plausible). NWA validity is not explicitly enforced (z_res-range
-warning only) — acceptable for ε ≪ 1, documented.
+spread is plausible).~~ NWA validity is not explicitly enforced (z_res-range
+warning only) — acceptable for ε ≪ 1, and now *measured* rather than assumed:
+1.2% at the boundary, 0.04% deep in the adiabatic regime.
 
 ### P1-5 — firas.py: default marginalisation inflates quoted limits ~1.8× (RESOLVED 2026-07-03: no figure impact; docs + anchor tests added)
 

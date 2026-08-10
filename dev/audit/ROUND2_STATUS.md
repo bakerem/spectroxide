@@ -12,7 +12,7 @@ Session 2026-07-06 progress:
 | R0 | Coverage matrix | ✅ done | `coverage_matrix.md` |
 | R4.1 | mpmath oracles | ✅ done | `highprec_numerics.md`, `dev/scripts/highprec_oracle.py`, `dev/output/highprec/oracle.json` |
 | R4.2 | Miri on unsafe kernel | ✅ **GREEN** | 7 kernel tests, `miri-kernel` CI job; 0 UB detected |
-| R1 | CLASS `sd` comparison | 🟡 Case A done, B–D scaffolded | `class_sd_comparison.md`, `dev/scripts/class_sd_compare.py` |
+| R1 | CLASS `sd` comparison | 🔴 **Case A RETRACTED 2026-07-30** (adiabatic-cooling double count; R1-A withdrawn, new open item R1-A′ on the y excess). Fix shipped (`--subtract-cooling`, reconstruction validated to 5% of the literature μ_cool); **rerun not done**. B–D still scaffolded. | `class_sd_comparison.md`, `dev/scripts/class_sd_compare.py` |
 | R2 | Mutation testing | 🛑 **CLOSED — TRUNCATED (EB, 2026-07-26)**. Lean sweep complete (5,264 mutants); escalation stopped after 320/2,037 survivors (16%, 41% conversion). Verified full-suite lower bound **63.6%**. Close-out fixes: `R2_WRAPUP_TODO.md` | `mutation_audit.md`, `R2_WRAPUP_TODO.md`, snapshots `dev/audit/mutation/{,rust_escalation/}` |
 | R3 | Clean-room refsolver | ✅ **all five cases GREEN 2026-07-27** — every case inside the contract's acceptance band (0.32–0.87% vs bands of 2–5%); photon case needs one reconciliation before quoting (see below) | `dev/refsolver/` + `STATUS.md`, `outputs/results.json`, reference side `dev/audit/r3_reference_side.json`, `contract.md` §5 correction |
 | R5 | Literature curves | ❌ **CANCELLED (EB, 2026-07-11)** | `digitization_request.md` kept for reference; `test_literature_curves.py` stays skipping. Consequence: R3 is now the *sole* planned independent anchor for the photon-injection channel (coverage matrix rows 6/7) — R3 priority raised. |
@@ -25,12 +25,27 @@ Session 2026-07-06 progress:
   large x near the |ρ−1|=0.01 window edge, but only where DC emission is
   exponentially suppressed (H_dc∝e⁻²ˣ). The 0.01 switch threshold could drop to
   ~10⁻³ to keep both branches <0.5% everywhere. Not a defect. **Flag to EB.**
-- **R1-A (paper-text scope, no bug).** Case A shows the paper's "PDE↔Green's-
+- ~~**R1-A (paper-text scope, no bug).** Case A shows the paper's "PDE↔Green's-
   function agree to 2–5% in μ" holds for *clean* single-era injections but not
   for a broad transition-spanning heating history (there the PDE puts ~34% less
   in μ / more in y than the branching-ratio method, while total distortion
   energy still agrees to 5.6% across CLASS/PDE/GF). Recommend scoping the claim
-  in the paper. **Flag to EB.**
+  in the paper. **Flag to EB.**~~
+- **R1-A — RETRACTED 2026-07-30. Do not act on it; do not scope the paper claim
+  on its basis.** Case A double-counted adiabatic cooling: CLASS's
+  `_sd_heating.dat` includes the first-order photon-baryon cooling term
+  (`external/heating/noninjection.c:197,313` → `source/distortions.c:862`), and
+  the spectroxide PDE models that same cooling internally and unconditionally via
+  Λρ_e. Measured size of the spurious second copy: **μ = −2.83×10⁻⁹** (validated
+  against the literature −2.7…−3×10⁻⁹ for pure ΛCDM cooling), i.e. **51% of the
+  5.6×10⁻⁹ μ gap that R1-A was built on.** Corrected first-order estimate: μ gap
+  34% → 17%. The eyeball convention check missed it because acoustic dissipation
+  dominates the column at every z, so no entry ever turns negative.
+  **New open item (R1-A′): the y excess is real and now larger.** Ours is
+  4.64×10⁻⁹ vs CLASS 3.45×10⁻⁹; the correction *raises* it to ≈5.20×10⁻⁹
+  (+34% → +51%). The double count was masking part of it. Unexplained.
+  Fix shipped as `class_sd_compare.py --subtract-cooling`; the corrected
+  comparison has **not** been run. Full write-up: `class_sd_comparison.md`.
 
 - **F-R2-3 (test-anchoring defect, FIXED 2026-07-26).** K_DC was implemented
   twice — `dc_prefactor·H_dc` in the solver hot loop vs `dc_emission_coefficient`
@@ -237,11 +252,67 @@ This is a **7 GB RAM** box: Miri sysroot compilation, the cargo-mutants
 OOM-kill each other** (observed repeatedly this session). Run heavy builds
 one-at-a-time. Detached `setsid` jobs survive only if nothing else is building.
 
+## Kompaneets moment-hierarchy workstream — merged 2026-07-30
+
+Not a Round-2 item; a separate pass (plan
+`dev/PLAN_KOMPANEETS_MOMENT_VERIFICATION_2026-07-07.md`) developed on branch
+`kompaneets-validation` in worktree `~/spectroxide-kompaneets` and **merged into
+`main` as files on 2026-07-30**, since every deliverable was a new untracked file.
+
+**Why it exists.** MMS verifies the *discretization*, not the *equation*: the
+manufactured residual is built from an operator transcribed from the code's own
+flux form, so a wrong coefficient cancels and MMS still reports p = 2.00. This
+suite pins the formulation against anchors derived outside the code. Now recorded
+as **CLAUDE.md pitfall #11**.
+
+**What landed:** `tests/kompaneets_moments.rs` (11),
+`tests/compton_equilibrium_analytic.rs` (4), `tests/mu_photosphere_profile.rs` (2),
+`tests/rate_coefficients_first_principles.rs` (3),
+`python/tests/test_firas_coverage.py` (4) + `conftest.py`,
+`dev/scripts/{compton_equilibrium_coefficients,gamma_con_landau_zener}.py`,
+`dev/audit/{KOMPANEETS_VERIFICATION_RESULTS,gamma_con_lz_check,term_coverage_matrix}.md`.
+Deliberately **not** merged: the worktree's `Cargo.toml` (benches stripped for
+memory). `COVERAGE_MATRIX.md` renamed to `term_coverage_matrix.md` (case collision
+with R0's `coverage_matrix.md`).
+
+**Verification on merge (release mode, current `main`):** 20/20 new Rust tests
+pass, 4/4 Python pass, `cargo clippy --release --all-targets -- -D warnings` clean,
+and the **full suite passes with them in place — 478 tests, exit 0, zero
+failures** (174 unit + 301 integration + 3 doc; 3 `#[ignore]`d; 481 declared).
+`--features axion` also run green: 486 pass, 489 declared (the feature adds 8, not
+4 — four unit tests in `src/axion.rs` plus the four documented in
+`heat_injection.rs`). Python: 333 collected. The re-run mattered: the three commits
+`main` had gained rewrote `double_compton.rs` (+231) and `greens.rs` (+457),
+including the F-R2-3 K_DC deduplication that the first-principles DC test pins.
+
+**Two findings that propagate into other records:**
+1. **γ_con is exonerated** — Landau–Zener ODE integration reproduces the NWA to
+   1.2% *at the adiabaticity boundary*, so the ~22% dark-photon offset lives in the
+   frozen-vs-thermalized treatment, not the conversion rate. Four audit files that
+   listed dead candidates were corrected.
+2. **The FIRAS coverage MC is narrower than it looks** — it drives the
+   single-amplitude fit, not the floating-`T` profile likelihood where the
+   surviving `firas.py` mutants and the paper's published limits both live.
+
+**Top open gap it identifies:** row 13 of `term_coverage_matrix.md`, the y_γ
+broadening kernel — no identity, no amplitude anchor, no design-order check, and
+∂lnμ/∂ln y_γ = −2.03. Largest unanchored O(1) lever in the code.
+
+**One weakness unchanged:** the Chluba 2015 Eq. 25 coefficients behind the
+μ-photosphere test were transcribed to match `src/greens.rs` rather than verified
+against the paper. Human spot-check outstanding.
+
 ## Resume checklist
 
+- R1 **Case A: rerun `python dev/scripts/class_sd_compare.py --case A
+  --subtract-cooling`.** The subtraction is implemented and its reconstruction
+  validated (μ_cool = −2.83×10⁻⁹ vs literature −2.7…−3×10⁻⁹); only the corrected
+  comparison is missing. Expect the y excess to get *worse* (R1-A′).
 - R1 B–D: derive CLASS `DM_decay_Gamma`/`DM_annihilation_efficiency` →
   spectroxide mapping, verify heating histories match <0.1%, then compare μ/y
-  (clean deep-μ-era decay case is the unambiguous check).
+  (clean deep-μ-era decay case is the unambiguous check — and it is also what
+  discriminates the two candidate causes of R1-A′, since it removes the
+  transition era).
 - R2: **closed, truncated.** Escalation results harvested from volatile /tmp to
   `dev/audit/mutation/rust_escalation/`; the three `/tmp/claude-1000/spx-mut*`
   worker trees can be deleted. Remaining work is the fix/report list in

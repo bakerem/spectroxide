@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test                     # Run all tests (167 unit + 264 integration + 3 doc)
+cargo test                     # Run all tests (174 unit + 301 integration + 3 doc pass; +3 ignored)
 cargo test --release           # Run tests with optimizations (some solver tests are slow in debug)
 cargo test test_name           # Run a single test by name
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -82,15 +82,23 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 ### Integration tests (tests/)
 
-- `heat_injection.rs` — 201 integration tests (197 in the default build; 4 axion tests behind `--features axion`): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
+- `heat_injection.rs` — 201 integration tests (197 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 17 tests: edge cases, invalid inputs, boundary conditions.
 - `coverage_gaps.rs` — 14 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement).
 - `cosmotherm_comparison.rs` — 7 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ).
 - `greens_function_checks.rs` — 7 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift) and Gaunt-factor spot checks.
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
 - `cli_integration.rs` — 4 tests: CLI end-to-end.
-- `science_suite.rs` — 5 tests: end-to-end physics validation.
+- `science_suite.rs` — 6 tests: end-to-end physics validation.
 - `physics_identities.rs` — 11 tests + 1 ignored: closed-form and published identities added by the physics-check audit (`dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`): Thomson depth vs Planck z_*, exact moments of the G_bb/M/Y shapes, Kompaneets first/second moment identities and H-theorem, quasi-stationary T_e energy return, DC/BR crossover redshift, grid-boundary independence, T_e Compton/adiabatic balance, α_th = 5/2 (ignored, ~7 min), plus the sensitivity-directed photon anchors T-PS-1/2/3 (P_s(x_c) = 1/e, x_c vs Chluba 2015 Eq. 25, μ at x_inj = x_c).
+- `mms_convergence.rs` — 8 tests: method of manufactured solutions on the Kompaneets kernel and the coupled path, plus the photon-number ledger identity. **Verifies the discretization, not the equation** — see Pitfall #11.
+- `conservation_fuzz.rs` — 3 tests: randomized energy/number-closure fuzzing across scenarios and grids.
+
+**The moment-hierarchy suite** (`dev/audit/KOMPANEETS_VERIFICATION_RESULTS.md`, plan `dev/PLAN_KOMPANEETS_MOMENT_VERIFICATION_2026-07-07.md`). These exist to pin the *formulation* against targets derived outside the code, closing the Pitfall #11 gap that MMS cannot reach. Coverage is tracked per physical term in `dev/audit/term_coverage_matrix.md`.
+- `kompaneets_moments.rs` — 11 tests: the exact moment hierarchy `dM_k/dy = (k−2)(k+1)M_k − (k−2)M_{k+1}` (derived by integration by parts on the *published* Kompaneets equation, coefficients not taken from the code) at k = 3,4,5; the Zel'dovich–Sunyaev energy law; the (φ−1) heating branch against the analytic Y_SZ shape *and* amplitude — the only test that exercises that branch, since every other kernel test runs at φ = 1 where it vanishes; a Δn² linearity diagnostic; and the H-theorem at Δn ~ n_pl, the only fully nonlinear check in the repo. Two tiers: tier-a carries the independent physics, tier-b adds the measured stimulated/quadratic term `C_k` to separate regime contamination from real failure.
+- `compton_equilibrium_analytic.rs` — 4 tests: the perturbative Δρ_eq coefficients (Pitfall #4) against mpmath quadrature at dps = 40 (`dev/scripts/compton_equilibrium_coefficients.py`, which imports nothing from spectroxide). Uses the difference method, since reading the absolute ratio would re-commit Pitfall #4.
+- `rate_coefficients_first_principles.rs` — 3 tests: DC and BR coefficient magnitudes from CODATA constants **typed literally into the test file**, nothing imported from `constants.rs`, checked for z-independence across three redshifts. This is the test class that would have caught the historical 10¹¹× BR bug (Pitfall #8).
+- `mu_photosphere_profile.rs` — 2 tests (~41 s): fitted μ-photosphere x_c(z) vs Chluba (2015) Eq. 25 at z = 2×10⁶ (DC-dominated) and 3×10⁵ (BR-significant). The only test of the *coupled* DC/BR + Compton balance against an analytic target rather than CosmoTherm's 2–5% envelope.
 
 ### Notebooks (notebooks/)
 
@@ -116,7 +124,8 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 ### Development artifacts (dev/)
 
-- `dev/scripts/` — 10 validation and diagnostic scripts (build_gf_table, build_visibility_table, convergence_figure, dm_cosmotherm_compare, fit_visibility_from_table, photon_energy_conservation, plot_visibility_comparison, remake_firas_photon_limits, benchmark_paper_table, check_refs)
+- `dev/scripts/` — 13 validation and diagnostic scripts (build_gf_table, build_visibility_table, convergence_figure, dm_cosmotherm_compare, fit_visibility_from_table, photon_energy_conservation, plot_visibility_comparison, remake_firas_photon_limits, benchmark_paper_table, check_refs, class_sd_compare, compton_equilibrium_coefficients, gamma_con_landau_zener)
+- `dev/audit/` — validation records. Two coverage matrices, deliberately: `coverage_matrix.md` is indexed by *published result* (one row per paper figure, R0), `term_coverage_matrix.md` by *physical term* in the code. Do not merge them; do not rename `term_coverage_matrix.md` back to `COVERAGE_MATRIX.md` (case-insensitive collision breaks macOS/Windows checkouts).
 - `dev/notebooks/` — 4 notebooks: cosmology_background, mu_y_vs_zh, pde_greens_function, pde_validation
 
 ## Critical Numerical Pitfalls
@@ -142,6 +151,10 @@ These are the hard-won lessons from development. **Violating any of these will s
 9. **Tests calibrated to code output cannot catch systematic errors**: If a test asserts `DC/BR > 1e10` because the code produces that value, the test passes even though the physical ratio should be ~17. Tests for physical quantities must derive targets from independent sources (analytic formulas, literature values, dimensional arguments), not from the code itself. When a computed quantity seems extreme, ask: "Is this physically reasonable?"
 
 10. **Unsafe indexing in hot loops**: `kompaneets.rs` uses `get_unchecked` in the Thomas solver, K_old precompute, and Newton inner loop for performance (~15-20% speedup). Safety is guaranteed by `assert!` guards at function entry that verify all slice lengths. **When modifying workspace fields, adding new arrays to the Newton loop, or changing grid sizes, you must update the corresponding asserts.** Debug-mode `debug_assert!` checks also validate inputs (NaN, physical ranges) — these run in `cargo test` but are stripped in release. Run tests in debug mode after any change to these functions.
+
+11. **MMS verifies the scheme, not the equation**: the manufactured residual `S = ∂_τΔn_m − L[Δn_m]` is built from an operator `L` transcribed from the code's own flux form. Any coefficient error in that form — recoil `2Δn` instead of `Δn`, flux weighted `x³` instead of `x⁴`, the wrong θ normalizing the Comptonization variable — appears in *both* the code and the residual, cancels exactly, and MMS still reports clean convergence at p = 2.00. **A term whose only strong test is MMS or Richardson order is unverified physics.** Pin the formulation separately against targets derived outside the code: exact moment identities, mpmath quadrature, literal CODATA constants, literature fits (`tests/kompaneets_moments.rs` and siblings; `dev/audit/term_coverage_matrix.md` tracks which terms still lack such an anchor). This is the same failure mode mutation testing found from the other end — there a coefficient was written twice and the literature anchor tested the unused copy (F-R2-3). Test *construction* and test *placement* fail independently, and a coverage percentage detects neither.
+
+12. **Cross-code source-term hand-offs: audit term content, not conventions**: when another code hands us a source term (a heating table, an injection history), matching sign, units and variable is necessary and not close to sufficient. Ask *which physical processes are inside that number*, and whether this solver already models any of them. Anything the PDE models unconditionally — adiabatic cooling via Λρ_e above all — is a double-count hazard by construction. This bit us for real: CLASS's `_sd_heating.dat` includes first-order photon-baryon cooling, feeding it verbatim to the PDE counted the cooling twice, and it produced a plausible μ discrepancy that was written up as physics (finding R1-A, since retracted; ~51% of the effect was bookkeeping). **It was invisible to inspection** because acoustic dissipation dominates the column at every z, so no entry ever turned negative. See `dev/audit/class_sd_comparison.md` and the `--subtract-cooling` path in `dev/scripts/class_sd_compare.py`.
 
 ## Dimensionless Variables
 
