@@ -1,28 +1,50 @@
 #!/usr/bin/env python3
-"""Plot visibility functions: literature vs new PDE-fitted parameters."""
+"""Plot visibility functions: literature vs PDE-fitted parameters.
+
+Fitted parameters are read from dev/data/visibility_conservation_fit.json,
+produced by fit_visibility_from_table.py's successor
+(fit_visibility_conservation.py): thermalization parameters (A, B, beta)
+from the conservation-law mu-era fit, transition parameters
+(z_y, alpha_y, z_mu, alpha_mu) from the quadrature spectral fit.
+"""
 import sys
+import json
 import pathlib
 
 import numpy as np
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "python"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent.parent / "python"))
 
 import matplotlib
 import matplotlib.pyplot as plt
 from spectroxide.style import apply_style, C, DOUBLE_COL
-from spectroxide.greens import Z_MU
 
 apply_style()
 
+datadir = pathlib.Path(__file__).resolve().parent.parent / "data"
+with open(datadir / "visibility_conservation_fit.json") as f:
+    fit = json.load(f)
+
+# Adopted fiducial: the all-7 global spectral fit.
+a7 = fit[fit["fiducial"]]
+A_F, B_F, BETA_F = a7["A"], a7["B"], a7["beta"]
+Z_Y, ALPHA_Y = a7["z_y"], a7["alpha_y"]
+Z_MU_T, ALPHA_MU = a7["z_mu"], a7["alpha_mu"]
+
 z = np.logspace(3, 7, 500)
 
-# --- Literature (Chluba 2013) parameters ---
-def j_bb_lit(z):
-    return np.exp(-((z / 1.98e6) ** 2.5))
+Z_TH = 1.98e6  # analytic, fixed in both literature and this-work fits
+ALPHA_TH = 2.5
 
+
+def j_bb(z):
+    return np.exp(-((z / Z_TH) ** ALPHA_TH))
+
+
+# --- Literature (Chluba 2013; Chluba 2015 Eq. 13) ---
 def j_bb_star_lit(z):
-    r = z / 1.98e6
-    return np.maximum(0.983 * j_bb_lit(z) * (1.0 - 0.0381 * r**2.29), 0.0)
+    r = z / Z_TH
+    return np.maximum(0.983 * j_bb(z) * (1.0 - 0.0381 * r**2.29), 0.0)
 
 def j_mu_lit(z):
     return 1.0 - np.exp(-(((1.0 + z) / 5.8e4) ** 1.88))
@@ -31,32 +53,16 @@ def j_y_lit(z):
     return 1.0 / (1.0 + ((1.0 + z) / 6.0e4) ** 2.58)
 
 
-# --- New fitted parameters (spectral fit, n_points=4000, 118 z_h, x∈[0.5,20]) ---
-# α_th = 5/2 and z_th = 1.98e6 fixed (analytic)
-def j_bb_new(z):
-    return np.exp(-((z / 1.98e6) ** 2.5))
-
+# --- This work (conservation-law + quadrature spectral fit) ---
 def j_bb_star_new(z):
-    r = z / 1.98e6
-    return np.maximum(0.992 * j_bb_new(z) * (1.0 - 0.048 * r**2.07), 0.0)
+    r = z / Z_TH
+    return np.maximum(A_F * j_bb(z) * (1.0 - B_F * r**BETA_F), 0.0)
 
 def j_mu_new(z):
-    return 1.0 - np.exp(-(((1.0 + z) / 5.843e4) ** 1.947))
+    return 1.0 - np.exp(-(((1.0 + z) / Z_MU_T) ** ALPHA_MU))
 
 def j_y_new(z):
-    return 1.0 / (1.0 + ((1.0 + z) / 6.313e4) ** 2.653)
-
-
-# --- Load per-spectrum PDE fits if available ---
-datadir = pathlib.Path(__file__).resolve().parent.parent / "data"
-tablepath = datadir / "visibility_table.npz"
-has_pde = tablepath.exists()
-if has_pde:
-    data = np.load(tablepath)
-    z_pde = data["z_h"]
-    j_mu_pde = data["j_mu_fit"]
-    j_bb_pde = data["j_bb_fit"]
-    j_y_pde = data["j_y_fixed"]  # J_y is fixed from formula, not fitted per-spectrum
+    return 1.0 / (1.0 + ((1.0 + z) / Z_Y) ** ALPHA_Y)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -79,7 +85,7 @@ ax.text(4e6, 0.7, "therm.", fontsize=7, color=C["blue"], ha="center")
 
 # Literature curves (solid)
 ax.semilogx(z, j_bb_star_lit(z), color=C["blue"], lw=1.5,
-            label=r"$\mathcal{J}_{\mathrm{bb}}^*$ Chluba (2013)")
+            label=r"$\mathcal{J}_{\mathrm{bb}}^*$ Chluba (2013, 2015)")
 ax.semilogx(z, j_mu_lit(z), color=C["orange"], lw=1.5,
             label=r"$\mathcal{J}_\mu$ Chluba (2013)")
 ax.semilogx(z, j_y_lit(z), color=C["teal"], lw=1.5,
@@ -92,11 +98,6 @@ ax.semilogx(z, j_mu_new(z), color=C["orange"], lw=1.2, ls="--",
             label=r"$\mathcal{J}_\mu$ this work")
 ax.semilogx(z, j_y_new(z), color=C["teal"], lw=1.2, ls="--",
             label=r"$\mathcal{J}_y$ this work")
-
-# PDE per-spectrum fits (scatter)
-if has_pde:
-    ax.semilogx(z_pde, j_bb_pde, ".", color=C["blue"], ms=2, alpha=0.5)
-    ax.semilogx(z_pde, j_mu_pde, ".", color=C["orange"], ms=2, alpha=0.5)
 
 ax.axvline(5e4, color=C["gray"], ls=":", lw=0.5)
 ax.axvline(2e5, color=C["gray"], ls=":", lw=0.5)
@@ -126,3 +127,9 @@ fig.tight_layout()
 outpath = pathlib.Path(__file__).resolve().parent.parent.parent / "notebooks" / "figures" / "pde_visibility_fit.pdf"
 fig.savefig(outpath)
 print(f"Saved: {outpath}")
+
+print("\nFitted parameters (this work):")
+print(f"  A={A_F:.4f} B={B_F:.5f} beta={BETA_F:.3f} (z_th={Z_TH:.3g}, "
+      f"alpha_th={ALPHA_TH} fixed)")
+print(f"  z_y={Z_Y:.5g} alpha_y={ALPHA_Y:.4f} z_mu={Z_MU_T:.5g} "
+      f"alpha_mu={ALPHA_MU:.4f}")
