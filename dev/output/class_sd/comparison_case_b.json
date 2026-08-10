@@ -1,0 +1,42 @@
+{
+  "case": "B_decay_deep_mu",
+  "gamma_x": 4.2e-08,
+  "f_x_ev": 100.0,
+  "class_DM_decay_fraction": 1.6490587550925594e-08,
+  "drho_total_spx": 6.392671654402454e-11,
+  "drho_total_class": 6.389461224009653e-11,
+  "history_gate_max_rel_dev": 0.0005841924978811086,
+  "class": {
+    "exact": {
+      "mu": 6.98819e-11,
+      "y": 3.91703e-15
+    },
+    "soft_soft": {
+      "mu": 6.96401e-11,
+      "y": 2.11821e-14
+    },
+    "sharp_sharp": {
+      "mu": 8.26316e-11,
+      "y": 1.31697e-180
+    }
+  },
+  "spx_gf": {
+    "mu": 6.792192806181443e-11,
+    "y": 2.1192527195274968e-14
+  },
+  "spx_pde": {
+    "mu_injection_only": 6.883716371637163e-11,
+    "y_injection_only": 2.1586568656865688e-13,
+    "method": "two-run linear subtraction of internal adiabatic-cooling baseline",
+    "runs": {
+      "f_x_100": {
+        "mu": -2.2324e-09,
+        "y": -9.2388e-10
+      },
+      "f_x_1e6": {
+        "mu": 6.860704e-07,
+        "y": 1.234561e-09
+      }
+    }
+  }
+}

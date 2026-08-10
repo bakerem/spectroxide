@@ -1,0 +1,26 @@
+{
+  "case": "A_adiabatic_lcdm",
+  "class_version": "v3.3.0 (0ceb7a9)",
+  "class_branching": "exact (Greens_data.dat)",
+  "cosmology": {
+    "h": 0.71,
+    "omega_b": 0.0221804,
+    "omega_cdm": 0.10888560000000001,
+    "T_cmb": 2.726,
+    "YHe": 0.24,
+    "N_ur": 3.046
+  },
+  "mu_class": 1.93096e-08,
+  "y_class": 3.45274e-09,
+  "mu_spx": 1.279877746162462e-08,
+  "y_spx": 5.581219704534355e-09,
+  "ratio_mu": 0.6628193987252258,
+  "ratio_y": 1.6164610438475981,
+  "subtract_cooling": true,
+  "cooling_selfcheck": {
+    "cooling_drho_over_rho": -4.746370138491107e-09,
+    "cooling_mu": -2.8290049157440367e-09,
+    "cooling_y": -5.566426226193239e-10
+  },
+  "note": "adiabatic cooling removed from the CLASS table; the PDE supplies it internally, so this is the apples-to-apples configuration"
+}
