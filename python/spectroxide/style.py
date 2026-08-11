@@ -15,7 +15,6 @@ All plot parameters are defined in ``plot_params.py``.
 
 import shutil
 
-import matplotlib.pyplot as plt
 from .plot_params import (
     C,
     SINGLE_COL,
@@ -37,11 +36,19 @@ def apply_style(*, usetex=True):
 
     Raises
     ------
+    ImportError
+        If matplotlib is not installed.  It is an optional dependency:
+        ``pip install spectroxide[plot]``.  The import lives inside this
+        function so that the base package (numpy + scipy only) imports
+        without it — ``spectroxide/__init__.py`` re-exports this module
+        unconditionally.
     RuntimeError
         If ``usetex=True`` but ``latex`` is not found on the system PATH
         (dvipng is needed too but is not checked here).  The error message
         includes installation instructions.
     """
+    import matplotlib.pyplot as plt
+
     if usetex and shutil.which("latex") is None:
         raise RuntimeError(
             "LaTeX not found on PATH.  Publication-quality plots require "
