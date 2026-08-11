@@ -56,7 +56,7 @@ jobs:
         # The full release-only rule exists because the *whole* suite is slow in
         # debug; these tiny-N kernel tests are fast and are the only place the
         # get_unchecked debug_assert! input validation runs in CI.
-        run: cargo test --lib miri_kernel thomas_solve
+        run: cargo test --lib -- miri_kernel thomas_solve
 
   rust-coverage:
     name: Rust coverage

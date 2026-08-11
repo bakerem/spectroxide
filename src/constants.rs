@@ -18,16 +18,25 @@
 //!   These are used by both the PDE solver and the Green's-function
 //!   visibility functions.
 
-// Fundamental constants
-pub const C_LIGHT: f64 = 2.997_924_58e8; // m/s (exact)
-pub const HBAR: f64 = 1.054_571_817e-34; // J·s
-pub const HPLANCK: f64 = 6.626_070_15e-34; // J·s (exact)
-pub const K_BOLTZMANN: f64 = 1.380_649e-23; // J/K (exact)
-pub const G_NEWTON: f64 = 6.674_30e-11; // m³/(kg·s²)
-pub const M_ELECTRON: f64 = 9.109_383_7015e-31; // kg
-pub const M_PROTON: f64 = 1.672_621_923_69e-27; // kg
-pub const SIGMA_THOMSON: f64 = 6.652_458_7321e-29; // m²
-pub const ALPHA_FS: f64 = 7.297_352_5693e-3; // fine structure constant
+// Fundamental constants (CODATA 2018)
+/// Speed of light, m/s (exact).
+pub const C_LIGHT: f64 = 2.997_924_58e8;
+/// Reduced Planck constant ħ, J·s.
+pub const HBAR: f64 = 1.054_571_817e-34;
+/// Planck constant h, J·s (exact).
+pub const HPLANCK: f64 = 6.626_070_15e-34;
+/// Boltzmann constant k_B, J/K (exact).
+pub const K_BOLTZMANN: f64 = 1.380_649e-23;
+/// Newton's gravitational constant G, m³/(kg·s²).
+pub const G_NEWTON: f64 = 6.674_30e-11;
+/// Electron mass, kg.
+pub const M_ELECTRON: f64 = 9.109_383_7015e-31;
+/// Proton mass, kg.
+pub const M_PROTON: f64 = 1.672_621_923_69e-27;
+/// Thomson cross section, m².
+pub const SIGMA_THOMSON: f64 = 6.652_458_7321e-29;
+/// Fine-structure constant α (dimensionless).
+pub const ALPHA_FS: f64 = 7.297_352_5693e-3;
 
 // Unit conversions
 /// 1 eV in Joules (exact by 2019 SI redefinition)
@@ -142,7 +151,7 @@ pub const ALPHA_RHO: f64 = G2_PLANCK / G3_PLANCK; // ≈ 0.3702
 pub const X_BALANCED: f64 = 4.0 / (3.0 * ALPHA_RHO); // ≈ 3.60
 
 // Thermalization redshifts (approximate)
-/// μ-era thermalization redshift (Chluba 2013, MNRAS 436, 2232)
+/// μ-era thermalization redshift (Chluba 2013, MNRAS 434, 352)
 pub const Z_MU: f64 = 1.98e6;
 /// μ-y transition redshift
 pub const Z_MU_Y: f64 = 5.0e4;

@@ -82,12 +82,18 @@ fn dc_coefficient_first_principles() {
     for &z in &[3e5, 1e6, 2e6] {
         let theta_z = cosmo.theta_z(z);
         let code = dc_emission_coefficient(x, theta_z);
-        let anchor = 4.0 * ALPHA_FS / (3.0 * PI) * theta_z * theta_z * i_pl / (1.0 + 14.16 * theta_z);
+        let anchor =
+            4.0 * ALPHA_FS / (3.0 * PI) * theta_z * theta_z * i_pl / (1.0 + 14.16 * theta_z);
         let ratio = code / anchor;
-        eprintln!("II.3|DC z={z:.1e} θ_z={theta_z:.3e} code={code:.4e} anchor={anchor:.4e} ratio={ratio:.6}");
+        eprintln!(
+            "II.3|DC z={z:.1e} θ_z={theta_z:.3e} code={code:.4e} anchor={anchor:.4e} ratio={ratio:.6}"
+        );
         // Magnitude ≈ 1 (allowing the tiny H_dc(x) deficit); a dimensional /
         // density-factor bug would be orders of magnitude off.
-        assert!((ratio - 1.0).abs() < 2e-3, "DC magnitude off at z={z:.1e}: ratio={ratio:.6}");
+        assert!(
+            (ratio - 1.0).abs() < 2e-3,
+            "DC magnitude off at z={z:.1e}: ratio={ratio:.6}"
+        );
         ratios.push(ratio);
     }
     // z-independence: ratio = H_dc(x), x fixed ⇒ identical across z. A wrong
@@ -95,7 +101,10 @@ fn dc_coefficient_first_principles() {
     let spread = ratios.iter().cloned().fold(f64::MIN, f64::max)
         - ratios.iter().cloned().fold(f64::MAX, f64::min);
     eprintln!("II.3|DC ratio z-spread = {spread:.3e}");
-    assert!(spread < 1e-4, "DC code/anchor ratio is z-dependent: spread={spread:.3e}");
+    assert!(
+        spread < 1e-4,
+        "DC code/anchor ratio is z-dependent: spread={spread:.3e}"
+    );
 }
 
 // ===========================================================================

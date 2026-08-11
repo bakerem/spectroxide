@@ -1468,12 +1468,24 @@ mod tests {
         let mut ws = KompaneetsWorkspace::new(&grid);
         for _ in 0..5 {
             let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
-                &grid, &mut delta_n, theta_e, theta_z, 0.01, None, None, &mut ws, 0.0, 20,
+                &grid,
+                &mut delta_n,
+                theta_e,
+                theta_z,
+                0.01,
+                None,
+                None,
+                &mut ws,
+                0.0,
+                20,
             );
             assert!(conv, "Newton should converge on tiny driven grid");
         }
         let max_dn = delta_n.iter().copied().fold(0.0_f64, |a, b| a.max(b.abs()));
-        assert!(max_dn.is_finite() && max_dn > 0.0, "should build a distortion");
+        assert!(
+            max_dn.is_finite() && max_dn > 0.0,
+            "should build a distortion"
+        );
     }
 
     /// Coupled step with DC/BR active and a nonzero equilibrium offset, tiny N.
@@ -1502,7 +1514,16 @@ mod tests {
         };
         for _ in 0..5 {
             let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
-                &grid, &mut delta_n, theta, theta, 0.01, Some(&dcbr), None, &mut ws, 0.0, 20,
+                &grid,
+                &mut delta_n,
+                theta,
+                theta,
+                0.01,
+                Some(&dcbr),
+                None,
+                &mut ws,
+                0.0,
+                20,
             );
             assert!(conv, "Newton should converge with DC/BR on tiny grid");
         }
@@ -1531,11 +1552,26 @@ mod tests {
             cn_dcbr: false,
         };
         let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
-            &grid, &mut delta_n, theta, theta, 0.01, Some(&dcbr), None, &mut ws, 0.0, 20,
+            &grid,
+            &mut delta_n,
+            theta,
+            theta,
+            0.01,
+            Some(&dcbr),
+            None,
+            &mut ws,
+            0.0,
+            20,
         );
-        assert!(conv, "Newton should converge with photon source on tiny grid");
+        assert!(
+            conv,
+            "Newton should converge with photon source on tiny grid"
+        );
         assert!(delta_n.iter().all(|v| v.is_finite()));
-        assert!(delta_n[mid] != 0.0, "source should inject at mid grid point");
+        assert!(
+            delta_n[mid] != 0.0,
+            "source should inject at mid grid point"
+        );
     }
 
     /// Verify that a small temperature perturbation produces a Y_SZ spectral shape.

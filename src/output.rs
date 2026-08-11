@@ -1,10 +1,20 @@
 //! Structured output types and serialization for solver results.
 //!
-//! Provides [`SolverResult`], [`SweepResult`], and [`GreensResult`] as owned,
-//! self-contained representations of completed runs, with zero-dependency
-//! JSON/CSV/table serialization.
+//! Provides [`SolverResult`], [`SweepResult`], [`GreensResult`],
+//! [`PhotonSweepResult`] (with [`PhotonSweepRow`]), and
+//! [`PhotonSweepBatchResult`] as owned, self-contained representations of
+//! completed runs, with zero-dependency JSON/CSV/table serialization.
 //!
 //! All result types implement [`Serializable`] for uniform JSON/CSV/table output.
+//!
+//! # JSON field naming
+//!
+//! For historical compatibility with the Python client, the injected energy
+//! Δρ/ρ appears under three names depending on the format: `drho` in
+//! per-row JSON objects, `delta_rho_inj` at the top level of sweep JSON, and
+//! `delta_rho_over_rho` in CSV header comments. All three are the same
+//! quantity; renaming any of them would break existing consumers, so the
+//! aliases are documented here instead.
 
 use crate::solver::SolverSnapshot;
 
@@ -629,7 +639,7 @@ fn write_json_string_array(out: &mut String, key: &str, arr: &[String]) {
     out.push(']');
 }
 
-/// Parse an output format from a string.
+/// Output format selected by the CLI `--format` flag.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
     Json,
@@ -638,6 +648,7 @@ pub enum OutputFormat {
 }
 
 impl OutputFormat {
+    /// Parse an output format from a string (`json`, `csv`, `table`).
     pub fn from_str(s: &str) -> Result<Self, String> {
         match s {
             "json" => Ok(OutputFormat::Json),

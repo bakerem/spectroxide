@@ -129,11 +129,5 @@ def gamma_con_axion(
     t_cmb_ev = _K_BOLTZMANN * cosmo["t_cmb"] * (1.0 + z_res) / _EV_IN_JOULES
     h_ev = _HBAR_EV_S * _cosmo_hubble(z_res, cosmo)
     d = dln_omega_pl_sq_dlna(z_res, cosmo)
-    gc = (
-        np.pi
-        * kappa**2
-        * (1.0 + z_res) ** 4
-        * t_cmb_ev
-        / (m_ev**2 * h_ev * d)
-    )
+    gc = np.pi * kappa**2 * (1.0 + z_res) ** 4 * t_cmb_ev / (m_ev**2 * h_ev * d)
     return gc, z_res

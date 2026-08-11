@@ -18,7 +18,7 @@ Conventions
 
 References
 ----------
-- Chluba (2013), MNRAS 436, 2232 [arXiv:1304.6120].
+- Chluba (2013), MNRAS 434, 352 [arXiv:1304.6120].
 - Chluba & Jeong (2014), MNRAS 438, 2065 [arXiv:1306.5751].
 - Chluba (2015), MNRAS 454, 4182 [arXiv:1506.06582].
 """
@@ -419,7 +419,7 @@ def greens_function(x: ArrayLike, z_h: float) -> NDArray[np.float64]:
 
     References
     ----------
-    - Chluba (2013), MNRAS 436, 2232 [arXiv:1304.6120].
+    - Chluba (2013), MNRAS 434, 352 [arXiv:1304.6120].
     """
     _val.validate_z_h(z_h)
     _val.validate_x_positive(x)
@@ -982,7 +982,7 @@ def _y_compton(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOrArray:
 
     h_z = _cosmo_hubble(zp, cosmo)  # array-safe
 
-    # Integrand: theta_e * sigma_T * c * n_e / h_z, shape (N, 32)
+    # Integrand: theta_e * sigma_T * c * n_e / h_z, shape (N, 128)
     integrand = theta_e * _SIGMA_THOMSON * _C_LIGHT * n_e / h_z
 
     # Midpoint sum: shape (N,)
@@ -1096,8 +1096,11 @@ def greens_function_photon(
 
     ``G_ph = J_μ G_μ + (1 − J_μ) G_y``.
 
-    The surviving photon δ-function is represented as a Gaussian of
-    width ``sigma_x`` (set 0 to omit it, e.g. for ``P_s ≈ 0`` tests).
+    The surviving photon line enters with weight ``P_s (1 − J_μ)`` and is
+    always present unless ``P_s = 0``.  Its shape: a log-normal broadened
+    by the Compton ``y_γ`` when ``y_γ ≥ 1e-6`` (``sigma_x`` adds in
+    quadrature); otherwise a Gaussian of width ``sigma_x``, falling back
+    to a narrow ``0.005 x_inj`` Gaussian when ``sigma_x = 0``.
 
     When ``P_s = 0``, reduces to
     ``α_ρ x_inj · greens_function(x_obs, z_h)``.
@@ -1114,13 +1117,16 @@ def greens_function_photon(
         Injection redshift.  Must lie outside the μ–y transition band
         ``(5e4, 2e5)``; otherwise a :class:`ValueError` is raised.
     sigma_x : float, optional
-        Gaussian width for the surviving photon δ-function (default 0).
+        Intrinsic Gaussian width of the surviving photon line (default 0;
+        the line is still drawn with a minimal width — see above).
     number_conserving : bool, optional
         If True, drop the temperature-shift component so the result
         satisfies ``∫ x² G dx ≈ 0`` (CosmoTherm convention for stored
         Green's function entries).  Default False.
     cosmo : Mapping, optional
-        Cosmological parameters for Compton y-parameter broadening.
+        Cosmological parameters feeding both the photon survival
+        probability ``P_s`` (DC + BR optical-depth integral) and the
+        Compton ``y_γ`` broadening of the surviving line.
         Defaults to :data:`~spectroxide.cosmology.DEFAULT_COSMO`.
 
     Returns

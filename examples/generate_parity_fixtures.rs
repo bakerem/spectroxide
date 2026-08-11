@@ -52,11 +52,7 @@ where
         .iter()
         .map(|inp| {
             let v = f(inp);
-            if v.is_finite() {
-                Some(vec![v])
-            } else {
-                None
-            }
+            if v.is_finite() { Some(vec![v]) } else { None }
         })
         .collect();
     Group {
@@ -140,13 +136,15 @@ fn main() {
 
     let cosmo_default = Cosmology::default();
     let cosmo_p18 = Cosmology::planck2018();
-    let cosmos: [(&str, &Cosmology); 2] =
-        [("default", &cosmo_default), ("planck2018", &cosmo_p18)];
+    let cosmos: [(&str, &Cosmology); 2] = [("default", &cosmo_default), ("planck2018", &cosmo_p18)];
 
     let mut groups: Vec<Group> = Vec::new();
 
     // --- Visibility functions (closed-form fits; exact mirrors) ------------
-    let z_vis: Vec<Vec<f64>> = logspace(200.0, 5.0e6, 40).into_iter().map(|z| vec![z]).collect();
+    let z_vis: Vec<Vec<f64>> = logspace(200.0, 5.0e6, 40)
+        .into_iter()
+        .map(|z| vec![z])
+        .collect();
     groups.push(scalar_group(
         "visibility_j_bb",
         "none",
@@ -197,16 +195,34 @@ fn main() {
     ));
 
     // --- Critical frequencies & analytic P_s --------------------------------
-    let z_xc: Vec<Vec<f64>> = logspace(1.0e3, 5.0e6, 25).into_iter().map(|z| vec![z]).collect();
-    groups.push(scalar_group("x_c_dc", "none", z_xc.clone(), 1e-12, "DC critical frequency fit", |i| {
-        greens::x_c_dc(i[0])
-    }));
-    groups.push(scalar_group("x_c_br", "none", z_xc.clone(), 1e-12, "BR critical frequency fit", |i| {
-        greens::x_c_br(i[0])
-    }));
-    groups.push(scalar_group("x_c", "none", z_xc.clone(), 1e-12, "combined critical frequency", |i| {
-        greens::x_c(i[0])
-    }));
+    let z_xc: Vec<Vec<f64>> = logspace(1.0e3, 5.0e6, 25)
+        .into_iter()
+        .map(|z| vec![z])
+        .collect();
+    groups.push(scalar_group(
+        "x_c_dc",
+        "none",
+        z_xc.clone(),
+        1e-12,
+        "DC critical frequency fit",
+        |i| greens::x_c_dc(i[0]),
+    ));
+    groups.push(scalar_group(
+        "x_c_br",
+        "none",
+        z_xc.clone(),
+        1e-12,
+        "BR critical frequency fit",
+        |i| greens::x_c_br(i[0]),
+    ));
+    groups.push(scalar_group(
+        "x_c",
+        "none",
+        z_xc.clone(),
+        1e-12,
+        "combined critical frequency",
+        |i| greens::x_c(i[0]),
+    ));
 
     let mut ps_inputs = Vec::new();
     for &z in &[1.0e4, 1.0e5, 1.0e6] {
@@ -245,19 +261,42 @@ fn main() {
     }
 
     // --- Spectral shapes -----------------------------------------------------
-    let x_shapes: Vec<Vec<f64>> = logspace(1.0e-4, 30.0, 25).into_iter().map(|x| vec![x]).collect();
-    groups.push(scalar_group("planck", "none", x_shapes.clone(), 1e-12, "Planck occupation", |i| {
-        spectrum::planck(i[0])
-    }));
-    groups.push(scalar_group("g_bb", "none", x_shapes.clone(), 1e-12, "blackbody derivative shape", |i| {
-        spectrum::g_bb(i[0])
-    }));
-    groups.push(scalar_group("mu_shape", "none", x_shapes.clone(), 1e-12, "mu distortion shape M(x)", |i| {
-        spectrum::mu_shape(i[0])
-    }));
-    groups.push(scalar_group("y_shape", "none", x_shapes.clone(), 1e-12, "y distortion shape Y_SZ(x)", |i| {
-        spectrum::y_shape(i[0])
-    }));
+    let x_shapes: Vec<Vec<f64>> = logspace(1.0e-4, 30.0, 25)
+        .into_iter()
+        .map(|x| vec![x])
+        .collect();
+    groups.push(scalar_group(
+        "planck",
+        "none",
+        x_shapes.clone(),
+        1e-12,
+        "Planck occupation",
+        |i| spectrum::planck(i[0]),
+    ));
+    groups.push(scalar_group(
+        "g_bb",
+        "none",
+        x_shapes.clone(),
+        1e-12,
+        "blackbody derivative shape",
+        |i| spectrum::g_bb(i[0]),
+    ));
+    groups.push(scalar_group(
+        "mu_shape",
+        "none",
+        x_shapes.clone(),
+        1e-12,
+        "mu distortion shape M(x)",
+        |i| spectrum::mu_shape(i[0]),
+    ));
+    groups.push(scalar_group(
+        "y_shape",
+        "none",
+        x_shapes.clone(),
+        1e-12,
+        "y distortion shape Y_SZ(x)",
+        |i| spectrum::y_shape(i[0]),
+    ));
 
     // --- Cosmology background ------------------------------------------------
     let z_bg: Vec<Vec<f64>> = vec![
@@ -268,12 +307,22 @@ fn main() {
     .collect();
     for (label, cosmo) in cosmos {
         let c = cosmo;
-        groups.push(scalar_group("hubble", label, z_bg.clone(), 1e-12, "H(z) [1/s]", move |i| {
-            c.hubble(i[0])
-        }));
-        groups.push(scalar_group("n_hydrogen", label, z_bg.clone(), 1e-12, "n_H(z) [1/m^3]", move |i| {
-            c.n_h(i[0])
-        }));
+        groups.push(scalar_group(
+            "hubble",
+            label,
+            z_bg.clone(),
+            1e-12,
+            "H(z) [1/s]",
+            move |i| c.hubble(i[0]),
+        ));
+        groups.push(scalar_group(
+            "n_hydrogen",
+            label,
+            z_bg.clone(),
+            1e-12,
+            "n_H(z) [1/m^3]",
+            move |i| c.n_h(i[0]),
+        ));
         groups.push(scalar_group(
             "baryon_photon_ratio",
             label,
@@ -282,12 +331,22 @@ fn main() {
             "R(z) = 3 rho_b / (4 rho_gamma)",
             move |i| c.baryon_photon_ratio(i[0]),
         ));
-        groups.push(scalar_group("rho_gamma", label, z_bg.clone(), 1e-12, "photon energy density [J/m^3]", move |i| {
-            c.rho_gamma(i[0])
-        }));
-        groups.push(scalar_group("omega_gamma", label, vec![vec![0.0]], 1e-12, "Omega_gamma today", move |_| {
-            c.omega_gamma()
-        }));
+        groups.push(scalar_group(
+            "rho_gamma",
+            label,
+            z_bg.clone(),
+            1e-12,
+            "photon energy density [J/m^3]",
+            move |i| c.rho_gamma(i[0]),
+        ));
+        groups.push(scalar_group(
+            "omega_gamma",
+            label,
+            vec![vec![0.0]],
+            1e-12,
+            "Omega_gamma today",
+            move |_| c.omega_gamma(),
+        ));
         groups.push(scalar_group(
             "cosmic_time",
             label,
@@ -298,7 +357,10 @@ fn main() {
         ));
         // Recombination history: same Peebles TLA + He Saha algorithm on both
         // sides (forward Euler, dz = 0.5, Saha switch at X_H = 0.99).
-        let z_xe: Vec<Vec<f64>> = logspace(1.0, 1.0e5, 60).into_iter().map(|z| vec![z]).collect();
+        let z_xe: Vec<Vec<f64>> = logspace(1.0, 1.0e5, 60)
+            .into_iter()
+            .map(|z| vec![z])
+            .collect();
         groups.push(scalar_group(
             "ionization_fraction",
             label,
@@ -325,8 +387,14 @@ fn main() {
     }
 
     // --- Dark photon (NWA helpers) -------------------------------------------
-    let z_pl: Vec<Vec<f64>> = logspace(10.0, 1.0e7, 30).into_iter().map(|z| vec![z]).collect();
-    let m_grid: Vec<Vec<f64>> = logspace(1.0e-14, 1.0e-4, 21).into_iter().map(|m| vec![m]).collect();
+    let z_pl: Vec<Vec<f64>> = logspace(10.0, 1.0e7, 30)
+        .into_iter()
+        .map(|z| vec![z])
+        .collect();
+    let m_grid: Vec<Vec<f64>> = logspace(1.0e-14, 1.0e-4, 21)
+        .into_iter()
+        .map(|m| vec![m])
+        .collect();
     for (label, cosmo) in cosmos {
         let c = cosmo;
         groups.push(scalar_group(
@@ -365,7 +433,11 @@ fn main() {
 
     // --- Photon-injection Green's function ----------------------------------
     let mut gfp_inputs = Vec::new();
-    for &(x_inj, z_h, sigma_x) in &[(1.0_f64, 1.0e4_f64, 0.05_f64), (0.01, 3.0e4, 0.0), (5.0, 3.0e5, 0.1)] {
+    for &(x_inj, z_h, sigma_x) in &[
+        (1.0_f64, 1.0e4_f64, 0.05_f64),
+        (0.01, 3.0e4, 0.0),
+        (5.0, 3.0e5, 0.1),
+    ] {
         for x_obs in logspace(0.1, 20.0, 12) {
             gfp_inputs.push(vec![x_obs, x_inj, z_h, sigma_x]);
         }

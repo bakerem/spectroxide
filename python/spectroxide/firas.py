@@ -856,7 +856,7 @@ class FIRASData:
 
         Fits the model
 
-            I_obs(ν) − B(ν, T) = 4π ν³ A · 𝒯(x(T)) + G₀ · ν² B(ν, T_d)
+            I_obs(ν) − B(ν, T) = (2hν³/c²) A · 𝒯(x(T)) + G₀ · ν² B(ν, T_d)
 
         to the 43 FIRAS monopole residuals using the full 43 × 43
         covariance matrix. The first term on the RHS converts the
@@ -872,7 +872,7 @@ class FIRASData:
         The CMB reference temperature ``T`` is itself a free parameter
         (it encodes the unobservable temperature shift), and both the
         residuals and the template shape ``𝒯(x(T))`` with
-        ``x(T) = 2π ν / T`` depend nonlinearly on ``T``.  We therefore
+        ``x(T) = hν/(k_B T)`` depend nonlinearly on ``T``.  We therefore
         profile over ``T`` by scanning a grid around ``T₀``; at each ``T``
         the best-fit ``A`` and ``G₀`` are obtained analytically (the
         model is linear in both), and we take the ``T`` that minimises
@@ -1064,8 +1064,10 @@ class FIRASData:
 # Module-level convenience
 # ------------------------------------------------------------------
 
-# Scalar bounds from the literature (for quick checks without loading data)
+# Scalar bounds (for quick checks without loading data)
 MU_FIRAS_95 = 9e-5  # Fixsen et al. 1996, 95% CL
 Y_FIRAS_95 = 1.5e-5  # Fixsen et al. 1996, 95% CL
-MU_FIRAS_68 = 4.5e-5  # 68% CL (1-sigma)
-Y_FIRAS_68 = 7.5e-6  # 68% CL (1-sigma)
+# Convention: half the 95% values, NOT published 68% numbers (Fixsen's
+# actual 1-sigma is sigma_mu ~ 4e-5). Kept for backward compatibility.
+MU_FIRAS_68 = 4.5e-5
+Y_FIRAS_68 = 7.5e-6

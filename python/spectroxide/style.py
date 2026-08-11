@@ -38,9 +38,9 @@ def apply_style(*, usetex=True):
     Raises
     ------
     RuntimeError
-        If ``usetex=True`` but ``latex`` or ``dvipng`` are not found on
-        the system PATH.  The error message includes installation
-        instructions.
+        If ``usetex=True`` but ``latex`` is not found on the system PATH
+        (dvipng is needed too but is not checked here).  The error message
+        includes installation instructions.
     """
     if usetex and shutil.which("latex") is None:
         raise RuntimeError(

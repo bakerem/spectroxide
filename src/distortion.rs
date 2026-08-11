@@ -10,10 +10,12 @@ use crate::spectrum::{
 
 /// Default frequency band for Gram-Schmidt and B&F decompositions.
 ///
-/// PIXIE-like window in dimensionless frequency at T₀ = 2.725 K:
-/// x ∈ [0.5, 18] corresponds to ν ∈ [28, 1020] GHz. Matches the
-/// experimental band used in CJ2014 Appendix A.
+/// Lower edge of the PIXIE-like decomposition window in dimensionless
+/// frequency at T₀ = 2.725 K: x ∈ [0.5, 18] corresponds to
+/// ν ∈ [28, 1020] GHz, the experimental band used in CJ2014 Appendix A.
 pub const DEFAULT_DECOMP_X_MIN: f64 = 0.5;
+/// Upper edge of the PIXIE-like decomposition window; see
+/// [`DEFAULT_DECOMP_X_MIN`].
 pub const DEFAULT_DECOMP_X_MAX: f64 = 18.0;
 
 /// Complete distortion decomposition result.
@@ -418,10 +420,11 @@ pub fn decomposition_band_count(x_grid: &[f64]) -> usize {
     idx.len()
 }
 
-/// FIRAS 95% CL upper limits on spectral distortion parameters.
+/// FIRAS 95% CL upper limit on |μ|.
 ///
 /// Reference: Fixsen et al. (1996), ApJ 473, 576
 pub const FIRAS_MU_LIMIT: f64 = 9.0e-5;
+/// FIRAS 95% CL upper limit on |y| (same reference).
 pub const FIRAS_Y_LIMIT: f64 = 1.5e-5;
 
 /// Check distortion parameters against FIRAS limits.
@@ -435,9 +438,7 @@ pub fn firas_check(params: &DistortionParams) -> (f64, f64) {
 
 /// Convert distortion Δn(x) to specific intensity ΔI_ν in MJy/sr.
 ///
-/// ΔI_ν = (2hν³/c²) Δn(x) = (2hν³/c²) Δn(x)
-///
-/// where ν = x k_B T_0 / h.
+/// ΔI_ν = (2hν³/c²) Δn(x), where ν = x k_B T_0 / h.
 pub fn delta_n_to_intensity_mjy(x: f64, delta_n: f64, t_cmb: f64) -> f64 {
     let nu = x * crate::constants::K_BOLTZMANN * t_cmb / crate::constants::HPLANCK;
     let prefactor = 2.0 * crate::constants::HPLANCK * nu.powi(3)

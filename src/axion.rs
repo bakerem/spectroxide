@@ -80,8 +80,8 @@ pub fn gamma_con_axion(
     let h_ev = hbar_ev_s * cosmo.hubble(z_res);
     let d = dln_omega_pl_sq_dlna(z_res, cosmo);
     let one_plus_z4 = (1.0 + z_res).powi(4);
-    let gc = std::f64::consts::PI * kappa * kappa * one_plus_z4 * t_cmb_ev
-        / (m_ev * m_ev * h_ev * d);
+    let gc =
+        std::f64::consts::PI * kappa * kappa * one_plus_z4 * t_cmb_ev / (m_ev * m_ev * h_ev * d);
     Some((gc, z_res))
 }
 
@@ -128,6 +128,9 @@ mod tests {
         let cosmo = Cosmology::default();
         let (gc, z_res) = gamma_con_axion(1e-10, 1.0, 1e-7, &cosmo).unwrap();
         assert!(gc.is_finite() && gc > 0.0, "γ_con = {gc}");
-        assert!((z_res - 3.21e4).abs() / 3.21e4 < 0.05, "z_res = {z_res:.3e}");
+        assert!(
+            (z_res - 3.21e4).abs() / 3.21e4 < 0.05,
+            "z_res = {z_res:.3e}"
+        );
     }
 }

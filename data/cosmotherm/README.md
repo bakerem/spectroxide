@@ -39,11 +39,11 @@ from Chluba's website. Use the download script:
 Source: https://www.jb.man.ac.uk/~jchluba/Science/CosmoTherm/Download.html
 
 The GF database uses our default cosmology (h=0.71, Omega_b=0.044) matching
-Chluba (2013), MNRAS 436, 2232.
+Chluba (2013), MNRAS 434, 352.
 
 ## References
 
 - Chluba & Sunyaev (2012), MNRAS 419, 1294 [arXiv:1109.6552]
 - Chluba, Khatri & Sunyaev (2012), MNRAS 425, 1129 [arXiv:1202.0057]
-- Chluba (2013), MNRAS 436, 2232 [arXiv:1304.6120]
+- Chluba (2013), MNRAS 434, 352 [arXiv:1304.6120]
 - Chluba (2016), MNRAS 460, 227 [arXiv:1603.02496]

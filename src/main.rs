@@ -23,9 +23,6 @@ fn main() {
         }
     }
 
-    eprintln!("spectroxide: CMB spectral distortion solver");
-    eprintln!("==========================================\n");
-
     let cli_args: Vec<String> = std::env::args().skip(1).collect();
 
     let command = if cli_args.is_empty() {
@@ -42,6 +39,16 @@ fn main() {
         }
     };
 
+    // Banner is a runtime diagnostic (stderr); suppress it for help output,
+    // which already opens with the program name on stdout.
+    if !matches!(
+        command,
+        cli::Command::Help | cli::Command::HelpFor(_) | cli::Command::PhysicsHash
+    ) {
+        eprintln!("spectroxide: CMB spectral distortion solver");
+        eprintln!("==========================================\n");
+    }
+
     let result = run_command(command);
     if let Err(e) = result {
         eprintln!("Error: {e}");
@@ -53,6 +60,10 @@ fn run_command(command: cli::Command) -> Result<(), String> {
     match command {
         cli::Command::Help => {
             cli::print_help();
+            Ok(())
+        }
+        cli::Command::HelpFor(ref sub) => {
+            cli::print_subcommand_help(sub);
             Ok(())
         }
         cli::Command::Info(opts) => {

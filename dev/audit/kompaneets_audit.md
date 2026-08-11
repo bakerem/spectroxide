@@ -2,7 +2,7 @@
 
 **Auditor:** physics-inquisitor (adversarial, anchored outside the code)
 **Date:** 2026-07-03
-**Commit:** 1f45d64 (branch `main` per plan; audited on `inhomog-distortions` working tree, file unchanged)
+**Commit:** 1f45d64 (branch `main` per plan; audited on a local working tree, file unchanged)
 **Verdict:** NO CONFIRMED BUGS. Two documented convention/accuracy trade-offs, one
 stale docstring (LOW), one test-coverage gap. All 13 module unit tests + 7
 integration Kompaneets tests pass.

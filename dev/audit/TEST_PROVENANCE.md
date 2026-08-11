@@ -403,7 +403,7 @@ Flagged audit gaps (code-derived target without a pin label): **1**
 | tests/adversarial_inputs.rs | `test_injection_near_z_start` | analytic | energy ratio tight/wide z_start > 0.90 (3-sigma Gaussian tail loses ~0.1%) | Gaussian tail integral (closed form); 10% tolerance is loose |
 | tests/adversarial_inputs.rs | `test_two_near_simultaneous_bursts` | analytic | linearity mu(2*drho)/mu(drho) = 2 within 0.1 | linearity of the perturbed Boltzmann equation for small distortions |
 | tests/adversarial_inputs.rs | `test_very_narrow_sigma_z` | structural | drho finite and \|drho\| > 1e-7 (nonzero) for sigma_z=10 burst | finiteness/nonzero check, no physics target |
-| tests/cli_integration.rs | `test_cli_greens_json_output` | cross-method | CLI gf_mu at z_h=2e5 matches (3/kappa_c)*J_bb*J_mu*drho to 10%; mu/y > 20 | Chluba 2013 MNRAS 436, 2232 Eq. 5, evaluated via the library's own visibility fits (binary vs library cross-check) |
+| tests/cli_integration.rs | `test_cli_greens_json_output` | cross-method | CLI gf_mu at z_h=2e5 matches (3/kappa_c)*J_bb*J_mu*drho to 10%; mu/y > 20 | Chluba 2013 MNRAS 434, 352 Eq. 5, evaluated via the library's own visibility fits (binary vs library cross-check) |
 | tests/cli_integration.rs | `test_cli_solve_single_burst_json` | analytic | energy sum mu/1.401 + 4y in [0.5, 2.0]e-5 for drho=1e-5 at z=5e4; mu,y > 0 | energy conservation identity mu/1.401 + 4y = drho/rho |
 | tests/cli_integration.rs | `test_execute_sweep_parallel_rows_consistent` | cross-method | sweep rows: GF mu matches Chluba Eq.5 to 15%, PDE-vs-GF mu to 30%, row order 1e-12, drho spread > 0.5% | Chluba 2013 Eq. 5 (via library fns) + PDE-vs-GF agreement; tolerances justified in doc comment |
 | tests/convergence_order.rs | `convergence_order_joint` | analytic | joint grid+timestep Richardson median order in [1.0, 2.5] | IMEX adaptive theoretical order 1.0-1.5 |
@@ -455,7 +455,7 @@ Flagged audit gaps (code-derived target without a pin label): **1**
 | tests/greens_function_checks.rs | `chluba2013_visibility_pde_cross_validation` | cross-method | PDE mu matches GF visibility formula to 12% at z_h=2e5 | PDE (no fitting formulas) vs Chluba 2013 GF fits |
 | tests/heat_injection.rs | `assert_rel` | structural | helper: generic relative-error assertion | test helper, not a test; inventory attributes its internal assert to this fn |
 | tests/heat_injection.rs | `find_resonance_z` | structural | helper: asserts omega_pl bisection bracket contains resonance | test helper (bracket precondition), not a test |
-| tests/heat_injection.rs | `golden_mu_era_spectral_shape` | literature | PDE mu = (3/kappa_c) J_bb* J_mu drho (~1.36e-5) to 10%; y/mu<8%; energy to 2%; M(x) sign structure | Chluba 2013 MNRAS 436, 2232 Eq. 5 (docstring gives oracle+uncertainty; production grid) |
+| tests/heat_injection.rs | `golden_mu_era_spectral_shape` | literature | PDE mu = (3/kappa_c) J_bb* J_mu drho (~1.36e-5) to 10%; y/mu<8%; energy to 2%; M(x) sign structure | Chluba 2013 MNRAS 434, 352 Eq. 5 (docstring gives oracle+uncertainty; production grid) |
 | tests/heat_injection.rs | `golden_transition_era_spectral_shape` | analytic | energy to 2%; mu,y>0; sum rule mu/1.401+4y within factor 2.5 of drho | energy conservation + basis-independent sum rule (docstring explains why mu/y not compared to GF) |
 | tests/heat_injection.rs | `golden_y_era_spectral_shape` | analytic | y = drho/4 to 3%; mu/y<4%; energy to 1%; Y_SZ sign structure; step count bounds | exact y-era relation |
 | tests/heat_injection.rs | `test_adaptive_dz_bounds` | structural | dz_min <= dz <= 0.05z | solver config contract |
@@ -640,7 +640,7 @@ Flagged audit gaps (code-derived target without a pin label): **1**
 | tests/heat_injection.rs | `test_tabulated_heating_matches_single_burst` | cross-method | tabulated interpolation vs closed-form SingleBurst mu,y to 2% | two injection code paths of same solver (interpolation consistency) |
 | tests/heat_injection.rs | `test_tabulated_heating_zero_outside_bounds` | structural | rate zero outside table, positive inside | API contract |
 | tests/heat_injection.rs | `test_tabulated_photon_source_interpolation` | structural | bilinear interpolation positive inside, zero outside | API contract |
-| tests/heat_injection.rs | `test_thermalization_era_pure_temperature_shift` | literature | mu/drho = (3/kappa_c) J_bb*(3e6) J_mu(3e6) ~ 0.08 to 10%; energy to 3% | Chluba 2013 MNRAS 436, 2232 Eq. 5 (docstring gives oracle+uncertainty); #[ignore]d production-grid test |
+| tests/heat_injection.rs | `test_thermalization_era_pure_temperature_shift` | literature | mu/drho = (3/kappa_c) J_bb*(3e6) J_mu(3e6) ~ 0.08 to 10%; energy to 3% | Chluba 2013 MNRAS 434, 352 Eq. 5 (docstring gives oracle+uncertainty); #[ignore]d production-grid test |
 | tests/heat_injection.rs | `test_thermalization_suppression_high_z` | dimensional | mu,y < 1e-3 * drho at z=5e6 | exponential J_bb* suppression argument (~exp(-(z/2e6)^2.5)) |
 | tests/heat_injection.rs | `test_thermalization_suppression_monotonic` | dimensional | J_bb* and mu/drho monotone decreasing with z; mu/drho<0.01 at z=5e6 | monotonicity of thermalization efficiency |
 | tests/heat_injection.rs | `test_thomas_algorithm_accuracy` | analytic | tridiagonal solve of -u''=sin(pi x) matches sin(pi x)/pi^2 to O(h^2) | exact PDE solution |
@@ -649,7 +649,7 @@ Flagged audit gaps (code-derived target without a pin label): **1**
 | tests/heat_injection.rs | `test_transition_region_pde_z5e4_gf_comparison` | cross-method | PDE vs GF: mu within 100%, y within 300%, same signs | PDE B&F vs GF visibility convolution; loose by documented decomposition-basis mismatch |
 | tests/heat_injection.rs | `test_transition_region_pde_z8e4` | dimensional | mu,y>0; mu>y at z=8e4; energy to 5% | mu-dominance in mu-side transition + energy conservation |
 | tests/heat_injection.rs | `test_visibility_function_physical_constraints` | dimensional | J's in [0,1], monotone, correct limits; J_mu/J_y crossing in [3e4,1e5] | model-independent limits; crossing range from mu-y transition literature |
-| tests/heat_injection.rs | `test_visibility_functions_literature_limits` | literature | J_bb*, J_mu, J_y limits and z~5e4 crossover; visibility sum within 25% of 1 | Chluba 2013 MNRAS 436, 2232 Fig. 2 regime boundaries |
+| tests/heat_injection.rs | `test_visibility_functions_literature_limits` | literature | J_bb*, J_mu, J_y limits and z~5e4 crossover; visibility sum within 25% of 1 | Chluba 2013 MNRAS 434, 352 Fig. 2 regime boundaries |
 | tests/heat_injection.rs | `test_x_balanced_from_first_principles` | analytic | X_BALANCED = 4G3/(3G2) ~ 3.602 to 1e-14 | exact constant |
 | tests/heat_injection.rs | `test_y_efficiency_y_era` | analytic | y = drho/4 (visibility-corrected) to 5% at z=3000; mu << y | exact definition of y-parameter; ZS 1969, Kompaneets 1957 |
 | tests/heat_injection.rs | `test_y_era_burst_spectral_purity` | analytic | y/(drho/4) in [0.7,1.3]; \|mu/y\|<0.20 | y=drho/4 exact in y-era |

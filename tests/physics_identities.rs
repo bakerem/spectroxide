@@ -7,7 +7,7 @@
 
 use spectroxide::bremsstrahlung::br_emission_coefficient;
 use spectroxide::constants::{
-    theta_z, BETA_MU, C_LIGHT, G1_PLANCK, G2_PLANCK, G3_PLANCK, KAPPA_C, SIGMA_THOMSON, ZETA_3,
+    BETA_MU, C_LIGHT, G1_PLANCK, G2_PLANCK, G3_PLANCK, KAPPA_C, SIGMA_THOMSON, ZETA_3, theta_z,
 };
 use spectroxide::cosmology::Cosmology;
 use spectroxide::double_compton::dc_emission_coefficient;
@@ -59,11 +59,7 @@ fn thomson_depth(cosmo: &Cosmology, z_max: f64, n: usize) -> (Vec<f64>, Vec<f64>
     for i in 1..=n {
         tau[i] = tau[i - 1] + 0.5 * (dtau[i] + dtau[i - 1]) * dz;
     }
-    let g: Vec<f64> = dtau
-        .iter()
-        .zip(&tau)
-        .map(|(d, t)| d * (-t).exp())
-        .collect();
+    let g: Vec<f64> = dtau.iter().zip(&tau).map(|(d, t)| d * (-t).exp()).collect();
     (z, tau, g)
 }
 
@@ -948,10 +944,7 @@ fn test_thermalization_exponent_five_halves() {
 
     // Least-squares slope of ln τ vs ln z.
     let n = ln_z.len() as f64;
-    let (mz, mt) = (
-        ln_z.iter().sum::<f64>() / n,
-        ln_tau.iter().sum::<f64>() / n,
-    );
+    let (mz, mt) = (ln_z.iter().sum::<f64>() / n, ln_tau.iter().sum::<f64>() / n);
     let num: f64 = ln_z
         .iter()
         .zip(&ln_tau)
@@ -1023,8 +1016,7 @@ fn test_electron_temperature_compton_adiabatic_balance() {
         let n_h = cosmo.n_h(z);
         let n_he = cosmo.n_he(z);
         let n_e = cosmo.n_e(z, x_e);
-        let gamma_c = 8.0 * SIGMA_THOMSON * cosmo.rho_gamma(z) / (3.0 * M_ELECTRON * C_LIGHT)
-            * n_e
+        let gamma_c = 8.0 * SIGMA_THOMSON * cosmo.rho_gamma(z) / (3.0 * M_ELECTRON * C_LIGHT) * n_e
             / (n_e + n_h + n_he);
         let h = cosmo.hubble(z);
         1.0 - h / (gamma_c + h)
@@ -1190,8 +1182,7 @@ fn test_photon_mu_at_critical_frequency_closed_form() {
 
         // P_s = 1/e at x_inj = x_c, so the number-vs-energy balance factor is
         // exactly 1 − x₀/(e·x_c).
-        let want = ALPHA_RHO * xc * (3.0 / KAPPA_C) * j_bb * j_mu
-            * (1.0 - inv_e * X_BALANCED / xc);
+        let want = ALPHA_RHO * xc * (3.0 / KAPPA_C) * j_bb * j_mu * (1.0 - inv_e * X_BALANCED / xc);
         let got = spectroxide::greens::mu_from_photon_injection(xc, z_h, 1.0);
 
         assert!(

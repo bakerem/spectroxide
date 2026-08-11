@@ -312,8 +312,8 @@ fn hierarchy_residuals(r: &MomentRun, k: usize) -> (f64, f64, f64) {
         let fd = (m_of(&r.m[j + 1], k) - m_of(&r.m[j], k)) / dy;
 
         let rhs_a = 0.5 * (rhs_tier_a(&r.m[j], k) + rhs_tier_a(&r.m[j + 1], k));
-        let rhs_b = 0.5
-            * (rhs_tier_b(&r.m[j], &r.c[j], k) + rhs_tier_b(&r.m[j + 1], &r.c[j + 1], k));
+        let rhs_b =
+            0.5 * (rhs_tier_b(&r.m[j], &r.c[j], k) + rhs_tier_b(&r.m[j + 1], &r.c[j + 1], k));
 
         let denom = rhs_b.abs().max(1e-300);
         worst_a = worst_a.max((fd - rhs_a).abs() / denom);
@@ -516,7 +516,10 @@ fn t5_phi_source_shape_and_amplitude() {
     assert!(at(1.0) < 0.0, "Δn should be < 0 at x=1 for T_e>T_z");
     // Crossing: |Δn| near 3.830 must be small relative to peak.
     let cross = at(3.830).abs() / peak;
-    assert!(cross < 0.05, "Y_SZ zero crossing not near 3.830 (|Δn|/peak={cross:.3e})");
+    assert!(
+        cross < 0.05,
+        "Y_SZ zero crossing not near 3.830 (|Δn|/peak={cross:.3e})"
+    );
 
     // Library-convention check: hardcoded Y_SZ must match spectrum::y_shape
     // (catches convention drift and validates the library shape normalization).
@@ -529,7 +532,10 @@ fn t5_phi_source_shape_and_amplitude() {
         worst_lib = worst_lib.max((ysz_hardcoded(x) - spectrum::y_shape(x)).abs() / denom);
     }
     eprintln!("T5|hardcoded Y_SZ vs spectrum::y_shape: max rel diff = {worst_lib:.3e}");
-    assert!(worst_lib < 1e-10, "spectrum::y_shape disagrees with analytic Y_SZ");
+    assert!(
+        worst_lib < 1e-10,
+        "spectrum::y_shape disagrees with analytic Y_SZ"
+    );
 
     // Number conservation on the (φ−1) branch. The branch is a pure flux
     // divergence, so the discrete operator injects EXACTLY the photon number
@@ -570,9 +576,7 @@ fn t6_linearity() {
     let (_, b_full, cont_full) = hierarchy_residuals(&full, 3);
     let (_, b_half, cont_half) = hierarchy_residuals(&half, 3);
     let (_, b_neg, cont_neg) = hierarchy_residuals(&neg, 3);
-    eprintln!(
-        "T6|k=3 tier-b rel residual: A={b_full:.3e} A/2={b_half:.3e} −A={b_neg:.3e}"
-    );
+    eprintln!("T6|k=3 tier-b rel residual: A={b_full:.3e} A/2={b_half:.3e} −A={b_neg:.3e}");
     eprintln!(
         "T6|k=3 contamination bound: A={cont_full:.3e} A/2={cont_half:.3e} −A={cont_neg:.3e}"
     );
@@ -588,7 +592,10 @@ fn t6_linearity() {
     // is exact for either sign; a large asymmetry signals a sign-dependent bug).
     let asym = (b_full - b_neg).abs() / (b_full + b_neg).max(1e-300);
     eprintln!("T6|A→−A tier-b relative asymmetry = {asym:.3e}");
-    assert!(asym < 0.5, "Large A→−A asymmetry in tier-b residual: {asym:.3e}");
+    assert!(
+        asym < 0.5,
+        "Large A→−A asymmetry in tier-b residual: {asym:.3e}"
+    );
 
     // The Δn²-driven contamination scales ~linearly with A (relative): halving
     // A should roughly halve the contamination bound. Loose sanity check.
@@ -606,7 +613,10 @@ fn t6_linearity() {
 #[test]
 fn regime_boundary_clean() {
     let r = default_run();
-    eprintln!("regime|max boundary |Δn|/peak over run = {:.3e}", r.bdry_ratio);
+    eprintln!(
+        "regime|max boundary |Δn|/peak over run = {:.3e}",
+        r.bdry_ratio
+    );
     // The broadened line must not reach the grid boundaries (else the zero-flux
     // treatment contaminates the moments).
     assert!(
@@ -693,7 +703,10 @@ fn t_h_theorem_monotonicity() {
             "II.6|H-theorem amp_frac={amp_frac}: max +ΔF coarse={pos_coarse:.3e} fine={pos_fine:.3e} | total F drop={drop_coarse:.3e}"
         );
         // F must decrease overall (the flow is dissipative).
-        assert!(drop_coarse > 0.0, "F did not decrease (amp_frac={amp_frac})");
+        assert!(
+            drop_coarse > 0.0,
+            "F did not decrease (amp_frac={amp_frac})"
+        );
         // Any positive per-step increment is O(Δτ²) truncation: it must shrink
         // under dτ halving (or already be negligible), and be tiny vs the total
         // F decrease (not a systematic increase).

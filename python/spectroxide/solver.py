@@ -57,8 +57,8 @@ def get_physics_hash(
     Parameters
     ----------
     project_root : str or Path, optional
-        Path to the Rust project root.  Defaults to ``../../`` relative
-        to this module (the repository root).
+        Path to the Rust project root.  Defaults to the repository root
+        (three levels up from this file).
     timeout : float, optional
         Maximum time in seconds to wait for the binary (default 60.0).
 
@@ -221,23 +221,19 @@ def _build_cosmo_args(cosmo_params):
     return args
 
 
+# Keys must correspond to flags the Rust CLI actually parses; the CLI
+# rejects unknown flags, so dead entries here become hard errors there.
 _INJECTION_PARAM_MAP = {
     "f_x": "--f-x",
     "gamma_x": "--gamma-x",
     "f_ann": "--f-ann",
-    "n_s": "--n-s",
-    "amplitude": "--amplitude",
     "sigma_z": "--sigma-z",
     "sigma_x": "--sigma-x",
     "z_h": "--z-h",
     "x_inj": "--x-inj",
     "delta_n_over_n": "--delta-n-over-n",
-    "a_s": "--a-s",
-    "k_pivot": "--k-pivot",
-    "k_min": "--k-min",
     "x_inj_0": "--x-inj-0",
     "f_inj": "--f-inj",
-    "gamma_con": "--gamma-con",
     "epsilon": "--epsilon",
     "m_ev": "--m-ev",
     "g_agamma": "--g-agamma",
@@ -264,20 +260,6 @@ def _injection_param_args(injection):
         else:
             args.extend([_INJECTION_PARAM_MAP[key], str(value)])
     return args
-
-
-def _build_injection_args(injection):
-    """Convert an injection scenario dict to flat-flag CLI arguments.
-
-    Returns ``["--injection", type, ...flags...]`` for the legacy
-    flat-flag CLI used by ``run_sweep`` / ``run_photon_sweep``.  For the
-    subcommand form (``solve <type> ...``), use :func:`_injection_param_args`
-    directly.
-    """
-    if injection is None:
-        return []
-    inj_type = injection["type"].replace("_", "-")
-    return ["--injection", inj_type, *_injection_param_args(injection)]
 
 
 def _build_common_solver_args(
@@ -664,7 +646,7 @@ def _run_pde_single_solve(
         ]
     else:
         # No injection, just initial perturbation: use solve single-burst
-        # with zero amplitude as a no-op injection carrier for --dn-planck/--dn-depletion
+        # with zero amplitude as a no-op injection carrier for --dn-planck
         z_h_dummy = z_start if z_start is not None else 1e5
         # Explicit sigma_z so the CLI's 100.0 floor doesn't violate the
         # sigma_z <= 0.3*z_h validator when z_h_dummy < 333 (e.g. low-mass
@@ -705,7 +687,7 @@ def _run_pde_single_solve(
         elif injection["type"] in (
             "decaying_particle",
             "annihilating_dm",
-            "annihilating_dm_p_wave",
+            "annihilating_dm_pwave",
         ):
             # Energy injected at z >> z_th ~ 2e6 is fully thermalized;
             # starting at 3e6 captures all observable distortions.
@@ -769,7 +751,7 @@ def run_sweep(
         Fractional energy injection ``Δρ/ρ``.  Default ``1e-5``.
     z_injections : sequence of float, optional
         Injection redshifts to sweep over.  If *None* (default), the Rust
-        binary uses a 15-point log-spaced grid from 2e3 to 5e5.
+        binary uses its built-in 17-point grid from 2e3 to 3e6.
     z_end : float, optional
         Final redshift for PDE evolution.  Default 500.
     z_start : float, optional
@@ -1156,9 +1138,11 @@ def run_single(
     Two modes of operation
     ----------------------
     **Single burst** (default) — provide ``z_h`` and ``delta_rho`` for a
-    delta-function energy injection at one redshift.  Uses the
-    cosmo-aware Green's function so ``J_Compton(z)`` correctly suppresses
-    y at ``z_h ≲ 1100``.
+    delta-function energy injection at one redshift, evaluated with the
+    analytic Green's function (Chluba 2013 visibility fits).  The heat
+    Green's function is *not* cosmology-aware: post-recombination
+    injections (``z_h < 1100``) receive no Compton suppression and a
+    warning is issued.
 
     **Custom heating** — provide ``dq_dz``, a callable returning
     ``d(Δρ/ρ)/dz`` (positive for heating).  The spectrum is computed

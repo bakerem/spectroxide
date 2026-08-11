@@ -123,27 +123,41 @@ fn check_photosphere(z_end: f64, z_h: f64, z_start: f64, drho: f64, tol: f64) {
         let (xc_fit, npts, mn, mx) = fit_xc(&x, &mu, wl * xc, wh * xc);
         eprintln!(
             "II.1|z={z_end:.1e} window=[{:.3}x_c,{:.0}x_c] npts={npts} μ∈[{mn:.3e},{mx:.3e}] x_c_fit={xc_fit:.4e} ratio={:.3}",
-            wl, wh, xc_fit / xc
+            wl,
+            wh,
+            xc_fit / xc
         );
         fits.push(xc_fit);
     }
     eprintln!(
         "II.1|z={z_end:.1e}: x_c_lit={xc:.4e} (DC={:.3e},BR={:.3e}) μ_amp={mu_amp:.3e} y={y:.3e} |y/μ|={:.3} ΔT/T={delta_t:.3e}",
-        x_c_dc_lit(z_end), x_c_br_lit(z_end), (y / mu_amp).abs()
+        x_c_dc_lit(z_end),
+        x_c_br_lit(z_end),
+        (y / mu_amp).abs()
     );
 
     // μ-dominance is required for the linearized Bose-Einstein extraction.
-    assert!((y / mu_amp).abs() < 0.05, "not μ-dominated at z={z_end:.1e}: |y/μ|={:.3}", (y / mu_amp).abs());
+    assert!(
+        (y / mu_amp).abs() < 0.05,
+        "not μ-dominated at z={z_end:.1e}: |y/μ|={:.3}",
+        (y / mu_amp).abs()
+    );
 
     let xc_main = fits[0];
     let spread = (fits.iter().cloned().fold(f64::MIN, f64::max)
         - fits.iter().cloned().fold(f64::MAX, f64::min))
         / xc;
-    eprintln!("II.1|z={z_end:.1e} window spread={spread:.3e} main ratio={:.3}", xc_main / xc);
+    eprintln!(
+        "II.1|z={z_end:.1e} window spread={spread:.3e} main ratio={:.3}",
+        xc_main / xc
+    );
 
     // Window-to-window stability: the fitted x_c must not depend strongly on
     // the (arbitrary) window bounds.
-    assert!(spread < 0.5 * tol, "x_c fit window-sensitive at z={z_end:.1e}: spread={spread:.3e}");
+    assert!(
+        spread < 0.5 * tol,
+        "x_c fit window-sensitive at z={z_end:.1e}: spread={spread:.3e}"
+    );
     // The physics anchor.
     let ratio = xc_main / xc;
     assert!(
@@ -161,7 +175,10 @@ fn mu_photosphere_dc_dominated_z2e6() {
     let z_end = 2.0e6;
     // Bonus cross-check: greens::x_c matches the transcribed Chluba 2015 formula.
     let rel_greens = (greens::x_c(z_end) - x_c_lit(z_end)).abs() / x_c_lit(z_end);
-    assert!(rel_greens < 1e-9, "greens::x_c disagrees with transcribed Chluba 2015: {rel_greens:.3e}");
+    assert!(
+        rel_greens < 1e-9,
+        "greens::x_c disagrees with transcribed Chluba 2015: {rel_greens:.3e}"
+    );
     check_photosphere(z_end, 3.0e6, 4.3e6, 1e-5, 0.12);
 }
 

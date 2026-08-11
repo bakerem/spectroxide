@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test                     # Run all tests (174 unit + 301 integration + 3 doc pass; +3 ignored)
+cargo test                     # Run all tests (178 unit + 301 integration + 3 doc pass; +3 ignored)
 cargo test --release           # Run tests with optimizations (some solver tests are slow in debug)
 cargo test test_name           # Run a single test by name
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid

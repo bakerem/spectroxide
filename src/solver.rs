@@ -4,11 +4,12 @@
 //! Kompaneets source drives y-type distortion → DC/BR create photons
 //! to convert y → μ and approach Bose-Einstein equilibrium.
 //!
-//! The Kompaneets equation is split into:
-//! 1. Conservative redistribution at T_e^eq (no net energy change)
-//! 2. Injection source ∝ (ρ_e - ρ_eq) that adds energy from injection
-//!
-//! This ensures energy conservation: only injection adds energy.
+//! The solver evolves the single Kompaneets operator at the full electron
+//! temperature θ_e = θ_z ρ_e, with ρ_e as an extra Newton unknown coupled to
+//! the photon field; the (φ−1)·n_pl(1+n_pl) term (φ = 1/ρ_e) carries the
+//! heating. Conceptually this decomposes into conservative redistribution at
+//! equilibrium plus an injection source ∝ (ρ_e − ρ_eq), but the
+//! implementation does not operator-split along that line.
 //!
 //! References:
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294
@@ -271,11 +272,12 @@ pub struct SolverDiagnostics {
 /// ThermalizationSolver::new(cosmo, grid_config)   // or ::builder(...)
 ///   → set_injection(scenario)                      // optional
 ///   → run_with_snapshots(&[z1, z2, ...])           // evolve the PDE
-///   → snapshots[i].{mu, y, delta_t, ...}           // read results
+///   → snapshots[i].{mu, y, accumulated_delta_t, ...} // read results
 /// ```
 ///
 /// The solver can be re-run after calling `reset()`, which clears Δn and
-/// diagnostic counters but keeps the cosmology and grid.
+/// diagnostic counters and restores `config` and all mode flags to their
+/// defaults, keeping only the cosmology and grid (see [`Self::reset`]).
 ///
 /// # Energy injection
 ///
@@ -1785,6 +1787,8 @@ pub struct SolverBuilder {
     no_auto_refine: bool,
     max_newton_iter: Option<usize>,
     nc_stride: Option<usize>,
+    dtau_max_photon_source: Option<f64>,
+    cn_dcbr: Option<bool>,
 }
 
 impl SolverBuilder {
@@ -1807,6 +1811,8 @@ impl SolverBuilder {
             no_auto_refine: false,
             max_newton_iter: None,
             nc_stride: None,
+            dtau_max_photon_source: None,
+            cn_dcbr: None,
         }
     }
 
@@ -1856,10 +1862,13 @@ impl SolverBuilder {
         self.dtau_max = Some(config.dtau_max);
         self.nc_z_min = Some(config.nc_z_min);
         self.max_newton_iter = Some(config.max_newton_iter);
+        self.dtau_max_photon_source = Some(config.dtau_max_photon_source);
+        self.cn_dcbr = Some(config.cn_dcbr);
         self
     }
 
-    /// Set the maximum Kompaneets step size.
+    /// Set the maximum fractional change in ln(1+z) per step (the
+    /// Kompaneets-accuracy limiter is `dtau_max`, not this).
     pub fn dy_max(mut self, val: f64) -> Self {
         self.dy_max = Some(val);
         self
@@ -1979,9 +1988,11 @@ impl SolverBuilder {
             dz_min: self.dz_min.unwrap_or(defaults.dz_min),
             dtau_max: self.dtau_max.unwrap_or(defaults.dtau_max),
             nc_z_min: self.nc_z_min.unwrap_or(defaults.nc_z_min),
-            dtau_max_photon_source: defaults.dtau_max_photon_source,
+            dtau_max_photon_source: self
+                .dtau_max_photon_source
+                .unwrap_or(defaults.dtau_max_photon_source),
             max_newton_iter: self.max_newton_iter.unwrap_or(defaults.max_newton_iter),
-            cn_dcbr: defaults.cn_dcbr,
+            cn_dcbr: self.cn_dcbr.unwrap_or(defaults.cn_dcbr),
         };
         config.validate()?;
 
@@ -2437,6 +2448,47 @@ mod tests {
             last.delta_rho_over_rho,
             drho_err * 100.0,
         );
+    }
+
+    #[test]
+    fn test_solver_builder_config_roundtrip() {
+        // Regression: solver_config() used to drop dtau_max_photon_source and
+        // cn_dcbr, silently substituting defaults in build(). Every field is
+        // set to a non-default value and asserted individually, so wiring a
+        // future field through the builder incompletely fails here.
+        let supplied = SolverConfig {
+            z_start: 2.1e5,
+            z_end: 1e5,
+            dy_max: 0.013,
+            dz_min: 3e-6,
+            dtau_max: 7.0,
+            nc_z_min: 3.3e4,
+            dtau_max_photon_source: 0.37,
+            max_newton_iter: 14,
+            cn_dcbr: !SolverConfig::default().cn_dcbr,
+        };
+        let solver = SolverBuilder::new(Cosmology::default())
+            .grid_fast()
+            .injection(InjectionScenario::SingleBurst {
+                z_h: 2e5,
+                delta_rho_over_rho: 1e-5,
+                sigma_z: 100.0,
+            })
+            .solver_config(supplied.clone())
+            .build()
+            .unwrap();
+        assert_eq!(solver.config.z_start, supplied.z_start);
+        assert_eq!(solver.config.z_end, supplied.z_end);
+        assert_eq!(solver.config.dy_max, supplied.dy_max);
+        assert_eq!(solver.config.dz_min, supplied.dz_min);
+        assert_eq!(solver.config.dtau_max, supplied.dtau_max);
+        assert_eq!(solver.config.nc_z_min, supplied.nc_z_min);
+        assert_eq!(
+            solver.config.dtau_max_photon_source,
+            supplied.dtau_max_photon_source
+        );
+        assert_eq!(solver.config.max_newton_iter, supplied.max_newton_iter);
+        assert_eq!(solver.config.cn_dcbr, supplied.cn_dcbr);
     }
 
     #[test]

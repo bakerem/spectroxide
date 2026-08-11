@@ -92,8 +92,10 @@ pub fn y_shape(x: f64) -> f64 {
     }
 }
 
-/// Numerical integral of x^n * n_pl(x) over [0, x_max] using the trapezoidal rule
-/// on a logarithmic grid. Used for validation against analytic G_n values.
+/// Numerical integral of x^n * n_pl(x) over [x_min, x_max] using the
+/// trapezoidal rule on a logarithmic grid. Used for validation against
+/// analytic G_n values (which are the [0, ∞) integrals; choose x_min small
+/// and x_max ≳ 30 accordingly).
 pub fn spectral_integral(n: i32, x_min: f64, x_max: f64, num_points: usize) -> f64 {
     // Use log-spaced grid for better accuracy at low x
     let log_min = x_min.ln();

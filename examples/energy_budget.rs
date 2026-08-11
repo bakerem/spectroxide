@@ -111,12 +111,14 @@ fn mode_quad() {
         ("production(N=4000, x∈[1e-5,60])", GridConfig::production()),
     ] {
         let g = FrequencyGrid::new(&gc);
-        let gbb: Vec<f64> = g.x.iter().map(|&x| spectroxide::spectrum::g_bb(x)).collect();
-        let m: Vec<f64> = g
-            .x
-            .iter()
-            .map(|&x| spectroxide::spectrum::mu_shape(x))
-            .collect();
+        let gbb: Vec<f64> =
+            g.x.iter()
+                .map(|&x| spectroxide::spectrum::g_bb(x))
+                .collect();
+        let m: Vec<f64> =
+            g.x.iter()
+                .map(|&x| spectroxide::spectrum::mu_shape(x))
+                .collect();
         let k3 = KAPPA_C / 3.0;
         println!(
             "  {label}:  x³G_bb trapz={:+.3e} midx={:+.3e} | x³M trapz={:+.3e} midx={:+.3e}",
@@ -133,12 +135,48 @@ fn mode_quad() {
 fn mode_heat() {
     let drho_inj = 1e-5;
     let cfgs = [
-        HeatCfg { label: "dtau=10 (default)", n_points: 2000, dtau_max: 10.0, dy_max: 0.02, no_dcbr: false },
-        HeatCfg { label: "dtau=10, N=4000  ", n_points: 4000, dtau_max: 10.0, dy_max: 0.02, no_dcbr: false },
-        HeatCfg { label: "dtau=10, dy=0.005", n_points: 2000, dtau_max: 10.0, dy_max: 0.005, no_dcbr: false },
-        HeatCfg { label: "dtau=10, no DC/BR", n_points: 2000, dtau_max: 10.0, dy_max: 0.02, no_dcbr: true },
-        HeatCfg { label: "dtau=2           ", n_points: 2000, dtau_max: 2.0, dy_max: 0.02, no_dcbr: false },
-        HeatCfg { label: "dtau=1           ", n_points: 2000, dtau_max: 1.0, dy_max: 0.02, no_dcbr: false },
+        HeatCfg {
+            label: "dtau=10 (default)",
+            n_points: 2000,
+            dtau_max: 10.0,
+            dy_max: 0.02,
+            no_dcbr: false,
+        },
+        HeatCfg {
+            label: "dtau=10, N=4000  ",
+            n_points: 4000,
+            dtau_max: 10.0,
+            dy_max: 0.02,
+            no_dcbr: false,
+        },
+        HeatCfg {
+            label: "dtau=10, dy=0.005",
+            n_points: 2000,
+            dtau_max: 10.0,
+            dy_max: 0.005,
+            no_dcbr: false,
+        },
+        HeatCfg {
+            label: "dtau=10, no DC/BR",
+            n_points: 2000,
+            dtau_max: 10.0,
+            dy_max: 0.02,
+            no_dcbr: true,
+        },
+        HeatCfg {
+            label: "dtau=2           ",
+            n_points: 2000,
+            dtau_max: 2.0,
+            dy_max: 0.02,
+            no_dcbr: false,
+        },
+        HeatCfg {
+            label: "dtau=1           ",
+            n_points: 2000,
+            dtau_max: 1.0,
+            dy_max: 0.02,
+            no_dcbr: false,
+        },
     ];
     println!("== heat injection (SingleBurst, σ_z = 0.01 z_h, Δρ/ρ = 1e-5, z_end = 500)");
     println!("   err_net subtracts an identical zero-injection run (adiabatic cooling).");
@@ -179,7 +217,9 @@ fn mode_photon() {
     let dn_over_n = 1e-5;
     println!("== photon injection (Gaussian IC at z_start = 3e5, ΔN/N = 1e-5, z_end = 500)");
     println!("   target = α_ρ x₀ ΔN/N ; analytic = target × (1 + 3σ²/x₀²)");
-    println!("   x₀    σ      IC/target-1  analytic/target-1   out/IC-1   out/target-1   [dtau, N]");
+    println!(
+        "   x₀    σ      IC/target-1  analytic/target-1   out/IC-1   out/target-1   [dtau, N]"
+    );
     for &(x_inj, dtau_max, n_points) in &[
         (1.5_f64, 10.0_f64, 2000_usize),
         (3.6, 10.0, 2000),
@@ -195,8 +235,8 @@ fn mode_photon() {
             ..GridConfig::default()
         };
         let sigma_x = (0.05_f64 * x_inj).max(0.05);
-        let amp = dn_over_n * G2_PLANCK
-            / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
+        let amp =
+            dn_over_n * G2_PLANCK / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
         let mut s = ThermalizationSolver::new(Cosmology::default(), grid);
         let ic: Vec<f64> = s
             .grid
@@ -362,8 +402,8 @@ fn mode_joint() {
             n_points,
             ..GridConfig::default()
         };
-        let amp = dn_over_n * G2_PLANCK
-            / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
+        let amp =
+            dn_over_n * G2_PLANCK / (x_inj * x_inj * sigma_x * (2.0 * std::f64::consts::PI).sqrt());
         let mut s = ThermalizationSolver::new(Cosmology::default(), grid);
         let ic: Vec<f64> = s
             .grid

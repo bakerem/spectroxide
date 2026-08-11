@@ -9,8 +9,9 @@ Two table classes
 
 Tables are built by running the PDE solver at many injection redshifts,
 then interpolating for fast convolution of arbitrary injection
-histories.  This eliminates the 30–70% shape errors of the analytic
-Green's function in the μ-to-y transition region ``3 × 10⁴ < z < 10⁵``.
+histories.  This eliminates the ~8–13% shape errors of the analytic
+Green's function in the μ-to-y transition region ``3 × 10⁴ < z < 10⁵``
+(see :func:`spectroxide.greens.greens_function`).
 
 Usage::
 
@@ -174,7 +175,7 @@ class GreensTable:
         else:
             # Single z_h: no interpolation possible, return stored value directly
             self._splines = None
-            self._g_clean_single = self.g_th[:, 0]
+            self._g_single_raw = self.g_th[:, 0]
         self._log_x = np.log(self.x)
 
     def greens_function(self, x: ArrayLike, z_h: float) -> NDArray[np.float64]:
@@ -203,8 +204,10 @@ class GreensTable:
         x = np.atleast_1d(np.asarray(x, dtype=np.float64))
 
         if self._splines is None:
-            # Single z_h: return the stored NC-stripped values directly
-            g_at_z = self._g_clean_single
+            # Single z_h: return the stored raw values directly (storage is
+            # raw G_th; NC stripping is the caller's job, see
+            # _build_interpolator)
+            g_at_z = self._g_single_raw
         else:
             log_z = np.log(np.clip(z_h, self.z_h[0], self.z_h[-1]))
             g_at_z = np.array([s(log_z) for s in self._splines])

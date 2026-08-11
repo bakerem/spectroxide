@@ -39,7 +39,6 @@ pub struct Cosmology {
 }
 
 impl Cosmology {
-    /// Construct a Cosmology with all cached derived quantities.
     /// Validate cosmological parameters.
     ///
     /// Returns `Err` with a descriptive message if any parameter is
@@ -452,7 +451,6 @@ impl Default for Cosmology {
     }
 }
 
-/// Midpoint quadrature nodes and weights on [a, b].
 #[cfg(test)]
 mod tests {
     use super::*;

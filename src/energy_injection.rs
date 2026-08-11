@@ -111,8 +111,7 @@ pub enum InjectionScenario {
     /// mode at x_inj, the physical rate carries a factor (1 + n(x_inj))²
     /// (one (1+n) per emitted photon, squared because both land in the
     /// same occupied mode). This is significant at x_inj ≪ 1 where
-    /// n_pl ≈ 1/x_inj ≫ 1, and is sub-percent for x_inj ≳ few. See
-    /// commit 0b6cfa4 for a prototype implementation.
+    /// n_pl ≈ 1/x_inj ≫ 1, and is sub-percent for x_inj ≳ few.
     ///
     /// All injected photons are routed through `photon_source_rate()` and
     /// are evolved self-consistently by the PDE solver (Compton + DC/BR).
@@ -179,9 +178,13 @@ pub enum InjectionScenario {
 
     /// Tabulated heating rate loaded from a file.
     ///
-    /// The z_table and rate_table are sorted ascending in z.
-    /// `heating_rate_per_redshift(z)` interpolates linearly in log(z),
-    /// returning 0 outside the table bounds.
+    /// The z_table and rate_table are sorted ascending in z, and the
+    /// stored rate is d(Δρ/ρ)/dz > 0 for heating. `heating_rate(z)`
+    /// interpolates linearly in log(z), returning 0 outside the table
+    /// bounds. Note the sign convention on the derived accessor:
+    /// `heating_rate_per_redshift(z)` returns the *negated* table value,
+    /// because it follows the solver's d/dz < 0 (time-forward) convention —
+    /// see its own doc before round-tripping a table.
     ///
     /// This enables Python (or any external tool) to define arbitrary
     /// heating rates by writing a CSV table and passing it to the Rust
@@ -1189,10 +1192,12 @@ impl InjectionScenario {
     /// Warn when the dark-photon NWA resonance falls outside the validated
     /// redshift range (roughly z ∈ [50, 3×10⁶] per CLAUDE.md).
     ///
-    /// Returns `Some(Err(msg))` when no resonance exists at all in the
-    /// supported band (hard error), `Some(Ok(warnings))` with a regime warning
-    /// when z_res lands outside the validated window, and `None` for
-    /// non-dark-photon scenarios or when everything is fine.
+    /// Returns a list of warnings: one when no resonance exists in the
+    /// searched band (the run then produces no distortion from this channel;
+    /// the hard error for that case lives in the solver-builder path via
+    /// `resonance_params`), one when z_res lands outside the validated
+    /// window. Empty for non-dark-photon scenarios or when everything is
+    /// fine.
     pub fn warn_dark_photon_range(&self, cosmo: &Cosmology) -> Vec<String> {
         let mut warnings = Vec::new();
         if let InjectionScenario::DarkPhotonResonance { m_ev, .. } = self {

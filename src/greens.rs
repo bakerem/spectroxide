@@ -29,7 +29,7 @@
 //! Callers that need strict energy conservation must use the full PDE solver.
 //!
 //! References:
-//! - Chluba (2013), MNRAS 436, 2232 [arXiv:1304.6120], Eqs. 5–6 for J_μ, J_y, G_th
+//! - Chluba (2013), MNRAS 434, 352 [arXiv:1304.6120], Eqs. 5–6 for J_μ, J_y, G_th
 //! - Chluba (2015), MNRAS 454, 4182 [arXiv:1506.06582], Eq. 13 for J_bb*
 //! - Chluba & Jeong (2014), MNRAS 438, 2065
 
@@ -129,7 +129,7 @@ pub fn visibility_j_t(z: f64) -> f64 {
 ///   1 − J_μ). Integrated μ and y agree with PDE to ~5–10%.
 ///
 /// References:
-///   Chluba (2013), MNRAS 436, 2232 [arXiv:1304.6120], Eq. 6
+///   Chluba (2013), MNRAS 434, 352 [arXiv:1304.6120], Eq. 6
 ///   Arsenadze et al. (2025), JHEP 03, 018 [arXiv:2409.12940], Appendix D
 pub fn greens_function(x: f64, z_h: f64) -> f64 {
     let j_mu = visibility_j_mu(z_h);
@@ -227,8 +227,9 @@ where
 ///
 /// y = (1/4) ∫ J_y(z) · d(Δρ/ρ)/dz dz
 ///
-/// Uses the independently fitted J_y visibility function (Arsenadze et al. 2025),
-/// which gives better agreement with PDE results than (1 − J_μ).
+/// Uses the independently fitted J_y visibility function (Chluba 2013,
+/// MNRAS 434, 352, Eq. 5), which gives better agreement with PDE results
+/// than (1 − J_μ).
 ///
 /// Calls [`mu_y_from_heating`] internally and returns the y component.
 /// For simultaneous μ and y, use [`mu_y_from_heating`] directly.
@@ -969,7 +970,10 @@ mod tests {
         for &x in &[1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 0.1, 1.0, 10.0] {
             let ps = photon_survival_probability_numerical(x, z_h, &cosmo);
             assert!((0.0..=1.0).contains(&ps), "P_s({x}) = {ps} out of [0,1]");
-            assert!(ps > prev, "P_s must increase with x: P_s({x}) = {ps} ≤ {prev}");
+            assert!(
+                ps > prev,
+                "P_s must increase with x: P_s({x}) = {ps} ≤ {prev}"
+            );
             prev = ps;
         }
         assert!(
@@ -1087,8 +1091,7 @@ mod tests {
             }
 
             let (mu, y) = mu_y_from_heating(dq, z_lo, z_hi, n_z);
-            let mu_want =
-                (3.0 / KAPPA_C) * visibility_j_mu(z_h) * visibility_j_bb_star(z_h) * drho;
+            let mu_want = (3.0 / KAPPA_C) * visibility_j_mu(z_h) * visibility_j_bb_star(z_h) * drho;
             let y_want = visibility_j_y(z_h) / 4.0 * drho;
             assert!(
                 (mu - mu_want).abs() / mu_want.abs() < 5e-4,
@@ -1124,7 +1127,11 @@ mod tests {
         // f decreases then rises: e^{-x}(1+x²/2) has a minimum at x = 1+√... ;
         // all that matters here is 0 < f < 1 away from the origin.
         for &x in &[0.5, 1.0, 2.0, 4.0] {
-            assert!((0.0..1.0).contains(&f_cs(x)), "f({x}) = {} ∉ (0,1)", f_cs(x));
+            assert!(
+                (0.0..1.0).contains(&f_cs(x)),
+                "f({x}) = {} ∉ (0,1)",
+                f_cs(x)
+            );
         }
 
         // --- α, β limits, Arsenadze Eq. D13 -------------------------------

@@ -76,8 +76,8 @@ pub fn dln_omega_pl_sq_dlna(z: f64, cosmo: &Cosmology) -> f64 {
 /// NWA dark-photon conversion parameter γ_con (dimensionless).
 ///
 /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a|_{z_res} × T_γ(z_res) × H(z_res)),
-/// following Chluba & Cyr (2024) Eq. 6. Returns `None` if no resonance exists
-/// in the supported redshift range.
+/// following Chluba, Cyr & Johnson (2024), MNRAS 535, 1874, Eq. 6. Returns
+/// `None` if no resonance exists in the supported redshift range.
 ///
 /// Returned tuple: `(gamma_con, z_res)`.
 pub fn gamma_con(epsilon: f64, m_ev: f64, cosmo: &Cosmology) -> Option<(f64, f64)> {

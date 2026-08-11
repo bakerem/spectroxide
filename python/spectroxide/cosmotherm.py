@@ -22,7 +22,7 @@ Loads and parses data files from Jens Chluba's CosmoTherm code:
 References
 ----------
 - Chluba & Sunyaev (2012), MNRAS 419, 1294.
-- Chluba (2013), MNRAS 436, 2232.
+- Chluba (2013), MNRAS 434, 352 (Green's function database).
 - Chluba (2016), MNRAS 460, 227.
 """
 

@@ -103,7 +103,10 @@ fn compton_equilibrium_coeff_y() {
         eprintln!("II.2|Y: amp={amp:.0e} measured={c:.8} anchor={COEFF_Y:.8} rel={rel:.3e}");
         // Tolerance = grid quadrature + O(amp) higher-order; far below the
         // signature of a missing/extra term in ΔI4−4ΔG3.
-        assert!(rel < 3e-3, "COEFF_Y mismatch at amp={amp:.0e}: measured {c:.8}, rel {rel:.3e}");
+        assert!(
+            rel < 3e-3,
+            "COEFF_Y mismatch at amp={amp:.0e}: measured {c:.8}, rel {rel:.3e}"
+        );
     }
 }
 
@@ -114,7 +117,10 @@ fn compton_equilibrium_coeff_mu() {
         let c = measured_coeff(&grid, &mshape, amp);
         let rel = (c - COEFF_MU).abs() / COEFF_MU;
         eprintln!("II.2|mu: amp={amp:.0e} measured={c:.8} anchor={COEFF_MU:.8} rel={rel:.3e}");
-        assert!(rel < 3e-3, "COEFF_MU mismatch at amp={amp:.0e}: measured {c:.8}, rel {rel:.3e}");
+        assert!(
+            rel < 3e-3,
+            "COEFF_MU mismatch at amp={amp:.0e}: measured {c:.8}, rel {rel:.3e}"
+        );
     }
 }
 
@@ -123,10 +129,16 @@ fn compton_equilibrium_linearity() {
     // The extracted coefficient must be amplitude-independent to O(amp) (the
     // response is linear; the Δn² piece is O(amp²)).
     let grid = fine_grid();
-    let cy: Vec<f64> = [1e-6, 1e-5, 1e-4].iter().map(|&a| measured_coeff(&grid, &ysz, a)).collect();
+    let cy: Vec<f64> = [1e-6, 1e-5, 1e-4]
+        .iter()
+        .map(|&a| measured_coeff(&grid, &ysz, a))
+        .collect();
     let spread = (cy.iter().cloned().fold(f64::MIN, f64::max)
         - cy.iter().cloned().fold(f64::MAX, f64::min))
         / COEFF_Y;
     eprintln!("II.2|Y linearity spread over amp∈[1e-6,1e-4] = {spread:.3e}");
-    assert!(spread < 1e-3, "COEFF_Y not amplitude-independent: spread {spread:.3e}");
+    assert!(
+        spread < 1e-3,
+        "COEFF_Y not amplitude-independent: spread {spread:.3e}"
+    );
 }

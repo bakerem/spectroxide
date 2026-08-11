@@ -66,7 +66,7 @@ DI_cooling/DI_damping residuals do not show a systematic of that size, so the
 | 16 | `python/spectroxide/cosmotherm.py:43` (`T_CMB_DEFAULT=2.726`), `:559` (`COSMOTHERM_GF_COSMO` fallback) | CosmoTherm data conversions | 2.726 = `Greens.h` T0_CMB | ✅ exact |
 | 17 | `python/spectroxide/firas.py:64` (`_T_CMB = 2.726 # (Fixsen & Mather 2002)`) | Fixsen 1996 monopole file (residuals w.r.t. **2.725 K** BB) | 2.726 for x-grid and kJy/sr conversions | ⚠ 0.037 % convention offset + wrong attribution (F&M 2002 give 2.725±0.001; 2.726 is the CosmoTherm/Chluba convention). Absorbed by floating-T fits; negligible vs FIRAS σ |
 | 18 | `notebooks/paper_figures/visibility_functions.ipynb`, `mu_y_vs_injection_redshift.ipynb`, `dev/notebooks/*` | Chluba 2013 fit formulas | library default / `DEFAULT_COSMO` | ✅ match |
-| 19 | rotti2022 / ec26 Planck-μ comparison | Rotti+2022 | lives on private `inhomog-distortions` branch only (main has stale `.pyc`/target artifacts); preset bug already covered by P0-5 | — out of scope here |
+| 19 | rotti2022 / ec26 Planck-μ comparison | Rotti+2022 | lives on a private working branch only (main has stale `.pyc`/target artifacts); preset bug already covered by P0-5 | — out of scope here |
 
 ---
 

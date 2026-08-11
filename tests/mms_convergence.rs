@@ -134,7 +134,13 @@ fn em_rate(x: f64, lambda: f64) -> f64 {
 /// March the production coupled Newton kernel with the manufactured source
 /// for `n_steps` of size `dtau`, starting from Δn_m(x, 0).
 /// Returns the numerical Δn at τ = n_steps·dtau.
-fn run_kernel_mms(case: &MmsCase, grid: &FrequencyGrid, n_steps: usize, dtau: f64, lambda: f64) -> Vec<f64> {
+fn run_kernel_mms(
+    case: &MmsCase,
+    grid: &FrequencyGrid,
+    n_steps: usize,
+    dtau: f64,
+    lambda: f64,
+) -> Vec<f64> {
     let n = grid.n;
     let mut delta_n: Vec<f64> = grid.x.iter().map(|&x| case.exact(x, 0.0)).collect();
     let mut ws = KompaneetsWorkspace::new(grid);
@@ -181,7 +187,9 @@ fn rel_l2_error(case: &MmsCase, grid: &FrequencyGrid, num: &[f64], tau_end: f64)
     for i in 1..grid.n {
         let dx = grid.dx[i - 1];
         let xm = grid.x_half[i - 1];
-        let em = 0.5 * ((num[i] - case.exact(grid.x[i], tau_end)) + (num[i - 1] - case.exact(grid.x[i - 1], tau_end)));
+        let em = 0.5
+            * ((num[i] - case.exact(grid.x[i], tau_end))
+                + (num[i - 1] - case.exact(grid.x[i - 1], tau_end)));
         let rm = 0.5 * (case.exact(grid.x[i], tau_end) + case.exact(grid.x[i - 1], tau_end));
         err2 += xm.powi(3) * em * em * dx;
         ref2 += xm.powi(3) * rm * rm * dx;
@@ -251,13 +259,17 @@ fn mms_kernel_temporal_order_pure_kompaneets() {
             let dx = grid.dx[i - 1];
             let xm = grid.x_half[i - 1];
             let dm = 0.5 * ((w[0][i] - w[1][i]) + (w[0][i - 1] - w[1][i - 1]));
-            let rm = 0.5 * (case.exact(grid.x[i], TAU_TOTAL) + case.exact(grid.x[i - 1], TAU_TOTAL));
+            let rm =
+                0.5 * (case.exact(grid.x[i], TAU_TOTAL) + case.exact(grid.x[i - 1], TAU_TOTAL));
             d2 += xm.powi(3) * dm * dm * dx;
             r2 += xm.powi(3) * rm * rm * dx;
         }
         diffs.push((d2 / r2).sqrt());
     }
-    let mut orders: Vec<f64> = diffs.windows(2).map(|w| order_between(w[0], w[1])).collect();
+    let mut orders: Vec<f64> = diffs
+        .windows(2)
+        .map(|w| order_between(w[0], w[1]))
+        .collect();
     eprintln!("MMS|pure_kompaneets|temporal diffs: {diffs:?}, orders: {orders:?}");
     let med = median(&mut orders);
     assert!(
@@ -330,13 +342,17 @@ fn mms_kernel_temporal_order_coupled_dcbr() {
             let dx = grid.dx[i - 1];
             let xm = grid.x_half[i - 1];
             let dm = 0.5 * ((w[0][i] - w[1][i]) + (w[0][i - 1] - w[1][i - 1]));
-            let rm = 0.5 * (case.exact(grid.x[i], TAU_TOTAL) + case.exact(grid.x[i - 1], TAU_TOTAL));
+            let rm =
+                0.5 * (case.exact(grid.x[i], TAU_TOTAL) + case.exact(grid.x[i - 1], TAU_TOTAL));
             d2 += xm.powi(3) * dm * dm * dx;
             r2 += xm.powi(3) * rm * rm * dx;
         }
         diffs.push((d2 / r2).sqrt());
     }
-    let mut orders: Vec<f64> = diffs.windows(2).map(|w| order_between(w[0], w[1])).collect();
+    let mut orders: Vec<f64> = diffs
+        .windows(2)
+        .map(|w| order_between(w[0], w[1]))
+        .collect();
     eprintln!("MMS|coupled_dcbr|temporal diffs: {diffs:?}, orders: {orders:?}");
     let med = median(&mut orders);
     // Backward Euler on the relaxation term: first order.
@@ -426,7 +442,16 @@ fn photon_number_conserved_coupled_path_pure_compton() {
             cn_dcbr: false,
         };
         let (converged, _, _) = kompaneets_step_coupled_inplace(
-            &grid, &mut delta_n, case.theta, case.theta, dtau, Some(&dcbr), None, &mut ws, 0.0, 30,
+            &grid,
+            &mut delta_n,
+            case.theta,
+            case.theta,
+            dtau,
+            Some(&dcbr),
+            None,
+            &mut ws,
+            0.0,
+            30,
         );
         assert!(converged, "Newton failed at step {k}");
     }
@@ -476,7 +501,16 @@ fn photon_number_ledger_identity_with_dcbr_and_source() {
             cn_dcbr: false,
         };
         let (converged, _, _) = kompaneets_step_coupled_inplace(
-            &grid, &mut delta_n, case.theta, case.theta, dtau, Some(&dcbr), None, &mut ws, 0.0, 30,
+            &grid,
+            &mut delta_n,
+            case.theta,
+            case.theta,
+            dtau,
+            Some(&dcbr),
+            None,
+            &mut ws,
+            0.0,
+            30,
         );
         assert!(converged, "Newton failed at step {k}");
 
@@ -707,7 +741,9 @@ fn mms_solver_level_reproduction() {
         for i in 1..x.len() {
             let dx = x[i] - x[i - 1];
             let xm = 0.5 * (x[i] + x[i - 1]);
-            let em = 0.5 * ((dn[i] - mms.exact(x[i], mms.z_end)) + (dn[i - 1] - mms.exact(x[i - 1], mms.z_end)));
+            let em = 0.5
+                * ((dn[i] - mms.exact(x[i], mms.z_end))
+                    + (dn[i - 1] - mms.exact(x[i - 1], mms.z_end)));
             let rm = 0.5 * (mms.exact(x[i], mms.z_end) + mms.exact(x[i - 1], mms.z_end));
             e2 += xm.powi(3) * em * em * dx;
             r2 += xm.powi(3) * rm * rm * dx;

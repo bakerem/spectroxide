@@ -1,17 +1,19 @@
 //! CLI argument parsing with subcommands (zero dependencies).
 //!
-//! Supports both new-style subcommands and legacy flat-flag mode:
-//!
 //! ```text
 //! spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5
 //! spectroxide sweep --z-injections 1e3,1e4,1e5 --format csv
+//! spectroxide photon-sweep --x-inj 0.01 --delta-n-over-n 1e-5
+//! spectroxide photon-sweep-batch --x-inj-values 0.01,0.1,1
 //! spectroxide greens --z-h 2e5 --delta-rho 1e-5
 //! spectroxide info --cosmology planck2018
+//! spectroxide physics-hash
 //! spectroxide help
 //! ```
 //!
-//! If the first argument is not a known subcommand, falls back to legacy
-//! flat-flag parsing with a deprecation warning.
+//! The first argument must be a known subcommand; anything else is an error
+//! (there is no legacy flat-flag mode). Every subcommand accepts `--help`,
+//! and unknown flags are rejected with a suggestion rather than ignored.
 
 use std::collections::HashMap;
 
@@ -39,8 +41,10 @@ pub enum Command {
     PhotonSweep(PhotonSweepOpts),
     /// Batch sweep over multiple x_inj values, parallelizing all (x_inj, z_h) pairs.
     PhotonSweepBatch(PhotonSweepBatchOpts),
-    /// Print help text.
+    /// Print the general help text.
     Help,
+    /// Print detailed help for one subcommand (`spectroxide <sub> --help`).
+    HelpFor(String),
 }
 
 /// Options for `spectroxide solve <injection-type> [flags]`.
@@ -69,8 +73,6 @@ pub struct SweepOpts {
     pub z_injections: Option<Vec<f64>>,
     /// Energy injection amplitude Δρ/ρ (`--delta-rho`).
     pub delta_rho: f64,
-    /// Per-scenario `key=value` parameters (see [`SolveOpts::params`]).
-    pub params: HashMap<String, String>,
     /// Solver tuning knobs.
     pub solver: SolverOpts,
     /// Cosmology overrides.
@@ -277,6 +279,133 @@ const SUBCOMMANDS: &[&str] = &[
     "help",
 ];
 
+/// Flags consumed by [`parse_solver_opts`].
+const SOLVER_KEYS: &[&str] = &[
+    "--z-start",
+    "--z-end",
+    "--dy-max",
+    "--dtau-max",
+    "--dtau-max-photon-source",
+    "--n-points",
+    "--production-grid",
+    "--no-dcbr",
+    "--split-dcbr",
+    "--cn-dcbr",
+    "--no-number-conserving",
+    "--nc-stride",
+    "--nc-z-min",
+    "--dn-planck",
+    "--no-auto-refine",
+    "--threads",
+];
+
+/// Flags consumed by [`parse_cosmo_opts`]. `--omega-cdm` is listed so its
+/// dedicated migration error fires instead of the generic unknown-flag one.
+const COSMO_KEYS: &[&str] = &[
+    "--cosmology",
+    "--omega-b",
+    "--omega-m",
+    "--omega-cdm",
+    "--h",
+    "--n-eff",
+    "--y-p",
+    "--t-cmb",
+];
+
+/// Flags consumed by [`parse_output_opts`].
+const OUTPUT_KEYS: &[&str] = &["--format", "--output"];
+
+/// Injection-scenario parameter flags accepted by `solve <injection-type>`.
+/// Must stay in sync with [`build_injection_scenario`].
+fn injection_param_keys(injection_type: &str) -> Option<&'static [&'static str]> {
+    match injection_type {
+        "single-burst" => Some(&["--z-h", "--sigma-z", "--delta-rho"]),
+        "decaying-particle" => Some(&["--f-x", "--gamma-x"]),
+        "annihilating-dm" | "annihilating-dm-pwave" => Some(&["--f-ann"]),
+        "monochromatic-photon" => Some(&[
+            "--x-inj",
+            "--delta-n-over-n",
+            "--z-h",
+            "--sigma-z",
+            "--sigma-x",
+        ]),
+        "decaying-particle-photon" => Some(&["--x-inj-0", "--f-inj", "--gamma-x"]),
+        "dark-photon-resonance" => Some(&["--epsilon", "--m-ev"]),
+        #[cfg(feature = "axion")]
+        "axion-resonance" => Some(&["--g-agamma", "--b-rms", "--m-ev"]),
+        "tabulated-heating" => Some(&["--heating-table", "--delta-rho"]),
+        "tabulated-photon" => Some(&["--photon-table"]),
+        _ => None,
+    }
+}
+
+/// Levenshtein edit distance, used only for "did you mean" suggestions.
+fn edit_distance(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut cur = vec![0usize; b.len() + 1];
+    for (i, &ca) in a.iter().enumerate() {
+        cur[0] = i + 1;
+        for (j, &cb) in b.iter().enumerate() {
+            let sub = prev[j] + usize::from(ca != cb);
+            cur[j + 1] = sub.min(prev[j + 1] + 1).min(cur[j] + 1);
+        }
+        std::mem::swap(&mut prev, &mut cur);
+    }
+    prev[b.len()]
+}
+
+/// Reject any parsed `--flag` that no group of `allowed` contains.
+///
+/// This is what turns a typo (`--z-injctions`) into an error instead of a
+/// silently ignored flag and a plausible-looking wrong result.
+fn validate_known_flags(
+    map: &HashMap<String, String>,
+    allowed: &[&[&str]],
+    subcommand: &str,
+) -> Result<(), String> {
+    let mut unknown: Vec<&String> = map
+        .keys()
+        .filter(|k| !allowed.iter().any(|group| group.contains(&k.as_str())))
+        .collect();
+    unknown.sort();
+    let Some(first) = unknown.first() else {
+        return Ok(());
+    };
+    if first.contains('=') {
+        let flag = first.split('=').next().unwrap_or(first);
+        return Err(format!(
+            "Unknown flag for {subcommand}: '{first}'. Flags take space-separated \
+             values: use `{flag} <value>`, not `{first}`."
+        ));
+    }
+    // Prefix/containment match first, then length-scaled edit distance
+    // (a fixed cutoff misleads when candidates mix 3- and 15-char flags,
+    // e.g. suggesting --z-end for --x-inj on photon-sweep-batch).
+    let suggestion = allowed
+        .iter()
+        .flat_map(|g| g.iter())
+        .filter(|cand| {
+            cand.starts_with(first.as_str())
+                || first.starts_with(*cand)
+                || edit_distance(first, cand) * 4 <= first.len().max(cand.len())
+        })
+        .min_by_key(|cand| edit_distance(first, cand))
+        .map(|cand| format!(" Did you mean '{cand}'?"))
+        .unwrap_or_default();
+    let also = if unknown.len() > 1 {
+        let rest: Vec<&str> = unknown[1..].iter().map(|s| s.as_str()).collect();
+        format!(" (also unknown: {})", rest.join(", "))
+    } else {
+        String::new()
+    };
+    Err(format!(
+        "Unknown flag for {subcommand}: '{first}'.{suggestion}{also} \
+         Run `spectroxide {subcommand} --help` for the full flag list."
+    ))
+}
+
 /// Parse CLI arguments into a Command.
 pub fn parse_command(args: &[String]) -> Result<Command, String> {
     if args.is_empty() {
@@ -287,9 +416,20 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
 
     // Check if first arg is a known subcommand
     if !SUBCOMMANDS.contains(&first) {
+        if first == "--help" || first == "-h" {
+            return Ok(Command::Help);
+        }
         return Err(format!(
-            "Unknown subcommand: '{first}'. Valid: solve, sweep, greens, info, help"
+            "Unknown subcommand: '{first}'. Valid: {}",
+            SUBCOMMANDS.join(", ")
         ));
+    }
+
+    // `--help`/`-h` anywhere after a subcommand prints that subcommand's help.
+    // This must run before any option parsing so `sweep --help` can never
+    // fall through and start a computation.
+    if args[1..].iter().any(|a| a == "--help" || a == "-h") {
+        return Ok(Command::HelpFor(first.to_string()));
     }
 
     match first {
@@ -297,6 +437,7 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
         "physics-hash" => Ok(Command::PhysicsHash),
         "info" => {
             let map = parse_flat_args(&args[1..]);
+            validate_known_flags(&map, &[&["--cosmology"]], "info")?;
             Ok(Command::Info(InfoOpts {
                 cosmology: map
                     .get("--cosmology")
@@ -306,6 +447,10 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
         }
         "greens" => {
             let map = parse_flat_args(&args[1..]);
+            // Deliberately narrow: the heat-injection Green's function is not
+            // cosmology-aware and takes no solver knobs, so cosmology/solver
+            // flags are rejected here rather than silently ignored.
+            validate_known_flags(&map, &[&["--z-h", "--delta-rho"], OUTPUT_KEYS], "greens")?;
             let z_h: f64 = map
                 .get("--z-h")
                 .ok_or("--z-h required for greens subcommand")?
@@ -321,6 +466,16 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
         }
         "sweep" => {
             let map = parse_flat_args(&args[1..]);
+            validate_known_flags(
+                &map,
+                &[
+                    &["--z-injections", "--delta-rho"],
+                    SOLVER_KEYS,
+                    COSMO_KEYS,
+                    OUTPUT_KEYS,
+                ],
+                "sweep",
+            )?;
             let z_injections = map
                 .get("--z-injections")
                 .map(|s| parse_float_list(s))
@@ -332,7 +487,6 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
             Ok(Command::Sweep(SweepOpts {
                 z_injections,
                 delta_rho,
-                params: map,
                 solver,
                 cosmo,
                 output,
@@ -340,6 +494,16 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
         }
         "photon-sweep" => {
             let map = parse_flat_args(&args[1..]);
+            validate_known_flags(
+                &map,
+                &[
+                    &["--x-inj", "--delta-n-over-n", "--sigma-x", "--z-injections"],
+                    SOLVER_KEYS,
+                    COSMO_KEYS,
+                    OUTPUT_KEYS,
+                ],
+                "photon-sweep",
+            )?;
             let x_inj: f64 = map
                 .get("--x-inj")
                 .ok_or("--x-inj required for photon-sweep subcommand")?
@@ -369,6 +533,21 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
         }
         "photon-sweep-batch" => {
             let map = parse_flat_args(&args[1..]);
+            validate_known_flags(
+                &map,
+                &[
+                    &[
+                        "--x-inj-values",
+                        "--delta-n-over-n",
+                        "--sigma-x",
+                        "--z-injections",
+                    ],
+                    SOLVER_KEYS,
+                    COSMO_KEYS,
+                    OUTPUT_KEYS,
+                ],
+                "photon-sweep-batch",
+            )?;
             let x_inj_str = map
                 .get("--x-inj-values")
                 .ok_or("--x-inj-values required for photon-sweep-batch subcommand")?;
@@ -410,6 +589,22 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
                 ));
             }
             let map = parse_flat_args(&args[2..]);
+            // Unknown injection types skip flag validation here; the
+            // authoritative unknown-type error fires in
+            // `build_injection_scenario` at execute time.
+            if let Some(scenario_keys) = injection_param_keys(&injection_type) {
+                validate_known_flags(
+                    &map,
+                    &[
+                        scenario_keys,
+                        &["--delta-rho"],
+                        SOLVER_KEYS,
+                        COSMO_KEYS,
+                        OUTPUT_KEYS,
+                    ],
+                    "solve",
+                )?;
+            }
             let solver = parse_solver_opts(&map)?;
             let cosmo = parse_cosmo_opts(&map)?;
             let output = parse_output_opts(&map)?;
@@ -620,73 +815,226 @@ pub fn build_cosmology(opts: &CosmoOpts) -> Result<crate::cosmology::Cosmology, 
     )
 }
 
-/// Print help text to stderr.
+/// Print the general help overview to stdout.
+///
+/// Explicitly requested help is program output, so it goes to stdout
+/// (`spectroxide help > usage.txt` must capture it); runtime diagnostics
+/// stay on stderr.
 pub fn print_help() {
-    eprintln!("spectroxide: CMB spectral distortion solver");
-    eprintln!();
-    eprintln!("USAGE:");
-    eprintln!("  spectroxide solve <injection-type> [options]");
-    eprintln!("  spectroxide sweep [options]");
-    eprintln!("  spectroxide photon-sweep --x-inj <x> [options]");
-    eprintln!("  spectroxide photon-sweep-batch --x-inj-values <x1,x2,...> [options]");
-    eprintln!("  spectroxide greens --z-h <z> [options]");
-    eprintln!("  spectroxide info [--cosmology <preset>]");
-    eprintln!("  spectroxide physics-hash");
-    eprintln!("  spectroxide help");
-    eprintln!();
-    eprintln!("INJECTION TYPES:");
-    eprintln!("  single-burst          --z-h, --delta-rho, [--sigma-z]");
-    eprintln!("  decaying-particle     --f-x, --gamma-x");
-    eprintln!("  annihilating-dm       --f-ann");
-    eprintln!("  annihilating-dm-pwave --f-ann");
-    eprintln!("  monochromatic-photon  --x-inj, --delta-n-over-n, --z-h");
-    eprintln!("  decaying-particle-photon --x-inj-0, --f-inj, --gamma-x");
-    eprintln!("  dark-photon-resonance --epsilon, --m-ev");
-    #[cfg(feature = "axion")]
-    eprintln!("  axion-resonance       --g-agamma, --b-rms, --m-ev");
-    eprintln!("  tabulated-heating     --heating-table PATH (CSV: z,dq_dz)");
-    eprintln!("  tabulated-photon      --photon-table PATH (CSV: z,x1,...,xN)");
-    eprintln!();
-    eprintln!("SOLVER OPTIONS:");
-    eprintln!("  --z-start <z>         Starting redshift");
-    eprintln!("  --z-end <z>           Final redshift (default 500)");
-    eprintln!("  --delta-rho <val>     Fractional energy injection (for solve)");
-    eprintln!("  --dy-max <val>        Max Kompaneets step size");
-    eprintln!(
-        "  --dtau-max <val>      Max Compton optical depth per step (default 10; use 3 for <0.1% precision)"
-    );
-    eprintln!(
-        "  --dtau-max-photon-source <val>  Max dtau per step near photon source (default 1.0)"
-    );
-    eprintln!("  --n-points <n>        Grid points");
-    eprintln!("  --production-grid     Use 4000-point production grid");
-    eprintln!("  --no-dcbr             Disable DC/BR");
-    eprintln!("  --split-dcbr          Operator-split DC/BR");
-    eprintln!("  --no-number-conserving  Disable NC T-shift subtraction (on by default)");
-    eprintln!("  --nc-stride <n>       NC stripping stride (steps between strips)");
-    eprintln!("  --nc-z-min <z>        NC stripping minimum redshift (default 5e4)");
-    eprintln!("  --dn-planck <val>     Initial Planck perturbation amplitude");
-    eprintln!("  --sigma-z <val>       Temporal width for burst injection");
-    eprintln!("  --sigma-x <val>       Spectral width for photon injection");
-    eprintln!("  --no-auto-refine      Disable automatic grid refinement");
-    eprintln!("  --threads <n>         Number of threads for parallel sweeps");
-    eprintln!("  --format json|csv|table  Output format (default json)");
-    eprintln!("  --output <path>       Write output to file (default: stdout)");
-    eprintln!();
-    eprintln!("COSMOLOGY:");
-    eprintln!("  --cosmology <preset>  default, planck2015, planck2018");
-    eprintln!("  --omega-b <Ω_b>       Fractional baryon density (pass with --omega-m)");
-    eprintln!("  --omega-m <Ω_m>       Fractional total matter density");
-    eprintln!("  --h, --n-eff, --y-p, --t-cmb");
-    eprintln!();
-    eprintln!("EXAMPLES:");
-    eprintln!("  spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5");
-    eprintln!("  spectroxide solve decaying-particle --f-x 1e5 --gamma-x 2e5");
-    eprintln!("  spectroxide solve dark-photon-resonance --epsilon 1e-9 --m-ev 1e-7");
-    #[cfg(feature = "axion")]
-    eprintln!("  spectroxide solve axion-resonance --g-agamma 1e-10 --b-rms 1 --m-ev 1e-7");
-    eprintln!("  spectroxide greens --z-h 2e5");
-    eprintln!("  spectroxide info --cosmology planck2018");
+    println!("spectroxide: CMB spectral distortion solver");
+    println!();
+    println!("USAGE:");
+    println!("  spectroxide <subcommand> [options]");
+    println!("  spectroxide <subcommand> --help    full option list for one subcommand");
+    println!();
+    println!("SUBCOMMANDS:");
+    println!("  solve <injection-type>  Single PDE solve for one injection scenario");
+    println!("  sweep                   PDE sweep over heat-injection redshifts (single-burst)");
+    println!("  photon-sweep            PDE sweep over redshifts at one photon frequency x_inj");
+    println!("  photon-sweep-batch      photon-sweep for several x_inj values in parallel");
+    println!("  greens                  Analytic Green's function mu/y (fast, no PDE)");
+    println!("  info                    Print the parameters of a cosmology preset");
+    println!("  physics-hash            Print the compile-time physics-source hash (provenance)");
+    println!("  help                    This overview");
+    println!();
+    println!("UNITS AND CONVENTIONS:");
+    println!("  x        dimensionless frequency x = h nu / (k T_z), with T_z = T_CMB (1+z)");
+    println!("  z        redshift (dimensionless); mu-era z > ~5e4, y-era z < ~1e4");
+    println!("  delta-rho    fractional injected energy Delta rho / rho");
+    println!("  delta-n-over-n  fractional injected photon number Delta n / n");
+    println!();
+    println!("EXAMPLES:");
+    println!("  spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5");
+    println!("  spectroxide sweep --z-injections 1e4,1e5,1e6 --format csv");
+    println!("  spectroxide photon-sweep --x-inj 0.01 --delta-n-over-n 1e-5");
+    println!("  spectroxide greens --z-h 2e5");
+    println!("  spectroxide info --cosmology planck2018");
+}
+
+/// Shared SOLVER OPTIONS help block (all PDE subcommands).
+fn print_solver_options_help() {
+    println!("SOLVER OPTIONS:");
+    println!("  --z-start <z>         Starting redshift. Default: 5e6 for solve (or z_res for");
+    println!("                        resonance scenarios); z_h + 7 sigma_z per point for sweeps");
+    println!("  --z-end <z>           Final redshift (default 500)");
+    println!("  --dy-max <val>        Max fractional change in ln(1+z) per step (default 0.02)");
+    println!("  --dtau-max <val>      Max Compton optical depth per step (default 10;");
+    println!("                        use 3 for <0.1% precision)");
+    println!("  --dtau-max-photon-source <val>  Max dtau per step while a photon source is");
+    println!("                        active (default 1.0; 10 for fast exploratory runs)");
+    println!("  --n-points <n>        Frequency-grid points (default 2000)");
+    println!("  --production-grid     Use the 4000-point production grid");
+    println!("  --no-auto-refine      Disable automatic grid refinement near injection features");
+    println!("  --threads <n>         Threads for parallel sweeps (default: all cores)");
+    println!();
+    println!("DIAGNOSTIC FLAGS (sensitivity probes, not production runs):");
+    println!("  --no-dcbr             Disable double-Compton + bremsstrahlung");
+    println!("  --split-dcbr          Operator-split DC/BR instead of the coupled Newton solve");
+    println!("  --cn-dcbr             Crank-Nicolson DC/BR (can fail at low x; default is");
+    println!("                        backward Euler, the validated path)");
+    println!("  --no-number-conserving  Disable the number-conserving T-shift subtraction");
+    println!("  --nc-stride <n>       Apply NC subtraction every n steps (default 1)");
+    println!("  --nc-z-min <z>        Minimum z for NC subtraction (default 5e4)");
+    println!("  --dn-planck <val>     Initial Planck-shaped Delta n amplitude at z_start");
+}
+
+/// Shared COSMOLOGY help block.
+fn print_cosmo_options_help() {
+    println!("COSMOLOGY:");
+    println!("  --cosmology <preset>  default, planck2015, planck2018");
+    println!("  --omega-b <val>       Fractional baryon density Omega_b (pass with --omega-m)");
+    println!("  --omega-m <val>       Fractional total matter density Omega_m");
+    println!("  --h <val>             Reduced Hubble parameter H0 / (100 km/s/Mpc)");
+    println!("  --n-eff <val>         Effective relativistic species count");
+    println!("  --y-p <val>           Helium mass fraction");
+    println!("  --t-cmb <K>           CMB temperature today in kelvin");
+}
+
+/// Shared OUTPUT help block.
+fn print_output_options_help() {
+    println!("OUTPUT:");
+    println!("  --format json|csv|table  Output format (default json)");
+    println!("  --output <path>       Write to file instead of stdout");
+}
+
+/// Print detailed help for one subcommand to stdout.
+pub fn print_subcommand_help(subcommand: &str) {
+    match subcommand {
+        "solve" => {
+            println!("spectroxide solve <injection-type> [options]");
+            println!();
+            println!("Run a single PDE solve from z_start down to z_end for one injection");
+            println!("scenario, reporting mu, y, and the full Delta n(x) spectrum.");
+            println!();
+            println!("INJECTION TYPES AND THEIR PARAMETERS:");
+            println!("  single-burst          --z-h <z> (heating redshift), [--sigma-z <z>]");
+            println!("                        Gaussian burst; sigma-z default max(0.04 z_h, 100)");
+            println!("  decaying-particle     --f-x <eV> (energy release), --gamma-x <1/s at z=0>");
+            println!("  annihilating-dm       --f-ann <eV/s> (s-wave annihilation efficiency)");
+            println!("  annihilating-dm-pwave --f-ann <eV/s> (p-wave, rate scales with (1+z))");
+            println!("  monochromatic-photon  --x-inj <x>, --delta-n-over-n <val>, --z-h <z>,");
+            println!(
+                "                        [--sigma-z <z>], [--sigma-x <x>, default 0.05 x_inj]"
+            );
+            println!("  decaying-particle-photon  --x-inj-0 <x at decay>, --f-inj <val>,");
+            println!("                        --gamma-x <1/s>");
+            println!("  dark-photon-resonance --epsilon <kinetic mixing>, --m-ev <mass in eV>");
+            #[cfg(feature = "axion")]
+            println!(
+                "  axion-resonance       --g-agamma <1/GeV>, --b-rms <nG>, --m-ev <mass in eV>"
+            );
+            #[cfg(not(feature = "axion"))]
+            println!("  axion-resonance       (requires a build with --features axion)");
+            println!("  tabulated-heating     --heating-table <PATH> (CSV: z, dQ/dz)");
+            println!("  tabulated-photon      --photon-table <PATH> (CSV: z, x1..xN)");
+            println!();
+            println!("ENERGY:");
+            println!("  --delta-rho <val>     Fractional energy injection (default 1e-5)");
+            println!();
+            print_solver_options_help();
+            println!();
+            print_cosmo_options_help();
+            println!();
+            print_output_options_help();
+            println!();
+            println!("EXAMPLES:");
+            println!("  spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5");
+            println!("  spectroxide solve dark-photon-resonance --epsilon 1e-9 --m-ev 1e-7");
+            #[cfg(feature = "axion")]
+            println!("  spectroxide solve axion-resonance --g-agamma 1e-10 --b-rms 1 --m-ev 1e-7");
+        }
+        "sweep" => {
+            println!("spectroxide sweep [options]");
+            println!();
+            println!("PDE solve repeated over a grid of single-burst heating redshifts,");
+            println!("one row of (z_h, mu, y, ...) per redshift, run in parallel.");
+            println!();
+            println!("SWEEP OPTIONS:");
+            println!("  --z-injections <z1,z2,...>  Comma-separated heating redshifts.");
+            println!("                        Default: built-in 17-point grid 2e3..3e6");
+            println!(
+                "  --delta-rho <val>     Fractional energy injection per burst (default 1e-5)"
+            );
+            println!();
+            print_solver_options_help();
+            println!();
+            print_cosmo_options_help();
+            println!();
+            print_output_options_help();
+            println!();
+            println!("EXAMPLE:");
+            println!("  spectroxide sweep --z-injections 1e4,1e5,1e6 --format csv");
+        }
+        "photon-sweep" | "photon-sweep-batch" => {
+            if subcommand == "photon-sweep" {
+                println!("spectroxide photon-sweep --x-inj <x> [options]");
+                println!();
+                println!("PDE solve for monochromatic photon injection at one frequency x_inj,");
+                println!("swept over injection redshifts.");
+            } else {
+                println!("spectroxide photon-sweep-batch --x-inj-values <x1,x2,...> [options]");
+                println!();
+                println!("photon-sweep repeated for several x_inj values, parallelizing over");
+                println!("all (x_inj, z_h) pairs.");
+            }
+            println!();
+            println!("PHOTON INJECTION OPTIONS:");
+            if subcommand == "photon-sweep" {
+                println!(
+                    "  --x-inj <x>           Injection frequency x = h nu / (k T_z). Required"
+                );
+            } else {
+                println!(
+                    "  --x-inj-values <x1,...>  Comma-separated injection frequencies. Required"
+                );
+            }
+            println!("  --delta-n-over-n <val>  Fractional photon-number injection (default 1e-5)");
+            println!("  --sigma-x <x>         Gaussian line width (default 0.05 x_inj)");
+            println!("  --z-injections <z1,...>  Injection redshifts.");
+            println!("                        Default: 150 log-spaced points, 1e3..5e6");
+            println!();
+            print_solver_options_help();
+            println!();
+            print_cosmo_options_help();
+            println!();
+            print_output_options_help();
+        }
+        "greens" => {
+            println!("spectroxide greens --z-h <z> [options]");
+            println!();
+            println!("Analytic heat-injection Green's function (Chluba 2013 visibility fits):");
+            println!("mu, y, and Delta n(x) for a Gaussian burst at z_h. Fast (no PDE).");
+            println!();
+            println!("Accuracy vs the PDE: 2-5% for mu, ~5% for y; ~8-13% shape error in the");
+            println!("mu-y transition (3e4 < z < 2e5). Not cosmology-aware: cosmology and");
+            println!("solver flags are rejected, and z < 1100 results are qualitative only.");
+            println!();
+            println!("OPTIONS:");
+            println!("  --z-h <z>             Heating redshift. Required");
+            println!("  --delta-rho <val>     Fractional energy injection (default 1e-5)");
+            println!();
+            print_output_options_help();
+            println!();
+            println!("EXAMPLE:");
+            println!("  spectroxide greens --z-h 2e5");
+        }
+        "info" => {
+            println!("spectroxide info [--cosmology <preset>]");
+            println!();
+            println!("Print the parameters of a cosmology preset (default, planck2015,");
+            println!("planck2018): densities, Y_p, T_CMB, N_eff, z_eq, H_0.");
+        }
+        "physics-hash" => {
+            println!("spectroxide physics-hash");
+            println!();
+            println!("Print the compile-time hash of the physics source files and exit.");
+            println!("Use it to record which physics build produced a given output file");
+            println!("(the Python wrapper stores it in precomputed Green's-function tables");
+            println!("and refuses to load a table built by a different physics version).");
+        }
+        "help" => print_help(),
+        _ => print_help(),
+    }
 }
 
 /// Print cosmology info.
@@ -810,14 +1158,26 @@ pub fn build_injection_scenario(
                 .ok_or("--photon-table PATH required for tabulated-photon")?;
             crate::energy_injection::load_photon_source_table(path)
         }
-        _ => Err(format!(
-            "Unknown injection type: '{injection_type}'. \
-             Valid: single-burst, \
-             decaying-particle, decaying-particle-photon, \
-             annihilating-dm, annihilating-dm-pwave, monochromatic-photon, \
-             dark-photon-resonance, \
-             tabulated-heating, tabulated-photon"
-        )),
+        #[cfg(not(feature = "axion"))]
+        "axion-resonance" => Err(
+            "Injection type 'axion-resonance' exists but is not compiled into this binary. \
+             Rebuild with `cargo build --release --features axion` to enable it."
+                .to_string(),
+        ),
+        _ => {
+            #[cfg(feature = "axion")]
+            let extra = "axion-resonance, ";
+            #[cfg(not(feature = "axion"))]
+            let extra = "";
+            Err(format!(
+                "Unknown injection type: '{injection_type}'. \
+                 Valid: single-burst, \
+                 decaying-particle, decaying-particle-photon, \
+                 annihilating-dm, annihilating-dm-pwave, monochromatic-photon, \
+                 dark-photon-resonance, {extra}\
+                 tabulated-heating, tabulated-photon"
+            ))
+        }
     }
 }
 
@@ -846,8 +1206,41 @@ pub fn execute_greens(opts: &GreensOpts) -> Result<GreensResult, String> {
         y,
         x_grid,
         delta_n,
-        warnings: Vec::new(),
+        warnings: greens_regime_warnings(z_h),
     })
+}
+
+/// Validity-range warnings for the analytic Green's function, keyed to the
+/// injection redshift. The three z-regime thresholds (5e6, 3e6, 1100) mirror
+/// `warn_z_h_regime` in the Python package's `_validation.py`; the μ–y
+/// transition band mirrors `warn_analytic_gf_heating` (3e4 < z < 2e5).
+fn greens_regime_warnings(z_h: f64) -> Vec<String> {
+    let mut warnings = Vec::new();
+    if z_h > 5e6 {
+        warnings.push(format!(
+            "z_h={z_h:.2e}: Green's function unreliable in the deep thermalization era \
+             (z > 5e6); the visibility fits are extrapolated there. Use the PDE solver \
+             (`spectroxide solve single-burst`) instead."
+        ));
+    } else if z_h > 3e6 {
+        warnings.push(format!(
+            "z_h={z_h:.2e}: approaching the deep thermalization era (z > 3e6); \
+             Green's function visibility fits lose accuracy. Cross-check with the PDE solver."
+        ));
+    }
+    if z_h < 1100.0 {
+        warnings.push(format!(
+            "z_h={z_h:.0}: post-recombination injection (z < 1100). The analytic Green's \
+             function is not cosmology-aware and applies no Compton suppression; results \
+             here are qualitative only."
+        ));
+    } else if (3e4..2e5).contains(&z_h) {
+        warnings.push(format!(
+            "z_h={z_h:.2e}: μ–y transition region (3e4 < z < 2e5); the analytic Green's \
+             function has ~8–13% shape error vs the PDE here."
+        ));
+    }
+    warnings
 }
 
 /// Build a GridConfig from CLI options.
@@ -1064,8 +1457,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     // Resonant conversion: hard-error if NWA gives no resonance in the
     // supported redshift band. Without this the solver runs to mu=y=0 and
     // looks like a "successful" null result.
-    if injection.is_impulsive_resonance() && injection.resonance_params(&cosmo).is_none()
-    {
+    if injection.is_impulsive_resonance() && injection.resonance_params(&cosmo).is_none() {
         return Err(
             "Resonant conversion: no resonance redshift z_res in [50, 3e6] for the given \
              parameters. The plasma frequency never crosses the particle mass in the supported \
@@ -1712,6 +2104,113 @@ mod tests {
     }
 
     #[test]
+    fn test_help_interception_never_computes() {
+        // --help/-h after any subcommand must parse to HelpFor, so `sweep
+        // --help` can never start a computation.
+        for sub in [
+            "solve",
+            "sweep",
+            "photon-sweep",
+            "photon-sweep-batch",
+            "greens",
+        ] {
+            match parse_command(&[s(sub), s("--help")]).unwrap() {
+                Command::HelpFor(name) => assert_eq!(name, sub),
+                other => panic!("{sub} --help parsed to {other:?}"),
+            }
+        }
+        assert!(matches!(
+            parse_command(&[s("greens"), s("--z-h"), s("2e5"), s("-h")]).unwrap(),
+            Command::HelpFor(_)
+        ));
+        assert!(matches!(
+            parse_command(&[s("--help")]).unwrap(),
+            Command::Help
+        ));
+    }
+
+    #[test]
+    fn test_unknown_flags_rejected() {
+        // Typo'd flag: rejected with a suggestion, not silently ignored.
+        let err = parse_command(&[s("sweep"), s("--z-injctions"), s("1e5")]).unwrap_err();
+        assert!(err.contains("--z-injctions"), "{err}");
+        assert!(err.contains("--z-injections"), "no suggestion in: {err}");
+
+        // greens takes no cosmology/solver flags (GF is not cosmology-aware).
+        let err = parse_command(&[
+            s("greens"),
+            s("--z-h"),
+            s("2e5"),
+            s("--cosmology"),
+            s("planck2018"),
+        ])
+        .unwrap_err();
+        assert!(err.contains("--cosmology"), "{err}");
+
+        // Scenario params from a different scenario are rejected on solve.
+        let err = parse_command(&[
+            s("solve"),
+            s("single-burst"),
+            s("--z-h"),
+            s("2e5"),
+            s("--f-ann"),
+            s("1e-24"),
+        ])
+        .unwrap_err();
+        assert!(err.contains("--f-ann"), "{err}");
+
+        // Unknown subcommand error lists the full subcommand set.
+        let err = parse_command(&[s("foobar")]).unwrap_err();
+        for sub in SUBCOMMANDS {
+            assert!(err.contains(sub), "'{sub}' missing from: {err}");
+        }
+    }
+
+    #[test]
+    fn test_known_flags_accepted() {
+        // Inverse of test_unknown_flags_rejected: every flag a scenario's
+        // allow-list declares must parse. Guards against a param added to
+        // build_injection_scenario without a matching injection_param_keys
+        // entry (which would become a silent false rejection).
+        let types: &[&str] = &[
+            "single-burst",
+            "decaying-particle",
+            "annihilating-dm",
+            "annihilating-dm-pwave",
+            "monochromatic-photon",
+            "decaying-particle-photon",
+            "dark-photon-resonance",
+            #[cfg(feature = "axion")]
+            "axion-resonance",
+            "tabulated-heating",
+            "tabulated-photon",
+        ];
+        for ty in types {
+            let keys = injection_param_keys(ty)
+                .unwrap_or_else(|| panic!("no allow-list for injection type '{ty}'"));
+            let mut args = vec![s("solve"), s(ty)];
+            for key in keys {
+                args.push(s(key));
+                args.push(s("1.0"));
+            }
+            // A representative flag from each shared group must also pass.
+            for (extra, val) in [
+                ("--dtau-max", "1.0"),
+                ("--cosmology", "default"),
+                ("--format", "json"),
+            ] {
+                args.push(s(extra));
+                args.push(s(val));
+            }
+            assert!(
+                matches!(parse_command(&args), Ok(Command::Solve(_))),
+                "flags for '{ty}' were falsely rejected: {:?}",
+                parse_command(&args)
+            );
+        }
+    }
+
+    #[test]
     fn test_parse_float_list() {
         let result = parse_float_list("1e3, 1e4, 1e5").unwrap();
         assert_eq!(result.len(), 3);
@@ -1904,7 +2403,11 @@ mod tests {
         #[cfg(feature = "axion")]
         cases.push((
             "axion-resonance",
-            vec![("--g-agamma", "1e-10"), ("--b-rms", "1"), ("--m-ev", "1e-7")],
+            vec![
+                ("--g-agamma", "1e-10"),
+                ("--b-rms", "1"),
+                ("--m-ev", "1e-7"),
+            ],
             |i| matches!(i, InjectionScenario::AxionResonance { .. }),
         ));
 

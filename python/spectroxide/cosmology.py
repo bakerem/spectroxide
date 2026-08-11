@@ -86,10 +86,9 @@ class Cosmology:
 
         Density fractions are derived from the paper's physical densities
         (ω_b = 0.02225, ω_cdm = 0.1198) so they match the Rust
-        ``Cosmology::planck2015``.  Note: the Rust preset uses
-        t_cmb = 2.726 (CosmoTherm DI-file convention) while this one keeps
-        the paper value 2.7255 — a known divergence tracked in the
-        validation audit; use :data:`PLANCK2015_COSMO` for CT comparisons.
+        ``Cosmology::planck2015``, including t_cmb = 2.7255 K.  For
+        CosmoTherm DI-file comparisons (which use t_cmb = 2.726 K) the
+        Rust side provides ``planck2015_cosmotherm()``.
         """
         return cls(
             h=0.6727,

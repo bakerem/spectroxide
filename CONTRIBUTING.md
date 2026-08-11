@@ -137,4 +137,4 @@ Use a short `type: subject` style — typical types are `fix:`, `docs:`, `polish
 - **Tutorial notebooks**: `notebooks/tutorials/` — start with `01_getting_started.ipynb`
 - **CosmoTherm**: Chluba (2012), the reference implementation we validate against
 - **Chluba & Sunyaev (2012)**, MNRAS 419, 1294 — primary reference for the equations
-- **Chluba (2013)**, MNRAS 436, 2232 — Green's function formalism
+- **Chluba (2013)**, MNRAS 434, 352 — Green's function formalism

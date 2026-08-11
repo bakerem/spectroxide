@@ -3,7 +3,6 @@
 use spectroxide::cli::{CosmoOpts, OutputOpts, SolverOpts, SweepOpts, execute_sweep};
 use spectroxide::constants::KAPPA_C;
 use spectroxide::greens;
-use std::collections::HashMap;
 use std::process::Command;
 
 fn spectroxide_bin() -> Command {
@@ -38,17 +37,19 @@ fn test_cli_help_exits_cleanly() {
         "help should exit 0: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    // Explicitly requested help is program output and goes to stdout
+    // (so `spectroxide help > usage.txt` captures it).
+    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        stderr.contains("spectroxide") || stderr.contains("solve"),
-        "help output should mention spectroxide or solve"
+        stdout.contains("spectroxide") && stdout.contains("solve"),
+        "help output on stdout should mention spectroxide and solve"
     );
 }
 
 /// `greens --z-h 2e5` CLI produces Chluba-2013 μ at the visibility-corrected
 /// coefficient, not just "positive and within factor-2 of 1.401".
 ///
-/// Oracle:             Chluba (2013) MNRAS 436, 2232 Eq. 5:
+/// Oracle:             Chluba (2013) MNRAS 434, 352 Eq. 5:
 ///                     μ/Δρ = (3/κ_c) · J_bb*(z_h) · J_μ(z_h)
 /// Expected:           at z_h=2e5:  J_bb*≈0.980, J_μ≈1.000 → μ/Δρ ≈ 1.37
 /// Oracle uncertainty: 5% (GF fit vs CosmoTherm in μ-era)
@@ -105,7 +106,7 @@ fn test_cli_greens_json_output() {
 /// the plumbing — parallel chunking, row aggregation, and PDE↔GF coupling
 /// across a multi-redshift run.
 ///
-/// Oracle:             Chluba (2013) MNRAS 436, 2232 Eq. 5,
+/// Oracle:             Chluba (2013) MNRAS 434, 352 Eq. 5,
 ///                     μ(z_h)/Δρ = (3/κ_c) · J_bb*(z_h) · J_μ(z_h).
 /// Expected z_h=3e5:   μ/Δρ ≈ 1.35
 /// Oracle uncertainty: within-sweep sigma_z = 0.04·z_h smears the burst over
@@ -134,7 +135,6 @@ fn test_execute_sweep_parallel_rows_consistent() {
     let opts = SweepOpts {
         z_injections: Some(z_injections.clone()),
         delta_rho,
-        params: HashMap::new(),
         solver: SolverOpts {
             n_points: Some(800),
             n_threads: Some(2), // chunk size 2 splits [1.5e5, 3e5] + [5e5]
@@ -230,7 +230,7 @@ fn test_cli_solve_single_burst_json() {
             "5e4",
             "--delta-rho",
             "1e-5",
-            "--grid-points",
+            "--n-points",
             "500",
             "--format",
             "json",

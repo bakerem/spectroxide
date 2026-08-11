@@ -362,7 +362,7 @@ fn test_mu_shape_zero_crossing_and_sign_structure() {
 ///   - Sunyaev & Zeldovich (1970), Ap&SS 7, 20
 ///   - Illarionov & Sunyaev (1975), Soviet Astronomy 18, 413
 ///   - Hu & Silk (1993), PRD 48, 485
-///   - Chluba (2013), MNRAS 436, 2232
+///   - Chluba (2013), MNRAS 434, 352
 #[test]
 fn test_mu_efficiency_deep_mu_era() {
     let z_h = 5.0e5;
@@ -1053,7 +1053,7 @@ fn test_greens_function_smooth_transition() {
 // SECTION 5: LITERATURE-VALIDATED BENCHMARKS
 // Tests with specific numerical targets from the spectral distortion literature.
 // References: Chluba (2016) MNRAS 460, 227; Chluba & Sunyaev (2012) MNRAS 419, 1294;
-//             Chluba (2013) MNRAS 436, 2232; Chluba & Grin (2013)
+//             Chluba (2013) MNRAS 434, 352; Chluba & Grin (2013)
 
 /// Helper: Gaussian heating profile dQ/dz for a delta-like injection.
 fn gaussian_heating(z: f64, z_h: f64, sigma_z: f64, drho: f64) -> f64 {
@@ -2240,10 +2240,15 @@ fn test_axion_depletes_wien_tail_opposite_to_dark_photon() {
         b_rms: 1.0,
         m_ev,
     };
-    let dark = InjectionScenario::DarkPhotonResonance { epsilon: 1e-6, m_ev };
+    let dark = InjectionScenario::DarkPhotonResonance {
+        epsilon: 1e-6,
+        m_ev,
+    };
 
     let dn_ax = axion.initial_delta_n(&x_grid, &cosmo).expect("axion IC");
-    let dn_dp = dark.initial_delta_n(&x_grid, &cosmo).expect("dark photon IC");
+    let dn_dp = dark
+        .initial_delta_n(&x_grid, &cosmo)
+        .expect("dark photon IC");
 
     // Relative depletion p(x) = |Δn/n_pl| = 1 - exp(-γ_con x) (axion),
     // 1 - exp(-γ_con/x) (dark photon).
@@ -2277,7 +2282,10 @@ fn test_axion_depletes_wien_tail_opposite_to_dark_photon() {
     }
     // All depletions are physical (a fraction in [0,1]).
     for &p in p_ax.iter().chain(p_dp.iter()) {
-        assert!((0.0..=1.0).contains(&p), "depletion fraction out of range: {p}");
+        assert!(
+            (0.0..=1.0).contains(&p),
+            "depletion fraction out of range: {p}"
+        );
     }
 }
 
@@ -10024,7 +10032,7 @@ fn test_newton_convergence_indirect() {
 
 /// μ-era burst at z=2×10⁵: PDE μ should match the Chluba 2013 analytic formula.
 ///
-/// Oracle:            Chluba (2013) MNRAS 436, 2232, Eq. 5
+/// Oracle:            Chluba (2013) MNRAS 434, 352, Eq. 5
 ///                    μ = (3/κ_c) · J_bb*(z_h) · J_μ(z_h) · Δρ/ρ
 /// Expected:          1.401 × J_bb*(2e5) × J_μ(2e5) × 1e-5 ≈ 1.36×10⁻⁵
 /// Oracle uncertainty: 5% (GF fit uncertainty vs CosmoTherm in μ-era)
@@ -12196,7 +12204,7 @@ fn test_perturbative_te_small_mu_distortion() {
 
 /// Visibility function limiting behavior and crossover points.
 ///
-/// Reference: Chluba (2013), MNRAS 436, 2232, Fig. 2
+/// Reference: Chluba (2013), MNRAS 434, 352, Fig. 2
 #[test]
 fn test_visibility_functions_literature_limits() {
     let jbb_deep = greens::visibility_j_bb_star(5e6);

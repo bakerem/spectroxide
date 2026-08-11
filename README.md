@@ -15,7 +15,7 @@ spectroxide solves the coupled photon-electron Boltzmann equation including Comp
 - **Full PDE solver** in Rust: implicit Kompaneets + coupled DC/BR with adaptive stepping
 - **Green's function** mode for fast approximate calculations (pure Python, no compilation needed)
 - **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), DM annihilation (s-wave/p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating via Rust API)
-- **Comprehensive test suite**: 430+ unit, integration, and doc-tests
+- **Comprehensive test suite**: 480+ unit, integration, and doc-tests
 - **Zero production dependencies** in Rust (pure `std` library)
 
 ## Installation
@@ -37,11 +37,14 @@ cd spectroxide
 
 The `--extras` flag controls which Python dependencies are installed:
 
-| Extra      | Includes                          | Use case                          |
+Every install pulls in the base dependencies `numpy` and `scipy`; the
+extras add on top of those:
+
+| Extra      | Adds                              | Use case                          |
 |------------|-----------------------------------|-----------------------------------|
-| `plot`     | numpy, matplotlib                 | Scripts and plotting (default)    |
-| `notebook` | numpy, matplotlib, jupyter        | Interactive notebooks             |
-| `dev`      | numpy, matplotlib, jupyter, scipy | Development and testing           |
+| `plot`     | matplotlib                        | Scripts and plotting (default)    |
+| `notebook` | matplotlib, jupyter               | Interactive notebooks             |
+| `dev`      | matplotlib, jupyter, pytest, mutmut | Development and testing         |
 | `doc`      | sphinx, nbsphinx, pydata-sphinx-theme | Building documentation        |
 
 Run `./install.sh --help` to see all options (skip steps, verbose output, etc.).
@@ -77,6 +80,21 @@ pip install -e "python/.[notebook]"   # ... or with Jupyter too
 ```
 
 </details>
+
+### Optional `axion` feature
+
+Resonant axion–photon conversion (`solve axion-resonance`, `src/axion.rs`)
+is gated behind the off-by-default `axion` Cargo feature while an unresolved
+3–10× discrepancy against Cyr, Chluba & Manoj (2024) at m_a < 10⁻¹¹ eV is
+investigated:
+
+```bash
+cargo build --release --features axion   # enables solve axion-resonance (+8 tests)
+```
+
+The pure-Python helpers in `spectroxide.axion` import without any Rust build
+(they call no Rust), but their PDE path needs the `--features axion` binary.
+The module is experimental and not re-exported at the package top level.
 
 ## Quick start
 
@@ -244,11 +262,13 @@ src/
 
 python/spectroxide/
 ├── __init__.py            # Public API
+├── cosmology.py           # Flat ΛCDM background (mirrors src/cosmology.rs)
 ├── greens.py              # Pure Python Green's function (NumPy)
 ├── greens_table.py        # Precomputed Green's function tables
 ├── solver.py              # Rust binary wrapper + run_single()
 ├── firas.py               # FIRAS data and constraint utilities
 ├── dark_photon.py         # NWA helpers (γ_con, z_res) — Python port
+├── axion.py               # γ↔a NWA helpers (experimental; PDE path needs --features axion)
 ├── cosmotherm.py          # CosmoTherm data loaders (submodule import)
 ├── plot_params.py         # Plot constants (submodule import)
 ├── style.py               # Matplotlib style helpers
@@ -259,10 +279,17 @@ tests/
 ├── adversarial_inputs.rs  # Edge cases, bad inputs
 ├── cosmotherm_comparison.rs # PDE vs CosmoTherm reference data
 ├── greens_function_checks.rs # GF spectral shapes, limits, conservation
-├── coverage_gaps.rs        # Additional coverage
+├── coverage_gaps.rs       # Additional coverage
 ├── convergence_order.rs   # Grid/timestep convergence
 ├── cli_integration.rs     # CLI end-to-end
-└── science_suite.rs       # End-to-end physics validation
+├── science_suite.rs       # End-to-end physics validation
+├── physics_identities.rs  # Closed-form/published identities (audit anchors)
+├── mms_convergence.rs     # Manufactured solutions (verifies the scheme)
+├── conservation_fuzz.rs   # Randomized energy/number-closure fuzzing
+├── kompaneets_moments.rs  # Exact moment hierarchy vs published equation
+├── compton_equilibrium_analytic.rs # Perturbative Δρ_eq vs mpmath quadrature
+├── rate_coefficients_first_principles.rs # DC/BR magnitudes from literal CODATA
+└── mu_photosphere_profile.rs # Fitted x_c(z) vs Chluba (2015) Eq. 25
 
 dev/
 ├── scripts/               # Validation and diagnostic scripts

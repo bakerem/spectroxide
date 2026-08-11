@@ -173,7 +173,7 @@ fn chluba2013_limit_pure_y() {
 /// hiding it behind a single wide tolerance.
 ///
 /// Oracle:            J_μ·J_bb* + J_y + (1 − J_bb*) = 1 in pure μ- and y-eras
-///                    (Chluba 2013 MNRAS 436, 2232, §3; Arsenadze et al. 2025 J_y fit)
+///                    (Chluba 2013 MNRAS 434, 352, §3; Arsenadze et al. 2025 J_y fit)
 /// Expected:          E/G₃ = 1 exactly
 /// Oracle uncertainty: 2-3% in pure regimes (fit residuals of J_μ, J_y, J_bb*)
 /// Tolerance:

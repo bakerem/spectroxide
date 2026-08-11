@@ -147,7 +147,7 @@ def gamma_con(
                             {\\bigl|d\\ln \\omega_{pl}^2 / d\\ln a\\bigr|_{z_{res}}
                              T_\\gamma(z_{res})\\, H(z_{res})},
 
-    following Chluba & Cyr (2024) Eq. 6.
+    following Chluba, Cyr & Johnson (2024), MNRAS 535, 1874, Eq. 6.
 
     Parameters
     ----------

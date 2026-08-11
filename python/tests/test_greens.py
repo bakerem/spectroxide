@@ -484,7 +484,7 @@ class TestPhotonGFPaths:
 from spectroxide.solver import (
     Cosmology,
     _build_cosmo_args,
-    _build_injection_args,
+    _injection_param_args,
     _build_common_solver_args,
 )
 
@@ -548,22 +548,18 @@ class TestBuildArgs:
         assert "--t-cmb" in args
 
     def test_injection_args_single_burst(self):
-        """Single burst injection args."""
+        """Single burst injection args (subcommand form: params only)."""
         inj = {"type": "single_burst", "z_h": 1e5, "sigma_z": 3000.0}
-        args = _build_injection_args(inj)
-        assert "--injection" in args
-        assert "single-burst" in args
+        args = _injection_param_args(inj)
         assert "--z-h" in args
         assert "--sigma-z" in args
+        # "type" is the positional subcommand argument, not a flag
+        assert "single-burst" not in args
 
     def test_injection_args_unknown_key_raises(self):
         """Unknown injection parameter should raise."""
         with pytest.raises(ValueError, match="Unknown injection parameter"):
-            _build_injection_args({"type": "test", "bogus": 42})
-
-    def test_injection_args_none(self):
-        """None injection should return empty list."""
-        assert _build_injection_args(None) == []
+            _injection_param_args({"type": "test", "bogus": 42})
 
     def test_common_solver_args(self):
         """Test common solver args builder."""

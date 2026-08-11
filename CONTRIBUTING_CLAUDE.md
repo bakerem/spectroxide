@@ -158,7 +158,7 @@ h=0.71, Omega_b=0.044, Omega_m=0.26, Y_p=0.24, T_cmb=2.726, N_eff=3.046 (Chluba 
 ## Useful references
 
 - Chluba & Sunyaev (2012), MNRAS 419, 1294 — CosmoTherm paper, primary reference for equations
-- Chluba (2013), MNRAS 436, 2232 — Green's function formalism
+- Chluba (2013), MNRAS 434, 352 — Green's function formalism
 - Chluba (2015), arXiv:1506.06582 — Photon injection
 - Chluba, Ravenni & Bolliet (2020), MNRAS 492, 177 — BR Gaunt factor (BRpack)
 

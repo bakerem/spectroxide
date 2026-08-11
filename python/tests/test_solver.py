@@ -16,7 +16,7 @@ from spectroxide.solver import (
     _apply_settings,
     _resolve_quality_settings,
     _build_cosmo_args,
-    _build_injection_args,
+    _injection_param_args,
     _build_common_solver_args,
     run_single,
     solve,
@@ -140,37 +140,32 @@ class TestBuildInjectionArgs:
     """Verify injection scenario CLI argument generation."""
 
     def test_single_burst(self):
-        """SingleBurst should produce --injection single-burst args."""
-        args = _build_injection_args(
+        """SingleBurst params translate to flags (type is positional)."""
+        args = _injection_param_args(
             {
                 "type": "single_burst",
                 "z_h": 5e4,
             }
         )
-        assert "--injection" in args
-        assert "single-burst" in args
         assert "--z-h" in args
+        assert "single-burst" not in args
 
     def test_decaying_particle(self):
         """DecayingParticle should produce correct args."""
-        args = _build_injection_args(
+        args = _injection_param_args(
             {
                 "type": "decaying_particle",
                 "f_x": 1e-3,
                 "gamma_x": 1e-8,
             }
         )
-        assert "decaying-particle" in args
         assert "--f-x" in args
+        assert "--gamma-x" in args
 
     def test_unknown_param_raises(self):
         """Unknown injection parameter should raise ValueError."""
         with pytest.raises(ValueError, match="Unknown injection parameter"):
-            _build_injection_args({"type": "single_burst", "bogus_param": 42})
-
-    def test_none_returns_empty(self):
-        """None injection → empty args."""
-        assert _build_injection_args(None) == []
+            _injection_param_args({"type": "single_burst", "bogus_param": 42})
 
 
 # =========================================================================
