@@ -81,21 +81,6 @@ pip install -e "python/.[notebook]"   # ... or with Jupyter too
 
 </details>
 
-### Optional `axion` feature
-
-Resonant axion–photon conversion (`solve axion-resonance`, `src/axion.rs`)
-is gated behind the off-by-default `axion` Cargo feature while an unresolved
-3–10× discrepancy against Cyr, Chluba & Manoj (2024) at m_a < 10⁻¹¹ eV is
-investigated:
-
-```bash
-cargo build --release --features axion   # enables solve axion-resonance (+8 tests)
-```
-
-The pure-Python helpers in `spectroxide.axion` import without any Rust build
-(they call no Rust), but their PDE path needs the `--features axion` binary.
-The module is experimental and not re-exported at the package top level.
-
 ## Quick start
 
 ### Python: PDE solver
