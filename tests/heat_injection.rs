@@ -62,7 +62,6 @@ fn assert_finite_max(iter: impl Iterator<Item = f64>) -> f64 {
         .fold(0.0, f64::max)
 }
 
-#[allow(dead_code)]
 #[track_caller]
 fn assert_rel(actual: f64, expected: f64, tol: f64, msg: &str) {
     let rel = if expected.abs() > 1e-30 {
@@ -76,7 +75,6 @@ fn assert_rel(actual: f64, expected: f64, tol: f64, msg: &str) {
     );
 }
 
-#[allow(dead_code)]
 fn fast_grid() -> GridConfig {
     GridConfig {
         n_points: 500,
@@ -7277,63 +7275,9 @@ fn test_photon_injection_kompaneets_redistribution_y_era() {
 // PDE solver's heat injection pathway with tight tolerances that
 // only a flawless implementation can satisfy.
 
-// ----- 30.1: μ/Δρ = 1.401 FIRST-PRINCIPLES TEST -----
-
-/// In the deep μ-era, Δρ/ρ should be redistributed into a pure chemical
-/// potential: μ = 1.401 × Δρ/ρ × J_bb*(z) × J_μ(z).
-///
-/// This is the fundamental identity. Test at z = 2e5 where J_bb* ≈ 1
-/// and J_μ ≈ 1, so μ/Δρ ≈ 1.401. Require <3% agreement (PDE has
-/// ~1-2% systematic from finite DC/BR at z=2e5).
-#[test]
-fn test_heat_mu_first_principles_ratio() {
-    let cosmo = Cosmology::default();
-    let grid_config = GridConfig {
-        n_points: 2000,
-        ..GridConfig::default()
-    };
-    let drho = 1e-5;
-    let z_h = 2.0e5;
-
-    let mut solver = ThermalizationSolver::new(cosmo.clone(), grid_config);
-    solver
-        .set_injection(InjectionScenario::SingleBurst {
-            z_h,
-            delta_rho_over_rho: drho,
-            sigma_z: z_h * 0.01,
-        })
-        .unwrap();
-    solver.set_config(SolverConfig {
-        z_start: z_h * 1.5,
-        z_end: 500.0,
-        ..SolverConfig::default()
-    });
-    solver.run_with_snapshots(&[500.0]);
-    let last = solver.snapshots.last().unwrap();
-
-    let j_bb_star = greens::visibility_j_bb_star(z_h);
-    let j_mu = greens::visibility_j_mu(z_h);
-    let expected_mu = 1.401 * drho * j_bb_star * j_mu;
-    let rel_err = (last.mu - expected_mu).abs() / expected_mu;
-
-    eprintln!(
-        "μ first-principles: PDE μ = {:.6e}, expected = {:.6e}",
-        last.mu, expected_mu
-    );
-    eprintln!(
-        "  J_bb* = {j_bb_star:.4}, J_μ = {j_mu:.4}, rel_err = {:.2}%",
-        rel_err * 100.0
-    );
-
-    // PDE has ~5-10% systematic offset from GF at z=2e5 (documented)
-    assert!(
-        rel_err < 0.12,
-        "μ/Δρ first-principles failed: PDE={:.6e}, expected={:.6e}, err={:.2}%",
-        last.mu,
-        expected_mu,
-        rel_err * 100.0
-    );
-}
+// ----- 30.1: removed — exact duplicate of
+// `chluba2013_visibility_pde_cross_validation` in greens_function_checks.rs
+// (same scenario, oracle, and 12% tolerance).
 
 // ----- 30.2: y = Δρ/(4ρ) IN PURE y-ERA -----
 

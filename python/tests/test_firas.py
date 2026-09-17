@@ -4,9 +4,12 @@ Validates FIRASData loading, chi-squared calculations, single and
 multi-parameter fits, upper limits, and Fisher matrix operations.
 """
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
+from spectroxide.greens import mu_shape, y_shape
 from spectroxide.firas import (
     FIRASData,
     MU_FIRAS_95,
@@ -227,6 +230,59 @@ class TestChiSquared:
         # They won't be exactly equal due to off-diagonal correlations
         assert np.isfinite(chi2_diag)
         assert chi2_diag > 0
+
+
+class TestChi2FromSolver:
+    """chi2_from_solver: the solver-grid Δn → FIRAS χ² bridge.
+
+    Targets come from the exact `extra_dn` template path evaluated at the
+    FIRAS frequencies, so these tests pin the interpolation and the
+    Δn → ΔI convention independently of chi2_from_solver's own code path.
+    """
+
+    @staticmethod
+    def _result(x, dn):
+        # Stand-in for SolverResult: anything with .x and .delta_n.
+        return SimpleNamespace(x=x, delta_n=dn)
+
+    def test_zero_distortion_equals_null(self):
+        """Δn = 0 on the solver grid must reproduce the null χ² exactly."""
+        firas = FIRASData()
+        x = np.geomspace(0.05, 30.0, 500)
+        chi2 = firas.chi2_from_solver(self._result(x, np.zeros_like(x)))
+        np.testing.assert_allclose(chi2, firas.chi2_null())
+
+    def test_mu_shape_matches_exact_template(self):
+        """μ-distortion on a dense grid matches the exact template path.
+
+        chi2_distortion(extra_dn=...) evaluates μ·M(x) exactly at the 43
+        FIRAS frequencies; chi2_from_solver linearly interpolates the same
+        Δn from an 8000-point log grid. Any convention error (t_cmb, ν³
+        factor, kJy conversion) would be O(1), far above the interp error.
+        """
+        firas = FIRASData()
+        mu = 5.0e-5
+        x = np.geomspace(0.05, 30.0, 8000)
+        chi2_solver = firas.chi2_from_solver(self._result(x, mu * mu_shape(x)))
+        chi2_exact = firas.chi2_distortion(extra_dn=lambda xf: mu * mu_shape(xf))
+        np.testing.assert_allclose(chi2_solver, chi2_exact, rtol=1e-5)
+
+    def test_y_shape_matches_exact_template(self):
+        """Same cross-path check for a y-distortion."""
+        firas = FIRASData()
+        y = 3.0e-5
+        x = np.geomspace(0.05, 30.0, 8000)
+        chi2_solver = firas.chi2_from_solver(self._result(x, y * y_shape(x)))
+        chi2_exact = firas.chi2_distortion(extra_dn=lambda xf: y * y_shape(xf))
+        np.testing.assert_allclose(chi2_solver, chi2_exact, rtol=1e-5)
+
+    def test_large_distortion_strongly_rejected(self):
+        """μ = 10⁻³ (≈ 11× the FIRAS 95% limit) must be strongly excluded:
+        Δχ² ≳ (μ/σ_μ)² ≈ 500 ≫ 100."""
+        firas = FIRASData()
+        x = np.geomspace(0.05, 30.0, 2000)
+        chi2 = firas.chi2_from_solver(self._result(x, 1.0e-3 * mu_shape(x)))
+        assert chi2 > firas.chi2_null() + 100.0
 
 
 # =========================================================================
