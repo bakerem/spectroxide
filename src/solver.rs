@@ -1301,8 +1301,7 @@ impl ThermalizationSolver {
         }
 
         // Fill photon source buffer (simple — no split-source logic needed)
-        let source_active;
-        if has_phot_src {
+        let source_active = if has_phot_src {
             let dt = actual_dz / (h * (1.0 + z_mid));
             if let Some(ref inj) = self.injection {
                 for i in 0..n {
@@ -1313,15 +1312,15 @@ impl ThermalizationSolver {
             // Use a threshold that excludes Gaussian tails > ~8σ from peak.
             // Peak source ~ O(1e-2), so 1e-20 catches everything within ~6σ
             // but correctly disables the bordered system in the far tails.
-            source_active = self.photon_source_buf.iter().any(|&v| v.abs() > 1e-20);
+            self.photon_source_buf.iter().any(|&v| v.abs() > 1e-20)
         } else {
             // No zeroing needed: `photon_source_buf` is only ever *read* when
             // `source_active` is true, and `source_active` can only be set on
             // the branch above, which overwrites all n entries first. Its
             // contents are therefore unobservable here, and clearing them
             // every step cost an O(n) memset per step for nothing.
-            source_active = false;
-        }
+            false
+        };
 
         // Photon source routing:
         //   - When coupled DC/BR Newton runs (below), the integrated source
