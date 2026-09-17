@@ -1383,7 +1383,6 @@ def distortion_from_photon_injection(
 # ---------------------------------------------------------------------------
 
 
-
 DEFAULT_DECOMP_X_MIN = 0.5
 DEFAULT_DECOMP_X_MAX = 18.0
 
