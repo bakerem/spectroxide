@@ -4,10 +4,10 @@
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
 
-# Load publication style
-plt.style.use(Path("~/.claude/skills/matplotlib-publication/matplotlibrc").expanduser())
+from spectroxide.style import apply_style
+
+apply_style()
 
 DOUBLE_COL = 6.75
 

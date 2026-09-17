@@ -430,76 +430,9 @@ def build_all():
     ])
 
     # ------------------------------------------------------------------
-    # 8. Dark Photon Constraints (Fig 8) — from notebooks/physics/dark_photon_validation.ipynb
+    # 8. Dark Photon Constraints (Fig 8) — dark_photon_constraints.ipynb is
+    #    maintained directly, not generated.
     # ------------------------------------------------------------------
-    dp_cells = read_notebook_cells(root / "notebooks" / "physics" / "dark_photon_validation.ipynb")
-    dp_code = {i: src for i, (ct, src) in enumerate(dp_cells) if ct == "code"}
-
-    def find_dp_cell(keyword):
-        for i, src in dp_code.items():
-            if keyword in src:
-                return i, src
-        return None, None
-
-    _, dp_imports = find_dp_cell("from spectroxide import")          # cell 1
-    _, dp_physics = find_dp_cell("def plasma_frequency_ev")         # cell 3
-    _, dp_spectral = find_dp_cell("g1 = G1_PLANCK")                # cell 5
-    _, dp_gamma = find_dp_cell("def dln_omega_pl2_dlna")            # cell 6
-    _, dp_firas = find_dp_cell("firas = FIRASData()")               # cell 8
-    _, dp_templates = find_dp_cell("def dp_gf_custom_template")     # cell 10
-    _, dp_pde_worker = find_dp_cell("def _pde_worker")              # cell 11
-    _, dp_pde_run = find_dp_cell("masses_low = np.geomspace")       # cell 12
-    _, dp_ct_lims = find_dp_cell("cosmotherm_dp_lims")              # cell 16
-    _, dp_figure = find_dp_cell("Publication figure: FIRAS dark photon")  # cell 17
-
-    # Fix paths
-    dp_ct_lims = dp_ct_lims.replace(
-        "np.loadtxt('dev/data/cosmotherm_dp_lims.csv'",
-        "np.loadtxt(PROJECT_ROOT / 'dev' / 'data' / 'cosmotherm_dp_lims.csv'"
-    )
-    dp_figure = dp_figure.replace(
-        "fig.savefig('../figures/dp_firas_pde_constraints.pdf', bbox_inches='tight')",
-        "fig.savefig(FIG_DIR / 'dp_firas_pde_constraints.pdf', bbox_inches='tight')"
-    )
-    # Remove the inline mass-vs-zres plot and validation tracking from dp_physics
-    # Keep only the function definitions (up to the first fig/ax line)
-    dp_physics_lines = dp_physics.splitlines(True)
-    dp_physics_clean = []
-    for line in dp_physics_lines:
-        if line.startswith("fig, ax") or line.startswith("masses_ev ="):
-            break
-        dp_physics_clean.append(line)
-    dp_physics = "".join(dp_physics_clean)
-    dp_spectral = dp_spectral.split("\nresults.append")[0]
-    dp_gamma = dp_gamma.split("\n# Recombination correction")[0]
-    dp_pde_run = dp_pde_run.split("\n# Compare PDE vs GF")[0]
-
-    # Remove 'results = []' from imports and unneeded plot code
-    dp_imports = dp_imports.replace("results = []", "")
-
-    write_notebook("dark_photon_constraints", [
-        ("markdown",
-         "# Dark Photon FIRAS Constraints\n\n"
-         "Generates `dp_firas_pde_constraints.pdf` (Figure 8 in paper).\n\n"
-         "FIRAS 95% CL upper limits on dark photon kinetic mixing epsilon "
-         "as a function of mass, via PDE spectral fit with floating-T profile likelihood."),
-        ("code", _SETUP + "\n" + dp_imports),
-        ("markdown", "## Physics: plasma frequency, resonance redshift"),
-        ("code", dp_physics),
-        ("markdown", "## Spectral integrals"),
-        ("code", dp_spectral),
-        ("markdown", "## Conversion parameter gamma_con"),
-        ("code", dp_gamma),
-        ("markdown", "## FIRAS data and profile likelihood"),
-        ("code", dp_firas),
-        ("markdown", "## Dark photon templates and GF limits"),
-        ("code", dp_templates),
-        ("markdown", "## PDE worker and parallel execution"),
-        ("code", dp_pde_worker),
-        ("code", dp_pde_run),
-        ("markdown", "## Load CosmoTherm reference and plot"),
-        ("code", dp_ct_lims + "\n" + dp_figure),
-    ])
 
     # ------------------------------------------------------------------
     # 9. Energy Conservation (Fig 10) — from dev/scripts/photon_energy_conservation.py
