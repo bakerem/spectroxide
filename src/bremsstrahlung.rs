@@ -223,6 +223,62 @@ pub struct BrPrecomputed {
     pub n_heii: f64,
     /// 0.5 * ln(θ_e), precomputed for fast Gaunt factor evaluation
     pub half_ln_theta_e: f64,
+    /// `exp(S3_PI·(ln 2.25 + ½lnθ_e) + 1.425)` — the x-independent half of
+    /// `exp(arg)` for Z = 1. See [`gaunt_expc_factor`].
+    pub ea_z1: f64,
+    /// Same for Z = 2 (`ln 1.125` in place of `ln 2.25`).
+    pub ea_z2: f64,
+}
+
+/// Grid-constant half of the Gaunt-factor exponential: `x^(−√3/π)`.
+///
+/// The softplus argument of the Born-approximation Gaunt fit is *affine* in
+/// `ln x`:
+///
+/// ```text
+/// arg = S3_PI·(ln(2.25/Z) + ½lnθ_e − ln x) + 1.425
+///     ⇒ exp(arg) = x^(−S3_PI) · exp(S3_PI·(ln(2.25/Z) + ½lnθ_e) + 1.425)
+///                = gaunt_expc_factor(ln x) · ea_Z
+/// ```
+///
+/// The first factor depends only on the frequency grid, the second only on the
+/// step's electron temperature. Precomputing the former once per grid removes
+/// both `exp()` calls from every Gaunt evaluation, leaving only the `ln(1+e)`.
+///
+/// Returns `0.0` for `ln_x < −69` (i.e. `x < 1e-30`), which propagates through
+/// [`gaunt_from_expc`] as `g = 1`, reproducing the guard in
+/// [`gaunt_ff_nr_fast_preln`] exactly.
+#[inline]
+pub fn gaunt_expc_factor(ln_x: f64) -> f64 {
+    if ln_x < -69.0 {
+        0.0
+    } else {
+        (-S3_PI * ln_x).exp()
+    }
+}
+
+/// `exp(20)` / `exp(-20)`: the [`softplus`] branch thresholds, moved to the
+/// exponentiated variable `e = exp(arg)`.
+const EXP_20: f64 = 485_165_195.409_790_3;
+const EXP_M20: f64 = 2.061_153_622_438_558e-9;
+
+/// Gaunt factor from the factored exponential `e = expc · ea`.
+///
+/// Mirrors `1.0 + softplus(arg)` branch-for-branch with `e = exp(arg)`;
+/// `e = 0` (the `ln_x < −69` sentinel) lands in the small-`e` branch and
+/// returns exactly 1.
+#[inline]
+fn gaunt_from_expc(expc: f64, ea: f64) -> f64 {
+    let e = expc * ea;
+    if e > EXP_20 {
+        // arg > 20 ⇒ softplus(arg) = arg = ln(e). Unreachable on physical
+        // grids (e stays below ~10³); kept so the branch structure matches.
+        1.0 + e.ln()
+    } else if e < EXP_M20 {
+        1.0 + e
+    } else {
+        1.0 + (1.0 + e).ln()
+    }
 }
 
 /// Precompute x-independent BR factors.
@@ -241,13 +297,16 @@ pub fn br_precompute(
     }
     let phi = theta_z / theta_e;
     let base_factor = BR_PREFACTOR * theta_e.powf(-3.5) / (phi * phi * phi);
+    let half_ln_theta_e = 0.5 * theta_e.ln();
     Some(BrPrecomputed {
         base_factor,
         phi,
         n_hii: x_e_frac.min(1.0) * n_h,
         n_heiii: y_he_ii * n_he,
         n_heii: (y_he_i - y_he_ii).max(0.0) * n_he,
-        half_ln_theta_e: 0.5 * theta_e.ln(),
+        half_ln_theta_e,
+        ea_z1: (S3_PI * (LN_2_25 + half_ln_theta_e) + 1.425).exp(),
+        ea_z2: (S3_PI * (LN_1_125 + half_ln_theta_e) + 1.425).exp(),
     })
 }
 
@@ -266,10 +325,76 @@ pub fn br_emission_coefficient_fast(x: f64, pre: &BrPrecomputed) -> f64 {
     pre.base_factor * exp_xphi * species_sum
 }
 
+/// Gaunt factor together with its logistic weight σ = dg/d(arg).
+///
+/// σ is the derivative of `softplus` with respect to its argument, evaluated
+/// branch-consistently (σ = 1 for arg > 20, σ = e^arg for arg < -20, else the
+/// logistic e^arg/(1+e^arg)). It shares the factored exponential `e = expc·ea`
+/// with the softplus, so σ costs no transcendental calls at all and `g` costs
+/// only the `ln(1+e)`. The returned `g` matches [`gaunt_from_expc`] exactly.
+#[inline]
+fn gaunt_from_expc_with_sigma(expc: f64, ea: f64) -> (f64, f64) {
+    let e = expc * ea;
+    if e > EXP_20 {
+        (1.0 + e.ln(), 1.0)
+    } else if e < EXP_M20 {
+        (1.0 + e, e)
+    } else {
+        (1.0 + (1.0 + e).ln(), e / (1.0 + e))
+    }
+}
+
+/// BR emission coefficient K_BR and its analytic derivative dK_BR/dρ_e,
+/// holding densities, He ionization fractions, and θ_z fixed (the same
+/// quantities the former finite-difference evaluation held fixed).
+///
+/// With θ_e = θ_z ρ_e and φ = 1/ρ_e, K_BR = base(θ_e) · e^{-xφ} · S(θ_e):
+///   d ln base/dρ_e = (-7/2 + 3)/ρ_e = -φ/2      (θ_e^{-7/2}/φ³ factor)
+///   d(-xφ)/dρ_e    = x φ²                        (Wien factor)
+///   dg/dρ_e        = σ · (√3/π) · φ/2            (softplus Gaunt fit)
+///
+/// `expc` is the grid-constant [`gaunt_expc_factor`]; the returned K_BR agrees
+/// with `br_emission_coefficient_fast_preln` to last-ulp rounding.
+#[inline]
+pub fn br_emission_coefficient_and_drho_expc(x: f64, expc: f64, pre: &BrPrecomputed) -> (f64, f64) {
+    let exp_xphi = (-x * pre.phi).exp();
+    let (g_z1, s_z1) = gaunt_from_expc_with_sigma(expc, pre.ea_z1);
+    let (g_he2, s_he2) = gaunt_from_expc_with_sigma(expc, pre.ea_z2);
+
+    let species_sum = pre.n_hii * g_z1 + 4.0 * pre.n_heiii * g_he2 + pre.n_heii * g_z1;
+    let k_br = pre.base_factor * exp_xphi * species_sum;
+
+    let d_species = (0.5 * S3_PI * pre.phi)
+        * (pre.n_hii * s_z1 + 4.0 * pre.n_heiii * s_he2 + pre.n_heii * s_z1);
+    let dk_br = k_br * (x * pre.phi - 0.5) * pre.phi + pre.base_factor * exp_xphi * d_species;
+
+    (k_br, dk_br)
+}
+
+/// BR emission coefficient using the factored Gaunt exponential.
+///
+/// `expc` is the grid-constant [`gaunt_expc_factor`] evaluated at this x.
+/// This is the production entry point: it costs one `exp` (the Wien factor
+/// `e^{-xφ}`) plus two `ln`, where `br_emission_coefficient_fast_preln` costs
+/// one `exp` plus two `exp`+`ln` pairs. The two agree to last-ulp rounding;
+/// `test_br_expc_matches_preln` pins them together.
+#[inline]
+pub fn br_emission_coefficient_expc(x: f64, expc: f64, pre: &BrPrecomputed) -> f64 {
+    let exp_xphi = (-x * pre.phi).exp();
+    let g_z1 = gaunt_from_expc(expc, pre.ea_z1);
+    let g_he2 = gaunt_from_expc(expc, pre.ea_z2);
+
+    let species_sum = pre.n_hii * g_z1 + 4.0 * pre.n_heiii * g_he2 + pre.n_heii * g_z1;
+
+    pre.base_factor * exp_xphi * species_sum
+}
+
 /// Fast BR emission coefficient with precomputed ln(x).
 ///
 /// Same as `br_emission_coefficient_fast` but avoids ln() calls in the
-/// Gaunt factor by using a precomputed ln(x) value.
+/// Gaunt factor by using a precomputed ln(x) value. Retained as the
+/// unfactored reference implementation that the `expc` path is checked
+/// against; production code calls [`br_emission_coefficient_expc`].
 #[inline]
 pub fn br_emission_coefficient_fast_preln(x: f64, ln_x: f64, pre: &BrPrecomputed) -> f64 {
     let exp_xphi = (-x * pre.phi).exp();
@@ -579,6 +704,28 @@ mod tests {
             assert!(
                 rel_preln < 1e-10,
                 "fast_preln mismatch at x={x}: ref={k_ref}, preln={k_preln}, rel={rel_preln}"
+            );
+
+            // Factored-exponential variant (production path). This must track
+            // the unfactored `_preln` reference to last-ulp rounding, not
+            // merely to the 1e-10 physics band: the two differ only by
+            // exp(a+c) vs exp(a)·exp(c). A looser band here would let a real
+            // algebra error in the factorisation hide behind the fit
+            // tolerance.
+            let k_expc = br_emission_coefficient_expc(x, gaunt_expc_factor(x.ln()), &pre);
+            let rel_expc = (k_expc - k_preln).abs() / k_preln.abs().max(1e-300);
+            assert!(
+                rel_expc < 1e-14,
+                "expc mismatch at x={x}: preln={k_preln}, expc={k_expc}, rel={rel_expc}"
+            );
+
+            // The derivative helper must return exactly the same K_BR as the
+            // plain factored path (it shares gaunt_from_expc_with_sigma).
+            let (k_drho, _) =
+                br_emission_coefficient_and_drho_expc(x, gaunt_expc_factor(x.ln()), &pre);
+            assert_eq!(
+                k_drho, k_expc,
+                "and_drho_expc K_BR must equal br_emission_coefficient_expc at x={x}"
             );
         }
 

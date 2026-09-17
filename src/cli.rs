@@ -1539,6 +1539,77 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     Ok(result)
 }
 
+/// Run `worker` over `items` on `n_threads` long-lived scoped threads pulling
+/// from a shared atomic work queue.
+///
+/// Replaces the former `chunks(n_threads)` + per-chunk barrier scheme: per-item
+/// cost in the sweeps spans ~128 to ~80,000 solver steps (z_start ≈ z_h + 7σ,
+/// and step count grows steeply with z), so a barrier left most cores idle
+/// while the heaviest points ran alone. Threads here grab the next undone item
+/// as they free up, and `priority` (higher = scheduled earlier; pass z_h)
+/// starts the most expensive items first so they set the makespan floor.
+///
+/// Scheduling only: each item computes exactly what it did before, and results
+/// are returned in `items` order, so output is independent of thread timing.
+/// `label` names the sweep in error messages. Unlike the chunked scheme, all
+/// items run even if one fails; the first error in item order is returned.
+fn run_work_queue<T, R>(
+    label: &str,
+    items: &[T],
+    n_threads: usize,
+    priority: impl Fn(&T) -> f64,
+    worker: impl Fn(&T) -> Result<R, String> + Sync,
+) -> Result<Vec<R>, String>
+where
+    T: Sync,
+    R: Send,
+{
+    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let mut order: Vec<usize> = (0..items.len()).collect();
+    order.sort_by(|&a, &b| priority(&items[b]).total_cmp(&priority(&items[a])));
+
+    let n_workers = n_threads.max(1).min(items.len().max(1));
+    let next = AtomicUsize::new(0);
+    let collected: Mutex<Vec<(usize, Result<R, String>)>> =
+        Mutex::new(Vec::with_capacity(items.len()));
+
+    std::thread::scope(|s| -> Result<(), String> {
+        let handles: Vec<_> = (0..n_workers)
+            .map(|_| {
+                s.spawn(|| {
+                    loop {
+                        let slot = next.fetch_add(1, Ordering::Relaxed);
+                        if slot >= order.len() {
+                            break;
+                        }
+                        let i = order[slot];
+                        let r = worker(&items[i]);
+                        collected.lock().unwrap().push((i, r));
+                    }
+                })
+            })
+            .collect();
+        for h in handles {
+            if let Err(e) = h.join() {
+                return Err(format!(
+                    "{label} thread panicked: {}",
+                    extract_panic_message(&e)
+                ));
+            }
+        }
+        Ok(())
+    })?;
+
+    let mut collected = collected.into_inner().unwrap();
+    collected.sort_by_key(|&(i, _)| i);
+    collected
+        .into_iter()
+        .map(|(_, r)| r.map_err(|msg| format!("{label} worker error: {msg}")))
+        .collect()
+}
+
 /// Execute a sweep over multiple injection redshifts. Returns result without doing I/O.
 pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
     let cosmo = build_cosmology(&opts.cosmo)?;
@@ -1562,95 +1633,70 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
     });
     let mut rows_all: Vec<SweepRow> = Vec::with_capacity(injection_redshifts.len());
     let mut warnings_all: Vec<String> = Vec::new();
-    for chunk in injection_redshifts.chunks(n_threads) {
-        let chunk_rows: Result<Vec<(SweepRow, Vec<String>)>, String> = std::thread::scope(|s| {
-            let handles: Vec<_> = chunk
-                .iter()
-                .map(|&z_h| {
-                    let cosmo = cosmo.clone();
-                    let solver_opts = &opts.solver;
-                    s.spawn(move || -> Result<(SweepRow, Vec<String>), String> {
-                        let sigma: f64 = (z_h * 0.04_f64).max(100.0);
-                        let z_start: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma);
+    let all_rows = run_work_queue(
+        "Sweep",
+        &injection_redshifts,
+        n_threads,
+        |&z_h| z_h,
+        |&z_h| -> Result<(SweepRow, Vec<String>), String> {
+            let cosmo = cosmo.clone();
+            let solver_opts = &opts.solver;
+            let sigma: f64 = (z_h * 0.04_f64).max(100.0);
+            let z_start: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma);
 
-                        let grid_config = build_grid_config(n_grid, solver_opts.production_grid);
-                        let injection = InjectionScenario::SingleBurst {
-                            z_h,
-                            delta_rho_over_rho: delta_rho,
-                            sigma_z: sigma,
-                        };
-                        let probe_config = build_solver_config(solver_opts, z_start, z_end);
-                        let preflight = validate_and_collect_warnings(
-                            &probe_config,
-                            &grid_config,
-                            &injection,
-                            &cosmo,
-                        )?;
+            let grid_config = build_grid_config(n_grid, solver_opts.production_grid);
+            let injection = InjectionScenario::SingleBurst {
+                z_h,
+                delta_rho_over_rho: delta_rho,
+                sigma_z: sigma,
+            };
+            let probe_config = build_solver_config(solver_opts, z_start, z_end);
+            let preflight =
+                validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
 
-                        let mut solver = ThermalizationSolver::new(cosmo, grid_config);
-                        apply_solver_flags(&mut solver, solver_opts);
-                        solver.set_injection(injection)?;
-                        solver.set_config(probe_config);
-                        solver.diag.warnings.extend(preflight);
+            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
+            apply_solver_flags(&mut solver, solver_opts);
+            solver.set_injection(injection)?;
+            solver.set_config(probe_config);
+            solver.diag.warnings.extend(preflight);
 
-                        solver.run_with_snapshots(&[z_end]);
-                        let step_count = solver.step_count;
-                        let x_grid = solver.grid.x.clone();
-                        let row_warnings = solver.diag.warnings.clone();
-                        let snapshot = solver
-                            .snapshots
-                            .last()
-                            .ok_or_else(|| {
-                                format!("sweep z_h={z_h:.3e}: solver produced no snapshots")
-                            })?
-                            .clone();
+            solver.run_with_snapshots(&[z_end]);
+            let step_count = solver.step_count;
+            let x_grid = solver.grid.x.clone();
+            let row_warnings = solver.diag.warnings.clone();
+            let snapshot = solver
+                .snapshots
+                .last()
+                .ok_or_else(|| format!("sweep z_h={z_h:.3e}: solver produced no snapshots"))?
+                .clone();
 
-                        let gf_z_min = (z_h - 10.0 * sigma).max(1e2);
-                        let gf_z_max = z_h + 10.0 * sigma;
-                        let dq_dz = |z: f64| -> f64 {
-                            delta_rho * (-(z - z_h).powi(2) / (2.0 * sigma * sigma)).exp()
-                                / (2.0 * std::f64::consts::PI * sigma * sigma).sqrt()
-                        };
-                        let (gf_mu, gf_y) =
-                            greens::mu_y_from_heating(&dq_dz, gf_z_min, gf_z_max, 5000);
-                        let gf_delta_n = greens::distortion_from_heating(
-                            &x_grid, &dq_dz, gf_z_min, gf_z_max, 5000,
-                        );
+            let gf_z_min = (z_h - 10.0 * sigma).max(1e2);
+            let gf_z_max = z_h + 10.0 * sigma;
+            let dq_dz = |z: f64| -> f64 {
+                delta_rho * (-(z - z_h).powi(2) / (2.0 * sigma * sigma)).exp()
+                    / (2.0 * std::f64::consts::PI * sigma * sigma).sqrt()
+            };
+            let (gf_mu, gf_y) = greens::mu_y_from_heating(&dq_dz, gf_z_min, gf_z_max, 5000);
+            let gf_delta_n =
+                greens::distortion_from_heating(&x_grid, &dq_dz, gf_z_min, gf_z_max, 5000);
 
-                        Ok((
-                            SweepRow {
-                                z_h,
-                                snapshot,
-                                gf_mu,
-                                gf_y,
-                                gf_delta_n,
-                                x_grid,
-                                step_count,
-                            },
-                            row_warnings,
-                        ))
-                    })
-                })
-                .collect();
-            let mut results = Vec::with_capacity(handles.len());
-            for h in handles {
-                match h.join() {
-                    Ok(Ok(row)) => results.push(row),
-                    Ok(Err(msg)) => return Err(format!("Sweep worker error: {msg}")),
-                    Err(e) => {
-                        return Err(format!(
-                            "Sweep thread panicked: {}",
-                            extract_panic_message(&e)
-                        ));
-                    }
-                }
-            }
-            Ok(results)
-        });
-        for (row, ws) in chunk_rows? {
-            rows_all.push(row);
-            warnings_all.extend(ws);
-        }
+            Ok((
+                SweepRow {
+                    z_h,
+                    snapshot,
+                    gf_mu,
+                    gf_y,
+                    gf_delta_n,
+                    x_grid,
+                    step_count,
+                },
+                row_warnings,
+            ))
+        },
+    )?;
+    for (row, ws) in all_rows {
+        rows_all.push(row);
+        warnings_all.extend(ws);
     }
     let rows = rows_all;
 
@@ -1696,100 +1742,72 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
     });
     let mut rows_all: Vec<PhotonSweepRow> = Vec::with_capacity(injection_redshifts.len());
     let mut warnings_all: Vec<String> = Vec::new();
-    for chunk in injection_redshifts.chunks(n_threads) {
-        let chunk_rows: Result<Vec<(PhotonSweepRow, Vec<String>)>, String> =
-            std::thread::scope(|s| {
-                let handles: Vec<_> = chunk
-                    .iter()
-                    .map(|&z_h| {
-                        let cosmo = cosmo.clone();
-                        let solver_opts = &opts.solver;
-                        s.spawn(move || -> Result<(PhotonSweepRow, Vec<String>), String> {
-                            let sigma_z: f64 = (z_h * 0.04_f64).max(100.0);
-                            let z_start_val: f64 =
-                                solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
+    let all_rows = run_work_queue(
+        "Photon sweep",
+        &injection_redshifts,
+        n_threads,
+        |&z_h| z_h,
+        |&z_h| -> Result<(PhotonSweepRow, Vec<String>), String> {
+            let cosmo = cosmo.clone();
+            let solver_opts = &opts.solver;
+            let sigma_z: f64 = (z_h * 0.04_f64).max(100.0);
+            let z_start_val: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
 
-                            let mut grid_config =
-                                build_grid_config(n_grid, solver_opts.production_grid);
+            let mut grid_config = build_grid_config(n_grid, solver_opts.production_grid);
 
-                            let injection = InjectionScenario::MonochromaticPhotonInjection {
-                                x_inj,
-                                delta_n_over_n,
-                                z_h,
-                                sigma_z,
-                                sigma_x,
-                            };
+            let injection = InjectionScenario::MonochromaticPhotonInjection {
+                x_inj,
+                delta_n_over_n,
+                z_h,
+                sigma_z,
+                sigma_x,
+            };
 
-                            if !solver_opts.no_auto_refine {
-                                for zone in injection.refinement_zones() {
-                                    grid_config.refinement_zones.push(zone);
-                                }
-                                if let Some(x_min) = injection.suggested_x_min() {
-                                    if x_min < grid_config.x_min {
-                                        grid_config.x_min = x_min;
-                                    }
-                                }
-                            }
-
-                            let probe_config = build_solver_config(solver_opts, z_start_val, z_end);
-                            let preflight = validate_and_collect_warnings(
-                                &probe_config,
-                                &grid_config,
-                                &injection,
-                                &cosmo,
-                            )?;
-
-                            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
-                            apply_solver_flags(&mut solver, solver_opts);
-                            solver.set_injection(injection)?;
-                            solver.set_config(probe_config);
-                            solver.diag.warnings.extend(preflight);
-
-                            solver.run_with_snapshots(&[z_end]);
-                            let step_count = solver.step_count;
-                            let x_grid = solver.grid.x.clone();
-                            let row_warnings = solver.diag.warnings.clone();
-                            let snapshot = solver
-                                .snapshots
-                                .last()
-                                .ok_or_else(|| {
-                                    format!("photon sweep z_h={z_h:.3e}: no snapshots produced")
-                                })?
-                                .clone();
-
-                            Ok((
-                                PhotonSweepRow {
-                                    z_h,
-                                    snapshot,
-                                    x_grid,
-                                    step_count,
-                                },
-                                row_warnings,
-                            ))
-                        })
-                    })
-                    .collect();
-                let mut results = Vec::with_capacity(handles.len());
-                for h in handles {
-                    match h.join() {
-                        Ok(Ok(row)) => results.push(row),
-                        Ok(Err(msg)) => {
-                            return Err(format!("Photon sweep worker error: {msg}"));
-                        }
-                        Err(e) => {
-                            return Err(format!(
-                                "Photon sweep thread panicked: {}",
-                                extract_panic_message(&e)
-                            ));
-                        }
+            if !solver_opts.no_auto_refine {
+                for zone in injection.refinement_zones() {
+                    grid_config.refinement_zones.push(zone);
+                }
+                if let Some(x_min) = injection.suggested_x_min() {
+                    if x_min < grid_config.x_min {
+                        grid_config.x_min = x_min;
                     }
                 }
-                Ok(results)
-            });
-        for (row, ws) in chunk_rows? {
-            rows_all.push(row);
-            warnings_all.extend(ws);
-        }
+            }
+
+            let probe_config = build_solver_config(solver_opts, z_start_val, z_end);
+            let preflight =
+                validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
+
+            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
+            apply_solver_flags(&mut solver, solver_opts);
+            solver.set_injection(injection)?;
+            solver.set_config(probe_config);
+            solver.diag.warnings.extend(preflight);
+
+            solver.run_with_snapshots(&[z_end]);
+            let step_count = solver.step_count;
+            let x_grid = solver.grid.x.clone();
+            let row_warnings = solver.diag.warnings.clone();
+            let snapshot = solver
+                .snapshots
+                .last()
+                .ok_or_else(|| format!("photon sweep z_h={z_h:.3e}: no snapshots produced"))?
+                .clone();
+
+            Ok((
+                PhotonSweepRow {
+                    z_h,
+                    snapshot,
+                    x_grid,
+                    step_count,
+                },
+                row_warnings,
+            ))
+        },
+    )?;
+    for (row, ws) in all_rows {
+        rows_all.push(row);
+        warnings_all.extend(ws);
     }
     let rows = rows_all;
 
@@ -1841,110 +1859,79 @@ pub fn execute_photon_sweep_batch(
             .map(|n| n.get())
             .unwrap_or(4)
     });
-    let mut rows_all: Vec<(usize, usize, PhotonSweepRow, Vec<String>)> =
-        Vec::with_capacity(tasks.len());
-    for task_chunk in tasks.chunks(n_threads) {
-        let chunk_rows: Result<Vec<(usize, usize, PhotonSweepRow, Vec<String>)>, String> =
-            std::thread::scope(|s| {
-                let handles: Vec<_> = task_chunk
-                    .iter()
-                    .map(|&(xi_idx, zh_idx)| {
-                        let cosmo = cosmo.clone();
-                        let solver_opts = &opts.solver;
-                        let x_inj = opts.x_inj_values[xi_idx];
-                        let sigma_x = opts.sigma_x.unwrap_or(x_inj * 0.05);
-                        let z_h = injection_redshifts[zh_idx];
-                        s.spawn(move || -> Result<(usize, usize, PhotonSweepRow, Vec<String>), String> {
-                            let sigma_z: f64 = (z_h * 0.04_f64).max(100.0);
-                            let z_start_val: f64 =
-                                solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
+    let rows_all: Vec<(usize, usize, PhotonSweepRow, Vec<String>)> = run_work_queue(
+        "Photon sweep batch",
+        &tasks,
+        n_threads,
+        |&(_, zh_idx)| injection_redshifts[zh_idx],
+        |&(xi_idx, zh_idx)| -> Result<(usize, usize, PhotonSweepRow, Vec<String>), String> {
+            let cosmo = cosmo.clone();
+            let solver_opts = &opts.solver;
+            let x_inj = opts.x_inj_values[xi_idx];
+            let sigma_x = opts.sigma_x.unwrap_or(x_inj * 0.05);
+            let z_h = injection_redshifts[zh_idx];
+            let sigma_z: f64 = (z_h * 0.04_f64).max(100.0);
+            let z_start_val: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
 
-                            let mut grid_config =
-                                build_grid_config(n_grid, solver_opts.production_grid);
+            let mut grid_config = build_grid_config(n_grid, solver_opts.production_grid);
 
-                            let injection = InjectionScenario::MonochromaticPhotonInjection {
-                                x_inj,
-                                delta_n_over_n,
-                                z_h,
-                                sigma_z,
-                                sigma_x,
-                            };
+            let injection = InjectionScenario::MonochromaticPhotonInjection {
+                x_inj,
+                delta_n_over_n,
+                z_h,
+                sigma_z,
+                sigma_x,
+            };
 
-                            if !solver_opts.no_auto_refine {
-                                for zone in injection.refinement_zones() {
-                                    grid_config.refinement_zones.push(zone);
-                                }
-                                if let Some(x_min) = injection.suggested_x_min() {
-                                    if x_min < grid_config.x_min {
-                                        grid_config.x_min = x_min;
-                                    }
-                                }
-                            }
-
-                            let probe_config =
-                                build_solver_config(solver_opts, z_start_val, z_end);
-                            let preflight = validate_and_collect_warnings(
-                                &probe_config,
-                                &grid_config,
-                                &injection,
-                                &cosmo,
-                            )?;
-
-                            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
-                            apply_solver_flags(&mut solver, solver_opts);
-                            solver.set_injection(injection)?;
-                            solver.set_config(probe_config);
-                            solver.diag.warnings.extend(preflight);
-
-                            solver.run_with_snapshots(&[z_end]);
-                            let step_count = solver.step_count;
-                            let x_grid = solver.grid.x.clone();
-                            let row_warnings = solver.diag.warnings.clone();
-                            let snapshot = solver
-                                .snapshots
-                                .last()
-                                .ok_or_else(|| {
-                                    format!(
-                                        "photon sweep batch (x_inj={x_inj:.3e}, z_h={z_h:.3e}): \
-                                         no snapshots produced"
-                                    )
-                                })?
-                                .clone();
-
-                            Ok((
-                                xi_idx,
-                                zh_idx,
-                                PhotonSweepRow {
-                                    z_h,
-                                    snapshot,
-                                    x_grid,
-                                    step_count,
-                                },
-                                row_warnings,
-                            ))
-                        })
-                    })
-                    .collect();
-
-                let mut results = Vec::with_capacity(handles.len());
-                for h in handles {
-                    match h.join() {
-                        Ok(Ok(row)) => results.push(row),
-                        Ok(Err(msg)) => {
-                            return Err(format!("Photon sweep batch worker error: {msg}"));
-                        }
-                        Err(e) => {
-                            return Err(format!(
-                                "Photon sweep batch thread panicked: {}",
-                                extract_panic_message(&e)
-                            ));
-                        }
+            if !solver_opts.no_auto_refine {
+                for zone in injection.refinement_zones() {
+                    grid_config.refinement_zones.push(zone);
+                }
+                if let Some(x_min) = injection.suggested_x_min() {
+                    if x_min < grid_config.x_min {
+                        grid_config.x_min = x_min;
                     }
                 }
-                Ok(results)
-            });
-        rows_all.extend(chunk_rows?);
-    }
+            }
+
+            let probe_config = build_solver_config(solver_opts, z_start_val, z_end);
+            let preflight =
+                validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
+
+            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
+            apply_solver_flags(&mut solver, solver_opts);
+            solver.set_injection(injection)?;
+            solver.set_config(probe_config);
+            solver.diag.warnings.extend(preflight);
+
+            solver.run_with_snapshots(&[z_end]);
+            let step_count = solver.step_count;
+            let x_grid = solver.grid.x.clone();
+            let row_warnings = solver.diag.warnings.clone();
+            let snapshot = solver
+                .snapshots
+                .last()
+                .ok_or_else(|| {
+                    format!(
+                        "photon sweep batch (x_inj={x_inj:.3e}, z_h={z_h:.3e}): \
+                                         no snapshots produced"
+                    )
+                })?
+                .clone();
+
+            Ok((
+                xi_idx,
+                zh_idx,
+                PhotonSweepRow {
+                    z_h,
+                    snapshot,
+                    x_grid,
+                    step_count,
+                },
+                row_warnings,
+            ))
+        },
+    )?;
     let rows = rows_all;
 
     // Group results by x_inj index

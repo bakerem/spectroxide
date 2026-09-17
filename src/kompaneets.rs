@@ -226,6 +226,78 @@ pub fn thomas_solve_inplace(
     }
 }
 
+/// Factorize once, solve two right-hand sides against the SAME tridiagonal
+/// matrix.
+///
+/// The bordered Newton solve needs `T·u = r` and `T·v = c` with identical `T`.
+/// Running `thomas_solve_inplace` twice recomputes the whole `denom` recurrence
+/// — including its `upper[i]/denom` division chain, which is the serial
+/// critical path of the whole Newton iteration. This does the factorization
+/// once and advances both right-hand sides inside it, so the two RHS
+/// recurrences overlap instead of serializing.
+///
+/// **Bit-identical** to two `thomas_solve_inplace` calls: each element is
+/// produced by the same operations on the same operands in the same order.
+/// `denom` depends only on `(lower, diag, upper)`, so sharing it changes
+/// nothing numerically.
+pub fn thomas_solve2_inplace(
+    lower: &[f64],
+    diag: &[f64],
+    upper: &[f64],
+    rhs1: &mut [f64],
+    rhs2: &mut [f64],
+    work: &mut [f64],
+) {
+    let n = diag.len();
+    assert!(n >= 2);
+    assert!(lower.len() >= n);
+    assert!(upper.len() >= n);
+    assert!(rhs1.len() >= n);
+    assert!(rhs2.len() >= n);
+    assert!(work.len() >= n);
+    assert!(
+        diag[0].abs() > 0.0,
+        "Thomas algorithm: zero pivot at row 0 (singular tridiagonal)"
+    );
+
+    // SAFETY: all accesses are within [0, n); the asserts above guarantee
+    // every slice is at least that long. Same rationale as
+    // `thomas_solve_inplace`.
+    unsafe {
+        // Forward sweep (shared factorization, both RHS advanced together)
+        let d0 = *diag.get_unchecked(0);
+        *work.get_unchecked_mut(0) = *upper.get_unchecked(0) / d0;
+        *rhs1.get_unchecked_mut(0) /= d0;
+        *rhs2.get_unchecked_mut(0) /= d0;
+
+        for i in 1..n - 1 {
+            let l = *lower.get_unchecked(i);
+            let denom = *diag.get_unchecked(i) - l * *work.get_unchecked(i - 1);
+            *work.get_unchecked_mut(i) = *upper.get_unchecked(i) / denom;
+            *rhs1.get_unchecked_mut(i) =
+                (*rhs1.get_unchecked(i) - l * *rhs1.get_unchecked(i - 1)) / denom;
+            *rhs2.get_unchecked_mut(i) =
+                (*rhs2.get_unchecked(i) - l * *rhs2.get_unchecked(i - 1)) / denom;
+        }
+        // Last row (no upper entry needed)
+        let i = n - 1;
+        let l = *lower.get_unchecked(i);
+        let denom = *diag.get_unchecked(i) - l * *work.get_unchecked(i - 1);
+        *work.get_unchecked_mut(i) = 0.0;
+        *rhs1.get_unchecked_mut(i) =
+            (*rhs1.get_unchecked(i) - l * *rhs1.get_unchecked(i - 1)) / denom;
+        *rhs2.get_unchecked_mut(i) =
+            (*rhs2.get_unchecked(i) - l * *rhs2.get_unchecked(i - 1)) / denom;
+
+        // Back substitution
+        for i in (0..n - 1).rev() {
+            let w = *work.get_unchecked(i);
+            *rhs1.get_unchecked_mut(i) -= w * *rhs1.get_unchecked(i + 1);
+            *rhs2.get_unchecked_mut(i) -= w * *rhs2.get_unchecked(i + 1);
+        }
+    }
+}
+
 /// Solve a tridiagonal system (allocating version for tests/convenience).
 pub fn thomas_solve(lower: &[f64], diag: &[f64], upper: &[f64], rhs: &mut [f64]) -> Vec<f64> {
     let n = diag.len();
@@ -338,10 +410,15 @@ pub struct KompaneetsWorkspace {
     j_upper: Vec<f64>,
     rhs_buf: Vec<f64>,
     thomas_work: Vec<f64>,
+    // Per-interface scratch (length ng-1). Each interface quantity is shared
+    // by the cells on either side of it, so it is built once per pass here
+    // and differenced in the cell loop rather than recomputed twice.
+    f_half: Vec<f64>,
+    b_half: Vec<f64>,
+    dfdr_half: Vec<f64>,
     // Bordered system workspace (for coupled ρ_e solve):
     c_vec: Vec<f64>,
     v_buf: Vec<f64>,
-    thomas_work2: Vec<f64>,
     // Precomputed w_j × em_j for the bordered Newton. Fixed across the
     // Newton iteration (em_rates and weights don't change within a step),
     // so we compute it once per step and reuse it in both the h_dcbr pass
@@ -434,9 +511,11 @@ impl KompaneetsWorkspace {
             j_upper: vec![0.0; ng],
             rhs_buf: vec![0.0; ng],
             thomas_work: vec![0.0; ng],
+            f_half: vec![0.0; n_half],
+            b_half: vec![0.0; n_half],
+            dfdr_half: vec![0.0; n_half],
             c_vec: vec![0.0; ng],
             v_buf: vec![0.0; ng],
-            thomas_work2: vec![0.0; ng],
             wem: vec![0.0; ng],
             dcbr_em_old: vec![0.0; ng],
             dcbr_neq_old: vec![0.0; ng],
@@ -555,6 +634,9 @@ pub fn kompaneets_step_coupled_inplace(
     assert!(ws.x4_half.len() >= n_half);
     assert!(ws.inv_dx.len() >= n_half);
     assert!(ws.x4_over_dx.len() >= n_half);
+    assert!(ws.f_half.len() >= n_half);
+    assert!(ws.b_half.len() >= n_half);
+    assert!(ws.dfdr_half.len() >= n_half);
 
     // Debug-mode input validation: catch NaN/Inf and unphysical parameters
     // before they propagate through unsafe blocks. Zero cost in release.
@@ -589,30 +671,33 @@ pub fn kompaneets_step_coupled_inplace(
         ws.half_dtau_coeff[i] = 0.5 * dtau * ws.inv_x2_dx_cell[i];
     }
 
-    // Precompute K(delta_n_old, φ_old) for Crank-Nicolson
-    // SAFETY: i ranges over 1..ng-1; all workspace arrays have length >= ng,
-    // half-point arrays have length >= ng-1. Asserted above.
+    // Precompute K(delta_n_old, φ_old) for Crank-Nicolson.
+    //
+    // The flux at interface j is shared by cells j and j+1 (it is `f_r` for the
+    // former and `f_l` for the latter), so it is built once into `f_half` and
+    // then differenced. This is exactly the same arithmetic on the same
+    // operands — only the redundancy is removed.
+    //
+    // SAFETY: j ranges over 0..ng-1 and i over 1..ng-1; all workspace arrays
+    // have length >= ng, half-point arrays >= ng-1. Asserted above.
+    let phi_old_m1 = phi_old - 1.0;
+    for j in 0..n_half {
+        unsafe {
+            let dn_j = *ws.dn_old.get_unchecked(j);
+            let dn_jp1 = *ws.dn_old.get_unchecked(j + 1);
+            let dn_half = 0.5 * (dn_j + dn_jp1);
+            let ddn_dx = (dn_jp1 - dn_j) * *ws.inv_dx.get_unchecked(j);
+            *ws.f_half.get_unchecked_mut(j) = *ws.x4_half.get_unchecked(j)
+                * (phi_old_m1 * *ws.np1_half.get_unchecked(j)
+                    + ddn_dx
+                    + phi_old * *ws.twonp1_half.get_unchecked(j) * dn_half
+                    + phi_old * dn_half * dn_half);
+        }
+    }
     for i in 1..ng - 1 {
         unsafe {
-            let dn_old_im1 = *ws.dn_old.get_unchecked(i - 1);
-            let dn_old_i = *ws.dn_old.get_unchecked(i);
-            let dn_old_ip1 = *ws.dn_old.get_unchecked(i + 1);
-            let dn_half_l = 0.5 * (dn_old_im1 + dn_old_i);
-            let dn_half_r = 0.5 * (dn_old_i + dn_old_ip1);
-            let ddn_dx_l = (dn_old_i - dn_old_im1) * *ws.inv_dx.get_unchecked(i - 1);
-            let ddn_dx_r = (dn_old_ip1 - dn_old_i) * *ws.inv_dx.get_unchecked(i);
-
-            let f_l = *ws.x4_half.get_unchecked(i - 1)
-                * ((phi_old - 1.0) * *ws.np1_half.get_unchecked(i - 1)
-                    + ddn_dx_l
-                    + phi_old * *ws.twonp1_half.get_unchecked(i - 1) * dn_half_l
-                    + phi_old * dn_half_l * dn_half_l);
-            let f_r = *ws.x4_half.get_unchecked(i)
-                * ((phi_old - 1.0) * *ws.np1_half.get_unchecked(i)
-                    + ddn_dx_r
-                    + phi_old * *ws.twonp1_half.get_unchecked(i) * dn_half_r
-                    + phi_old * dn_half_r * dn_half_r);
-            *ws.k_old.get_unchecked_mut(i) = *ws.inv_x2_dx_cell.get_unchecked(i) * (f_r - f_l);
+            *ws.k_old.get_unchecked_mut(i) = *ws.inv_x2_dx_cell.get_unchecked(i)
+                * (*ws.f_half.get_unchecked(i) - *ws.f_half.get_unchecked(i - 1));
         }
     }
 
@@ -719,29 +804,46 @@ pub fn kompaneets_step_coupled_inplace(
         // SAFETY: i ranges over 1..ng-1; all workspace/delta_n arrays have length >= ng,
         // half-point arrays have length >= ng-1. DC/BR arrays (when has_dcbr) >= ng.
         // All asserted at function entry.
+        // Interface pass. Every interface quantity below is shared by the cell
+        // on its left and the cell on its right: the flux `f_r` of cell i is
+        // literally the `f_l` of cell i+1, and likewise for the drift
+        // coefficient `b` and the ρ_e-derivative `dF/dρ_e`. Computing them once
+        // here instead of twice inside the cell loop is the same arithmetic on
+        // the same operands, so the result is bit-identical; it just halves the
+        // flux/Jacobian work and vectorizes better. The loop-invariant scalars
+        // (`phi - 1`, `1/ρ_e²`) are hoisted for the same reason.
+        //
+        // SAFETY: j ranges over 0..ng-1; delta_n has length >= ng and every
+        // half-point array has length >= ng-1. Asserted at function entry.
+        let phim1 = phi - 1.0;
+        let inv_rho2 = 1.0 / (rho_e * rho_e);
+        for j in 0..n_half {
+            unsafe {
+                let dn_j = *delta_n.get_unchecked(j);
+                let dn_jp1 = *delta_n.get_unchecked(j + 1);
+                let dn_half = 0.5 * (dn_j + dn_jp1);
+                let ddn_dx = (dn_jp1 - dn_j) * *ws.inv_dx.get_unchecked(j);
+                let x4 = *ws.x4_half.get_unchecked(j);
+                *ws.f_half.get_unchecked_mut(j) = x4
+                    * (phim1 * *ws.np1_half.get_unchecked(j)
+                        + ddn_dx
+                        + phi * *ws.twonp1_half.get_unchecked(j) * dn_half
+                        + phi * dn_half * dn_half);
+                let nh = *ws.n_pl_half.get_unchecked(j) + dn_half;
+                *ws.b_half.get_unchecked_mut(j) = x4 * phi * (2.0 * nh + 1.0) * 0.5;
+                if has_rho_coupling {
+                    *ws.dfdr_half.get_unchecked_mut(j) = -x4 * inv_rho2 * nh * (1.0 + nh);
+                }
+            }
+        }
+
         for i in 1..ng - 1 {
             unsafe {
-                let dn_im1 = *delta_n.get_unchecked(i - 1);
                 let dn_i = *delta_n.get_unchecked(i);
-                let dn_ip1 = *delta_n.get_unchecked(i + 1);
-                let dn_half_l = 0.5 * (dn_im1 + dn_i);
-                let dn_half_r = 0.5 * (dn_i + dn_ip1);
 
-                // Compute K(delta_n, φ) at interior point i (CN "new" part)
-                let ddn_dx_l = (dn_i - dn_im1) * *ws.inv_dx.get_unchecked(i - 1);
-                let ddn_dx_r = (dn_ip1 - dn_i) * *ws.inv_dx.get_unchecked(i);
-                let x4h_l = *ws.x4_half.get_unchecked(i - 1);
-                let x4h_r = *ws.x4_half.get_unchecked(i);
-                let f_l = x4h_l
-                    * ((phi - 1.0) * *ws.np1_half.get_unchecked(i - 1)
-                        + ddn_dx_l
-                        + phi * *ws.twonp1_half.get_unchecked(i - 1) * dn_half_l
-                        + phi * dn_half_l * dn_half_l);
-                let f_r = x4h_r
-                    * ((phi - 1.0) * *ws.np1_half.get_unchecked(i)
-                        + ddn_dx_r
-                        + phi * *ws.twonp1_half.get_unchecked(i) * dn_half_r
-                        + phi * dn_half_r * dn_half_r);
+                // K(delta_n, φ) at interior point i (CN "new" part)
+                let f_l = *ws.f_half.get_unchecked(i - 1);
+                let f_r = *ws.f_half.get_unchecked(i);
                 let inv_x2dc = *ws.inv_x2_dx_cell.get_unchecked(i);
                 let k_i = inv_x2dc * (f_r - f_l);
 
@@ -797,12 +899,10 @@ pub fn kompaneets_step_coupled_inplace(
 
                 // Jacobian: CN (halved) for Kompaneets + BE diagonal for DC/BR
                 let hdc = *ws.half_dtau_coeff.get_unchecked(i);
-                let n_l = *ws.n_pl_half.get_unchecked(i - 1) + dn_half_l;
-                let n_r = *ws.n_pl_half.get_unchecked(i) + dn_half_r;
                 let a_l = *ws.x4_over_dx.get_unchecked(i - 1);
-                let b_l = x4h_l * phi * (2.0 * n_l + 1.0) * 0.5;
+                let b_l = *ws.b_half.get_unchecked(i - 1);
                 let a_r = *ws.x4_over_dx.get_unchecked(i);
-                let b_r = x4h_r * phi * (2.0 * n_r + 1.0) * 0.5;
+                let b_r = *ws.b_half.get_unchecked(i);
 
                 *ws.j_lower.get_unchecked_mut(i) = -hdc * (a_l - b_l);
                 *ws.j_diag.get_unchecked_mut(i) = 1.0 - hdc * (-a_r + b_r - a_l - b_l) + dcbr_jac;
@@ -819,9 +919,8 @@ pub fn kompaneets_step_coupled_inplace(
                 //       quadratic Newton convergence in the ρ_e direction
                 //       when DC/BR is strong (high z, photon-injection burst).
                 if has_rho_coupling {
-                    let inv_rho2 = 1.0 / (rho_e * rho_e);
-                    let dfdr_l = -x4h_l * inv_rho2 * n_l * (1.0 + n_l);
-                    let dfdr_r = -x4h_r * inv_rho2 * n_r * (1.0 + n_r);
+                    let dfdr_l = *ws.dfdr_half.get_unchecked(i - 1);
+                    let dfdr_r = *ws.dfdr_half.get_unchecked(i);
                     let c_kompaneets = -0.5 * dtau * inv_x2dc * (dfdr_r - dfdr_l);
                     *ws.c_vec.get_unchecked_mut(i) = c_kompaneets + dcbr_crho;
                 }
@@ -851,24 +950,21 @@ pub fn kompaneets_step_coupled_inplace(
             // d = dR_ρ/dρ_e = 1 + dτ·(R·(1 + dH/dρ_e) + H·t_C)
             let d_rho = 1.0 + dtau * (rc.r_compton * (1.0 + rc.dh_drho) + rc.lambda_exp);
 
-            // Step 1: T·u = r (standard Thomas, result in rhs_buf)
-            thomas_solve_inplace(
-                &ws.j_lower,
-                &ws.j_diag,
-                &ws.j_upper,
-                &mut ws.rhs_buf,
-                &mut ws.thomas_work,
-            );
-
-            // Step 2: T·v = c (Thomas on c_vec, result in v_buf)
-            ws.v_buf[..ng].copy_from_slice(&ws.c_vec[..ng]);
-            thomas_solve_inplace(
-                &ws.j_lower,
-                &ws.j_diag,
-                &ws.j_upper,
-                &mut ws.v_buf,
-                &mut ws.thomas_work2,
-            );
+            // Steps 1+2: T·u = r and T·v = c share the same matrix, so they
+            // share one factorization (see `thomas_solve2_inplace`). Results
+            // land in `rhs_buf` (u) and `v_buf` (v).
+            {
+                let w = &mut *ws;
+                w.v_buf[..ng].copy_from_slice(&w.c_vec[..ng]);
+                thomas_solve2_inplace(
+                    &w.j_lower,
+                    &w.j_diag,
+                    &w.j_upper,
+                    &mut w.rhs_buf,
+                    &mut w.v_buf,
+                    &mut w.thomas_work,
+                );
+            }
 
             // Step 3: b'·u and b'·v dot products.
             // b'_j = ∂R_ρ/∂Δn_j = −dτ · R · h_norm · wem_j.

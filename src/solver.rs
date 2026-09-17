@@ -14,7 +14,7 @@
 //! References:
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294
 
-use crate::bremsstrahlung::{br_emission_coefficient_fast_preln, br_precompute};
+use crate::bremsstrahlung::{br_emission_coefficient_expc, br_precompute, gaunt_expc_factor};
 use crate::constants::*;
 use crate::cosmology::Cosmology;
 use crate::double_compton::{dc_high_freq_suppression, dc_prefactor};
@@ -249,8 +249,6 @@ pub struct SolverDiagnostics {
     /// without converging. Non-zero values indicate the solver may need more
     /// iterations or smaller step sizes.
     pub newton_exhausted: usize,
-    /// Maximum uncapped emission rate encountered (NaN excluded).
-    pub max_emission_rate: f64,
     /// Whether any NaN emission rate was encountered.
     pub nan_emission_detected: bool,
     /// Warning messages collected during solver evolution.
@@ -349,9 +347,6 @@ pub struct ThermalizationSolver {
     komp_ws: KompaneetsWorkspace,
     /// Precomputed Planck spectrum on the grid: planck(x[i])
     planck_grid: Vec<f64>,
-    /// Diagnostic: scale factor for DC/BR emission rates. Default 1.0.
-    /// Set to < 1.0 to test whether rates are too strong.
-    pub dcbr_scale: f64,
     /// Subtract the temperature shift component from Δn after each
     /// DC/BR step at z > 5×10⁴, enforcing photon number conservation
     /// (∫x² Δn dx = 0). This prevents DC/BR-created photons from
@@ -386,10 +381,16 @@ pub struct ThermalizationSolver {
     exp_m1_grid: Vec<f64>,
     /// Precomputed exp(x) for each grid point (for Bose factor Taylor expansion).
     exp_grid: Vec<f64>,
-    /// Precomputed ln(x) for each grid point (for BR Gaunt factor).
-    ln_x_grid: Vec<f64>,
-    /// Precomputed ln(x_half) for each cell midpoint (for BR Gaunt factor in heating integral).
-    ln_x_half: Vec<f64>,
+    /// Precomputed Planck occupation at cell midpoints x_half[i] = (x[i]+x[i+1])/2.
+    /// Used by the DC/BR heating integral, which evaluates n_pl at midpoints.
+    planck_half: Vec<f64>,
+    /// Precomputed 1/x³ for each grid point (DC/BR rate normalisation).
+    inv_x3_grid: Vec<f64>,
+    /// Precomputed grid-constant half of the BR Gaunt exponential, x^(-√3/π),
+    /// for each grid point. See [`crate::bremsstrahlung::gaunt_expc_factor`].
+    expc_grid: Vec<f64>,
+    /// Same at cell midpoints (for the BR Gaunt factor in the heating integral).
+    expc_half: Vec<f64>,
     /// Precomputed trapezoidal quadrature weights for ∫x² f(x) dx (per grid node).
     /// Used by subtract_temperature_shift() instead of recomputing x_half² × dx.
     quad_weights_x2: Vec<f64>,
@@ -402,18 +403,26 @@ pub struct ThermalizationSolver {
     rho_e_ode_cache: Option<RhoECache>,
 }
 
-/// Compute DC+BR heating integral and optionally its finite-difference
-/// derivative dH/dρ_e in a single pass over the frequency grid.
+/// Compute DC+BR heating integral and optionally its analytic derivative
+/// dH/dρ_e in a single pass over the frequency grid.
 ///
-/// **Performance optimization**: DC emission coefficients K_DC(x, θ_z) are
-/// independent of θ_e, so they're computed once and reused for all 3 FD
-/// evaluations (current, +δ, -δ). Grid midpoints, dx, and n_mid are also
-/// computed once. This replaces 6 separate O(N) grid sweeps with 1 combined
-/// sweep (or 1 sweep + 2 lightweight inner loops for the FD passes).
+/// The derivative differentiates the integrand B·(K_DC + K_BR) at fixed Δn,
+/// densities, and He ionization fractions (exactly what the former central
+/// finite difference held fixed):
+///   dB/dρ_e     = n_mid · x φ² · e^{xφ}   with B = 1 − n_mid(e^{xφ} − 1)
+///   dK_DC/dρ_e  = 0                        (K_DC depends only on θ_z)
+///   dK_BR/dρ_e  — see `br_emission_coefficient_and_drho_preln`.
+/// e^{xφ} reuses the exp_m1 already computed for B, and the Gaunt logistic
+/// shares its exp with the softplus, so the derivative costs no transcendental
+/// calls beyond the plain heating integral — it replaces the former three
+/// full-integral evaluations (θ_e, θ_e(1±10⁻⁴)) with one.
 ///
 /// Returns (h_dc_br, dh_drho).
 fn dcbr_heating_with_derivative(
     x_grid: &[f64],
+    x_half: &[f64],
+    dx_arr: &[f64],
+    planck_half: &[f64],
     delta_n: &[f64],
     theta_z: f64,
     theta_e: f64,
@@ -424,11 +433,12 @@ fn dcbr_heating_with_derivative(
     y_he_ii: f64,
     y_he_i: f64,
     compute_derivative: bool,
-    ln_x_half: &[f64],
+    expc_half: &[f64],
     dc_supp_half: &[f64],
 ) -> (f64, f64) {
-    use crate::bremsstrahlung::{br_emission_coefficient_fast_preln, br_precompute};
-    use crate::spectrum::planck;
+    use crate::bremsstrahlung::{
+        br_emission_coefficient_and_drho_expc, br_emission_coefficient_expc, br_precompute,
+    };
 
     if theta_e < 1e-30 || n_e < 1e-30 {
         return (0.0, 0.0);
@@ -438,19 +448,16 @@ fn dcbr_heating_with_derivative(
     let norm = 1.0 / (4.0 * G3_PLANCK * theta_z);
     let n = x_grid.len();
 
-    // Single pass: compute h_dc_br at current θ_e
+    // Single pass: compute h_dc_br at current θ_e, and optionally dH/dρ_e
     let mut integral = 0.0;
+    let mut d_integral = 0.0;
 
-    // If computing derivative, also accumulate +/- integrals
+    // Historical guard from the finite-difference era: the FD stencil needed
+    // θ_e(ρ_e − 10⁻⁴) ≥ 10⁻³⁰ for its minus-side `br_precompute` to succeed,
+    // and returned dh = 0 otherwise (ρ_e ≲ 10⁻⁴, extremely uncommon). Kept
+    // so the analytic derivative fires on exactly the same steps.
     let delta_rho_fd = 1e-4;
     let rho_e = theta_e / theta_z;
-    let phi_plus = theta_z / (theta_z * (rho_e + delta_rho_fd));
-    let phi_minus = theta_z / (theta_z * (rho_e - delta_rho_fd));
-    let theta_e_plus = theta_z * (rho_e + delta_rho_fd);
-    let theta_e_minus = theta_z * (rho_e - delta_rho_fd);
-
-    let mut integral_plus = 0.0;
-    let mut integral_minus = 0.0;
 
     // Hoist x-independent DC prefactor out of the grid loop
     let dc_pre = dc_prefactor(theta_z);
@@ -465,74 +472,43 @@ fn dcbr_heating_with_derivative(
     let br_pre = br_precompute(theta_e, theta_z, n_h, n_he, n_e, x_e_frac, y_he_ii, y_he_i)
         .expect("br_precompute: entry checks guarantee Some");
 
-    // Derivative only runs when both FD shifts stay positive. If either
-    // `theta_e_plus` / `theta_e_minus` would underflow `br_precompute`'s
-    // positivity guard (ρ_e ≲ δ_FD = 1e-4, extremely uncommon), fall back
-    // to the no-derivative path and return dh = 0.
-    let fd_pre = if compute_derivative {
-        match (
-            br_precompute(
-                theta_e_plus,
-                theta_z,
-                n_h,
-                n_he,
-                n_e,
-                x_e_frac,
-                y_he_ii,
-                y_he_i,
-            ),
-            br_precompute(
-                theta_e_minus,
-                theta_z,
-                n_h,
-                n_he,
-                n_e,
-                x_e_frac,
-                y_he_ii,
-                y_he_i,
-            ),
-        ) {
-            (Some(p), Some(m)) => Some((p, m)),
-            _ => None,
-        }
-    } else {
-        None
-    };
+    let want_derivative = compute_derivative && theta_z * (rho_e - delta_rho_fd) >= 1e-30;
 
-    if let Some((br_pre_plus, br_pre_minus)) = fd_pre {
+    if want_derivative {
+        let phi2 = phi * phi;
         for i in 1..n {
-            let dx = x_grid[i] - x_grid[i - 1];
-            let x_mid = 0.5 * (x_grid[i] + x_grid[i - 1]);
+            // dx, x_mid and planck(x_mid) are grid-constant: `dx_arr[i-1]` and
+            // `x_half[i-1]` are defined as exactly these expressions in
+            // `FrequencyGrid::new`, and `planck_half` caches the Planck
+            // occupation there. Hoisting them out of the step loop removes one
+            // exp() per cell per step.
+            let dx = dx_arr[i - 1];
+            let x_mid = x_half[i - 1];
             let dn_mid = 0.5 * (delta_n[i] + delta_n[i - 1]);
-            let n_mid = planck(x_mid) + dn_mid;
-            let ln_xm = ln_x_half[i - 1];
+            let n_mid = planck_half[i - 1] + dn_mid;
+            let ec = expc_half[i - 1];
 
             let k_dc = dc_pre * dc_supp_half[i - 1];
-            let k_br = br_emission_coefficient_fast_preln(x_mid, ln_xm, &br_pre);
-            let k_br_p = br_emission_coefficient_fast_preln(x_mid, ln_xm, &br_pre_plus);
-            let k_br_m = br_emission_coefficient_fast_preln(x_mid, ln_xm, &br_pre_minus);
+            let (k_br, dk_br) = br_emission_coefficient_and_drho_expc(x_mid, ec, &br_pre);
 
             let x_e = x_mid * phi;
-            let x_e_p = x_mid * phi_plus;
-            let x_e_m = x_mid * phi_minus;
             let em = x_e.exp_m1();
-            let em_p = x_e_p.exp_m1();
-            let em_m = x_e_m.exp_m1();
+            let bose = 1.0 - n_mid * em;
 
-            integral += (1.0 - n_mid * em) * (k_dc + k_br) * dx;
-            integral_plus += (1.0 - n_mid * em_p) * (k_dc + k_br_p) * dx;
-            integral_minus += (1.0 - n_mid * em_m) * (k_dc + k_br_m) * dx;
+            integral += bose * (k_dc + k_br) * dx;
+            // dB/dρ_e = n_mid · x_mid φ² · e^{x_e}, with e^{x_e} = em + 1.
+            d_integral += (n_mid * x_mid * phi2 * (em + 1.0) * (k_dc + k_br) + bose * dk_br) * dx;
         }
     } else {
         for i in 1..n {
-            let dx = x_grid[i] - x_grid[i - 1];
-            let x_mid = 0.5 * (x_grid[i] + x_grid[i - 1]);
+            let dx = dx_arr[i - 1];
+            let x_mid = x_half[i - 1];
             let dn_mid = 0.5 * (delta_n[i] + delta_n[i - 1]);
-            let n_mid = planck(x_mid) + dn_mid;
-            let ln_xm = ln_x_half[i - 1];
+            let n_mid = planck_half[i - 1] + dn_mid;
+            let ec = expc_half[i - 1];
 
             let k_dc = dc_pre * dc_supp_half[i - 1];
-            let k_br = br_emission_coefficient_fast_preln(x_mid, ln_xm, &br_pre);
+            let k_br = br_emission_coefficient_expc(x_mid, ec, &br_pre);
 
             let x_e = x_mid * phi;
             let factor = 1.0 - n_mid * x_e.exp_m1();
@@ -541,11 +517,7 @@ fn dcbr_heating_with_derivative(
     }
 
     let h = integral * norm;
-    let dh = if compute_derivative {
-        (integral_plus * norm - integral_minus * norm) / (2.0 * delta_rho_fd)
-    } else {
-        0.0
-    };
+    let dh = d_integral * norm;
 
     (h, dh)
 }
@@ -587,16 +559,24 @@ impl ThermalizationSolver {
             .iter()
             .map(|&x| if x > 500.0 { f64::INFINITY } else { x.exp() })
             .collect();
-        let ln_x_grid: Vec<f64> = grid
+        // ln(x) feeds only the BR Gaunt factor, and it enters there solely
+        // through x^(-√3/π). Storing that factored form instead of ln(x)
+        // removes both exp() calls from every Gaunt evaluation; the -69.0
+        // clamp is preserved so the sentinel reaching `gaunt_expc_factor` is
+        // unchanged (note `< -69.0` is strict, so the clamped value does not
+        // itself trip the guard — same as before).
+        let expc_grid: Vec<f64> = grid
             .x
             .iter()
-            .map(|&x| if x < 1e-30 { -69.0 } else { x.ln() })
+            .map(|&x| gaunt_expc_factor(if x < 1e-30 { -69.0 } else { x.ln() }))
             .collect();
-        let ln_x_half: Vec<f64> = grid
+        let expc_half: Vec<f64> = grid
             .x_half
             .iter()
-            .map(|&x| if x < 1e-30 { -69.0 } else { x.ln() })
+            .map(|&x| gaunt_expc_factor(if x < 1e-30 { -69.0 } else { x.ln() }))
             .collect();
+        let planck_half: Vec<f64> = grid.x_half.iter().map(|&x| planck(x)).collect();
+        let inv_x3_grid: Vec<f64> = grid.x.iter().map(|&x| 1.0 / (x * x * x)).collect();
         let quad_weights_x2: Vec<f64> = {
             let mut w = vec![0.0; n];
             for j in 1..n {
@@ -637,7 +617,6 @@ impl ThermalizationSolver {
             dneq_drho_eq: vec![0.0; n],
             komp_ws,
             planck_grid,
-            dcbr_scale: 1.0,
             number_conserving: true,
             nc_stride: 1,
             accumulated_delta_t: 0.0,
@@ -649,8 +628,10 @@ impl ThermalizationSolver {
             dc_suppression_half,
             exp_m1_grid,
             exp_grid,
-            ln_x_grid,
-            ln_x_half,
+            planck_half,
+            inv_x3_grid,
+            expc_grid,
+            expc_half,
             quad_weights_x2,
             photon_source_buf: vec![0.0; n],
         }
@@ -761,7 +742,6 @@ impl ThermalizationSolver {
         self.coupled_dcbr = true;
         self.number_conserving = true;
         self.nc_stride = 1;
-        self.dcbr_scale = 1.0;
         for v in self.emission_rates.iter_mut() {
             *v = 0.0;
         }
@@ -882,8 +862,6 @@ impl ThermalizationSolver {
         let mut max_dn: f64 = 0.0;
         let mut delta_i4 = 0.0;
         let mut delta_g3 = 0.0;
-        let mut exact_i4 = 0.0;
-        let mut exact_g3 = 0.0;
         // First element contributes to max_dn but not to the midpoint integrals
         let abs0 = self.delta_n[0].abs();
         if abs0.is_nan() {
@@ -907,9 +885,6 @@ impl ThermalizationSolver {
             let n_pl = 0.5 * (self.planck_grid[i] + self.planck_grid[i - 1]);
             delta_g3 += x3 * dn_mid * dx;
             delta_i4 += x3 * x_half * (2.0 * n_pl + 1.0) * dn_mid * dx;
-            let n_full = (n_pl + dn_mid).max(0.0);
-            exact_g3 += x3 * n_full * dx;
-            exact_i4 += x3 * x_half * n_full * (1.0 + n_full) * dx;
         }
         assert!(
             max_dn.is_finite(),
@@ -923,8 +898,27 @@ impl ThermalizationSolver {
             // 1/(G₃+ΔG₃)) becomes inaccurate. The exact computation has ~0.1%
             // discretization error from computing I₄/(4G₃), which is negligible
             // for |ΔG₃/G₃| > 0.1 but catastrophic for tiny distortions (~10⁻⁵).
-            if delta_g3.abs() / G3_PLANCK > 0.1 && exact_g3 > 1e-30 {
-                exact_i4 / (4.0 * exact_g3) - 1.0
+            // The exact moments are needed only on this rare branch, so they
+            // get their own pass rather than being accumulated every step.
+            // Same summation order as before, hence the same value.
+            if delta_g3.abs() / G3_PLANCK > 0.1 {
+                let mut exact_i4 = 0.0;
+                let mut exact_g3 = 0.0;
+                for i in 1..self.grid.n {
+                    let dx = self.grid.dx[i - 1];
+                    let x_half = self.grid.x_half[i - 1];
+                    let x3 = self.grid.x_half_cubed[i - 1];
+                    let dn_mid = 0.5 * (self.delta_n[i] + self.delta_n[i - 1]);
+                    let n_pl = 0.5 * (self.planck_grid[i] + self.planck_grid[i - 1]);
+                    let n_full = (n_pl + dn_mid).max(0.0);
+                    exact_g3 += x3 * n_full * dx;
+                    exact_i4 += x3 * x_half * n_full * (1.0 + n_full) * dx;
+                }
+                if exact_g3 > 1e-30 {
+                    exact_i4 / (4.0 * exact_g3) - 1.0
+                } else {
+                    delta_i4 / (4.0 * G3_PLANCK) - delta_g3 / G3_PLANCK
+                }
             } else {
                 delta_i4 / (4.0 * G3_PLANCK) - delta_g3 / G3_PLANCK
             }
@@ -988,6 +982,9 @@ impl ThermalizationSolver {
                 let compute_fd = theta_z_val > 2e-5;
                 dcbr_heating_with_derivative(
                     &self.grid.x,
+                    &self.grid.x_half,
+                    &self.grid.dx,
+                    &self.planck_half,
                     &self.delta_n,
                     theta_z_val,
                     theta_e_val,
@@ -998,7 +995,7 @@ impl ThermalizationSolver {
                     y_he_ii,
                     y_he_i,
                     compute_fd,
-                    &self.ln_x_half,
+                    &self.expc_half,
                     &self.dc_suppression_half,
                 )
             } else {
@@ -1200,16 +1197,15 @@ impl ThermalizationSolver {
             // them and elide bounds checks inside the grid loop. Splitting on
             // `in_taylor` specialises the hot |δρ|<0.01 path into a straight-line
             // loop with no per-point branch on `delta_rho`.
-            let dcbr_scale = self.dcbr_scale;
             let in_taylor = delta_rho.abs() < 0.01;
             let mut any_nan = false;
-            let mut max_rate = self.diag.max_emission_rate;
 
             // Borrow the read-only and mut slices once, up-front. Disjoint
             // fields → the borrow checker accepts this.
             let xs: &[f64] = &self.grid.x[..n];
             let dc_supp: &[f64] = &self.dc_suppression_grid[..n];
-            let ln_x: &[f64] = &self.ln_x_grid[..n];
+            let inv_x3: &[f64] = &self.inv_x3_grid[..n];
+            let expc: &[f64] = &self.expc_grid[..n];
             let exp_m1: &[f64] = &self.exp_m1_grid[..n];
             let exp_x: &[f64] = &self.exp_grid[..n];
             let planck_g: &[f64] = &self.planck_grid[..n];
@@ -1229,13 +1225,16 @@ impl ThermalizationSolver {
                 // Analytic ρ-derivatives of em/neq below use the same expansion.
                 let delta_rho_inv = delta_rho * inv_rho_eq;
                 let inv_rho_eq2 = inv_rho_eq * inv_rho_eq;
+                // Hoist the Option out of the loop so the body has no per-point
+                // branch (same pattern as dcbr_heating_with_derivative).
+                let br_ref = br_pre.as_ref();
                 for i in 0..n {
                     let xi = xs[i];
-                    let inv_xi3 = 1.0 / (xi * xi * xi);
+                    let inv_xi3 = inv_x3[i];
 
                     let k_dc = dc_pre * dc_supp[i];
-                    let k_br = match br_pre {
-                        Some(ref pre) => br_emission_coefficient_fast_preln(xi, ln_x[i], pre),
+                    let k_br = match br_ref {
+                        Some(pre) => br_emission_coefficient_expc(xi, expc[i], pre),
                         None => 0.0,
                     };
                     let k_sum = k_dc + k_br;
@@ -1243,12 +1242,9 @@ impl ThermalizationSolver {
                     let exp_xi = exp_x[i];
                     let bose_factor = exp_m1[i] - xi * delta_rho_inv * exp_xi;
 
-                    let uncapped = dcbr_scale * k_sum * bose_factor * inv_xi3;
+                    let uncapped = k_sum * bose_factor * inv_xi3;
                     let finite = uncapped.is_finite();
                     any_nan |= uncapped.is_nan();
-                    if finite && uncapped > max_rate {
-                        max_rate = uncapped;
-                    }
                     em_out[i] = if finite { uncapped } else { 0.0 };
 
                     let npl = planck_g[i];
@@ -1261,7 +1257,7 @@ impl ThermalizationSolver {
                     // the bordered Newton c-vector would otherwise be poisoned
                     // by exp(x/ρ_eq) growing across many decades.
                     let dbose_drho = -xi * exp_xi * inv_rho_eq2;
-                    let dem_raw = dcbr_scale * k_sum * dbose_drho * inv_xi3;
+                    let dem_raw = k_sum * dbose_drho * inv_xi3;
                     dem_out[i] = if dem_raw.is_finite() { dem_raw } else { 0.0 };
                     let dneq_raw = npl_1p * xi * inv_rho_eq2;
                     dneq_out[i] = if dneq_raw.is_finite() { dneq_raw } else { 0.0 };
@@ -1269,13 +1265,14 @@ impl ThermalizationSolver {
             } else {
                 // Full (non-Taylor) path — post-recombination regime where
                 // ρ drifts to O(0.3). ρ-derivatives zeroed (see Taylor branch).
+                let br_ref = br_pre.as_ref();
                 for i in 0..n {
                     let xi = xs[i];
-                    let inv_xi3 = 1.0 / (xi * xi * xi);
+                    let inv_xi3 = inv_x3[i];
 
                     let k_dc = dc_pre * dc_supp[i];
-                    let k_br = match br_pre {
-                        Some(ref pre) => br_emission_coefficient_fast_preln(xi, ln_x[i], pre),
+                    let k_br = match br_ref {
+                        Some(pre) => br_emission_coefficient_expc(xi, expc[i], pre),
                         None => 0.0,
                     };
 
@@ -1285,12 +1282,9 @@ impl ThermalizationSolver {
                     } else {
                         xe.exp_m1()
                     };
-                    let uncapped = dcbr_scale * (k_dc + k_br) * bose_factor * inv_xi3;
+                    let uncapped = (k_dc + k_br) * bose_factor * inv_xi3;
                     let finite = uncapped.is_finite();
                     any_nan |= uncapped.is_nan();
-                    if finite && uncapped > max_rate {
-                        max_rate = uncapped;
-                    }
                     em_out[i] = if finite { uncapped } else { 0.0 };
 
                     let npl = planck_g[i];
@@ -1304,7 +1298,6 @@ impl ThermalizationSolver {
             if any_nan {
                 self.diag.nan_emission_detected = true;
             }
-            self.diag.max_emission_rate = max_rate;
         }
 
         // Fill photon source buffer (simple — no split-source logic needed)
@@ -1322,9 +1315,11 @@ impl ThermalizationSolver {
             // but correctly disables the bordered system in the far tails.
             source_active = self.photon_source_buf.iter().any(|&v| v.abs() > 1e-20);
         } else {
-            for v in self.photon_source_buf.iter_mut() {
-                *v = 0.0;
-            }
+            // No zeroing needed: `photon_source_buf` is only ever *read* when
+            // `source_active` is true, and `source_active` can only be set on
+            // the branch above, which overwrites all n entries first. Its
+            // contents are therefore unobservable here, and clearing them
+            // every step cost an O(n) memset per step for nothing.
             source_active = false;
         }
 
@@ -1504,7 +1499,6 @@ impl ThermalizationSolver {
         let saved_coupled_dcbr = self.coupled_dcbr;
         let saved_number_conserving = self.number_conserving;
         let saved_nc_stride = self.nc_stride;
-        let saved_dcbr_scale = self.dcbr_scale;
         self.reset();
         self.config = saved_config;
         self.z = self.config.z_start;
@@ -1513,7 +1507,6 @@ impl ThermalizationSolver {
         self.coupled_dcbr = saved_coupled_dcbr;
         self.number_conserving = saved_number_conserving;
         self.nc_stride = saved_nc_stride;
-        self.dcbr_scale = saved_dcbr_scale;
         self.injection = injection;
 
         // Frequency grid sanity: the μ/y decomposition silently returns
@@ -1773,7 +1766,6 @@ pub struct SolverBuilder {
     cosmo: Cosmology,
     grid_config: GridConfig,
     injection: Option<InjectionScenario>,
-    initial_delta_n: Option<Vec<f64>>,
     z_start: Option<f64>,
     z_end: Option<f64>,
     dy_max: Option<f64>,
@@ -1783,10 +1775,7 @@ pub struct SolverBuilder {
     disable_dcbr: bool,
     coupled_dcbr: bool,
     number_conserving: bool,
-    dcbr_scale: f64,
-    no_auto_refine: bool,
     max_newton_iter: Option<usize>,
-    nc_stride: Option<usize>,
     dtau_max_photon_source: Option<f64>,
     cn_dcbr: Option<bool>,
 }
@@ -1797,7 +1786,6 @@ impl SolverBuilder {
             cosmo,
             grid_config: GridConfig::default(),
             injection: None,
-            initial_delta_n: None,
             z_start: None,
             z_end: None,
             dy_max: None,
@@ -1807,10 +1795,7 @@ impl SolverBuilder {
             disable_dcbr: false,
             coupled_dcbr: true,
             number_conserving: true,
-            dcbr_scale: 1.0,
-            no_auto_refine: false,
             max_newton_iter: None,
-            nc_stride: None,
             dtau_max_photon_source: None,
             cn_dcbr: None,
         }
@@ -1828,21 +1813,9 @@ impl SolverBuilder {
         self
     }
 
-    /// Use the production (4000-point) grid for high-accuracy runs.
-    pub fn grid_production(mut self) -> Self {
-        self.grid_config = GridConfig::production();
-        self
-    }
-
     /// Set the energy injection scenario.
     pub fn injection(mut self, scenario: InjectionScenario) -> Self {
         self.injection = Some(scenario);
-        self
-    }
-
-    /// Set an initial photon perturbation Δn(x).
-    pub fn initial_delta_n(mut self, delta_n: Vec<f64>) -> Self {
-        self.initial_delta_n = Some(delta_n);
         self
     }
 
@@ -1892,45 +1865,15 @@ impl SolverBuilder {
         self
     }
 
-    /// Enable number-conserving T-shift subtraction (on by default).
-    pub fn number_conserving(mut self) -> Self {
-        self.number_conserving = true;
-        self
-    }
-
     /// Disable number-conserving T-shift subtraction.
     pub fn no_number_conserving(mut self) -> Self {
         self.number_conserving = false;
         self
     }
 
-    /// Set the minimum redshift for number-conserving subtraction.
-    pub fn nc_z_min(mut self, val: f64) -> Self {
-        self.nc_z_min = Some(val);
-        self
-    }
-
-    /// Set the NC stripping stride (strip every N steps).
-    pub fn nc_stride(mut self, val: usize) -> Self {
-        self.nc_stride = Some(val);
-        self
-    }
-
-    /// Scale DC/BR emission rates by this factor (diagnostic).
-    pub fn dcbr_scale(mut self, val: f64) -> Self {
-        self.dcbr_scale = val;
-        self
-    }
-
     /// Set the maximum number of Newton iterations per Kompaneets step.
     pub fn max_newton_iter(mut self, val: usize) -> Self {
         self.max_newton_iter = Some(val);
-        self
-    }
-
-    /// Disable automatic refinement zone insertion for photon injection scenarios.
-    pub fn no_auto_refine(mut self) -> Self {
-        self.no_auto_refine = true;
         self
     }
 
@@ -1946,17 +1889,15 @@ impl SolverBuilder {
         let mut grid_config = self.grid_config;
 
         // Auto-apply refinement zones and x_min adjustment from injection scenario
-        if !self.no_auto_refine {
-            if let Some(ref inj) = self.injection {
-                for zone in inj.refinement_zones() {
-                    grid_config.refinement_zones.push(zone);
-                }
-                // Lower x_min for low-frequency photon injection to prevent
-                // boundary absorption (Dirichlet BC eats photons at x_min).
-                if let Some(x_min) = inj.suggested_x_min() {
-                    if x_min < grid_config.x_min {
-                        grid_config.x_min = x_min;
-                    }
+        if let Some(ref inj) = self.injection {
+            for zone in inj.refinement_zones() {
+                grid_config.refinement_zones.push(zone);
+            }
+            // Lower x_min for low-frequency photon injection to prevent
+            // boundary absorption (Dirichlet BC eats photons at x_min).
+            if let Some(x_min) = inj.suggested_x_min() {
+                if x_min < grid_config.x_min {
+                    grid_config.x_min = x_min;
                 }
             }
         }
@@ -2046,17 +1987,9 @@ impl SolverBuilder {
         solver.disable_dcbr = self.disable_dcbr;
         solver.coupled_dcbr = self.coupled_dcbr;
         solver.number_conserving = self.number_conserving;
-        solver.dcbr_scale = self.dcbr_scale;
-        if let Some(stride) = self.nc_stride {
-            solver.nc_stride = stride;
-        }
 
         if let Some(scenario) = self.injection {
             solver.set_injection(scenario)?;
-        }
-
-        if let Some(dn) = self.initial_delta_n {
-            solver.set_initial_delta_n(dn);
         }
 
         solver.diag.warnings.extend(deferred_warnings);
@@ -2068,6 +2001,84 @@ impl SolverBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The analytic dH/dρ_e in `dcbr_heating_with_derivative` must match a
+    /// central finite difference of the heating integral itself, built here
+    /// from two derivative-free calls at θ_z(ρ_e ± δ). This is the guard for
+    /// the analytic derivative that replaced the original FD implementation:
+    /// the end-to-end observables are insensitive to dh at the 1e-9 level, so
+    /// only a direct comparison like this can catch a wrong derivative.
+    #[test]
+    fn test_dcbr_heating_analytic_derivative_matches_fd() {
+        use crate::grid::{FrequencyGrid, GridConfig};
+        use crate::spectrum::planck;
+
+        let grid = FrequencyGrid::new(&GridConfig {
+            n_points: 500,
+            ..GridConfig::default()
+        });
+        let n = grid.x.len();
+        let expc_half: Vec<f64> = (0..n - 1)
+            .map(|i| gaunt_expc_factor((0.5 * (grid.x[i] + grid.x[i + 1])).ln()))
+            .collect();
+        let planck_half: Vec<f64> = grid.x_half.iter().map(|&x| planck(x)).collect();
+        // K_DC shape factor: unity suffices — the FD identity must hold for
+        // any fixed x-dependence.
+        let dc_supp_half = vec![1.0; n - 1];
+
+        // Representative states: (z, ρ_e), μ-era through recombination era.
+        let states: [(f64, f64); 3] = [(3.0e6, 1.0 + 3e-5), (2.0e5, 1.0 - 1e-5), (2.0e4, 0.999)];
+        // A smooth non-Planck distortion so the Bose factor term is exercised.
+        let delta_n: Vec<f64> = grid
+            .x
+            .iter()
+            .map(|&x| 1e-5 * planck(x) * (1.0 + planck(x)) * x)
+            .collect();
+
+        for &(z, rho_e) in &states {
+            let theta_z = 4.6e-10 * (1.0 + z);
+            let n_h = 0.19 * (1.0 + z).powi(3);
+            let n_he = 0.012 * (1.0 + z).powi(3);
+            let n_e = n_h; // fully ionized H is representative enough
+            let (x_e_frac, y_he_ii, y_he_i) = (1.0, 0.5, 0.9);
+
+            let h_at = |rho: f64, deriv: bool| {
+                dcbr_heating_with_derivative(
+                    &grid.x,
+                    &grid.x_half,
+                    &grid.dx,
+                    &planck_half,
+                    &delta_n,
+                    theta_z,
+                    theta_z * rho,
+                    n_h,
+                    n_he,
+                    n_e,
+                    x_e_frac,
+                    y_he_ii,
+                    y_he_i,
+                    deriv,
+                    &expc_half,
+                    &dc_supp_half,
+                )
+            };
+
+            let (_, dh_analytic) = h_at(rho_e, true);
+            // δ = 1e-6: FD truncation O(δ²) ~ 1e-12 relative, rounding on the
+            // difference ~ eps/δ ~ 1e-10 relative — both well under the 1e-6
+            // assertion band.
+            let delta = 1e-6;
+            let (h_plus, _) = h_at(rho_e + delta, false);
+            let (h_minus, _) = h_at(rho_e - delta, false);
+            let dh_fd = (h_plus - h_minus) / (2.0 * delta);
+
+            let rel = ((dh_analytic - dh_fd) / dh_fd).abs();
+            assert!(
+                rel < 1e-6,
+                "z={z:.1e}, rho_e={rho_e}: dh_analytic={dh_analytic:.12e} vs dh_fd={dh_fd:.12e} (rel {rel:.2e})"
+            );
+        }
+    }
 
     #[test]
     fn test_no_injection_stays_planck() {
