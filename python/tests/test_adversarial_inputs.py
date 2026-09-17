@@ -212,18 +212,6 @@ class TestValidators:
         # None should be silently accepted
         _val.validate_finite_scalar(None, "test_val")
 
-    def test_require_zh_none(self):
-        with pytest.raises(ValueError, match="z_h is required"):
-            _val.require_z_h(None)
-
-    def test_require_zh_negative(self):
-        with pytest.raises(ValueError, match="z_h must be positive"):
-            _val.require_z_h(-100)
-
-    def test_require_zh_valid(self):
-        # Should not raise
-        _val.require_z_h(1e5)
-
     def test_validate_n_eff_negative(self):
         with pytest.raises(ValueError, match="n_eff"):
             _val.validate_n_eff(-1.0)

@@ -161,24 +161,6 @@ def validate_finite_scalar(val: float | None, label: str) -> None:
         raise ValueError(f"{label} must be finite, got {val}")
 
 
-def require_z_h(z_h: float | None) -> None:
-    """Stricter version of :func:`validate_z_h`: also forbids *None*.
-
-    Parameters
-    ----------
-    z_h : float or None
-        Injection redshift; must not be *None*.
-
-    Raises
-    ------
-    ValueError
-        If ``z_h`` is *None* or fails :func:`validate_z_h`.
-    """
-    if z_h is None:
-        raise ValueError("z_h is required but was None")
-    validate_z_h(z_h)
-
-
 def validate_n_eff(n_eff: float | None) -> None:
     """Validate the effective neutrino species count ``N_eff``.
 

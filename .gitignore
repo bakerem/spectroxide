@@ -136,3 +136,10 @@ review_report.md
 /dev/output/wp3_transfer/
 /data/rotti2022_planck_mu/
 /notebooks/data/
+
+# Python build/test artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+*.egg-info/

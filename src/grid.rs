@@ -139,12 +139,6 @@ impl GridConfig {
         }
         Ok(())
     }
-
-    /// Add a refinement zone to this grid configuration.
-    pub fn with_refinement(mut self, zone: RefinementZone) -> Self {
-        self.refinement_zones.push(zone);
-        self
-    }
 }
 
 /// The frequency grid with precomputed helper arrays.

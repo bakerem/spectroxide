@@ -29,7 +29,7 @@ References
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable, Tuple
+from typing import Any, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray

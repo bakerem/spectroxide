@@ -53,7 +53,6 @@ MS = 4  # default marker size
 MS_SMALL = 3  # small markers (dense data)
 
 # ── Residual panel defaults ───────────────────────────────────────
-RESID_YLIM = (-15, 15)  # default residual y-limits [%]
 RESID_BAND = 5  # ±% target band
 RESID_BAND_ALPHA = 0.08  # band transparency
 RESID_MASK_FRAC = 0.03  # mask below this fraction of peak

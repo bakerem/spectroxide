@@ -6,15 +6,15 @@
 //! - **Fundamental**: `C_LIGHT`, `HBAR`, `HPLANCK`, `K_BOLTZMANN`, `M_ELECTRON`,
 //!   `M_PROTON`, `SIGMA_THOMSON`, `ALPHA_FS` — feed Compton scattering rates,
 //!   Planck normalisations, and DC/BR emission prefactors.
-//! - **Unit conversions**: `EV_IN_JOULES`, `MPC_IN_METERS`.
+//! - **Unit conversions**: `EV_IN_JOULES`.
 //! - **Atomic physics**: `E_RYDBERG_*`, `E_HE_*`, `LAMBDA_LYA`, `LAMBDA_2S1S` —
 //!   used by [`crate::recombination`] for the Peebles 3-level atom.
-//! - **Derived**: `LAMBDA_ELECTRON`, `M_E_C2`, `M_E_C2_EV`.
+//! - **Derived**: `LAMBDA_ELECTRON`, `M_E_C2`.
 //! - **Cosmology**: `T_CMB_0`, `Y_P`, `N_EFF`, and Planck spectral integrals
 //!   (`G1_PLANCK = π²/6`, `G2_PLANCK = 2ζ(3)`, `G3_PLANCK = π⁴/15`,
 //!   `I4_PLANCK = 4 G₃`), plus the derived μ-channel coefficients
-//!   `BETA_MU`, `KAPPA_C`, `ALPHA_RHO`, and the era-boundary redshifts
-//!   `Z_MU` (μ-distortion freeze-out) and `Z_MU_Y` (μ→y transition).
+//!   `BETA_MU`, `KAPPA_C`, `ALPHA_RHO`, and the μ-distortion freeze-out
+//!   redshift `Z_MU`.
 //!   These are used by both the PDE solver and the Green's-function
 //!   visibility functions.
 
@@ -41,8 +41,6 @@ pub const ALPHA_FS: f64 = 7.297_352_5693e-3;
 // Unit conversions
 /// 1 eV in Joules (exact by 2019 SI redefinition)
 pub const EV_IN_JOULES: f64 = 1.602_176_634e-19;
-/// 1 Mpc in meters
-pub const MPC_IN_METERS: f64 = 3.085_677_581e22;
 
 // Hydrogen atomic physics
 /// Hydrogen ionization energy (1s ground state), in eV.
@@ -72,9 +70,6 @@ pub const LAMBDA_ELECTRON: f64 = HPLANCK / (M_ELECTRON * C_LIGHT);
 
 /// m_e c^2 in Joules
 pub const M_E_C2: f64 = M_ELECTRON * C_LIGHT * C_LIGHT;
-
-/// m_e c^2 in eV
-pub const M_E_C2_EV: f64 = 0.510_998_950e6;
 
 // Cosmological constants
 /// Default CMB temperature today, in K.
@@ -120,9 +115,6 @@ pub const BETA_MU: f64 = 3.0 * ZETA_3 / G1_PLANCK;
 ///   κ_c = 3[(4G₃/β_μ) − 3G₂]/G₃ = 12/β_μ − 9G₂/G₃
 pub const KAPPA_C: f64 = 12.0 / BETA_MU - 9.0 * G2_PLANCK / G3_PLANCK;
 
-/// α_μ = 1/β_μ = π²/(18ζ(3)) — relates μ to energy
-pub const ALPHA_MU: f64 = 1.0 / BETA_MU;
-
 /// κ_γ = 8π / λ_e³ — photon phase space density prefactor.
 ///
 /// The photon energy density per electron is:
@@ -153,8 +145,6 @@ pub const X_BALANCED: f64 = 4.0 / (3.0 * ALPHA_RHO); // ≈ 3.60
 // Thermalization redshifts (approximate)
 /// μ-era thermalization redshift (Chluba 2013, MNRAS 434, 352)
 pub const Z_MU: f64 = 1.98e6;
-/// μ-y transition redshift
-pub const Z_MU_Y: f64 = 5.0e4;
 
 /// Dimensionless temperature at the *default* CMB temperature T_CMB_0 = 2.726 K.
 ///
@@ -165,15 +155,6 @@ pub const Z_MU_Y: f64 = 5.0e4;
 #[inline]
 pub fn theta_z(z: f64) -> f64 {
     K_BOLTZMANN * T_CMB_0 * (1.0 + z) / M_E_C2
-}
-
-/// Photon temperature at redshift `z` assuming the default T_CMB_0.
-///
-/// Convenience helper; see the note on [`theta_z`] for production usage.
-#[doc(hidden)]
-#[inline]
-pub fn t_z(z: f64) -> f64 {
-    T_CMB_0 * (1.0 + z)
 }
 
 #[cfg(test)]

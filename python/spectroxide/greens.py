@@ -663,27 +663,11 @@ def y_from_heating(
 from .cosmology import (  # noqa: E402,F401
     DEFAULT_COSMO,
     COSMOTHERM_GF_COSMO,
-    PLANCK2015_COSMO,
-    PLANCK2018_COSMO,
     _C_LIGHT,
     _K_BOLTZMANN,
     _HBAR,
-    _G_NEWTON,
-    _M_PROTON,
     _M_ELECTRON,
     _SIGMA_THOMSON,
-    _KM_PER_MPC,
-    _MPC_M,
-    _EV_IN_JOULES,
-    _E_RYDBERG,
-    _E_ION_N2,
-    _E_HE_II_ION,
-    _E_HE_I_ION,
-    _LAMBDA_LYA,
-    _LAMBDA_2S1S,
-    _cosmo_h0,
-    _cosmo_omega_gamma,
-    _cosmo_omega_rel,
     _cosmo_hubble,
     _cosmo_n_h,
     _cosmo_n_e,
@@ -803,7 +787,7 @@ def photon_survival_probability(x: ArrayLike, z: float) -> NDArray[np.float64]:
 # Numerical photon survival probability (Chluba 2015, Eq. 29/32)
 # ---------------------------------------------------------------------------
 
-_H_PLANCK = 2.0 * np.pi * _HBAR
+_H_PLANCK = 6.626_070_15e-34  # J·s (exact by SI definition)
 _M_E_C2 = _M_ELECTRON * _C_LIGHT**2
 _ALPHA_FS = 7.297_352_5693e-3
 _LAMBDA_ELECTRON = _H_PLANCK / (_M_ELECTRON * _C_LIGHT)
@@ -1398,7 +1382,6 @@ def distortion_from_photon_injection(
 # Unit conversion: Δn(x) → ΔI(ν) in physical units
 # ---------------------------------------------------------------------------
 
-_H_PLANCK = 6.626_070_15e-34  # J·s
 
 
 DEFAULT_DECOMP_X_MIN = 0.5

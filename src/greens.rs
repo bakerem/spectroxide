@@ -760,14 +760,6 @@ where
     delta_n
 }
 
-/// Returns `true` iff the GF integration window crosses the μ-y transition
-/// band; callers can use this to emit a warning at function entry.
-pub fn integration_crosses_photon_gf_gap(z_min: f64, z_max: f64) -> bool {
-    let lo = PHOTON_GF_Y_ERA_Z_MAX;
-    let hi = PHOTON_GF_MU_ERA_Z_MIN;
-    z_min < hi && z_max > lo
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

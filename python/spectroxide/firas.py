@@ -54,7 +54,6 @@ from .greens import (
     mu_shape as _mu_shape,
     y_shape as _y_shape,
     g_bb as _g_bb,
-    planck as _planck,
 )
 
 # Physical constants (must match greens.py)

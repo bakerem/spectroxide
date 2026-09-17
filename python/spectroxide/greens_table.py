@@ -35,19 +35,15 @@ import json
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Mapping, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from . import greens
-
-trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
 from .solver import (
     get_physics_hash,
     run_sweep,
     run_photon_sweep,
-    run_photon_sweep_batch,
 )
 
 #: Type alias for a heating-rate callable ``z -> dQ/dz``.
