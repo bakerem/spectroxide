@@ -12,7 +12,7 @@ in Rust and integrated through Python; an analytic Green's-function
 approximation (Chluba 2013) is also provided for fast estimates.
 
 For physical background and derivations, see the
-`paper <https://github.com/bakerem/spectroxide>`_.
+`paper <https://arxiv.org/abs/2604.24838>`_.
 
 
 Quick example

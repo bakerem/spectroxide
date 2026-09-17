@@ -105,8 +105,14 @@ emitted if they disagree, so stale caches from earlier code versions do
 not silently shadow updated physics. Pass ``rebuild=True`` to force a
 fresh build, or delete the cache file to start over.
 
+The hash itself comes from :func:`~spectroxide.solver.get_physics_hash`,
+which queries the Rust binary for its compile-time physics-source hash.
+You only need it directly when diagnosing a hash-mismatch warning.
+
 .. autoclass:: spectroxide.greens_table.GreensTableHashMismatch
    :no-members:
+
+.. autofunction:: spectroxide.solver.get_physics_hash
 
 
 Builders / loaders

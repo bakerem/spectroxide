@@ -34,7 +34,7 @@ always installed. The ``--extras`` flag selects optional add-ons on top:
      - matplotlib, jupyter
      - Interactive notebooks
    * - ``dev``
-     - matplotlib, jupyter
+     - matplotlib, jupyter, pytest, mutmut
      - Development and testing
    * - ``doc``
      - sphinx, pydata-sphinx-theme, nbsphinx, nbsphinx-link, sphinx-copybutton, ipython

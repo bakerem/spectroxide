@@ -14,9 +14,9 @@ but the Rust API is useful when:
 Browsing the crate documentation
 --------------------------------
 
-The rustdoc output is the authoritative reference. Two copies are available:
+The rustdoc output is the authoritative reference:
 
-.. grid:: 1 2 2 2
+.. grid:: 1
    :gutter: 3
 
    .. grid-item-card:: Embedded rustdoc
@@ -25,11 +25,6 @@ The rustdoc output is the authoritative reference. Two copies are available:
       Built from the current source tree and served alongside this site.
       Rebuild locally with ``make -C docs html`` (requires ``cargo`` on
       ``PATH``).
-
-   .. grid-item-card:: docs.rs
-      :link: https://docs.rs/spectroxide
-
-      Authoritative copy for the latest published release on crates.io.
 
 The crate root (``spectroxide``) contains an overview, and ``spectroxide::prelude``
 re-exports everything you typically need: ``Cosmology``,

@@ -27,7 +27,7 @@ Usage
 Statistical conventions
 -----------------------
 Two distinct — and mutually inconsistent — limit conventions coexist in
-this module (validation audit, dev/audit/firas_audit.md §2.5/§2.7):
+this module:
 
 - ``upper_limit_*`` family: two-sided ``|Â| + 1.96 σ`` at 95%, Fixsen
   1996 style. Reproduces the literature 9e-5 / 1.5e-5 anchors only with
@@ -503,8 +503,7 @@ class FIRASData:
             severe μ–y shape degeneracy over the FIRAS band inflates σ_μ
             by ~82% under joint marginalisation, giving a ~1.8× looser
             (more conservative) limit. ``marginalise_y=False`` reproduces
-            Fixsen's μ̂ = −1e-5 ± 4e-5 and the 9e-5 limit to ≲8%
-            (validation audit, dev/audit/firas_audit.md §2.4).
+            Fixsen's μ̂ = −1e-5 ± 4e-5 and the 9e-5 limit to ≲8%.
 
         Parameters
         ----------
@@ -552,8 +551,7 @@ class FIRASData:
             under joint marginalisation. ``marginalise_mu=False``
             reproduces the Fixsen statistical fit (ŷ ± σ ≈ −0.3e-6 ±
             4.0e-6 vs the paper's −1e-6 ± 6e-6 statistical; the published
-            15e-6 additionally folds in a 4e-6 systematic). See
-            dev/audit/firas_audit.md §2.4.
+            15e-6 additionally folds in a 4e-6 systematic).
 
         Parameters
         ----------

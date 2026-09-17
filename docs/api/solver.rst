@@ -57,7 +57,7 @@ The ``injection`` argument to :func:`solve` is a ``dict`` with a
 ``"type"`` key and scenario-specific parameter keys.
 ``delta_rho`` is always a **top-level** argument (not an injection key).
 For the physics behind each scenario and full derivations, see the
-`paper <https://github.com/bakerem/spectroxide>`_.
+`paper <https://arxiv.org/abs/2604.24838>`_.
 
 .. list-table::
    :header-rows: 1
@@ -302,9 +302,3 @@ faster ``DEBUG`` preset for quick checks.
    :no-value:
 .. autodata:: spectroxide.solver.DEBUG
    :no-value:
-
-
-Build provenance
-----------------
-
-.. autofunction:: spectroxide.solver.get_physics_hash

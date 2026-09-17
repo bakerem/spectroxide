@@ -178,8 +178,5 @@ html_css_files = ["custom.css"]
 exclude_patterns = [
     "_build",
     "**.ipynb_checkpoints",
-    "codex_suggestions.md",
-    "cosmotherm_heating_rate_analysis.md",
-    "heating_rate_conventions.md",
 ]
 templates_path = ["_templates"]

@@ -124,7 +124,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 ### Development artifacts (dev/)
 
-- `dev/scripts/` — 13 validation and diagnostic scripts (build_gf_table, build_visibility_table, convergence_figure, dm_cosmotherm_compare, fit_visibility_from_table, photon_energy_conservation, plot_visibility_comparison, remake_firas_photon_limits, benchmark_paper_table, check_refs, class_sd_compare, compton_equilibrium_coefficients, gamma_con_landau_zener)
+- `dev/scripts/` — 20 validation and diagnostic scripts (build_gf_table, build_visibility_table, convergence_figure, mms_convergence_figure, dm_cosmotherm_compare, fit_visibility_from_table, photon_energy_conservation, plot_visibility_comparison, remake_firas_photon_limits, benchmark_paper_table, check_refs, class_sd_compare, class_sd_case_b, compton_equilibrium_coefficients, gamma_con_landau_zener, highprec_oracle, extract_test_assertions, error_budget, build_test_provenance, bryce2411_red_sensitivity, plus run_mutation_shards.sh and the dm_residual_diagnostics/ and visibility_diagnostics/ one-shot subdirectories)
 - `dev/audit/` — validation records. Two coverage matrices, deliberately: `coverage_matrix.md` is indexed by *published result* (one row per paper figure, R0), `term_coverage_matrix.md` by *physical term* in the code. Do not merge them; do not rename `term_coverage_matrix.md` back to `COVERAGE_MATRIX.md` (case-insensitive collision breaks macOS/Windows checkouts).
 - `dev/notebooks/` — 4 notebooks: cosmology_background, mu_y_vs_zh, pde_greens_function, pde_validation
 

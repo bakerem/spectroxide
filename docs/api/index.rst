@@ -88,13 +88,13 @@ science targets are computed by the PDE solver above.
       resonant γ↔A' conversion; the route to reproduce the dark-photon
       constraint numbers.
 
-   .. grid-item-card:: CosmoTherm interface
-      :link: cosmotherm
+   .. grid-item-card:: Axion helpers (experimental)
+      :link: axion
       :link-type: doc
 
-      ``spectroxide.cosmotherm`` — loaders for CosmoTherm ``DI`` files
-      and the Green's-function database, plus heating-rate models used
-      for cross-validation.
+      ``spectroxide.axion`` — NWA helpers for resonant γ↔a conversion.
+      **Experimental**; the PDE path needs a binary built with
+      ``--features axion``.
 
    .. grid-item-card:: Plotting
       :link: style
@@ -103,6 +103,12 @@ science targets are computed by the PDE solver above.
       ``spectroxide.style`` and ``spectroxide.plot_params`` — Matplotlib
       style and constants for publication-quality figures.
 
+
+``spectroxide.cosmotherm`` (loaders for CosmoTherm reference data) is a
+development-only cross-validation module: its loaders, conventions, and
+file paths can change without notice, and it is not part of the
+documented API. The one exception, :func:`~spectroxide.cosmotherm.strip_gbb`,
+is re-exported at the top level and documented on the :doc:`greens` page.
 
 .. toctree::
    :maxdepth: 2
@@ -114,5 +120,5 @@ science targets are computed by the PDE solver above.
    firas
    cosmology
    dark_photon
-   cosmotherm
+   axion
    style

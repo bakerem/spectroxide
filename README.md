@@ -6,7 +6,7 @@
 
 Numerical solver for **CMB spectral distortions** from energy and photon injection in the early Universe.
 
-Energy released into the photon-baryon plasma at redshifts $z \sim 10^3 - 2 \times 10^6$ creates deviations from a perfect blackbody spectrum. These spectral distortions --- $\mu$-type (chemical potential) and $y$-type (Compton) --- encode information about early-universe physics, from the dissipation of primordial acoustic waves to exotic particle decays and dark sector interactions.
+Energy released into the photon-baryon plasma at redshifts $z \sim 10^3 - 5 \times 10^6$ creates deviations from a perfect blackbody spectrum. These spectral distortions --- $\mu$-type (chemical potential) and $y$-type (Compton) --- encode information about early-universe physics, from the dissipation of primordial acoustic waves to exotic particle decays and dark sector interactions.
 
 spectroxide solves the coupled photon-electron Boltzmann equation including Compton scattering (Kompaneets equation), double Compton emission, bremsstrahlung, and Hubble expansion. It provides both a **full PDE solver** (Rust) and a **fast Green's function approximation** (Rust + Python).
 
@@ -197,8 +197,9 @@ Additional notebooks in [`notebooks/physics/`](notebooks/physics/) (photon injec
 
 The Python `solve(injection={"type": ...})` dict uses the snake_case `type`
 key in the middle column (not the Rust CamelCase name in the first column).
+Arbitrary sources are passed as callables instead of an `injection` dict.
 
-| Scenario (Rust) | Python `"type"` key | Key parameters |
+| Scenario (Rust) | Python entry point | Key parameters |
 |----------|----------|---------------|
 | `SingleBurst` | `"single_burst"` | $z_h$, $\Delta\rho/\rho$ |
 | `DecayingParticle` | `"decaying_particle"` | $f_X$, $\Gamma_X$ |
@@ -207,9 +208,9 @@ key in the middle column (not the Rust CamelCase name in the first column).
 | `AnnihilatingDMPWave` | `"annihilating_dm_pwave"` | $f_{\rm ann}$ |
 | `MonochromaticPhotonInjection` | `"monochromatic_photon"` | $x_{\rm inj}$, $\Delta N/N$, $z_h$ |
 | `DarkPhotonResonance` | `"dark_photon_resonance"` | $\epsilon$, $m_{A'}$ (eV) |
-| `TabulatedHeating` | (`dq_dz=` callable) | CSV file |
-| `TabulatedPhotonSource` | (`photon_source=` callable) | CSV file |
-| `Custom` | (`dq_dz=` callable) | user-defined function |
+| `TabulatedHeating` | `dq_dz=` callable | heating history $dQ/dz(z)$ |
+| `TabulatedPhotonSource` | `photon_source=` callable | photon source $S(x, z)$ |
+| `Custom` | — (Rust API only) | user-defined closure |
 
 Units: $f_X$ [eV] is the energy released **per baryon** ($\Gamma_X$ [1/s] the
 decay rate); $f_{\rm ann}$ [eV/s] is energy per baryon per second;
