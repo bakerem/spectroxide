@@ -1,10 +1,8 @@
-:orphan:
-
-.. note::
-   Axion support is behind the off-by-default ``axion`` Cargo feature and is
-   **not part of the released feature set**. Build with ``--features axion``
-   to enable it. This page is kept for that configuration and is intentionally
-   excluded from the documentation tree.
+.. warning::
+   **Experimental.** Axion support is behind the off-by-default ``axion``
+   Cargo feature (build with ``--features axion``). The pure-Python
+   helpers on this page import without any Rust build; only the PDE path
+   needs the feature-enabled binary.
 
 Axion helpers (``spectroxide.axion``)
 =====================================

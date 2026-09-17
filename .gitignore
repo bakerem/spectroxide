@@ -113,10 +113,8 @@ review_report.md
 **/.claude/
 **/.pytest_cache/
 
-# Axion / Bryce-2411 replication study — WIP, deliberately untracked.
-# Open 3-10x FIRAS-limit discrepancy at m_a < 1e-11 eV; the axion *module*
-# (src/axion.rs, python/spectroxide/axion.py) IS tracked, this is the
-# replication study built on top of it.
+# Axion replication study — work in progress, untracked. The axion *module*
+# (src/axion.rs, python/spectroxide/axion.py) is tracked.
 /dev/bryce2411/
 /dev/scripts/bryce2411_red_sensitivity.py
 /data/bryce_axions.csv

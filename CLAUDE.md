@@ -26,7 +26,7 @@ cd python && pip install -e ".[notebook]" # Install with jupyter too
 
 **Key constraints**: Zero production Rust dependencies (pure std library). Only dev-dependency is `approx` for float comparison in tests.
 
-**Cargo features**: `axion` (off by default) gates resonant axion–photon conversion — `src/axion.rs`, `InjectionScenario::AxionResonance`, the `solve axion-resonance` subcommand, and four tests in `heat_injection.rs`. It is excluded from the release because the accompanying replication study has an unresolved 3–10× discrepancy vs Cyr, Chluba & Manoj (2024) at m_a < 10⁻¹¹ eV. Build/test it with `--features axion`. **Both configurations must build, test and pass clippy** — check the `not(feature)` arm when touching `InjectionScenario` matches, `axion_params`, or `warn_axion_range` (the latter two are defined in both configurations, returning `None`/empty when off, so call sites need no `cfg`).
+**Cargo features**: `axion` (off by default) gates resonant axion–photon conversion — `src/axion.rs`, `InjectionScenario::AxionResonance`, the `solve axion-resonance` subcommand, and four tests in `heat_injection.rs`. It is experimental and excluded from the release. Build/test it with `--features axion`. **Both configurations must build, test and pass clippy** — check the `not(feature)` arm when touching `InjectionScenario` matches, `axion_params`, or `warn_axion_range` (the latter two are defined in both configurations, returning `None`/empty when off, so call sites need no `cfg`).
 
 ## Scope
 
