@@ -436,7 +436,7 @@ pub struct KompaneetsWorkspace {
 ///
 /// When passed to `kompaneets_step_coupled_inplace`, ρ_e becomes
 /// the (N+1)-th unknown solved simultaneously with Δn. The system
-/// becomes bordered tridiagonal, solved in O(N) via two Thomas solves.
+/// becomes bordered tridiagonal, solved in O(N) with two Thomas solves.
 pub struct RhoECoupling {
     /// ρ_e at the start of this timestep (before update_temperatures).
     pub rho_e_old: f64,
@@ -573,7 +573,7 @@ pub struct DcbrCoupling<'a> {
 /// Identical physics to `kompaneets_step_nonlinear_coupled` but avoids
 /// per-step heap allocations.
 ///
-/// DC/BR is handled via backward Euler within the Newton iteration:
+/// DC/BR is handled with backward Euler within the Newton iteration:
 /// the DC/BR residual `dτ × em × (neq - Δn_new)` and Jacobian `dτ × em`
 /// are added to the Kompaneets system. Backward Euler is unconditionally
 /// stable (amplification → 0 for stiff rates), avoiding the oscillation
@@ -623,7 +623,7 @@ pub struct DcbrCoupling<'a> {
 /// **Note:** the third field
 /// is the size of the last Newton *correction* `|δx|`, not the residual
 /// `|F(x)|`. At convergence `|δx| < tol` by construction; if the Newton
-/// loop exits via `max_newton_iter`, `last_correction` is the final step
+/// loop exits through `max_newton_iter`, `last_correction` is the final step
 /// the solver attempted, which only upper-bounds the residual for
 /// contractive iterations. Treat it as a diagnostic, not a proof of
 /// small residual.
@@ -1226,7 +1226,7 @@ mod tests {
         );
     }
 
-    /// Quantitative Kompaneets check in the y-regime: injecting energy via
+    /// Quantitative Kompaneets check in the y-regime: injecting energy through
     /// T_e > T_z for one Thomson time should produce Δρ/ρ ≈ 4·y·G₃ where
     /// y = (θ_e − θ_z)·dτ is the standard y-parameter. This catches
     /// order-of-magnitude errors in the flux split, grid geometry, or time
@@ -1269,7 +1269,7 @@ mod tests {
     }
 
     /// When T_e > T_z, all Kompaneets solver variants must produce Δρ/ρ > 0
-    /// (energy flows from electrons to photons via upscattering).
+    /// (energy flows from electrons to photons through upscattering).
     /// Tests CN (kompaneets_step), backward Euler (kompaneets_tridiagonal + Thomas),
     /// and nonlinear (kompaneets_step_nonlinear) in a single test.
     #[test]

@@ -132,7 +132,7 @@ impl SolverConfig {
         Ok(())
     }
 
-    /// Collects non-fatal validation warnings (e.g. regimes where the
+    /// Collects non-fatal validation warnings (for example, regimes where the
     /// Kompaneets Fokker-Planck approximation begins to show O(θ_e²)
     /// corrections but is not outright invalid).
     pub(crate) fn soft_warnings(&self) -> Vec<String> {
@@ -314,7 +314,7 @@ pub struct ThermalizationSolver {
     pub electron_temp: ElectronTemperature,
     /// Current redshift of the integration.
     pub z: f64,
-    /// Active injection scenario, if any. Set via [`Self::set_injection`].
+    /// Active injection scenario, if any. Set with [`Self::set_injection`].
     pub injection: Option<InjectionScenario>,
     /// Snapshots collected during the last run. Populated by
     /// [`Self::run_with_snapshots`] / [`Self::run`].
@@ -343,7 +343,7 @@ pub struct ThermalizationSolver {
     /// d(emission_rates)/d(ρ_eq), analytical. Used by the bordered Newton
     /// c-vector to close the Δn-row Jacobian on ρ_e (otherwise the solve
     /// is only linearly convergent in the ρ_e direction when DC/BR is
-    /// strong, e.g. at z ≳ 10⁶ or during a photon-injection burst).
+    /// strong, for example at z ≳ 10⁶ or during a photon-injection burst).
     dem_drho_eq: Vec<f64>,
     /// d(n_eq_minus_n_pl)/d(ρ_eq), analytical. See `dem_drho_eq`.
     dneq_drho_eq: Vec<f64>,
@@ -643,7 +643,7 @@ impl ThermalizationSolver {
 
     /// Attaches an energy-injection scenario, validating it first.
     ///
-    /// Returns `Err` if the scenario parameters are unphysical (e.g. negative
+    /// Returns `Err` if the scenario parameters are unphysical (such as negative
     /// widths, impossible masses). Collects stimulated-emission warnings into
     /// [`SolverDiagnostics::warnings`].
     pub fn set_injection(&mut self, scenario: InjectionScenario) -> Result<(), String> {
@@ -851,7 +851,7 @@ impl ThermalizationSolver {
     ///   Avoids the 0.1% cancellation error in the full I₄/(4G₃) computation.
     /// - **Large Δn** (|ΔG₃/G₃| > 0.1): Exact ρ_eq = I₄/(4G₃) using the full
     ///   occupation number n = n_pl + Δn. Retains the Δn² term in I₄ and the
-    ///   nonlinear denominator. Necessary for strong depletions (e.g., dark photon
+    ///   nonlinear denominator. Necessary for strong depletions (for example, dark photon
     ///   conversions with γ_con ~ O(1)) where the perturbative expansion breaks down.
     ///
     /// Returns (x_e, t_c, theta_z, max_dn_abs, dtau, hubble) at z_eval for reuse
@@ -1669,7 +1669,7 @@ impl ThermalizationSolver {
     }
 
     /// Saves a snapshot with a specific redshift label.
-    /// The solver state (delta_n, rho_e, etc.) is taken from the current state,
+    /// The solver state (such as delta_n and rho_e) is taken from the current state,
     /// but the snapshot's z field is set to the requested value.
     fn save_snapshot_at(&mut self, z: f64) {
         // Extract μ, y via the Bianchini & Fabbian (2022) nonlinear BE fit
@@ -1708,7 +1708,7 @@ impl ThermalizationSolver {
         });
     }
 
-    /// Extracts `(μ, y)` from the current `Δn(x)` via the default joint
+    /// Extracts `(μ, y)` from the current `Δn(x)` using the default joint
     /// least-squares decomposition (B&F 2022 nonlinear BE; see
     /// [`crate::distortion::decompose_distortion`]).
     pub fn extract_mu_y_joint(&self) -> (f64, f64) {

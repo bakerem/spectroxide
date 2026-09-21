@@ -43,7 +43,7 @@ always installed. The ``--extras`` flag selects optional add-ons on top:
      - sphinx, pydata-sphinx-theme, nbsphinx, nbsphinx-link, sphinx-copybutton, ipython
      - Building documentation
 
-Run ``./install.sh --help`` for all options (skip steps, verbose output, etc.).
+Run ``./install.sh --help`` for all options, such as the flags that skip steps or print verbose output.
 
 
 Manual installation

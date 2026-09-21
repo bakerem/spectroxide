@@ -25,7 +25,7 @@ Primordial Inflation Explorer (:term:`PIXIE`).
    :header-rows: 0
 
    * - **01**
-     - **Getting started** --- Green's function basics, first PDE runs, PDE vs GF comparison.
+     - **Getting started** --- Green's function basics, first PDE runs, PDE versus GF comparison.
    * - **02**
      - **Energy injection** --- Decaying particles, DM annihilation (s-wave, p-wave), amplitude scaling.
    * - **03**

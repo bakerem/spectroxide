@@ -71,7 +71,7 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
 /// Reference: Chluba & Jeong (2014), arXiv:1306.5751, Appendix A.
 ///
 /// Constructs an orthonormal basis (e_y, e_μ, e_T) for the three-dimensional
-/// subspace spanned by (Y_SZ, M, G) via Gram-Schmidt in the order
+/// subspace spanned by (Y_SZ, M, G) using Gram-Schmidt in the order
 ///   1. e_y  = Y_SZ / |Y_SZ|
 ///   2. e_μ  = M⊥  / |M⊥|,   with M⊥  = M  − (M·e_y) e_y
 ///   3. e_T  = G⊥  / |G⊥|,   with G⊥  = G  − (G·e_y) e_y − (G·e_μ) e_μ
@@ -81,7 +81,7 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
 /// the continuum limit.
 ///
 /// After projection, the coefficients (a_y, a_μ, a_T) = (⟨Δn, e_y⟩, ⟨Δn, e_μ⟩,
-/// ⟨Δn, e_T⟩) are mapped back to (μ, y, ΔT/T) via exact back-substitution of
+/// ⟨Δn, e_T⟩) are mapped back to (μ, y, ΔT/T) through exact back-substitution of
 ///   Δn ≈ μ M + y Y_SZ + (ΔT/T) G,
 /// giving
 ///   ΔT/T = a_T / |G⊥|
@@ -212,7 +212,7 @@ pub fn decompose_gram_schmidt(
 /// [x_min, x_max] with a trapezoidal inner product matching
 /// `decompose_gram_schmidt`.
 ///
-/// Initial guess: bootstrap from `decompose_gram_schmidt` (converted via
+/// Initial guess: bootstrap from `decompose_gram_schmidt` (converted using
 /// δ_BF = δ_GS + μ/β_μ). This gives the linearized optimum for free; the
 /// LM iterations only refine the O(μ²) nonlinear correction.
 ///
@@ -395,7 +395,7 @@ pub fn decompose_nonlinear_be(
 /// diverges from linear M(x) and the methods materially differ.
 ///
 /// Domain of validity: for spectra with support outside span{M, Y_SZ, G_bb} —
-/// e.g. frozen/locked-in photon-injection bumps from z < 1100 that never
+/// for example, frozen/locked-in photon-injection bumps from z < 1100 that never
 /// Comptonized — the returned (μ, y, ΔT/T) is the in-band L² best fit, not a
 /// physical decomposition. Inspect `residual` before interpreting the triple
 /// in that regime.

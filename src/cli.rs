@@ -55,7 +55,7 @@ pub enum Command {
 /// Options for `spectroxide solve <injection-type> [flags]`.
 #[derive(Debug)]
 pub struct SolveOpts {
-    /// Injection-scenario tag (positional, e.g. `single-burst`,
+    /// Injection-scenario tag (positional, such as `single-burst`,
     /// `decaying-particle`, `photon`). Drives which `--params` keys are
     /// expected.
     pub injection_type: String,
@@ -64,7 +64,7 @@ pub struct SolveOpts {
     pub params: HashMap<String, String>,
     /// Solver tuning knobs (timestepping, grid, DC/BR diagnostics).
     pub solver: SolverOpts,
-    /// Cosmology overrides (preset and/or individual parameters).
+    /// Cosmology overrides (preset, individual parameters, or both).
     pub cosmo: CosmoOpts,
     /// Output format and destination.
     pub output: OutputOpts,
@@ -1343,7 +1343,7 @@ fn default_photon_sweep_redshifts() -> Vec<f64> {
 }
 
 /// Deduplicates a `Vec<String>` while preserving first-occurrence order.
-/// Used to compress repeated per-worker warnings (e.g. one identical
+/// Used to compress repeated per-worker warnings (for example, one identical
 /// "z_start in O(theta_e^2) regime" message per sweep redshift) into
 /// a single user-facing line.
 fn dedup_keep_order(items: Vec<String>) -> Vec<String> {

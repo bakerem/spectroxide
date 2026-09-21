@@ -1,6 +1,6 @@
 # LLM Context File for spectroxide Contributors
 
-This file is designed to be included as context when using an LLM (Claude, GPT, etc.) to develop features for spectroxide. Copy its contents into your LLM's system prompt or project instructions before starting work.
+This file is designed to be included as context when using an LLM (including Claude and GPT) to develop features for spectroxide. Copy its contents into your LLM's system prompt or project instructions before starting work.
 
 > **Why this file exists.** spectroxide is a numerical physics code where plausible-looking implementations can be silently wrong. During development, four serious physics bugs passed a large automated test suite because the LLM wrote tests calibrated to its own (incorrect) output. This file encodes the hard-won lessons so you don't repeat them. See Sec. 6 of the paper (Baker, Liu & Mishra-Sharma, 2026) for the full story.
 
@@ -75,7 +75,7 @@ You must add match arms to ALL of these methods on `InjectionScenario`:
 
 ### Step 3: Wire into CLI (`src/cli.rs`)
 
-CLI subcommands are `solve`, `sweep`, `greens`, `photon-sweep`, `photon-sweep-batch`, `info`, `help` (entry point in `src/main.rs`, dispatch in `src/cli.rs`). New scenarios usually plug into `solve` and `sweep` via the existing `--scenario` / `--params` machinery; photon-source scenarios additionally go through the photon-sweep subcommands.
+CLI subcommands are `solve`, `sweep`, `greens`, `photon-sweep`, `photon-sweep-batch`, `info`, `help` (entry point in `src/main.rs`, dispatch in `src/cli.rs`). New scenarios usually plug into `solve` and `sweep` through the existing `--scenario` / `--params` machinery; photon-source scenarios additionally go through the photon-sweep subcommands.
 
 ### Step 4: Write tests with INDEPENDENT targets
 
@@ -126,7 +126,7 @@ If a test fails, investigate the root cause. Do not relax tolerances, restrict c
 
 ## Numerical pitfalls you MUST know about
 
-`CLAUDE.md` enumerates **10 critical numerical pitfalls** in full, with the algebraic expansions and code-level requirements. That list is mandatory reading and is the canonical source — do not paraphrase it from memory. The summaries below are the workflow-relevant tips; consult `CLAUDE.md` for the rest (CFL/implicit Kompaneets, NaN-hiding via `f64::max`, x_max ≥ 30 for G₃, the BR dimensional-analysis war story, the unsafe-indexing/`assert!` invariants in `kompaneets.rs`, and the "tests calibrated to code output" failure mode).
+`CLAUDE.md` enumerates **10 critical numerical pitfalls** in full, with the algebraic expansions and code-level requirements. That list is mandatory reading and is the canonical source — do not paraphrase it from memory. The summaries below are the workflow-relevant tips; consult `CLAUDE.md` for the rest (CFL/implicit Kompaneets, NaN-hiding with `f64::max`, x_max ≥ 30 for G₃, the BR dimensional-analysis war story, the unsafe-indexing/`assert!` invariants in `kompaneets.rs`, and the "tests calibrated to code output" failure mode).
 
 1. **Kompaneets cancellation**: The flux must use the Planck identity dn_pl/dx + n_pl(1+n_pl) = 0 analytically. Finite-difference error (~0.003) is 1000x the physical signal (~1e-5).
 

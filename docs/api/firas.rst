@@ -9,8 +9,8 @@ monopole spectrum, residuals, and the full 43 × 43 frequency-frequency
 covariance matrix from the LAMBDA archive into clean numpy arrays. A
 :class:`FIRASData` instance is the primary handle: its attributes give
 the data itself, and its methods provide χ²-based constraint utilities
-for downstream analysis (μ/y upper limits, joint fits over a free
-cosmic microwave background temperature, etc.).
+for downstream analysis (including μ/y upper limits and joint fits over
+a free cosmic microwave background temperature).
 
 Quick example
 -------------

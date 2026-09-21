@@ -23,7 +23,7 @@ The separation is deliberate. You need to understand *why* we do things a certai
 
 ### Setting up your LLM
 
-1. **Include `CONTRIBUTING_CLAUDE.md` as context.** In Claude Code, this happens automatically via `CLAUDE.md`. For other tools (ChatGPT, Copilot, Cursor, etc.), paste the contents of `CONTRIBUTING_CLAUDE.md` into your system prompt or project instructions.
+1. **Include `CONTRIBUTING_CLAUDE.md` as context.** In Claude Code, this happens automatically through `CLAUDE.md`. For other tools (including ChatGPT, Copilot, and Cursor), paste the contents of `CONTRIBUTING_CLAUDE.md` into your system prompt or project instructions.
 
 2. **Tell the LLM what you're building and what the correct answer is.** For example: *"Add a scenario for evaporating primordial black holes. The heating rate is given by .... . In the y-era, I expect y = f(M_PBH) to match their Figure 3."*
 
@@ -48,7 +48,7 @@ Your LLM can handle steps 1-3 and 5 reliably. Step 4 is where you must be active
 
 Changes to the core solver (`kompaneets.rs`, `double_compton.rs`, `bremsstrahlung.rs`, `electron_temp.rs`, `solver.rs`) require extra care:
 
-- **Read the existing code first.** These modules encode subtle numerical choices (e.g., backward Euler for double Compton (DC) and bremsstrahlung (BR) instead of Crank-Nicolson to avoid amplification instability). Ask your LLM to explain the existing approach before modifying it.
+- **Read the existing code first.** These modules encode subtle numerical choices (for example, backward Euler for double Compton (DC) and bremsstrahlung (BR) instead of Crank-Nicolson to avoid amplification instability). Ask your LLM to explain the existing approach before modifying it.
 - **Check limiting cases.** Does your change preserve mu = 1.401 * Delta_rho/rho in the deep mu-era? Does it preserve energy conservation? Does it maintain stability at z > 10^6?
 - **Run convergence tests.** `cargo test --release convergence` exercises grid and timestep convergence.
 
@@ -58,7 +58,7 @@ All contributions go through pull requests to `main`. Here's the process:
 
 ### Before you open a PR
 
-1. **Fork the repository** and create a feature branch (e.g., `add-pbh-evaporation`).
+1. **Fork the repository** and create a feature branch (for example, `add-pbh-evaporation`).
 2. **Run the full test suite locally**: `cargo test --release`. All existing tests must pass. Do not skip tests or mark them `#[ignore]` to get a green build.
 3. **Run formatting and linting**: `cargo fmt` and `cargo clippy --all-targets -- -D warnings`. CI will reject unformatted code.
 4. **If you modified Python code**: from `python/`, run `black spectroxide/` and `pytest tests/`.
@@ -67,7 +67,7 @@ All contributions go through pull requests to `main`. Here's the process:
 
 Every PR that adds or modifies physics code must include:
 
-- **Tests with independently justified targets.** Each test comment should state where the expected value comes from (e.g., "Eq. 15 of Chluba 2015", "y-era limit: y = drho/(4*rho)", "dimensional analysis: K_BR is dimensionless"). A test that asserts a value without justification will be asked to add one during review.
+- **Tests with independently justified targets.** Each test comment should state where the expected value comes from (such as "Eq. 15 of Chluba 2015", "y-era limit: y = drho/(4*rho)", or "dimensional analysis: K_BR is dimensionless"). A test that asserts a value without justification will be asked to add one during review.
 
 - **A dimensional analysis check** for any new rate coefficient or physical formula. This can be a comment in the code or a note in the PR description showing the units work out.
 
@@ -77,7 +77,7 @@ Every PR that adds or modifies physics code must include:
 
 ### What your PR should include (when applicable)
 
-- **Cross-validation of partial differential equation (PDE) vs Green's function** for new injection scenarios where the GF is applicable (simple injection histories). Agreement within ~5% is expected.
+- **Cross-validation of partial differential equation (PDE) versus Green's function** for new injection scenarios where the GF is applicable (simple injection histories). Agreement within ~5% is expected.
 - **A notebook or script** demonstrating the new feature, especially for new injection scenarios.
 - **Updated docstrings** on any new public API (enum variants, methods).
 

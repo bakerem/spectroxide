@@ -14,7 +14,7 @@ spectroxide solves the coupled photon-electron Boltzmann equation including Comp
 
 - **Full PDE solver** in Rust: implicit Kompaneets + coupled double Compton (DC) and bremsstrahlung (BR) with adaptive stepping
 - **Green's function** mode for fast approximate calculations (pure Python, no compilation needed)
-- **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave/p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating via Rust API)
+- **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave/p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating through the Rust API)
 - **Comprehensive test suite**: 480+ unit, integration, and doc-tests
 - **Zero production dependencies** in Rust (pure `std` library)
 
@@ -47,7 +47,7 @@ extras add on top of those:
 | `dev`      | matplotlib, jupyter, pytest, mutmut | Development and testing         |
 | `doc`      | sphinx, nbsphinx, pydata-sphinx-theme | Building documentation        |
 
-Run `./install.sh --help` to see all options (skip steps, verbose output, etc.).
+Run `./install.sh --help` to see all options, such as the flags that skip steps or print verbose output.
 
 ### Manual installation
 
@@ -221,7 +221,7 @@ The tutorial notebooks in `notebooks/tutorials/` are numbered in the suggested r
 
 | Notebook | Description |
 |----------|-------------|
-| [`01_getting_started.ipynb`](notebooks/tutorials/01_getting_started.ipynb) | Green's function basics, first PDE runs, PDE vs GF comparison |
+| [`01_getting_started.ipynb`](notebooks/tutorials/01_getting_started.ipynb) | Green's function basics, first PDE runs, PDE versus GF comparison |
 | [`02_energy_injection.ipynb`](notebooks/tutorials/02_energy_injection.ipynb) | PDE: decaying particles, DM annihilation (s-wave, p-wave), amplitude scaling |
 | [`03_new_physics.ipynb`](notebooks/tutorials/03_new_physics.ipynb) | PDE: dark photon depletion, monochromatic photon injection, $\mu$ sign flip |
 | [`04_custom_scenarios.ipynb`](notebooks/tutorials/04_custom_scenarios.ipynb) | Custom injection scenarios and tabulated heating histories |

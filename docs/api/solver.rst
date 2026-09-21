@@ -86,7 +86,7 @@ Gaussian widths of the burst in redshift/frequency and default to
 narrow values when omitted.
 
 Each parameter name is mapped to the corresponding Rust command-line
-interface flag ``--<kebab-case>`` (e.g. ``f_x → --f-x``,
+interface flag ``--<kebab-case>`` (such as ``f_x → --f-x`` and
 ``delta_n_over_n → --delta-n-over-n``).
 
 
@@ -233,7 +233,7 @@ Quick example
 For the typed cosmology container (``Cosmology`` dataclass) and the
 flat ΛCDM background quantities, see :doc:`cosmology`. ``solve`` and
 ``run_sweep`` accept either a :class:`~spectroxide.cosmology.Cosmology`
-instance or a plain dict via the ``cosmo=`` keyword.
+instance or a plain dict with the ``cosmo=`` keyword.
 
 
 Reference

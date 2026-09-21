@@ -47,7 +47,7 @@ use crate::spectrum::{g_bb, mu_shape, y_shape};
 /// derived: z_μ from equating the double Compton (DC) + bremsstrahlung (BR)
 /// photon production rate to the Hubble rate in radiation domination
 /// (Chluba & Sunyaev 2012), and 5/2 from the redshift scaling of the DC
-/// opacity ∝ (1+z)^{−9/2} vs H ∝ (1+z)^{−2}
+/// opacity ∝ (1+z)^{−9/2} compared with H ∝ (1+z)^{−2}
 /// (Danese & de Zotti 1982; Hu & Silk 1993). These are NOT fit parameters.
 pub fn visibility_j_bb(z: f64) -> f64 {
     let ratio = z / Z_MU;
@@ -123,7 +123,7 @@ pub fn visibility_j_t(z: f64) -> f64 {
 ///
 /// # Accuracy
 ///
-/// Per-point spectral shape vs PDE (worst-case over frequency grid):
+/// Per-point spectral shape compared with PDE (worst-case over frequency grid):
 /// - **Deep μ-era** (z_h > 2×10⁵): < 17% per-point; < 5% on integrated μ.
 /// - **y-era** (z_h < 10⁴): < 5% per-point; < 1% on integrated y.
 /// - **Transition era** (z_h ~ 3×10⁴ – 10⁵): 8–17% per-point shape error
@@ -1234,7 +1234,7 @@ mod tests {
     ///
     /// `test_compton_broadening_identities` pins the *variance* to the exact
     /// Zeldovich–Sunyaev value 2βy_γ, but its ⟨x⟩ = x′·f_int check is internal
-    /// self-consistency (log-normal moment vs the returned normalization), not a
+    /// self-consistency (log-normal moment compared with the returned normalization), not a
     /// physics anchor. The physics anchor is the linearized Kompaneets first
     /// moment. With Δn = n − n_pl and T_e = T_z,
     ///
@@ -1246,7 +1246,7 @@ mod tests {
     ///
     ///   d⟨x⟩/dy = x′[4 − x′coth(x′/2)],    zero at x′ = 3.8300,
     ///
-    /// i.e. the drift vanishes exactly at the Y_SZ zero crossing (same
+    /// That is, the drift vanishes exactly at the Y_SZ zero crossing (same
     /// transcendental equation as `test_y_sz_zero_crossing_from_transcendental_equation`).
     /// Matching this requires f(x′) = x′/(e^{x′}−1); Arsenadze et al. use
     /// e^{−x′}(1+x′²/2), which is exact only at x′ → 0 and x′ → ∞.

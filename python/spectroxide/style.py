@@ -8,7 +8,7 @@ Usage::
 
 This enables ``text.usetex=True`` with a LaTeX preamble that defines
 the same custom commands as ``paper/paper.tex``, so plot labels can use
-``$\\spectroxide$``, ``$\\Gbb$``, ``$\\Te$``, etc.
+commands such as ``$\\spectroxide$``, ``$\\Gbb$``, and ``$\\Te$``.
 
 All plot parameters are defined in ``plot_params.py``.
 """

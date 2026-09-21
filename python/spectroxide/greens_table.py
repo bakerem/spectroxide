@@ -57,7 +57,7 @@ class GreensTableHashMismatch(UserWarning):
     physics-code version than the currently-installed Rust binary.
 
     The cached table and the current binary may produce inconsistent
-    results. Regenerate via ``load_or_build_greens_table(rebuild=True)``
+    results. Regenerate with ``load_or_build_greens_table(rebuild=True)``
     to bring the cache back in sync. To suppress the warning, pass
     ``verify_hash=False`` to ``load``.
     """
@@ -1115,7 +1115,7 @@ def load_or_build_greens_table(
         ``rebuild=True`` to regenerate after a code change.
     **kwargs
         Forwarded to the private ``_build_greens_table`` builder when a
-        new table needs to be generated (e.g. ``z_h_grid``, ``n_threads``).
+        new table needs to be generated (for example, ``z_h_grid``, ``n_threads``).
 
     Returns
     -------
@@ -1135,7 +1135,7 @@ def load_or_build_greens_table(
         try:
             return GreensTable.load(cache_path, verify_hash=verify_hash)
         except Exception:
-            pass  # rebuild on load failure (corrupt file, schema change, etc.)
+            pass  # rebuild on load failure, such as a corrupt file or schema change
 
     return _build_greens_table(cache_path=cache_path, **kwargs)
 
@@ -1161,7 +1161,7 @@ def load_or_build_photon_greens_table(
         :class:`GreensTableHashMismatch` warning on mismatch.
     **kwargs
         Forwarded to the private ``_build_photon_greens_table`` builder
-        when a new table needs to be generated (e.g. ``x_inj_grid``,
+        when a new table needs to be generated (for example, ``x_inj_grid``,
         ``z_h_grid``, ``n_threads``).
 
     Returns

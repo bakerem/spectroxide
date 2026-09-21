@@ -744,7 +744,7 @@ mod tests {
         }
     }
 
-    /// Counts opening vs. closing braces/brackets in a JSON string, ignoring
+    /// Counts opening braces/brackets against closing ones in a JSON string, ignoring
     /// contents inside double-quoted strings. Used to catch the audit H7
     /// class of bug (`}}]}` emitting one too many closing braces) without
     /// taking a serde_json dev-dependency.

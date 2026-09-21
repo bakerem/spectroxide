@@ -481,7 +481,7 @@ class FIRASData:
         """Fit amplitude ``A`` marginalized over a list of nuisance templates.
 
         Fits the model ``data = A · template + Σ_j b_j · nuisance_j`` and
-        returns the marginalized constraint on ``A`` (i.e. ``A`` after
+        returns the marginalized constraint on ``A`` (that is, ``A`` after
         profiling over the ``b_j``).
 
         Parameters
@@ -614,7 +614,7 @@ class FIRASData:
             *separately*, and the μ–y degeneracy inflates σ_y by ~82%
             under joint marginalization. ``marginalize_mu=False``
             reproduces the Fixsen statistical fit (ŷ ± σ ≈ −0.3e-6 ±
-            4.0e-6 vs the paper's −1e-6 ± 6e-6 statistical; the published
+            4.0e-6 compared with the paper's −1e-6 ± 6e-6 statistical; the published
             15e-6 additionally folds in a 4e-6 systematic).
 
         Parameters
@@ -1079,7 +1079,8 @@ class FIRASData:
             var_a = float(param_cov[0, 0])
             sigma_a = float(np.sqrt(var_a)) if var_a > 0 else float("nan")
         except np.linalg.LinAlgError:
-            # Template degenerate with T_CMB (e.g. G_bb shape) — Fisher singular.
+            # Template degenerate with T_CMB (for example, G_bb shape) —
+            # Fisher singular.
             a_hat = float("nan")
             sigma_a = float("nan")
 

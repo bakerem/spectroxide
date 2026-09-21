@@ -87,7 +87,7 @@ fn solve_saha_linear(s: f64) -> f64 {
 /// y / (1 − y) = K(T) / n_e, where n_e ≈ n_H + (1 + y_II)·n_He is dominated
 /// by H⁺ at z ≳ 1500 (H is fully ionized throughout He recombination since
 /// χ_I(H) = 13.6 eV ≪ χ_II(He) = 54.4 eV). Using n_e = n_H + 2·n_He
-/// (y_II = 1 limit) introduces ≲7% error in n_e vs the fully self-consistent
+/// (y_II = 1 limit) introduces ≲7% error in n_e compared with the fully self-consistent
 /// y_II = 0 limit — negligible compared to the ~factor-of-29 error from the
 /// old He-only quadratic form that assumed n_e = y·n_He.
 pub fn saha_he_ii(z: f64, cosmo: &Cosmology) -> f64 {
@@ -204,7 +204,7 @@ fn beta_ion(t_rad: f64) -> f64 {
 ///
 /// Decomposition into competing rates:
 ///
-/// - `rate_lya_escape`: Lyman-α escape via Sobolev approximation.
+/// - `rate_lya_escape`: Lyman-α escape using the Sobolev approximation.
 ///   Rate = 1/(K_H × n_{1s}) = 8πH / (n_H (1−X_e) λ_Lyα³).
 ///   Most Ly-α photons are reabsorbed; only the cosmological redshift
 ///   allows escape from the optically thick line.
@@ -695,8 +695,8 @@ mod tests {
     /// HyRec-2 values read from dev/output/hyrec2_xe_default_cosmo.dat (same run
     /// and cosmology as above). Bands follow the measured per-band disagreement
     /// in xe_hyrec_comparison.md with ~1.5× slack: ≤0.14% for 3000–5000 (He²⁺/He⁺
-    /// Saha, where both codes are in equilibrium) and 5.7% at z≈2300 (our Saha vs
-    /// HyRec's non-equilibrium He⁺→He⁰ — HyRec recombines later, the expected
+    /// Saha, where both codes are in equilibrium) and 5.7% at z≈2300 (our Saha
+    /// against HyRec's non-equilibrium He⁺→He⁰ — HyRec recombines later, the expected
     /// direction).
     #[test]
     fn test_xe_vs_hyrec_helium_epoch() {

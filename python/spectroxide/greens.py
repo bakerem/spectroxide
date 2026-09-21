@@ -46,8 +46,8 @@ def _call_vectorized(
 ) -> NDArray[np.float64]:
     """Call a user-provided callable with an array, falling back to scalar loop.
 
-    Tries ``func(z_arr)`` first. Only the specific broadcasting failure modes
-    ("cannot broadcast", "only integer scalar arrays can be converted", etc.)
+    Tries ``func(z_arr)`` first. Only specific broadcasting failure modes,
+    such as "cannot broadcast" or "only integer scalar arrays can be converted",
     and shape mismatches trigger the scalar-loop fallback. Other
     TypeError/ValueError exceptions are assumed to be genuine bugs in
     ``func`` and are re-raised, preventing audit I3 (silently running
@@ -393,8 +393,8 @@ def greens_function(x: ArrayLike, z_h: float) -> NDArray[np.float64]:
     visibility functions.  The temperature-shift weight ``(1 − J_bb*)/4``
     follows the Chluba (2013) convention.
 
-    Accuracy (vs. PDE)
-    ------------------
+    Accuracy (compared with PDE)
+    ----------------------------
     - Deep μ-era (z_h > 2 × 10⁵): spectral shape accurate to <5%.
     - y-era (z_h < 10⁴): spectral shape accurate to <1%.
     - Transition era (z_h ~ 3 × 10⁴–10⁵): ~8–13% shape error.
@@ -529,7 +529,7 @@ def distortion_from_heating(
     y_x = y_shape(x_grid)
     g_x = g_bb(x_grid)
 
-    # Weighted sum via outer products: delta_n = sum_z hw(z) * G(x, z)
+    # Weighted sum using outer products: delta_n = sum_z hw(z) * G(x, z)
     # = M(x) * sum(c_mu * hw) + Y(x) * sum(c_y * hw) + G(x) * sum(c_t * hw)
     delta_n = m_x * np.dot(c_mu, hw) + y_x * np.dot(c_y, hw) + g_x * np.dot(c_t, hw)
 
@@ -656,9 +656,9 @@ def y_from_heating(
 # ---------------------------------------------------------------------------
 
 # Cosmology background, presets, recombination history, and physical
-# constants live in ``spectroxide.cosmology``. Re-imported here so legacy
-# ``from spectroxide.greens import hubble`` / ``cosmic_time`` / ``DEFAULT_COSMO``
-# / ``_C_LIGHT`` etc. keep working.
+# constants live in ``spectroxide.cosmology``. Re-imported here so legacy imports
+# such as ``from spectroxide.greens import hubble`` / ``cosmic_time`` /
+# ``DEFAULT_COSMO`` / ``_C_LIGHT`` keep working.
 # DEPRECATED back-compat shim: prefer the canonical path
 # ``from spectroxide import cosmic_time`` (or ``spectroxide.cosmology``).
 # Remove once no in-repo docs/notebooks import cosmology names through
@@ -1175,7 +1175,7 @@ def greens_function_photon(
     coeff_y = 1.0 - p_s * f_int
     y_smooth = coeff_y * 0.25 * y_shape(x_obs)
 
-    # Combine mu and y via universal visibility J_mu(z).
+    # Combine mu and y using universal visibility J_mu(z).
     if number_conserving:
         smooth = alpha_x * (_j_mu * mu_part + (1.0 - _j_mu) * y_smooth)
     else:
@@ -1587,7 +1587,7 @@ def _decompose_gram_schmidt(
     """CJ2014 Appendix-A Gram–Schmidt decomposition over ``[x_min, x_max]``.
 
     Constructs an orthonormal basis ``(e_y, e_μ, e_T)`` from
-    ``(Y_SZ, M, G_bb)`` via Gram–Schmidt under the trapezoidal inner
+    ``(Y_SZ, M, G_bb)`` using Gram–Schmidt under the trapezoidal inner
     product
     ``⟨a, b⟩ = ∫_{x_min}^{x_max} a(x) b(x) dx``,
     then projects ``Δn`` and back-substitutes for ``(μ, y, ΔT/T)`` in the
@@ -1697,7 +1697,7 @@ def _decompose_nonlinear_be(
 
     by Levenberg–Marquardt over the band ``[x_min, x_max]``,
     bootstrapped from :func:`_decompose_gram_schmidt` (converted to the
-    B&F parameterization via ``δ_BF = δ_GS + μ/β_μ``).  The LM iteration
+    B&F parameterization using ``δ_BF = δ_GS + μ/β_μ``).  The LM iteration
     refines the ``O(μ²)`` nonlinear correction; for realistic injection
     amplitudes ``|μ| ≲ 10⁻³`` the answer differs from Gram–Schmidt on
     ``μ`` and ``y`` at the numerical-noise level.

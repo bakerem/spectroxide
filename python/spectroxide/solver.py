@@ -187,7 +187,7 @@ def _build_cosmo_args(cosmo_params):
     if isinstance(cosmo_params, Cosmology):
         cosmo_params = cosmo_params.to_dict()
 
-    # Validate via Cosmology before launching a subprocess.
+    # Validate with Cosmology before launching a subprocess.
     if isinstance(cosmo_params, dict):
         _cosmo_fields = {"h", "omega_b", "omega_m", "y_p", "t_cmb", "n_eff"}
         _known = {k: v for k, v in cosmo_params.items() if k in _cosmo_fields}
@@ -244,7 +244,7 @@ def _injection_param_args(injection):
     """Translate an injection dict's *parameter* keys to CLI args.
 
     Walks every key/value in ``injection`` (skipping ``"type"``) and emits
-    ``[flag, value]`` pairs via :data:`_INJECTION_PARAM_MAP`.  Boolean
+    ``[flag, value]`` pairs using :data:`_INJECTION_PARAM_MAP`.  Boolean
     parameters are emitted as bare flags (only when truthy).
     """
     args = []
@@ -394,12 +394,13 @@ def _run_rust_binary(cmd, *, cwd, timeout=600):
 
 
 def _emit_solver_warnings(parsed):
-    """Re-emit Rust solver diagnostic warnings via warnings.warn.
+    """Re-emit Rust solver diagnostic warnings using warnings.warn.
 
     The Rust ``SolverResult`` / ``SweepResult`` / ``PhotonSweepResult`` /
     ``GreensResult`` types each carry an optional ``warnings`` field
-    populated from ``SolverDiagnostics.warnings`` (Newton non-convergence,
-    rho_e clamping, x_inj-out-of-grid, untested-regime soft warnings, etc.).
+    populated from ``SolverDiagnostics.warnings``, including Newton
+    non-convergence, rho_e clamping, x_inj-out-of-grid, and untested-regime
+    soft warnings.
     Without this re-emission Python callers had no way to see them.
     """
     if not isinstance(parsed, dict):
@@ -648,8 +649,8 @@ def _run_pde_single_solve(
         # with zero amplitude as a no-op injection carrier for --dn-planck
         z_h_dummy = z_start if z_start is not None else 1e5
         # Explicit sigma_z so the CLI's 100.0 floor doesn't violate the
-        # sigma_z <= 0.3*z_h validator when z_h_dummy < 333 (e.g. low-mass
-        # dark photons with z_res ~ 200). delta_rho=0 makes sigma_z inert.
+        # sigma_z <= 0.3*z_h validator when z_h_dummy < 333 (for example,
+        # low-mass dark photons with z_res ~ 200). delta_rho=0 makes sigma_z inert.
         sigma_z_dummy = max(0.01 * z_h_dummy, 1.0)
         cmd = [
             "cargo",
@@ -735,7 +736,7 @@ def run_sweep(
 
     Calls the Rust binary once with a list of ``z_injections`` and a
     fixed ``delta_rho``; the binary loops over redshifts internally
-    (parallelized via ``n_threads``).
+    (parallelized with ``n_threads``).
 
     For other PDE workloads use :func:`solve` instead:
 
@@ -1146,7 +1147,7 @@ def run_single(
 
     **Custom heating** — provide ``dq_dz``, a callable returning
     ``d(Δρ/ρ)/dz`` (positive for heating).  The spectrum is computed
-    via :func:`spectroxide.greens.distortion_from_heating` and ``μ``/``y``
+    with :func:`spectroxide.greens.distortion_from_heating` and ``μ``/``y``
     are extracted by separate integrations.
 
     Parameters
@@ -1358,7 +1359,7 @@ def solve(
         built with the off-by-default ``axion`` Cargo feature
         (``cargo build --release --features axion``); otherwise the binary
         rejects it as an unknown injection type.
-        Remaining keys are scenario parameters, e.g.::
+        Remaining keys are scenario parameters, for example::
 
             {"type": "single_burst", "z_h": 2e5}
 
@@ -1443,7 +1444,7 @@ def solve(
     Raises
     ------
     ValueError
-        If incompatible arguments are supplied (e.g. ``method="pde"``
+        If incompatible arguments are supplied (for example, ``method="pde"``
         but neither ``injection`` nor ``dq_dz``/``photon_source``).
     TypeError
         If ``table`` is neither :class:`GreensTable`,

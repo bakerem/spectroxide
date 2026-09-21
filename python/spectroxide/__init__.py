@@ -31,11 +31,11 @@ G_bb stripping (``strip_gbb``) and style helpers (``apply_style``, ``C``,
 Far Infrared Absolute Spectrophotometer (FIRAS) constraint data
 (``FIRASData`` and the ``MU_FIRAS_*`` / ``Y_FIRAS_*`` confidence limits).
 
-CosmoTherm comparison utilities are available via submodule import::
+CosmoTherm comparison utilities are available through submodule import::
 
     from spectroxide.cosmotherm import load_di_file, convolve_cosmotherm_gf
 
-Plot parameter constants are available via submodule import::
+Plot parameter constants are available through submodule import::
 
     from spectroxide.plot_params import FONT_SIZE, LW
 """

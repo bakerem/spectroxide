@@ -3,7 +3,7 @@
 //! All functions here take the dimensionless frequency `x = hν/(kT_z)` and
 //! return an occupation-number perturbation `Δn`. They are normalized so
 //! that the corresponding distortion amplitude (μ, y, ΔT/T) is the
-//! coefficient that multiplies the shape — e.g. `Δn_μ(x) = μ · M(x)`,
+//! coefficient that multiplies the shape — such as `Δn_μ(x) = μ · M(x)`,
 //! `Δn_y(x) = y · Y_SZ(x)`, `Δn_T(x) = (ΔT/T) · G_bb(x)`.
 //!
 //! Provided shapes:

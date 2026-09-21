@@ -258,7 +258,7 @@ pub struct BrPrecomputed {
 /// step's electron temperature. Precomputing the former once per grid removes
 /// both `exp()` calls from every Gaunt evaluation, leaving only the `ln(1+e)`.
 ///
-/// Returns `0.0` for `ln_x < −69` (i.e. `x < 1e-30`), which propagates through
+/// Returns `0.0` for `ln_x < −69` (that is, `x < 1e-30`), which propagates through
 /// `gaunt_from_expc` as `g = 1`, reproducing the guard in
 /// `gaunt_ff_nr_fast_preln` exactly.
 #[inline]

@@ -151,7 +151,7 @@ pub const Z_MU: f64 = 1.98e6;
 ///
 /// Convenience helper for tests and quick calculations. Production code must
 /// use [`crate::cosmology::Cosmology::theta_z`] so that a user-supplied T_CMB
-/// (e.g. Planck 2018's 2.7255 K) is honored.
+/// (for example, Planck 2018's 2.7255 K) is honored.
 #[doc(hidden)]
 #[inline]
 pub fn theta_z(z: f64) -> f64 {
@@ -255,7 +255,7 @@ mod tests {
     ///
     /// κ_c = 12/β_μ − 9G₂/G₃ ≈ 2.1419
     ///
-    /// Also verified via numerical integration: κ_c = 3∫x³M(x)dx / G₃
+    /// Also verified through numerical integration: κ_c = 3∫x³M(x)dx / G₃
     /// where M(x) = (x/β_μ − 1) G_bb(x) / x.
     #[test]
     fn test_kappa_c_analytical_and_numerical() {

@@ -142,7 +142,7 @@ class Cosmology:
 # ---------------------------------------------------------------------------
 #
 # These dicts are the canonical input format consumed by the helpers below
-# (``_cosmo_hubble`` etc.) and by the Rust command-line interface.  Where the
+# (such as ``_cosmo_hubble``) and by the Rust command-line interface.  Where the
 # values match a :class:`Cosmology` classmethod exactly, we derive the dict
 # from it to keep them in sync.  The two CosmoTherm-comparison presets
 # intentionally differ from the Planck dataclass values (n_eff = 3.04 to
@@ -449,7 +449,7 @@ def ionization_fraction(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOr
     Parameters
     ----------
     z : float or array_like
-        Redshift(s).
+        Redshift or redshifts.
     cosmo : Mapping, optional
         Cosmological parameters.  Defaults to :data:`DEFAULT_COSMO`.
 
@@ -664,7 +664,7 @@ def cosmic_time(
         Cosmological parameters.  Defaults to :data:`DEFAULT_COSMO`.
     z_upper : float, optional
         Upper integration limit (default ``1e9``).  Increase for very
-        early-Universe applications (e.g., neutrino decoupling).
+        early-Universe applications (for example, neutrino decoupling).
     n_points : int, optional
         Number of quadrature points (default 2048, giving < 1e-5 relative
         quadrature error at all z; mirrors the Rust ``cosmic_time``).
@@ -677,7 +677,7 @@ def cosmic_time(
     if cosmo is None:
         cosmo = DEFAULT_COSMO
     # Integrate dt = -dz / ((1+z)*H(z)) from z_upper to z
-    # i.e. t(z) = integral from z to z_upper of dz' / ((1+z')*H(z'))
+    # that is, t(z) = integral from z to z_upper of dz' / ((1+z')*H(z'))
     u_low = np.log(1.0 + z)
     u_high = np.log(1.0 + z_upper)
     h = (u_high - u_low) / n_points

@@ -143,7 +143,7 @@ def validate_array_lengths(x: ArrayLike, delta_n: ArrayLike) -> None:
 
 
 def validate_finite_scalar(val: float | None, label: str) -> None:
-    """Validate that a scalar is finite (i.e. neither NaN nor ±Inf).
+    """Validate that a scalar is finite (that is, neither NaN nor ±Inf).
 
     Parameters
     ----------
@@ -196,8 +196,8 @@ def validate_cosmology(cosmo: Mapping[str, float] | Any | None) -> None:
     Raises
     ------
     ValueError
-        If any present field is unphysical (non-finite, non-positive,
-        ``omega_m < omega_b``, ``y_p ∉ [0, 1)``, etc.).
+        If any present field is unphysical, including non-finite,
+        non-positive, ``omega_m < omega_b``, or ``y_p ∉ [0, 1)`` values.
     """
     if cosmo is None:
         return
@@ -299,7 +299,7 @@ def validate_dq_dz_callable(
     if dq_dz is None:
         return
     # 32 log-spaced points (~one per 0.2 dex over [1e2, 5e6]) catches
-    # isolated singularities that 5-point sampling misses (e.g. 1/(z-z*)
+    # isolated singularities that 5-point sampling misses (for example, 1/(z-z*)
     # with z* between two of the original five samples). Plus the literal
     # endpoints, which user formulas often hit edge cases at.
     sample_zs = np.unique(

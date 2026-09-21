@@ -30,7 +30,7 @@ specific functional forms and references.
 
 .. note::
 
-   **Accuracy vs. PDE** — ``<5%`` deep μ-era (z_h > 2 × 10⁵), ``<1%``
+   **Accuracy versus PDE** — ``<5%`` deep μ-era (z_h > 2 × 10⁵), ``<1%``
    y-era (z_h < 10⁴), ``~8–13%`` shape error in the μ↔y transition
    (3 × 10⁴–10⁵). For the transition region prefer the PDE-based
    numerical Green's function in :doc:`greens_table`.
@@ -182,7 +182,7 @@ Three-component Green's function and convolutions over a heating history
    y  = y_from_heating(dq_dz,  z_min=1e3, z_max=5e6)
 
 The ``cosmo`` keyword (where supported) folds the post-recombination
-Compton visibility into the y-channel automatically (via the bundled
+Compton visibility into the y-channel automatically (through the bundled
 free-electron history).
 
 .. autofunction:: spectroxide.greens.greens_function

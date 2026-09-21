@@ -273,7 +273,7 @@ fn mode_photon() {
 }
 
 /// The scenario behind `test_pb2009_energy_conservation`: z_h = 2e5, wide
-/// burst, snapshot at z = 200. Grid vs dtau_max, to show which axis matters.
+/// burst, snapshot at z = 200. Grid versus dtau_max, to show which axis matters.
 fn mode_pb2009() {
     let drho = 1e-5;
     let z_h = 2e5;
@@ -310,9 +310,9 @@ fn mode_pb2009() {
 
 /// The deep-μ end of the paper figure. `notebooks/paper_figures/
 /// energy_conservation.ipynb` sweeps z_h up to 3e6 through the CLI `sweep`
-/// path, i.e. σ_z = max(0.04 z_h, 100), z_start = z_h + 7σ_z, number-conserving,
+/// path, that is, σ_z = max(0.04 z_h, 100), z_start = z_h + 7σ_z, number-conserving,
 /// dtau_max = 3, N = 8000. Here at N = 4000 to keep it affordable, with
-/// dtau_max = 3 vs 1.5 to show whether the figure's high-z points are
+/// dtau_max = 3 versus 1.5 to show whether the figure's high-z points are
 /// converged. Uses the snapshot's own `delta_rho_over_rho` (spectral + T-shift),
 /// exactly what the figure plots.
 fn mode_figure() {
@@ -486,7 +486,7 @@ fn erf(x: f64) -> f64 {
     sign * (1.0 - poly * (-x * x).exp())
 }
 
-/// Localize the deficit in redshift: running photon energy vs the analytically
+/// Localize the deficit in redshift: running photon energy compared with the analytically
 /// integrated burst source. Shows the deficit is generated in the injection
 /// window and then partly recovered.
 fn mode_steps() {

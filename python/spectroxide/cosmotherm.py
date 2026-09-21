@@ -61,7 +61,7 @@ def load_di_file(
         Full path to the DI file.  Either ``path`` or ``name`` must be
         provided.
     name : str, optional
-        Filename (e.g. ``"DI_damping.dat"``) looked up in the bundled
+        Filename (for example, ``"DI_damping.dat"``) looked up in the bundled
         ``data/cosmotherm/`` directory.
 
     Returns
@@ -142,7 +142,7 @@ def load_greens_database(path=None, include_metadata=False):
 
         The database stores Green's function entries WITHOUT the G_bb
         temperature shift component (``add_G_term`` is disabled in
-        Greens.cpp). The temperature shift is tracked separately via
+        Greens.cpp). The temperature shift is tracked separately through
         the Tgin/Tglast metadata in the header. Use ``include_metadata=True``
         and :func:`reconstruct_full_gf` to get the full GF including
         the temperature shift.
@@ -188,7 +188,7 @@ def load_greens_database(path=None, include_metadata=False):
     if path is None:
         path = _DATA_DIR / "Greens_data.dat"
         if not path.exists():
-            # Search nested directory (e.g. Greens.v1.0.3/Gdatabase/)
+            # Search nested directory (for example, Greens.v1.0.3/Gdatabase/)
             for candidate in _DATA_DIR.glob("Greens*/Gdatabase/Greens_data.dat"):
                 path = candidate
                 break

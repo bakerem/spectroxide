@@ -54,7 +54,7 @@ pub enum InjectionScenario {
         /// f_ann: energy injection rate parameter [eV/s].
         /// Defined as f_eff × ⟨σv⟩ × m_χ × n_χ,0² / n_H,0 (paper convention).
         /// Rate: dE/(dt dV) = f_ann × n_H(z) × (1+z)³.
-        /// This matches the CosmoTherm convention (e.g. f_ann = 1e-22 eV/s for s-wave).
+        /// This matches the CosmoTherm convention (for example, f_ann = 1e-22 eV/s for s-wave).
         f_ann: f64,
     },
 
@@ -80,7 +80,7 @@ pub enum InjectionScenario {
     ///
     /// The heating rate method returns the energy injection rate from the
     /// photon injection: d(Δρ/ρ)/dt = (α_ρ × x_inj) × d(ΔN/N)/dt.
-    /// The frequency-dependent source is applied separately via
+    /// The frequency-dependent source is applied separately through
     /// `photon_source_rate`.
     ///
     /// References:
@@ -1015,7 +1015,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Returns the characteristic injection redshift(s) for this scenario.
+    /// Returns the characteristic injection redshifts for this scenario.
     ///
     /// For burst-like scenarios, returns `Some((z_center, z_upper))` where
     /// `z_upper` is the highest redshift at which injection is active
@@ -1218,7 +1218,7 @@ impl InjectionScenario {
     ///
     /// Returns a list of warnings: one when no resonance exists in the
     /// searched band (the run then produces no distortion from this channel;
-    /// the hard error for that case lives in the solver-builder path via
+    /// the hard error for that case lives in the solver-builder path through
     /// `resonance_params`), one when z_res lands outside the validated
     /// window. Empty for non-dark-photon scenarios or when everything is
     /// fine.
@@ -1355,7 +1355,7 @@ impl InjectionScenario {
     /// `DecayingParticlePhoton` uses the vacuum decay rate only. For the
     /// canonical X → γγ channel, the physical rate carries a factor
     /// (1 + n(x_inj))² (one (1+n) per emitted photon, both into the same
-    /// mode at x_inj); for single-photon channels (e.g. X → γ X') the
+    /// mode at x_inj); for single-photon channels (for example, X → γ X') the
     /// factor is (1 + n(x_inj)). The squared form is significant at
     /// x_inj ≪ 1 where n_pl ≈ 1/x_inj ≫ 1.
     pub fn warn_stimulated_emission(&self) -> Vec<String> {
@@ -1380,8 +1380,9 @@ impl InjectionScenario {
     /// this returns a NEGATIVE value because energy enters as z decreases
     /// (dt > 0, dz < 0). This is the correct physical sign.
     ///
-    /// **WARNING**: The Green's function routines (`mu_from_heating`, etc.)
-    /// expect a POSITIVE dq/dz for heating. Use `heating_rate_per_redshift().abs()`
+    /// **WARNING**: The Green's function routines (`mu_from_heating`, `y_from_heating`,
+    /// `mu_y_from_heating`) expect a POSITIVE dq/dz for heating.
+    /// Use `heating_rate_per_redshift().abs()`
     /// or pass a positive Gaussian directly when calling Green's function methods.
     pub fn heating_rate_per_redshift(&self, z: f64, cosmo: &Cosmology) -> f64 {
         // d(Δρ/ρ)/dz = d(Δρ/ρ)/dt × dt/dz = -d(Δρ/ρ)/dt / (H(1+z))
