@@ -877,7 +877,7 @@ fn print_solver_options_help() {
     println!("  --z-start <z>         Starting redshift. Default: 5e6 for solve (or z_res for");
     println!("                        resonance scenarios); z_h + 7 sigma_z per point for sweeps");
     println!("  --z-end <z>           Final redshift (default 500)");
-    println!("  --dy-max <val>        Max fractional change in ln(1+z) per step (default 0.02)");
+    println!("  --dy-max <val>        Max Compton-y step theta_e*dtau (default 0.02)");
     println!("  --dtau-max <val>      Max Compton optical depth per step (default 10;");
     println!("                        use 3 for <0.1% precision)");
     println!("  --dtau-max-photon-source <val>  Max dtau per step while a photon source is");

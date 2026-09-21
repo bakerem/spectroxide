@@ -39,7 +39,7 @@ pub struct SolverConfig {
     pub z_start: f64,
     /// Lower redshift at which integration ends.
     pub z_end: f64,
-    /// Maximum fractional change in ln(1+z) per step (limits step size for
+    /// Maximum Compton y-parameter increment per step, Δy_C = θ_e Δτ (limits step size for
     /// slow-varying sources). Default 0.02. Historical value 0.005 was
     /// calibrated for photon-injection bursts; for smooth (continuous) heat
     /// injection scenarios 0.02 gives the same μ/y to 4 significant figures
@@ -95,8 +95,8 @@ impl SolverConfig {
         if !self.dy_max.is_finite() || self.dy_max <= 0.0 {
             return Err(format!("dy_max must be positive, got {}", self.dy_max));
         }
-        // Guardrail on the upper end: dy_max controls the fractional change
-        // in ln(1+z) per step, and the adaptive-step derivation assumes this
+        // Guardrail on the upper end: dy_max controls the Compton-y increment
+        // θ_e Δτ per step, and the adaptive-step derivation assumes this
         // is small. Default is 0.02; at 0.1 the linearization begins to fail
         // and step-count savings are illusory since dtau_max takes over.
         if self.dy_max > 0.1 {
@@ -1843,7 +1843,7 @@ impl SolverBuilder {
         self
     }
 
-    /// Set the maximum fractional change in ln(1+z) per step (the
+    /// Set the maximum Compton y-parameter increment per step, Δy_C = θ_e Δτ (the
     /// Kompaneets-accuracy limiter is `dtau_max`, not this).
     pub fn dy_max(mut self, val: f64) -> Self {
         self.dy_max = Some(val);

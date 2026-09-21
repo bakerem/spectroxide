@@ -82,11 +82,22 @@ Notes on the lint, so that nobody reads a count as a verdict:
   slice panics at the entry asserts. The doc now says to pass zeros. The claim that zeros reproduce the legacy Picard behavior
   follows from how the term enters the Jacobian; not run.
 
+- **F-DS-6. `dy_max` was documented as the wrong quantity (fixed).** Four sites said "maximum fractional change in ln(1+z) per
+  step". The code gives dz = dy_max · t_C H (1+z)/θ_e, so θ_e Δτ = dy_max: it caps the Compton-y increment. Δln(1+z) per
+  step is 120 × dy_max at z = 1e4 and 0.01 × dy_max at z = 1e6 (the two agree only near z = 1e5). Verified by a fresh-context
+  claim-verifier (algebra plus an independent Python table). Fixed in `src/solver.rs` (two doc comments, one code comment) and
+  the `--dy-max` help line in `src/cli.rs`. `docs/cli.rst` and `python/spectroxide/solver.py` were already right. No
+  numerical behavior changes. If the paper describes `dy_max`, check its wording.
+
 ## Recorded exceptions
 
 None yet. Add one line per exception with the rule, the file, and the reason.
 
 ## Log
+
+- 2026-09-21: CHECKPOINT after phase 4. Branch `docs-google-style`, five phase commits plus the `dy_max` doc fix. Next: phase 5
+  (about 12 mechanical commits; start with `python dev/scripts/docs_style_lint.py --list rs-imperative-summary`), which needs
+  only D1 for the dash item. Phase 7 needs D2. Safe to clear context here.
 
 - 2026-09-21: phase 4 done. `docs/cli.rst` only; Sphinx 0 warnings. `src/cli.rs` help text and `tests/cli_integration.rs` untouched.
 
