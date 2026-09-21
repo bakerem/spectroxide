@@ -22,7 +22,7 @@ Quick start::
 
 For redshift sweeps use ``run_sweep()`` (single-burst energy injection) or
 ``run_photon_sweep()`` / ``run_photon_sweep_batch()`` (monochromatic photon
-injection); the Rust binary loops internally and parallelises across cores.
+injection); the Rust binary loops internally and parallelizes across cores.
 ``run_single()`` is a thin convenience wrapper around the analytic Green's
 function.
 

@@ -255,7 +255,7 @@ def validate_delta_rho(delta_rho: float) -> None:
     Warns
     -----
     UserWarning
-        If ``|Δρ/ρ| > 0.01`` — the linearised Kompaneets equation is no
+        If ``|Δρ/ρ| > 0.01`` — the linearized Kompaneets equation is no
         longer accurate in this regime.
     """
     if not np.isfinite(delta_rho):

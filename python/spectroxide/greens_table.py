@@ -298,7 +298,7 @@ class GreensTable:
                 fill_value=0.0,
             )
 
-        # Vectorised query: (n_active * n_x, 2) points → reshape to (n_active, n_x).
+        # Vectorized query: (n_active * n_x, 2) points → reshape to (n_active, n_x).
         log_x_cache = np.log10(self.x)
         log_z_clip = np.log10(np.clip(z_active, self.z_h[0], self.z_h[-1]))
         n_x = len(self.x)
@@ -687,8 +687,8 @@ def _build_greens_table(
 ) -> "GreensTable":
     """Build a heating Green's-function table from PDE solver runs.
 
-    Runs the Rust PDE solver at each injection redshift (parallelised
-    internally by the Rust binary) and normalises by ``Δρ/ρ`` to obtain
+    Runs the Rust PDE solver at each injection redshift (parallelized
+    internally by the Rust binary) and normalizes by ``Δρ/ρ`` to obtain
     ``G_th`` per unit injection.
 
     Supports checkpointing: splits ``z_h`` into chunks of size

@@ -735,7 +735,7 @@ def run_sweep(
 
     Calls the Rust binary once with a list of ``z_injections`` and a
     fixed ``delta_rho``; the binary loops over redshifts internally
-    (parallelised via ``n_threads``).
+    (parallelized via ``n_threads``).
 
     For other PDE workloads use :func:`solve` instead:
 
@@ -860,7 +860,7 @@ def run_photon_sweep(
 ) -> dict:
     """Photon-injection sweep over multiple ``z_h`` at fixed ``x_inj``.
 
-    Calls the Rust ``photon-sweep`` subcommand, which parallelises across
+    Calls the Rust ``photon-sweep`` subcommand, which parallelizes across
     injection redshifts internally using native threads.
 
     Parameters
@@ -995,7 +995,7 @@ def run_photon_sweep_batch(
 ) -> list[dict]:
     """Batch photon-injection sweep over multiple ``x_inj`` values.
 
-    Calls the Rust ``photon-sweep-batch`` subcommand, which parallelises
+    Calls the Rust ``photon-sweep-batch`` subcommand, which parallelizes
     all ``(x_inj, z_h)`` pairs in a single process, avoiding subprocess
     overhead and CPU oversubscription.
 

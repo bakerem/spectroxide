@@ -24,7 +24,7 @@
 //!   J_μ × J_bb* + J_y + (1 − J_bb*) ≠ 1
 //!
 //! Chluba (2013) §3 notes that the "missing" energy in this ansatz stays within
-//! the residual and never exceeds ~16–17%, maximised in the μ-y transition
+//! the residual and never exceeds ~16–17%, maximized in the μ-y transition
 //! region (z ~ 7–8×10⁴). Using the independent J_y fit matches PDE results
 //! more closely than the strictly energy-conserving choice J_y = (1 − J_μ) · J_bb*.
 //! Callers that need strict energy conservation must use the full PDE solver.
@@ -1033,11 +1033,11 @@ mod tests {
     /// The heating convolution must reduce to the single-burst Green's function
     /// (R2 mutation audit, fix B3).
     ///
-    /// For a narrow normalised heating history at z_h,
+    /// For a narrow normalized heating history at z_h,
     ///   ∫ dz (dQ/dz) G_th(x, z) → G_th(x, z_h) · Δρ/ρ,
     /// and likewise (μ, y) → ((3/κ_c) J_μ J_bb*, J_y/4) · Δρ/ρ. This is the
     /// defining property of a Green's function, and it pins the convolution's
-    /// normalisation and its ln(1+z) Jacobian (`dz_dln = 1+z`) against
+    /// normalization and its ln(1+z) Jacobian (`dz_dln = 1+z`) against
     /// `greens_function`, which `greens_function_checks` anchors to the Chluba
     /// 2013 limits.
     ///
@@ -1229,13 +1229,13 @@ mod tests {
         }
     }
 
-    /// Characterisation test for the bump's **first** moment (finding F-PC-1,
+    /// Characterization test for the bump's **first** moment (finding F-PC-1,
     /// `dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`).
     ///
     /// `test_compton_broadening_identities` pins the *variance* to the exact
     /// Zeldovich–Sunyaev value 2βy_γ, but its ⟨x⟩ = x′·f_int check is internal
-    /// self-consistency (log-normal moment vs the returned normalisation), not a
-    /// physics anchor. The physics anchor is the linearised Kompaneets first
+    /// self-consistency (log-normal moment vs the returned normalization), not a
+    /// physics anchor. The physics anchor is the linearized Kompaneets first
     /// moment. With Δn = n − n_pl and T_e = T_z,
     ///
     ///   ∂Δn/∂y = x⁻²∂ₓ[x⁴(∂ₓΔn + coth(x/2)·Δn)]   (the Planck identity kills
@@ -1253,7 +1253,7 @@ mod tests {
     ///
     /// **We keep the published form.** Swapping in the exact f changes the
     /// photon Green's function by ≤0.83% in L2 (measured at z_h = 3×10⁴, where
-    /// y_γ = 0.039 maximises the effect), ≲0.05% at z_h ≤ 2×10³, ~0 at
+    /// y_γ = 0.039 maximizes the effect), ≲0.05% at z_h ≤ 2×10³, ~0 at
     /// z_h ≥ 2×10⁵ where the √(1+x′y_γ) suppression takes over, and μ by
     /// <0.001% everywhere. This test therefore locks in the *deviation* so that
     /// a future edit to `f_cs` is visible rather than silent.

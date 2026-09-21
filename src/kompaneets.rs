@@ -546,7 +546,7 @@ pub struct DcbrCoupling<'a> {
     /// The slice must hold at least `grid.n` entries; an empty slice panics
     /// at the entry asserts of `kompaneets_step_coupled_inplace`. A slice
     /// of zeros drops this Jacobian term, which is the legacy Picard-in-ρ_e
-    /// behaviour: correct to O(Δρ_e per step) but only linearly convergent
+    /// behavior: correct to O(Δρ_e per step) but only linearly convergent
     /// at z ≳ 10⁶.
     pub dem_drho_eq: &'a [f64],
     /// Analytical derivative d(n_eq_minus_n_pl)/d(ρ_eq). Formula:
@@ -558,7 +558,7 @@ pub struct DcbrCoupling<'a> {
     /// rather than relying on the caller to pre-add `S_i` to Δn_old. This
     /// avoids poisoning the Kompaneets CN "old" flux with the source (the
     /// pre-add approach effectively treats the source as injected at
-    /// `t_old`, which over-Comptonises by roughly `O(dt · ∂K/∂t)` per step
+    /// `t_old`, which over-Comptonizes by roughly `O(dt · ∂K/∂t)` per step
     /// during a narrow injection window). `None` preserves the legacy
     /// pre-add caller code path.
     pub photon_source: Option<&'a [f64]>,

@@ -30,7 +30,7 @@ use crate::spectrum::planck;
 /// from thermal averaging (Chluba+ 2007), evaluated at the **photon
 /// temperature** θ_z. Strictly the thermal average runs over the electron
 /// distribution, so θ_e would be the cleaner choice when T_e ≠ T_z
-/// (injection-driven heating); however CS2012 parametrises DC through θ_z
+/// (injection-driven heating); however CS2012 parametrizes DC through θ_z
 /// and the difference is <1% for θ_z ≲ 10⁻³ even when |ρ_e−1| ~ 0.1.
 pub fn dc_gaunt_factor(x: f64, theta_z: f64) -> f64 {
     I4_PLANCK * dc_relativistic_correction(theta_z) * dc_high_freq_suppression(x)
@@ -184,7 +184,7 @@ mod tests {
     ///
     /// DC emission and absorption must cancel identically when the photon field
     /// is a Planck spectrum at the **electron** temperature, for any ρ_e. In the
-    /// code's normalisation x = hν/kT_z that spectrum is
+    /// code's normalization x = hν/kT_z that spectrum is
     ///   n_eq(x) = 1/(exp(x·φ) − 1),  φ ≡ θ_z/θ_e = 1/ρ_e.
     ///
     /// The Planck test above only covers ρ_e = 1, where φ = 1 and any error in
@@ -474,7 +474,7 @@ mod tests {
     ///   (1+14.16 θ_z)⁻¹ = 0.9935326
     ///   ⟹ K_DC = 1.1002×10⁻⁸
     ///
-    /// This is the anchor on the DC *normalisation* that the suite lacked: the
+    /// This is the anchor on the DC *normalization* that the suite lacked: the
     /// pre-audit tests constrained it only to within a factor ~1.5.
     #[test]
     fn test_dc_emission_coefficient_absolute_value_z1e6() {

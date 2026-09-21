@@ -118,7 +118,7 @@ full LAMBDA correlation matrix; ``sigma_kJy`` is the diagonal only.
      - 1-σ diagonal uncertainties in kJy/sr.
    * - ``galaxy_kJy``
      - ``(43,)``
-     - Modelled high-latitude galactic spectrum in kJy/sr.
+     - Modeled high-latitude galactic spectrum in kJy/sr.
    * - ``cov``
      - ``(43, 43)``
      - Full monopole covariance in (kJy/sr)².

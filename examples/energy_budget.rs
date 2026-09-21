@@ -4,7 +4,7 @@
 //! quoting a single number. Findings it was built to establish
 //! (`dev/audit/energy_conservation_audit.md`):
 //!
-//!   * the x-quadrature and the analytic G₃ normalisation contribute ≲10⁻⁴ —
+//!   * the x-quadrature and the analytic G₃ normalization contribute ≲10⁻⁴ —
 //!     the deviation is not a bookkeeping error;
 //!   * the heat-injection deficit is the first-order-in-Δτ temporal error of
 //!     the coupled T_e / double Compton–bremsstrahlung step (`dtau_max`
@@ -16,7 +16,7 @@
 //!
 //! Usage: `cargo run --release --example energy_budget [mode]`
 //! with mode ∈ {all, quad, heat, photon, pb2009, figure, joint, deepmu, steps}.
-//! Default `all`; `steps` (per-step localisation), `figure` (deep-μ end at the
+//! Default `all`; `steps` (per-step localization), `figure` (deep-μ end at the
 //! paper figure's settings), `joint` and `deepmu` (joint dtau×N refinement,
 //! closing the audit's "survives Δτ→0" open item) are excluded from `all`
 //! because they are slow.
@@ -486,7 +486,7 @@ fn erf(x: f64) -> f64 {
     sign * (1.0 - poly * (-x * x).exp())
 }
 
-/// Localise the deficit in redshift: running photon energy vs the analytically
+/// Localize the deficit in redshift: running photon energy vs the analytically
 /// integrated burst source. Shows the deficit is generated in the injection
 /// window and then partly recovered.
 fn mode_steps() {

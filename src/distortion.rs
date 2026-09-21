@@ -76,7 +76,7 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
 ///   2. e_μ  = M⊥  / |M⊥|,   with M⊥  = M  − (M·e_y) e_y
 ///   3. e_T  = G⊥  / |G⊥|,   with G⊥  = G  − (G·e_y) e_y − (G·e_μ) e_μ
 /// under the inner product ⟨a, b⟩ = ∫_{x_min}^{x_max} a(x) b(x) dx
-/// (trapezoidal rule on the supplied grid). This generalises CJ2014's
+/// (trapezoidal rule on the supplied grid). This generalizes CJ2014's
 /// uniform-channel flat sum to our non-uniform x-grid and reduces to it in
 /// the continuum limit.
 ///
@@ -213,7 +213,7 @@ pub fn decompose_gram_schmidt(
 /// `decompose_gram_schmidt`.
 ///
 /// Initial guess: bootstrap from `decompose_gram_schmidt` (converted via
-/// δ_BF = δ_GS + μ/β_μ). This gives the linearised optimum for free; the
+/// δ_BF = δ_GS + μ/β_μ). This gives the linearized optimum for free; the
 /// LM iterations only refine the O(μ²) nonlinear correction.
 ///
 /// In the small-(μ, δ, y) limit the model reduces to a linear fit of
@@ -221,7 +221,7 @@ pub fn decompose_gram_schmidt(
 /// which spans the same 3-D subspace as the CJ2014 basis (Y_SZ, M, G) since
 /// M(x) = G(x)/β_μ − G(x)/x. The two methods therefore give the SAME μ and y
 /// to O(μ²), but a DIFFERENT ΔT/T: a pure B&F BE distortion with chemical
-/// potential μ_BF has ΔT/T = 0 in the B&F parameterisation and ΔT/T = −μ_BF/β_μ
+/// potential μ_BF has ΔT/T = 0 in the B&F parameterization and ΔT/T = −μ_BF/β_μ
 /// in CJ2014. Concretely: δ_BF = δ_CJ + μ/β_μ.
 pub fn decompose_nonlinear_be(
     x_grid: &[f64],
@@ -386,11 +386,11 @@ pub fn decompose_nonlinear_be(
 /// For the linear alternative (CJ2014 Appendix A Gram-Schmidt), call
 /// [`decompose_gram_schmidt`] directly. The two methods agree on μ and y to
 /// O(μ²) at realistic injection amplitudes (μ ≲ 10⁻³); they differ by a
-/// parameterisation-only offset δ_BF = δ_GS + μ/β_μ in the extracted ΔT/T.
+/// parameterization-only offset δ_BF = δ_GS + μ/β_μ in the extracted ΔT/T.
 ///
 /// Note: B&F absorbs μ inside the Bose-Einstein exponential, so the returned
 /// μ is the physical chemical potential (matching FIRAS-convention fits) —
-/// NOT Chluba's orthogonalised "M-shape" μ. The relation is μ_BF = μ_M to
+/// NOT Chluba's orthogonalized "M-shape" μ. The relation is μ_BF = μ_M to
 /// leading order; at μ ≳ 0.1 (rare in practice) the nonlinear BE shape
 /// diverges from linear M(x) and the methods materially differ.
 ///
@@ -413,7 +413,7 @@ pub fn decompose(x_grid: &[f64], delta_n: &[f64]) -> (f64, f64, f64) {
 /// band [`DEFAULT_DECOMP_X_MIN`, `DEFAULT_DECOMP_X_MAX`].
 ///
 /// `decompose_distortion` silently returns mu=y=0 when fewer than three
-/// grid points fall in the band, which is the right behaviour for the
+/// grid points fall in the band, which is the right behavior for the
 /// solver hot loop but a footgun for callers who set a custom (too-narrow)
 /// `x_min`/`x_max`. Solvers should sample this once at startup and surface
 /// a warning before running.

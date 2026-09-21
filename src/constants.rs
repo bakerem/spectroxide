@@ -5,7 +5,7 @@
 //! Grouped as:
 //! - **Fundamental**: `C_LIGHT`, `HBAR`, `HPLANCK`, `K_BOLTZMANN`, `M_ELECTRON`,
 //!   `M_PROTON`, `SIGMA_THOMSON`, `ALPHA_FS` — feed Compton scattering rates,
-//!   Planck normalisations, and double Compton and bremsstrahlung emission prefactors.
+//!   Planck normalizations, and double Compton and bremsstrahlung emission prefactors.
 //! - **Unit conversions**: `EV_IN_JOULES`.
 //! - **Atomic physics**: `E_RYDBERG_*`, `E_HE_*`, `LAMBDA_LYA`, `LAMBDA_2S1S` —
 //!   used by [`crate::recombination`] for the Peebles 3-level atom.
@@ -151,7 +151,7 @@ pub const Z_MU: f64 = 1.98e6;
 ///
 /// Convenience helper for tests and quick calculations. Production code must
 /// use [`crate::cosmology::Cosmology::theta_z`] so that a user-supplied T_CMB
-/// (e.g. Planck 2018's 2.7255 K) is honoured.
+/// (e.g. Planck 2018's 2.7255 K) is honored.
 #[doc(hidden)]
 #[inline]
 pub fn theta_z(z: f64) -> f64 {

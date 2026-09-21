@@ -388,7 +388,7 @@ pub struct ThermalizationSolver {
     /// Precomputed Planck occupation at cell midpoints x_half[i] = (x[i]+x[i+1])/2.
     /// Used by the DC/BR heating integral, which evaluates n_pl at midpoints.
     planck_half: Vec<f64>,
-    /// Precomputed 1/x³ for each grid point (DC/BR rate normalisation).
+    /// Precomputed 1/x³ for each grid point (DC/BR rate normalization).
     inv_x3_grid: Vec<f64>,
     /// Precomputed grid-constant half of the BR Gaunt exponential, x^(-√3/π),
     /// for each grid point. See [`crate::bremsstrahlung::gaunt_expc_factor`].

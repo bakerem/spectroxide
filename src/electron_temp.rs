@@ -33,7 +33,7 @@ impl Default for ElectronTemperature {
 impl ElectronTemperature {
     /// θ_e from a precomputed θ_z value (cosmology-aware).
     ///
-    /// Pass `cosmo.theta_z(z)` so a non-default T_CMB is honoured.
+    /// Pass `cosmo.theta_z(z)` so a non-default T_CMB is honored.
     #[inline]
     pub fn theta_e_with(&self, theta_z_val: f64) -> f64 {
         self.rho_e * theta_z_val

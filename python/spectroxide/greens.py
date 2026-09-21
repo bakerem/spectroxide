@@ -1221,7 +1221,7 @@ def mu_from_photon_injection(x_inj: float, z_h: float, delta_n_over_n: float) ->
     Uses the universal ``J_μ(z)`` visibility function (same as heat
     injection).
 
-    Sign behaviour
+    Sign behavior
     --------------
     - ``x_inj > x₀`` and ``P_s ≈ 1``: ``μ > 0`` (energy-dominated).
     - ``x_inj < x₀`` and ``P_s ≈ 1``: ``μ < 0`` (number-dominated).
@@ -1363,7 +1363,7 @@ def distortion_from_photon_injection(
     # mu-y transition band (where the photon GF is undefined).
     active = np.abs(sw) >= 1e-50
     if transition_overlap:
-        # Match Rust's skip behaviour: drop samples in (Y_ERA_Z_MAX, MU_ERA_Z_MIN)
+        # Match Rust's skip behavior: drop samples in (Y_ERA_Z_MAX, MU_ERA_Z_MIN)
         # rather than panic. The slack matches the Rust TOL constant.
         tol = 1.0e-6
         lo = _val.PHOTON_GF_Y_ERA_Z_MAX * (1.0 + tol)
@@ -1406,7 +1406,7 @@ def decompose_distortion(
     on x ∈ [0.5, 18], bootstrapped from a linear Gram-Schmidt initial guess
     and refined by Levenberg-Marquardt. See :func:`_decompose_nonlinear_be`.
 
-    **``method="gs"``:** Linear Gram-Schmidt orthogonalisation of
+    **``method="gs"``:** Linear Gram-Schmidt orthogonalization of
     (Y_SZ, M, G) over the same band (Chluba & Jeong 2014, Appendix A).
     Agrees with ``bf`` on μ and y to numerical precision at realistic
     injection amplitudes; see :func:`_decompose_gram_schmidt`.
@@ -1414,7 +1414,7 @@ def decompose_distortion(
     **``method="gf_fit"`` (requires z_h):** Three-component Green's-function
     spectral fit for visibility-function calibration against PDE spectra.
     NC-strips the spectrum, fixes J_y from Chluba (2013) Eq. 5, then fits
-    J_μ and J_bb* by minimising the x³-weighted residual. Use this for
+    J_μ and J_bb* by minimizing the x³-weighted residual. Use this for
     visibility calibration, NOT for production μ/y extraction.
 
     Parameters
@@ -1444,7 +1444,7 @@ def decompose_distortion(
         If ``method`` is unknown, or if ``method="gf_fit"`` is selected
         without supplying ``z_h``.
     RuntimeError
-        If the ``gf_fit`` L-BFGS-B optimisation fails to converge.
+        If the ``gf_fit`` L-BFGS-B optimization fails to converge.
     """
     if method == "bf":
         if z_h is not None:
@@ -1697,7 +1697,7 @@ def _decompose_nonlinear_be(
 
     by Levenberg–Marquardt over the band ``[x_min, x_max]``,
     bootstrapped from :func:`_decompose_gram_schmidt` (converted to the
-    B&F parameterisation via ``δ_BF = δ_GS + μ/β_μ``).  The LM iteration
+    B&F parameterization via ``δ_BF = δ_GS + μ/β_μ``).  The LM iteration
     refines the ``O(μ²)`` nonlinear correction; for realistic injection
     amplitudes ``|μ| ≲ 10⁻³`` the answer differs from Gram–Schmidt on
     ``μ`` and ``y`` at the numerical-noise level.
@@ -1792,7 +1792,7 @@ def _decompose_nonlinear_be(
         r = dn_b - model_at(xb, mu, delta, y_par)
         return float(np.sum(r * r * wb))
 
-    # Bootstrap from GS (translated to BF parameterisation).
+    # Bootstrap from GS (translated to BF parameterization).
     gs = _decompose_gram_schmidt(x_grid, delta_n, x_min, x_max)
     mu = gs["mu"]
     delta = gs["dT"] + gs["mu"] / BETA_MU

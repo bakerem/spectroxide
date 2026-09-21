@@ -110,8 +110,8 @@ Pass a ``dq_dz`` callable to run a custom heating history through the PDE solver
          z_min=1e3, z_max=3e6, n_z=5000)
 
 * **Signature**: ``dq_dz(z) -> float`` (or array). The wrapper attempts a
-  vectorised call ``dq_dz(z_arr)`` first and falls back to scalar
-  evaluation. Vectorise where you can — the tabulation grid has 5000
+  vectorized call ``dq_dz(z_arr)`` first and falls back to scalar
+  evaluation. Vectorize where you can — the tabulation grid has 5000
   points by default.
 * **Quantity**: :math:`d(\Delta\rho/\rho_\gamma)/dz`, the per-redshift
   derivative of the fractional energy perturbation. Dimensionless.
@@ -135,7 +135,7 @@ Pass a ``photon_source`` callable to inject photons at specific frequencies and 
          x_min=0.01, x_max=30.0, n_x=500)
 
 * **Signature**: ``photon_source(x, z) -> float``. Called scalar-by-scalar
-  on the tabulation grid (no vectorisation), so keep it cheap.
+  on the tabulation grid (no vectorization), so keep it cheap.
 * **Quantity**: :math:`d(\Delta n)/dz` at frequency :math:`x` and redshift
   :math:`z`, the per-redshift derivative of the photon-occupation
   perturbation.  Dimensionless.
