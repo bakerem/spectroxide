@@ -10,8 +10,8 @@ A fresh session resumes from the first unchecked box below.
 - [x] Phase 2. API reference gaps (2026-09-21): all plan items; physics-inquisitor pass done, 17 corrections applied
 - [x] Phase 3. Procedures, code-block introductions, page openings (2026-09-21): `heading-then-code` 28 to 0, `nb-code-no-intro` 6 to 0
 - [x] Phase 4. Placeholders in `docs/cli.rst` (2026-09-21): 11 placeholders to UPPER_SNAKE_CASE with "Replace ..." sentences. `--help` left as is (D4 recommendation; reversible if EB decides otherwise)
-- [ ] Phase 5. Mechanical prose substitutions (blocked on D1 for dashes only)
-- [ ] Phase 6. Record the house style in `CONTRIBUTING.md`; add the script to the `CLAUDE.md` list (20 to 22; see the log)
+- [x] Phase 5. Mechanical prose substitutions (2026-09-21): five commits; every lint rule reads zero
+- [x] Phase 6. House style recorded in `CONTRIBUTING.md`; `CLAUDE.md` script list updated (2026-09-21). CI wiring left for EB: `docs_style_lint.py --check` exits 1 on any hit
 - [x] Phase 7. `firas.py` keyword names (2026-09-21): American names, British names are deprecated aliases
 - [ ] Phase 8. Independent re-review
 
@@ -96,9 +96,24 @@ Notes on the lint, so that nobody reads a count as a verdict:
 
 ## Recorded exceptions
 
-None yet. Add one line per exception with the rule, the file, and the reason.
+The five project-wide exceptions are listed in `CONTRIBUTING.md`, section "Documentation style". Left on purpose in phase 5:
+
+- Citation ampersands ("Chluba & Sunyaev"), "COBE/FIRAS", "RECFAST/Seager", "key/value", "NaN/Inf", "2x2/3x3": names or fixed pairs.
+- Arrows for limits, reactions, atomic transitions, and swaps ("P_s→1", "He II→He I", "z↔x"); order-of-magnitude "~".
+- Bold run-in labels and bold unit markers in parameter docs; `NOTE` and `DEPRECATED` comment tags; `PRODUCTION`, `DEBUG` identifiers.
+- Agentless passives where no reader action depends on the agent (about 40; the plan said not to chase these).
+- The title "Contributing to spectroxide" and the README heading "Contributing" (conventional).
+- One British spelling inside a notebook code-cell comment (tutorial 04); code cells are not edited.
+- `//` (non-doc) Rust comments are out of scope and not linted.
 
 ## Log
+
+- 2026-09-21: phases 5 and 6 done. Phase 5 commits: third-person summaries; American spelling; word list; headings, real em
+  dashes, word choices; person, tense, emphasis, symbols, link text. Subagents did the judgment rules by file group; I read
+  every diff and corrected about ten slips, mostly "/" turned into "or" where "and" or an apposition was meant, and one
+  sentence that lost its subject. After each commit: Sphinx 0 warnings, rustdoc 0, Clippy clean in both configurations,
+  3 doctests, pytest 345, zero changed Rust code lines, Python AST identical, notebook code cells and outputs identical.
+  Remaining: phase 8 (independent re-review).
 
 - 2026-09-21: phase 7 done. `marginalize_y`, `marginalize_mu`, `marginalize_gbb` (the plan missed this one),
   `marginalize_galactic`, and `fit_amplitude_marginalized` are the API. A decorator maps the British keyword names with a

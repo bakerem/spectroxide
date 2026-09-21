@@ -14,6 +14,7 @@ Usage:
     python dev/scripts/docs_style_lint.py --list RULE     # file:line: text per hit
     python dev/scripts/docs_style_lint.py --json OUT.json # machine-readable counts
     python dev/scripts/docs_style_lint.py PATH [PATH...]  # restrict to these files
+    python dev/scripts/docs_style_lint.py --check         # exit 1 on any hit
 
 The rules are heuristics. A hit is a lead, not a verdict: "via", "above", and the
 abbreviation check all have legitimate exceptions, which the status file records.
@@ -492,6 +493,9 @@ def main():
         "--list", metavar="RULE", help="print every hit for RULE ('all' for every rule)"
     )
     parser.add_argument("--json", metavar="OUT", help="write per-file counts to OUT")
+    parser.add_argument(
+        "--check", action="store_true", help="exit with status 1 if any rule has a hit"
+    )
     args = parser.parse_args()
 
     if args.paths:
@@ -533,7 +537,7 @@ def main():
                     + " ".join(f"{c.get(r, 0) or '':>9}" for r in RULES)
                 )
         print(f"{'TOTAL':<{width}} " + " ".join(f"{totals[r]:>9}" for r in RULES))
-    return 0
+    return 1 if args.check and any(totals.values()) else 0
 
 
 if __name__ == "__main__":

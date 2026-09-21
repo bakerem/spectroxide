@@ -133,6 +133,51 @@ All checks must pass before merge. If CI fails, fix the issue — do not ask for
 
 Use a short `type: subject` style — typical types are `fix:`, `docs:`, `polish:`, `chore:`, `feat:`. Append `[skip ci]` to commits that touch only documentation, the paper, or other non-code files.
 
+## Documentation style
+
+The documentation follows the
+[Google developer documentation style guide](https://developers.google.com/style/highlights).
+This covers the README files, the Sphinx pages in `docs/`, the tutorial notebooks, Python
+docstrings, Rust doc comments, and help text. The main rules are:
+
+- Address the reader as "you". Use the active voice and the present tense.
+- Spell out each abbreviation at its first use in every file, then use the abbreviation.
+  In `docs/*.rst`, link the first use to the glossary: ``partial differential equation
+  (:term:`PDE`)``. If you add an abbreviation, add it to `docs/glossary.rst`.
+- Introduce every code block, table, and list with a sentence. Use numbered lists for
+  procedures, with one action per step.
+- Use sentence case for headings. Start a task heading with a verb ("Install the package").
+- Write "for example", "that is", "through", and "versus", not `e.g.`, `i.e.`, `via`, and
+  `vs`. Do not write `etc.`; name the items.
+- Use American spelling.
+- Write placeholders in UPPER_SNAKE_CASE and explain each one after the code block.
+- Do not use ALL CAPS or bold for emphasis. For a real hazard, use a **Note:**, **Caution:**,
+  or **Warning:** notice.
+- Start a Rust function summary with a third-person verb ("Computes", "Returns"). State the
+  units of every physical quantity, and document every `Err`, `None`, and panic condition.
+
+The project departs from the guide in five places, on purpose:
+
+- Python docstring summaries use the imperative ("Compute the ..."), as PEP 257 and the
+  NumPy docstring standard prescribe.
+- Physics notation stays in prose: "z ~ 10⁶", "γe → γγe", "DC/BR", "μ/y", "×".
+- The `--help` output keeps angle-bracket placeholders (`--z-start <z>`), the
+  command-line convention. `docs/cli.rst` uses UPPER_SNAKE_CASE.
+- A heading whose whole subject is one identifier keeps the code font (`solve`, `run_sweep`).
+- The em dash has a space on each side, to match the paper.
+
+To check your changes, run the style checker. It counts hits per rule per file, and every
+count must stay zero (`--check` exits with status 1 otherwise):
+
+```bash
+python dev/scripts/docs_style_lint.py
+```
+
+To list the hits for one rule, add `--list RULE`. Replace `RULE` with a rule name from the
+table header, for example `abbrev-first-use`. The checker is a set of heuristics, so a hit is a lead and not a
+verdict. To edit a Markdown cell of an executed notebook without touching its outputs, use
+`python dev/scripts/nb_md_replace.py`.
+
 ## Resources
 
 - **Paper**: Baker, Liu & Mishra-Sharma (2026), Sec. 6 documents the AI development process and failure modes
