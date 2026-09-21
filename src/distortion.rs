@@ -37,7 +37,7 @@ pub struct DistortionParams {
     pub residual: Vec<f64>,
 }
 
-/// Collect trapezoidal weights and indices for grid points within [x_min, x_max].
+/// Collects trapezoidal weights and indices for grid points within [x_min, x_max].
 ///
 /// Precondition: the supplied grid should extend beyond [x_min, x_max] on both
 /// sides. The half-weight rule at the ends keys off the *parent array's* edges,
@@ -378,7 +378,7 @@ pub fn decompose_nonlinear_be(
     }
 }
 
-/// Decompose a spectral distortion into μ, y, and temperature shift components.
+/// Decomposes a spectral distortion into μ, y, and temperature shift components.
 ///
 /// Default method: Bianchini & Fabbian (2022) nonlinear fit on the band
 /// [`DEFAULT_DECOMP_X_MIN`, `DEFAULT_DECOMP_X_MAX`] = [0.5, 18].
@@ -429,7 +429,7 @@ pub const FIRAS_MU_LIMIT: f64 = 9.0e-5;
 /// FIRAS 95% CL upper limit on |y| (same reference).
 pub const FIRAS_Y_LIMIT: f64 = 1.5e-5;
 
-/// Check distortion parameters against FIRAS limits.
+/// Checks distortion parameters against FIRAS limits.
 /// Returns (mu_fraction, y_fraction) as fraction of the FIRAS limit.
 pub fn firas_check(params: &DistortionParams) -> (f64, f64) {
     (
@@ -438,7 +438,7 @@ pub fn firas_check(params: &DistortionParams) -> (f64, f64) {
     )
 }
 
-/// Convert distortion Δn(x) to specific intensity ΔI_ν in MJy/sr.
+/// Converts distortion Δn(x) to specific intensity ΔI_ν in MJy/sr.
 ///
 /// ΔI_ν = (2hν³/c²) Δn(x), where ν = x k_B T_0 / h.
 pub fn delta_n_to_intensity_mjy(x: f64, delta_n: f64, t_cmb: f64) -> f64 {

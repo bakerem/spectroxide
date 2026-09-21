@@ -39,7 +39,7 @@ impl ElectronTemperature {
         self.rho_e * theta_z_val
     }
 
-    /// Set ρ_e from the full Compton-equilibrium form I₄/(4G₃).
+    /// Sets ρ_e from the full Compton-equilibrium form I₄/(4G₃).
     ///
     /// **Not used by the production solver.** The full form has ~0.1%
     /// numerical error from near-cancellation of the two integrals, which
@@ -75,7 +75,7 @@ mod tests {
     // test_theta_e_with_scaling removed: theta_e_with(θ_z) is defined as
     // rho_e * θ_z, so asserting (1.05 * θ_z).abs() < 1e-30 was tautological.
 
-    /// Verify ρ_eq = 1 exactly for any Bose-Einstein distribution.
+    /// Verifies ρ_eq = 1 exactly for any Bose-Einstein distribution.
     ///
     /// Analytic anchor: for n_BE(x, μ) = 1/(e^{x+μ}-1), n(1+n) = −dn/dx, so
     /// integrating by parts gives I₄ = ∫x⁴ n(1+n)dx = 4∫x³ n dx = 4G₃

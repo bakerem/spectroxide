@@ -52,7 +52,7 @@ pub struct SolverResult {
 }
 
 impl SolverResult {
-    /// Serialize to a JSON string (zero dependencies).
+    /// Serializes to a JSON string (zero dependencies).
     ///
     /// Output format matches the command-line interface convention used by the Python client:
     /// `{"results":[{"pde_mu":..., "pde_y":..., "drho":..., ...}], "diag_newton_exhausted":N}`
@@ -91,7 +91,7 @@ impl SolverResult {
         out
     }
 
-    /// Write CSV (frequency, delta_n) to a writer.
+    /// Writes CSV (frequency, delta_n) to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         let s = &self.snapshot;
         writeln!(
@@ -109,7 +109,7 @@ impl SolverResult {
         Ok(())
     }
 
-    /// Write a human-readable summary table to a writer.
+    /// Writes a human-readable summary table to a writer.
     pub fn write_table<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         let s = &self.snapshot;
         writeln!(w, "Solver Result")?;
@@ -158,7 +158,7 @@ pub struct SweepResult {
 }
 
 impl SweepResult {
-    /// Serialize to a JSON string.
+    /// Serializes to a JSON string.
     pub fn to_json(&self) -> String {
         let per_row = self.rows.first().map_or(4096, |r| {
             (r.x_grid.len() + r.snapshot.delta_n.len()) * 24 + 256
@@ -206,7 +206,7 @@ impl SweepResult {
         out
     }
 
-    /// Write CSV summary to a writer.
+    /// Writes CSV summary to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         for warning in &self.warnings {
             writeln!(w, "# WARNING: {warning}")?;
@@ -228,7 +228,7 @@ impl SweepResult {
         Ok(())
     }
 
-    /// Write a human-readable summary table to stderr-style output.
+    /// Writes a human-readable summary table to stderr-style output.
     pub fn write_table<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         writeln!(
             w,
@@ -281,7 +281,7 @@ pub struct PhotonSweepResult {
 }
 
 impl PhotonSweepResult {
-    /// Serialize to a JSON string.
+    /// Serializes to a JSON string.
     pub fn to_json(&self) -> String {
         let per_row = self.rows.first().map_or(4096, |r| {
             (r.x_grid.len() + r.snapshot.delta_n.len()) * 24 + 256
@@ -325,7 +325,7 @@ impl PhotonSweepResult {
         out
     }
 
-    /// Write CSV summary to a writer.
+    /// Writes CSV summary to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         for warning in &self.warnings {
             writeln!(w, "# WARNING: {warning}")?;
@@ -345,7 +345,7 @@ impl PhotonSweepResult {
         Ok(())
     }
 
-    /// Write a human-readable summary table.
+    /// Writes a human-readable summary table.
     pub fn write_table<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         writeln!(
             w,
@@ -391,7 +391,7 @@ pub struct PhotonSweepBatchResult {
 }
 
 impl PhotonSweepBatchResult {
-    /// Serialize to a JSON object containing per-x_inj results and aggregated warnings.
+    /// Serializes to a JSON object containing per-x_inj results and aggregated warnings.
     ///
     /// Pre-warnings format was a bare JSON array. With warnings we wrap into
     /// `{"results":[...], "warnings":[...]}`. Python wrappers tolerate both.
@@ -413,7 +413,7 @@ impl PhotonSweepBatchResult {
         out
     }
 
-    /// Write combined CSV summary to a writer.
+    /// Writes combined CSV summary to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         for warning in &self.warnings {
             writeln!(w, "# WARNING: {warning}")?;
@@ -436,7 +436,7 @@ impl PhotonSweepBatchResult {
         Ok(())
     }
 
-    /// Write a human-readable summary table.
+    /// Writes a human-readable summary table.
     pub fn write_table<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         writeln!(w, "Photon sweep batch: {} x_inj values", self.results.len())?;
         for r in &self.results {
@@ -467,7 +467,7 @@ pub struct GreensResult {
 }
 
 impl GreensResult {
-    /// Serialize to a JSON string.
+    /// Serializes to a JSON string.
     pub fn to_json(&self) -> String {
         let mut out = String::with_capacity(self.x_grid.len() * 30 + 256);
         use std::fmt::Write;
@@ -492,7 +492,7 @@ impl GreensResult {
         out
     }
 
-    /// Write CSV to a writer.
+    /// Writes CSV to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         writeln!(
             w,
@@ -509,7 +509,7 @@ impl GreensResult {
         Ok(())
     }
 
-    /// Write a human-readable summary.
+    /// Writes a human-readable summary.
     pub fn write_table<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
         writeln!(w, "Green's function result at z_h = {:.2e}:", self.z_h)?;
         writeln!(w, "  mu = {:.6e}", self.mu)?;
@@ -586,7 +586,7 @@ impl Serializable for GreensResult {
     }
 }
 
-/// Write a JSON-safe float: NaN and Inf become null (valid JSON).
+/// Writes a JSON-safe float: NaN and Inf become null (valid JSON).
 fn write_json_float(out: &mut String, val: f64, precision: usize) {
     use std::fmt::Write;
     if val.is_finite() {
@@ -614,7 +614,7 @@ fn write_json_array(out: &mut String, key: &str, arr: &[f64]) {
     out.push(']');
 }
 
-/// Write a JSON array of strings, escaping `"`, `\`, and control characters.
+/// Writes a JSON array of strings, escaping `"`, `\`, and control characters.
 fn write_json_string_array(out: &mut String, key: &str, arr: &[String]) {
     use std::fmt::Write;
     write!(out, "\"{key}\":[").unwrap();
@@ -650,7 +650,7 @@ pub enum OutputFormat {
 }
 
 impl OutputFormat {
-    /// Parse an output format from a string (`json`, `csv`, `table`).
+    /// Parses an output format from a string (`json`, `csv`, `table`).
     ///
     /// # Errors
     /// Returns `Err` if `s` is not exactly `json`, `csv`, or `table` (the match is
@@ -744,7 +744,7 @@ mod tests {
         }
     }
 
-    /// Count opening vs. closing braces/brackets in a JSON string, ignoring
+    /// Counts opening vs. closing braces/brackets in a JSON string, ignoring
     /// contents inside double-quoted strings. Used to catch the audit H7
     /// class of bug (`}}]}` emitting one too many closing braces) without
     /// taking a serde_json dev-dependency.

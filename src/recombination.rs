@@ -47,7 +47,7 @@ fn thermal_de_broglie(t: f64) -> f64 {
     (M_ELECTRON * K_BOLTZMANN * t / (2.0 * std::f64::consts::PI * HBAR * HBAR)).powf(1.5)
 }
 
-/// Solve the Saha quadratic X²/(1−X) = S for the ionized fraction X.
+/// Solves the Saha quadratic X²/(1−X) = S for the ionized fraction X.
 ///
 /// Handles extreme limits to avoid overflow/underflow. Used by the hydrogen
 /// Saha (where the self-ionization n_e = X·n_H is exact at z ≳ 1500 because
@@ -63,7 +63,7 @@ fn solve_saha_quadratic(s: f64) -> f64 {
     }
 }
 
-/// Solve the linear Saha X/(1−X) = S for the ionized fraction X.
+/// Solves the linear Saha X/(1−X) = S for the ionized fraction X.
 #[inline]
 fn solve_saha_linear(s: f64) -> f64 {
     if s > 1e15 {
@@ -250,7 +250,7 @@ fn peebles_c(z: f64, x_e: f64, cosmo: &Cosmology) -> f64 {
     if denom > 0.0 { rate_down / denom } else { 1.0 }
 }
 
-/// Evaluate the Peebles ODE RHS `dX_h/dz_up = C·α_B·n_H/[H·(1+z)] ·
+/// Evaluates the Peebles ODE RHS `dX_h/dz_up = C·α_B·n_H/[H·(1+z)] ·
 /// [X_h² − X_S²·(1−X_h)/(1−X_S)]` at the given (z, X_h).
 ///
 /// Here z_up is oriented so that positive `dz_up` corresponds to stepping
@@ -304,7 +304,7 @@ fn peebles_step(z_new: f64, x_h: f64, dz: f64, cosmo: &Cosmology) -> f64 {
     (x_h - 0.5 * dz * (k1 + k2)).clamp(1e-5, 1.0)
 }
 
-/// Find the redshift where the Saha hydrogen X_e first drops below 0.99.
+/// Finds the redshift where the Saha hydrogen X_e first drops below 0.99.
 ///
 /// This is where the Peebles correction becomes significant and we
 /// switch from the Saha equation to the TLA ODE.
@@ -399,7 +399,7 @@ pub struct RecombinationHistory {
 }
 
 impl RecombinationHistory {
-    /// Build the recombination history table for a given cosmology.
+    /// Builds the recombination history table for a given cosmology.
     ///
     /// Integrates the Peebles ODE from z_switch down to z=1 with dz=0.5,
     /// storing total X_e (H + He) at each step.
@@ -439,7 +439,7 @@ impl RecombinationHistory {
         }
     }
 
-    /// Look up X_e(z) using the cached table.
+    /// Looks up X_e(z) using the cached table.
     ///
     /// - z > 8000: fully ionized (Saha for He)
     /// - z_switch < z ≤ 8000: Saha for H + He (cheap, no table)
@@ -651,7 +651,7 @@ mod tests {
         );
     }
 
-    /// Compare X_e at key redshifts against RECFAST literature values.
+    /// Compares X_e at key redshifts against RECFAST literature values.
     ///
     /// Peebles 3-level atom with fudge factor F=1.125 (Chluba & Thomas 2011)
     /// agrees with RECFAST (Seager, Sasselov & Scott 1999) to ~1-5%.

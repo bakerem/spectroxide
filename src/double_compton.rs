@@ -82,7 +82,7 @@ pub fn dc_emission_coefficient(x: f64, theta_z: f64) -> f64 {
     dc_emission_coefficient_fast(x, dc_prefactor(theta_z))
 }
 
-/// Precompute the x-independent DC prefactor: (4α/3π) θ_z² × I₄^pl / (1 + 14.16 θ_z)
+/// Precomputes the x-independent DC prefactor: (4α/3π) θ_z² × I₄^pl / (1 + 14.16 θ_z)
 ///
 /// The only x-dependent part remaining is H_dc(x) = exp(-2x) × polynomial.
 pub fn dc_prefactor(theta_z: f64) -> f64 {
@@ -95,7 +95,7 @@ pub fn dc_emission_coefficient_fast(x: f64, dc_pre: f64) -> f64 {
     dc_pre * dc_high_freq_suppression(x)
 }
 
-/// Compute the DC contribution to the photon equation RHS (test-only).
+/// Computes the DC contribution to the photon equation RHS (test-only).
 ///
 /// Production code uses the coupled inplace solver with precomputed rates.
 ///
@@ -340,7 +340,7 @@ mod tests {
         }
     }
 
-    /// Verify K_DC has physically reasonable absolute magnitude.
+    /// Verifies K_DC has physically reasonable absolute magnitude.
     ///
     /// At θ_z = 4.60e-5 (z ~ 10^5), x = 1:
     ///   K_DC = (4α/3π) θ_z² I₄^pl H_dc(1) / (1 + 14.16 θ_z)
@@ -489,7 +489,7 @@ mod tests {
         );
     }
 
-    /// Verify H_dc polynomial coefficients match Chluba & Sunyaev (2012) Eq. 13.
+    /// Verifies H_dc polynomial coefficients match Chluba & Sunyaev (2012) Eq. 13.
     ///
     /// H_dc^pl(x) = exp(-2x) [1 + 3x/2 + 29x²/24 + 11x³/16 + 5x⁴/12]
     ///

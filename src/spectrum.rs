@@ -120,7 +120,7 @@ pub fn spectral_integral(n: i32, x_min: f64, x_max: f64, num_points: usize) -> f
     result
 }
 
-/// Compute the Compton equilibrium temperature ratio T_e^eq / T_z
+/// Computes the Compton equilibrium temperature ratio T_e^eq / T_z
 /// from the photon spectrum.
 ///
 /// T_e^eq = (I₄ / (4 G₃)) T_z where I₄ = ∫x⁴ n(1+n) dx, G₃ = ∫x³ n dx.
@@ -159,12 +159,12 @@ fn weighted_integral(x_grid: &[f64], delta_n: &[f64], power: i32, norm: f64) -> 
     integral / norm
 }
 
-/// Compute fractional energy in distortion: Δρ/ρ = ∫x³ Δn dx / G₃.
+/// Computes fractional energy in distortion: Δρ/ρ = ∫x³ Δn dx / G₃.
 pub fn delta_rho_over_rho(x_grid: &[f64], delta_n: &[f64]) -> f64 {
     weighted_integral(x_grid, delta_n, 3, G3_PLANCK)
 }
 
-/// Compute fractional photon number change: ΔN/N = ∫x² Δn dx / G₂.
+/// Computes fractional photon number change: ΔN/N = ∫x² Δn dx / G₂.
 pub fn delta_n_over_n(x_grid: &[f64], delta_n: &[f64]) -> f64 {
     weighted_integral(x_grid, delta_n, 2, G2_PLANCK)
 }

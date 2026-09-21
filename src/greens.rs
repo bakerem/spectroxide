@@ -108,7 +108,7 @@ pub fn visibility_j_t(z: f64) -> f64 {
     1.0 - visibility_j_bb_star(z)
 }
 
-/// Compute the Green's function G_th(x, z_h) for a delta-function energy injection
+/// Computes the Green's function G_th(x, z_h) for a delta-function energy injection
 /// at redshift z_h, observed at z = 0.
 ///
 /// The three-component decomposition from Chluba (2013), Eq. 6:
@@ -145,7 +145,7 @@ pub fn greens_function(x: f64, z_h: f64) -> f64 {
     mu_part + y_part + t_part
 }
 
-/// Compute the spectral distortion from an arbitrary energy release history.
+/// Computes the spectral distortion from an arbitrary energy release history.
 ///
 /// ΔI(x) = ∫ G_th(x, z') · d(Q/ρ_γ)/dz' dz'
 ///
@@ -212,7 +212,7 @@ where
     delta_n
 }
 
-/// Extract μ parameter from the Green's function approximation.
+/// Extracts μ parameter from the Green's function approximation.
 ///
 /// μ = (3/κ_c) ∫ J_bb*(z) · J_μ(z) · d(Δρ/ρ)/dz dz
 ///
@@ -225,7 +225,7 @@ where
     mu_y_from_heating(dq_dz, z_min, z_max, n_z).0
 }
 
-/// Extract y parameter from the Green's function approximation.
+/// Extracts y parameter from the Green's function approximation.
 ///
 /// y = (1/4) ∫ J_y(z) · d(Δρ/ρ)/dz dz
 ///
@@ -242,7 +242,7 @@ where
     mu_y_from_heating(dq_dz, z_min, z_max, n_z).1
 }
 
-/// Compute both μ and y from an arbitrary energy release history in a single pass.
+/// Computes both μ and y from an arbitrary energy release history in a single pass.
 ///
 /// This is more efficient than calling `mu_from_heating` and `y_from_heating`
 /// separately, as it evaluates the visibility functions only once per z-step.
@@ -364,7 +364,7 @@ pub fn photon_survival_probability_numerical(x: f64, z_h: f64, cosmo: &Cosmology
     tau_ff_survival(x, z_h, cosmo)
 }
 
-/// Compute P_s = exp(−τ_ff) from the integrated DC+BR absorption optical depth.
+/// Computes P_s = exp(−τ_ff) from the integrated DC+BR absorption optical depth.
 ///
 /// τ_ff(x, z_h) = ∫_{z_end}^{z_h} R(x,z) × dτ_Thomson/dz dz
 ///
@@ -487,7 +487,7 @@ fn beta_cs(x_inj: f64, yg: f64) -> f64 {
     1.0 / (1.0 + x_inj * yg * (1.0 - f_cs(x_inj)))
 }
 
-/// Compute the Compton-broadened photon bump and its energy integral f_int.
+/// Computes the Compton-broadened photon bump and its energy integral f_int.
 ///
 /// Returns (bump_value, f_int) where:
 /// - bump_value is the log-normal PDF at x_obs
@@ -671,7 +671,7 @@ pub fn greens_function_photon(
     smooth + surviving
 }
 
-/// Compute μ from monochromatic photon injection at frequency x_inj.
+/// Computes μ from monochromatic photon injection at frequency x_inj.
 ///
 /// μ = α_ρ × x_inj × (3/κ_c) × J*(z_h) × J_μ(z_h)
 ///     × [1 − P_s × x₀/x_inj] × ΔN/N
@@ -695,7 +695,7 @@ pub fn mu_from_photon_injection(x_inj: f64, z_h: f64, delta_n_over_n: f64) -> f6
     ALPHA_RHO * x_inj * (3.0 / KAPPA_C) * j_bb_star * j_mu * mu_factor * delta_n_over_n
 }
 
-/// Compute spectral distortion from an arbitrary photon injection history.
+/// Computes spectral distortion from an arbitrary photon injection history.
 ///
 /// ΔI(x) = ∫ G_ph(x, x_inj, z') × d(ΔN/N)/dz' dz'
 ///
@@ -1722,7 +1722,7 @@ mod tests {
         );
     }
 
-    /// Verify visibility function values at specific redshifts against
+    /// Verifies visibility function values at specific redshifts against
     /// hand-computed values from the fitting formulas.
     ///
     /// This catches mis-transcribed coefficients in the visibility functions.

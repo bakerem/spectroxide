@@ -21,7 +21,7 @@ use crate::cosmology::Cosmology;
 use crate::grid::RefinementZone;
 use crate::spectrum::planck;
 
-/// Compute vacuum survival fraction for decaying particle photon injection.
+/// Computes vacuum survival fraction for decaying particle photon injection.
 ///
 /// Returns exp(-Γ_X × t(z)), where t(z) is the cosmic time at redshift z.
 fn vacuum_survival(z: f64, gamma_x: f64, cosmo: &Cosmology) -> f64 {
@@ -217,7 +217,7 @@ pub enum InjectionScenario {
     Custom(Box<dyn Fn(f64, &Cosmology) -> f64 + Send + Sync>),
 }
 
-/// Interpolate a value from a table sorted ascending in z, using linear
+/// Interpolates a value from a table sorted ascending in z, using linear
 /// interpolation in log(z). Returns 0 outside the table bounds.
 fn interp_log_z(z: f64, z_table: &[f64], val_table: &[f64]) -> f64 {
     if z_table.is_empty() || z < z_table[0] || z > z_table[z_table.len() - 1] {
@@ -302,7 +302,7 @@ fn interp_2d(z: f64, x: f64, z_table: &[f64], x_grid: &[f64], source_2d: &[Vec<f
     (1.0 - tz) * ((1.0 - tx) * f00 + tx * f01) + tz * ((1.0 - tx) * f10 + tx * f11)
 }
 
-/// Load a tabulated heating rate from a CSV file.
+/// Loads a tabulated heating rate from a CSV file.
 ///
 /// File format: one header line (`z,dq_dz`), then data rows.
 /// The z column must be positive. Data is sorted ascending by z.
@@ -370,7 +370,7 @@ pub fn load_heating_table(path: &str) -> Result<InjectionScenario, String> {
     })
 }
 
-/// Load a tabulated photon source from a CSV file.
+/// Loads a tabulated photon source from a CSV file.
 ///
 /// File format:
 ///   Header: `z,x1,x2,...,xN`
@@ -478,7 +478,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Validate parameters, returning an error message if invalid.
+    /// Validates parameters, returning an error message if invalid.
     pub fn validate(&self) -> Result<(), String> {
         match self {
             InjectionScenario::SingleBurst {
@@ -780,7 +780,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Compute the heating rate d(Δρ_γ/ρ_γ)/dt at redshift z.
+    /// Computes the heating rate d(Δρ_γ/ρ_γ)/dt at redshift z.
     ///
     /// Returns the rate in units of [1/s].
     pub fn heating_rate(&self, z: f64, cosmo: &Cosmology) -> f64 {
@@ -978,7 +978,7 @@ impl InjectionScenario {
         )
     }
 
-    /// Return refinement zones for adaptive grid resolution near injection features.
+    /// Returns refinement zones for adaptive grid resolution near injection features.
     ///
     /// Photon injection scenarios need extra grid points near the injection
     /// frequency to resolve the narrow Gaussian source profile and the
@@ -1015,7 +1015,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Return the characteristic injection redshift(s) for this scenario.
+    /// Returns the characteristic injection redshift(s) for this scenario.
     ///
     /// For burst-like scenarios, returns `Some((z_center, z_upper))` where
     /// `z_upper` is the highest redshift at which injection is active
@@ -1167,7 +1167,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Check for strong distortion regime and return warnings.
+    /// Checks for strong distortion regime and return warnings.
     ///
     /// The Kompaneets equation solver uses a linearized perturbation approach
     /// (Δn = n - n_pl) that breaks down for |Δρ/ρ| > ~0.01. Returns a
@@ -1213,7 +1213,7 @@ impl InjectionScenario {
         warnings
     }
 
-    /// Warn when the dark-photon NWA resonance falls outside the validated
+    /// Warns when the dark-photon NWA resonance falls outside the validated
     /// redshift range (roughly z ∈ [50, 3×10⁶] per CLAUDE.md).
     ///
     /// Returns a list of warnings: one when no resonance exists in the
@@ -1254,7 +1254,7 @@ impl InjectionScenario {
         warnings
     }
 
-    /// Warn when the axion NWA resonance falls outside the validated redshift
+    /// Warns when the axion NWA resonance falls outside the validated redshift
     /// range. Mirrors [`Self::warn_dark_photon_range`].
     ///
     /// Without the `axion` feature this always returns an empty `Vec`, so the
@@ -1264,7 +1264,7 @@ impl InjectionScenario {
         Vec::new()
     }
 
-    /// Warn when the axion NWA resonance falls outside the validated redshift
+    /// Warns when the axion NWA resonance falls outside the validated redshift
     /// range. Mirrors [`Self::warn_dark_photon_range`].
     #[cfg(feature = "axion")]
     pub fn warn_axion_range(&self, cosmo: &Cosmology) -> Vec<String> {
@@ -1311,7 +1311,7 @@ impl InjectionScenario {
         warnings
     }
 
-    /// Warn when a tabulated-source table doesn't cover the solver's
+    /// Warns when a tabulated-source table doesn't cover the solver's
     /// integration range `[z_end, z_start]`.
     ///
     /// `interp_log_z` / `interp_2d` return 0.0 outside the table — a silent
@@ -1350,7 +1350,7 @@ impl InjectionScenario {
         warnings
     }
 
-    /// Warn if stimulated emission (Bose enhancement) is missing for photon decay.
+    /// Warns if stimulated emission (Bose enhancement) is missing for photon decay.
     ///
     /// `DecayingParticlePhoton` uses the vacuum decay rate only. For the
     /// canonical X → γγ channel, the physical rate carries a factor
@@ -1374,7 +1374,7 @@ impl InjectionScenario {
         warnings
     }
 
-    /// Compute the physical d(Δρ/ρ)/dz.
+    /// Computes the physical d(Δρ/ρ)/dz.
     ///
     /// **Sign convention**: For positive energy injection (heating_rate > 0),
     /// this returns a NEGATIVE value because energy enters as z decreases

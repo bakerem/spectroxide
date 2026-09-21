@@ -75,7 +75,7 @@ pub struct SolverConfig {
 }
 
 impl SolverConfig {
-    /// Validate solver configuration parameters.
+    /// Validates solver configuration parameters.
     ///
     /// Returns `Err` with a descriptive message if any parameter would cause
     /// the solver to fail or produce meaningless results.
@@ -132,7 +132,7 @@ impl SolverConfig {
         Ok(())
     }
 
-    /// Collect non-fatal validation warnings (e.g. regimes where the
+    /// Collects non-fatal validation warnings (e.g. regimes where the
     /// Kompaneets Fokker-Planck approximation begins to show O(θ_e²)
     /// corrections but is not outright invalid).
     pub(crate) fn soft_warnings(&self) -> Vec<String> {
@@ -407,7 +407,7 @@ pub struct ThermalizationSolver {
     rho_e_ode_cache: Option<RhoECache>,
 }
 
-/// Compute DC+BR heating integral and optionally its analytic derivative
+/// Computes DC+BR heating integral and optionally its analytic derivative
 /// dH/dρ_e in a single pass over the frequency grid.
 ///
 /// The derivative differentiates the integrand B·(K_DC + K_BR) at fixed Δn,
@@ -527,7 +527,7 @@ fn dcbr_heating_with_derivative(
 }
 
 impl ThermalizationSolver {
-    /// Construct a solver with the given cosmology and frequency grid.
+    /// Constructs a solver with the given cosmology and frequency grid.
     ///
     /// All other state (solver config, injection, flags) is set to defaults;
     /// mutate the public fields or call [`Self::set_injection`] /
@@ -641,7 +641,7 @@ impl ThermalizationSolver {
         }
     }
 
-    /// Attach an energy-injection scenario, validating it first.
+    /// Attaches an energy-injection scenario, validating it first.
     ///
     /// Returns `Err` if the scenario parameters are unphysical (e.g. negative
     /// widths, impossible masses). Collects stimulated-emission warnings into
@@ -689,14 +689,14 @@ impl ThermalizationSolver {
         Ok(())
     }
 
-    /// Replace the solver configuration and reset the current redshift to
+    /// Replaces the solver configuration and reset the current redshift to
     /// the new `z_start`.
     pub fn set_config(&mut self, config: SolverConfig) {
         self.z = config.z_start;
         self.config = config;
     }
 
-    /// Set an initial photon perturbation Δn(x) for the next PDE run.
+    /// Sets an initial photon perturbation Δn(x) for the next PDE run.
     ///
     /// This replaces the default Δn = 0 initialization in `run_with_snapshots`.
     /// The perturbation is consumed (taken) on the next call to `run_with_snapshots`.
@@ -722,7 +722,7 @@ impl ThermalizationSolver {
         self.initial_delta_n = Some(delta_n);
     }
 
-    /// Reset solver state for reuse, keeping grid and recombination cache.
+    /// Resets solver state for reuse, keeping grid and recombination cache.
     ///
     /// Restores all configuration flags to their defaults: a reset solver
     /// behaves identically to a freshly constructed one (aside from the
@@ -844,7 +844,7 @@ impl ThermalizationSolver {
         dz.max(self.config.dz_min).min(self.z * 0.05)
     }
 
-    /// Update ρ_e from distortion feedback + injection.
+    /// Updates ρ_e from distortion feedback + injection.
     ///
     /// Two modes selected automatically by distortion amplitude:
     /// - **Small Δn** (|ΔG₃/G₃| ≤ 0.1): Perturbative Δρ_eq = ΔI₄/(4G₃) - ΔG₃/G₃.
@@ -1067,7 +1067,7 @@ impl ThermalizationSolver {
         (x_e, t_c, theta_z_val, max_dn, dtau, hubble)
     }
 
-    /// Subtract the temperature shift component from Δn to enforce
+    /// Subtracts the temperature shift component from Δn to enforce
     /// photon number conservation: ∫x² Δn dx = 0.
     ///
     /// DC/BR creates photons at low x that accumulate as a temperature
@@ -1106,7 +1106,7 @@ impl ThermalizationSolver {
         delta_t
     }
 
-    /// Advance the solver by a single adaptively-chosen timestep.
+    /// Advances the solver by a single adaptively-chosen timestep.
     ///
     /// Returns the `dz` taken. Most users should call [`Self::run`] or
     /// [`Self::run_with_snapshots`] instead of stepping manually.
@@ -1115,7 +1115,7 @@ impl ThermalizationSolver {
         self.step_with_dz(dz)
     }
 
-    /// Take a single timestep with a specified dz (instead of the adaptive choice).
+    /// Takes a single timestep with a specified dz (instead of the adaptive choice).
     /// Used by `run_with_snapshots` to land exactly on requested snapshot redshifts.
     fn step_with_dz(&mut self, dz: f64) -> f64 {
         let z_new = (self.z - dz).max(self.config.z_end);
@@ -1480,7 +1480,7 @@ impl ThermalizationSolver {
         actual_dz
     }
 
-    /// Integrate from `z_start` to `z_end`, recording a snapshot at each
+    /// Integrates from `z_start` to `z_end`, recording a snapshot at each
     /// requested redshift.
     ///
     /// `snapshot_redshifts` may be given in any order; they are sorted
@@ -1652,7 +1652,7 @@ impl ThermalizationSolver {
         &self.snapshots
     }
 
-    /// Run the solver with `n_snapshots` log-spaced snapshot redshifts between
+    /// Runs the solver with `n_snapshots` log-spaced snapshot redshifts between
     /// z_start and z_end. Note: with `n_snapshots=1` the single snapshot is at
     /// z_start (the first log-spaced point), not z_end.
     pub fn run(&mut self, n_snapshots: usize) -> &[SolverSnapshot] {
@@ -1668,7 +1668,7 @@ impl ThermalizationSolver {
         self.save_snapshot_at(self.z);
     }
 
-    /// Save a snapshot with a specific redshift label.
+    /// Saves a snapshot with a specific redshift label.
     /// The solver state (delta_n, rho_e, etc.) is taken from the current state,
     /// but the snapshot's z field is set to the requested value.
     fn save_snapshot_at(&mut self, z: f64) {
@@ -1708,7 +1708,7 @@ impl ThermalizationSolver {
         });
     }
 
-    /// Extract `(μ, y)` from the current `Δn(x)` via the default joint
+    /// Extracts `(μ, y)` from the current `Δn(x)` via the default joint
     /// least-squares decomposition (B&F 2022 nonlinear BE; see
     /// [`crate::distortion::decompose_distortion`]).
     pub fn extract_mu_y_joint(&self) -> (f64, f64) {
@@ -1716,7 +1716,7 @@ impl ThermalizationSolver {
         (params.mu, params.y)
     }
 
-    /// Run the solver and return an owned [`crate::output::SolverResult`]
+    /// Runs the solver and return an owned [`crate::output::SolverResult`]
     /// with a single snapshot at `z_obs`.
     ///
     /// This is the preferred entry point: the result does not borrow the
@@ -1740,7 +1740,7 @@ impl ThermalizationSolver {
         }
     }
 
-    /// Create a builder for configuring a solver with a fluent API.
+    /// Creates a builder for configuring a solver with a fluent API.
     ///
     /// # Example
     /// ```rust,no_run
@@ -1804,32 +1804,32 @@ impl SolverBuilder {
         }
     }
 
-    /// Set the frequency grid configuration.
+    /// Sets the frequency grid configuration.
     pub fn grid(mut self, config: GridConfig) -> Self {
         self.grid_config = config;
         self
     }
 
-    /// Use the fast (500-point) grid for quick tests.
+    /// Uses the fast (500-point) grid for quick tests.
     pub fn grid_fast(mut self) -> Self {
         self.grid_config = GridConfig::fast();
         self
     }
 
-    /// Set the energy injection scenario.
+    /// Sets the energy injection scenario.
     pub fn injection(mut self, scenario: InjectionScenario) -> Self {
         self.injection = Some(scenario);
         self
     }
 
-    /// Set the redshift range (z_start, z_end).
+    /// Sets the redshift range (z_start, z_end).
     pub fn z_range(mut self, z_start: f64, z_end: f64) -> Self {
         self.z_start = Some(z_start);
         self.z_end = Some(z_end);
         self
     }
 
-    /// Set a complete solver config, overriding individual z/dy/dtau settings.
+    /// Sets a complete solver config, overriding individual z/dy/dtau settings.
     pub fn solver_config(mut self, config: SolverConfig) -> Self {
         self.z_start = Some(config.z_start);
         self.z_end = Some(config.z_end);
@@ -1843,44 +1843,44 @@ impl SolverBuilder {
         self
     }
 
-    /// Set the maximum Compton y-parameter increment per step, Δy_C = θ_e Δτ (the
+    /// Sets the maximum Compton y-parameter increment per step, Δy_C = θ_e Δτ (the
     /// Kompaneets-accuracy limiter is `dtau_max`, not this).
     pub fn dy_max(mut self, val: f64) -> Self {
         self.dy_max = Some(val);
         self
     }
 
-    /// Set the maximum Compton optical depth per step.
+    /// Sets the maximum Compton optical depth per step.
     pub fn dtau_max(mut self, val: f64) -> Self {
         self.dtau_max = Some(val);
         self
     }
 
-    /// Disable DC/BR processes (Kompaneets only).
+    /// Disables DC/BR processes (Kompaneets only).
     pub fn disable_dcbr(mut self) -> Self {
         self.disable_dcbr = true;
         self
     }
 
-    /// Use operator-split DC/BR instead of coupled IMEX.
+    /// Uses operator-split DC/BR instead of coupled IMEX.
     pub fn split_dcbr(mut self) -> Self {
         self.coupled_dcbr = false;
         self
     }
 
-    /// Disable number-conserving T-shift subtraction.
+    /// Disables number-conserving T-shift subtraction.
     pub fn no_number_conserving(mut self) -> Self {
         self.number_conserving = false;
         self
     }
 
-    /// Set the maximum number of Newton iterations per Kompaneets step.
+    /// Sets the maximum number of Newton iterations per Kompaneets step.
     pub fn max_newton_iter(mut self, val: usize) -> Self {
         self.max_newton_iter = Some(val);
         self
     }
 
-    /// Build the configured solver.
+    /// Builds the configured solver.
     ///
     /// Validates all configuration (cosmology, grid, solver config, injection)
     /// before constructing the solver. Returns `Err` with a descriptive message

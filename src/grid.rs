@@ -77,7 +77,7 @@ impl GridConfig {
         }
     }
 
-    /// Validate grid configuration parameters.
+    /// Validates grid configuration parameters.
     ///
     /// Returns `Err` with a descriptive message if any parameter would cause
     /// numerical failure or produce meaningless results.
@@ -157,7 +157,7 @@ pub struct FrequencyGrid {
 }
 
 impl FrequencyGrid {
-    /// Build a FrequencyGrid from a sorted vector of grid points.
+    /// Builds a FrequencyGrid from a sorted vector of grid points.
     ///
     /// # Panics
     /// Panics if `x` has fewer than 2 elements.
@@ -180,7 +180,7 @@ impl FrequencyGrid {
         }
     }
 
-    /// Create a frequency grid from configuration.
+    /// Creates a frequency grid from configuration.
     ///
     /// Uses logarithmic spacing for x < x_transition and linear spacing above,
     /// with a smooth blending zone around x_transition. The blending uses a
@@ -305,7 +305,7 @@ impl FrequencyGrid {
         Self::from_points(x)
     }
 
-    /// Create a purely logarithmic grid (useful for testing).
+    /// Creates a purely logarithmic grid (useful for testing).
     ///
     /// # Panics
     /// Panics if `n < 2`.
@@ -319,7 +319,7 @@ impl FrequencyGrid {
         Self::from_points(x)
     }
 
-    /// Create a uniform grid (useful for testing).
+    /// Creates a uniform grid (useful for testing).
     ///
     /// # Panics
     /// Panics if `n < 2`.
@@ -331,7 +331,7 @@ impl FrequencyGrid {
         Self::from_points(x)
     }
 
-    /// Find the index of the grid point closest to a given x value.
+    /// Finds the index of the grid point closest to a given x value.
     pub fn find_index(&self, x_target: f64) -> usize {
         match self.x.binary_search_by(|a| a.total_cmp(&x_target)) {
             Ok(i) => i,

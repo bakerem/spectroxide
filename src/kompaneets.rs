@@ -24,7 +24,7 @@
 use crate::grid::FrequencyGrid;
 use crate::spectrum::planck;
 
-/// Compute the Kompaneets operator applied to Δn on the grid (test-only).
+/// Computes the Kompaneets operator applied to Δn on the grid (test-only).
 ///
 /// Returns dΔn/dτ|_C at each grid point. Production code uses the
 /// coupled inplace solver instead.
@@ -86,7 +86,7 @@ pub fn kompaneets_rhs(
     rhs
 }
 
-/// Build tridiagonal matrix coefficients for the linearized Kompaneets equation (test-only).
+/// Builds tridiagonal matrix coefficients for the linearized Kompaneets equation (test-only).
 ///
 /// Production code uses the coupled inplace solver instead.
 #[cfg(test)]
@@ -174,7 +174,7 @@ pub fn kompaneets_tridiagonal(
     (lower, diag, upper, source)
 }
 
-/// Solve a tridiagonal system Ax = d using the Thomas algorithm.
+/// Solves a tridiagonal system Ax = d using the Thomas algorithm.
 ///
 /// A is given by (lower, diag, upper) vectors.
 /// Modifies `rhs` in place to contain the solution.
@@ -229,7 +229,7 @@ pub fn thomas_solve_inplace(
     }
 }
 
-/// Factorize once, solve two right-hand sides against the SAME tridiagonal
+/// Factorizes once, solve two right-hand sides against the SAME tridiagonal
 /// matrix.
 ///
 /// The bordered Newton solve needs `T·u = r` and `T·v = c` with identical `T`.
@@ -301,7 +301,7 @@ pub fn thomas_solve2_inplace(
     }
 }
 
-/// Solve a tridiagonal system (allocating version for tests/convenience).
+/// Solves a tridiagonal system (allocating version for tests/convenience).
 pub fn thomas_solve(lower: &[f64], diag: &[f64], upper: &[f64], rhs: &mut [f64]) -> Vec<f64> {
     let n = diag.len();
     let mut work = vec![0.0; n];
@@ -310,7 +310,7 @@ pub fn thomas_solve(lower: &[f64], diag: &[f64], upper: &[f64], rhs: &mut [f64])
     result
 }
 
-/// Perform one Crank-Nicolson step of the linearized Kompaneets equation (test-only).
+/// Performs one Crank-Nicolson step of the linearized Kompaneets equation (test-only).
 ///
 /// Production code uses the nonlinear coupled inplace solver instead.
 #[cfg(test)]
@@ -357,7 +357,7 @@ pub fn kompaneets_step(
     thomas_solve(&lhs_lower, &lhs_diag, &lhs_upper, &mut rhs)
 }
 
-/// Perform one implicit step of the NONLINEAR Kompaneets equation on Δn.
+/// Performs one implicit step of the NONLINEAR Kompaneets equation on Δn.
 ///
 /// Allocating convenience wrapper around the inplace solver. Used by tests;
 /// production code calls `kompaneets_step_coupled_inplace` directly.
@@ -455,7 +455,7 @@ pub struct RhoECoupling {
 }
 
 impl KompaneetsWorkspace {
-    /// Create workspace for a given frequency grid. Call once in solver construction.
+    /// Creates workspace for a given frequency grid. Call once in solver construction.
     pub fn new(grid: &FrequencyGrid) -> Self {
         let ng = grid.n;
         let n_half = ng - 1;
@@ -1713,7 +1713,7 @@ mod tests {
         );
     }
 
-    /// Verify that a small temperature perturbation produces a Y_SZ spectral shape.
+    /// Verifies that a small temperature perturbation produces a Y_SZ spectral shape.
     ///
     /// For T_e slightly > T_z, the Kompaneets equation produces Δn ∝ Y_SZ(x).
     /// This is the defining property of the y-distortion. The Pearson correlation

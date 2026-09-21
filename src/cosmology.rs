@@ -39,7 +39,7 @@ pub struct Cosmology {
 }
 
 impl Cosmology {
-    /// Validate cosmological parameters.
+    /// Validates cosmological parameters.
     ///
     /// Returns `Err` with a descriptive message if any parameter is
     /// non-physical or would cause numerical failure.
@@ -81,7 +81,7 @@ impl Cosmology {
         Ok(())
     }
 
-    /// Construct a Cosmology from dimensionless parameters, validating the inputs.
+    /// Constructs a Cosmology from dimensionless parameters, validating the inputs.
     ///
     /// Returns `Err` if any parameter is non-finite, negative where physical
     /// positivity is required, or outside the supported range.
@@ -119,7 +119,7 @@ impl Cosmology {
         ))
     }
 
-    /// Construct a Cosmology without validation.
+    /// Constructs a Cosmology without validation.
     ///
     /// Escape hatch for hardcoded presets and test fixtures where the inputs
     /// are known a priori to be valid. Using non-finite or zero `h` / `y_p`

@@ -91,7 +91,8 @@ BRITISH_FIXED_RE = re.compile(
 
 # First words that mark an imperative Rust summary (rule A2).
 IMPERATIVE_VERBS = set("""
-    accumulate add advance allocate append apply assemble assert bisect build cache
+    accumulate add advance allocate append apply assemble assert attach bisect build cache
+    compare deduplicate factorize reject
     calculate call check choose clamp clear clip collect combine compute configure
     construct convert copy count create decode decompose define derive detect determine
     disable dispatch drop dump emit enable encode ensure estimate evaluate evolve execute

@@ -294,7 +294,7 @@ fn gaunt_from_expc(expc: f64, ea: f64) -> f64 {
     }
 }
 
-/// Precompute x-independent BR factors.
+/// Precomputes x-independent BR factors.
 ///
 /// # Arguments
 /// * `theta_e` - electron temperature kT_e/(m_e c²)
@@ -444,7 +444,7 @@ pub fn br_emission_coefficient_fast_preln(x: f64, ln_x: f64, pre: &BrPrecomputed
 // excluded `heat_injection` suite. Mirrors the earlier `dc_heating_integral`
 // removal (F-R2-1). See dev/audit/mutation_audit.md.
 
-/// Compute the BR contribution to the photon equation RHS (test-only).
+/// Computes the BR contribution to the photon equation RHS (test-only).
 ///
 /// Production code uses the coupled inplace solver with precomputed rates.
 ///
@@ -691,7 +691,7 @@ mod tests {
         );
     }
 
-    /// Verify all BR fast variants (fast, fast_preln, with_he) match the reference
+    /// Verifies all BR fast variants (fast, fast_preln, with_he) match the reference
     /// br_emission_coefficient to machine precision across multiple parameter combos.
     /// Consolidates: test_br_precompute_and_fast_consistency, test_br_with_he_matches_standard,
     /// test_br_emission_fast_matches_full, test_br_emission_fast_preln_matches.
@@ -883,7 +883,7 @@ mod tests {
         );
     }
 
-    /// Verify K_BR has physically reasonable absolute magnitude at z=10^5.
+    /// Verifies K_BR has physically reasonable absolute magnitude at z=10^5.
     ///
     /// The historical /n_e bug made K_BR ~ 10^11 instead of O(1)–O(10^3).
     /// This test catches that class of error by computing K_BR from first

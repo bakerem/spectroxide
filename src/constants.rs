@@ -251,7 +251,7 @@ mod tests {
         assert!((F_HE - 0.07895).abs() < 0.001);
     }
 
-    /// Verify κ_c against the analytical formula and a numerical quadrature.
+    /// Verifies κ_c against the analytical formula and a numerical quadrature.
     ///
     /// κ_c = 12/β_μ − 9G₂/G₃ ≈ 2.1419
     ///

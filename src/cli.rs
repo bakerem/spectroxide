@@ -361,7 +361,7 @@ fn edit_distance(a: &str, b: &str) -> usize {
     prev[b.len()]
 }
 
-/// Reject any parsed `--flag` that no group of `allowed` contains.
+/// Rejects any parsed `--flag` that no group of `allowed` contains.
 ///
 /// This is what turns a typo (`--z-injctions`) into an error instead of a
 /// silently ignored flag and a plausible-looking wrong result.
@@ -411,7 +411,7 @@ fn validate_known_flags(
     ))
 }
 
-/// Parse CLI arguments into a Command.
+/// Parses CLI arguments into a Command.
 ///
 /// # Errors
 /// Returns `Err` with a message for the user if the first argument is not a known
@@ -632,7 +632,7 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
     }
 }
 
-/// Parse flat --key value args into a HashMap (shared by all subcommands and legacy mode).
+/// Parses flat --key value args into a HashMap (shared by all subcommands and legacy mode).
 pub fn parse_flat_args(args: &[String]) -> HashMap<String, String> {
     let mut map = HashMap::new();
     let mut i = 0;
@@ -719,7 +719,7 @@ fn parse_solver_opts(map: &HashMap<String, String>) -> Result<SolverOpts, String
     })
 }
 
-/// Parse an optional float CLI argument, returning a clear error on invalid values.
+/// Parses an optional float CLI argument, returning a clear error on invalid values.
 fn parse_optional_f64(map: &HashMap<String, String>, key: &str) -> Result<Option<f64>, String> {
     match map.get(key) {
         Some(s) => s
@@ -761,7 +761,7 @@ fn parse_output_opts(map: &HashMap<String, String>) -> Result<OutputOpts, String
     })
 }
 
-/// Build a Cosmology from CosmoOpts.
+/// Builds a Cosmology from CosmoOpts.
 ///
 /// The preset (`default` if `opts.preset` is `None`) supplies every parameter, and each
 /// individual field of `opts` that is `Some` then overrides it. An `h` override without
@@ -843,7 +843,7 @@ pub fn build_cosmology(opts: &CosmoOpts) -> Result<crate::cosmology::Cosmology, 
     )
 }
 
-/// Print the general help overview to stdout.
+/// Prints the general help overview to stdout.
 ///
 /// Explicitly requested help is program output, so it goes to stdout
 /// (`spectroxide help > usage.txt` must capture it); runtime diagnostics
@@ -925,7 +925,7 @@ fn print_output_options_help() {
     println!("  --output <path>       Write to file instead of stdout");
 }
 
-/// Print detailed help for one subcommand to stdout.
+/// Prints detailed help for one subcommand to stdout.
 pub fn print_subcommand_help(subcommand: &str) {
     match subcommand {
         "solve" => {
@@ -1065,7 +1065,7 @@ pub fn print_subcommand_help(subcommand: &str) {
     }
 }
 
-/// Print cosmology info.
+/// Prints cosmology info.
 ///
 /// # Errors
 /// Returns `Err` if `opts.cosmology` is not a known preset name (see [`build_cosmology`]).
@@ -1093,7 +1093,7 @@ pub fn print_info(opts: &InfoOpts) -> Result<(), String> {
     Ok(())
 }
 
-/// Build an InjectionScenario from CLI arguments.
+/// Builds an InjectionScenario from CLI arguments.
 ///
 /// Returns `Err` for unknown injection types or missing/invalid parameters.
 pub fn build_injection_scenario(
@@ -1212,7 +1212,7 @@ pub fn build_injection_scenario(
     }
 }
 
-/// Execute a Green's function calculation. Returns result without doing I/O.
+/// Executes a Green's function calculation. Returns result without doing I/O.
 ///
 /// # Errors
 /// Never returns `Err` at present. The `Result` type matches the other `execute_*`
@@ -1278,7 +1278,7 @@ fn greens_regime_warnings(z_h: f64) -> Vec<String> {
     warnings
 }
 
-/// Build a GridConfig from CLI options.
+/// Builds a GridConfig from CLI options.
 ///
 /// If `production_grid` is set, uses `GridConfig::production()` as the base.
 /// If `n_grid > 0`, overrides `n_points`. Otherwise uses the base defaults.
@@ -1302,7 +1302,7 @@ fn build_grid_config(n_grid: usize, production_grid: bool) -> GridConfig {
     }
 }
 
-/// Build a SolverConfig from CLI solver options with the given z_start.
+/// Builds a SolverConfig from CLI solver options with the given z_start.
 fn build_solver_config(solver_opts: &SolverOpts, z_start: f64, z_end: f64) -> SolverConfig {
     let effective_dy = solver_opts.dy_max.unwrap_or(SolverConfig::default().dy_max);
     let effective_dtau = solver_opts.dtau_max.unwrap_or(10.0);
@@ -1320,7 +1320,7 @@ fn build_solver_config(solver_opts: &SolverOpts, z_start: f64, z_end: f64) -> So
     }
 }
 
-/// Extract a human-readable message from a thread panic payload.
+/// Extracts a human-readable message from a thread panic payload.
 fn extract_panic_message(payload: &(dyn std::any::Any + Send)) -> String {
     payload
         .downcast_ref::<String>()
@@ -1330,7 +1330,7 @@ fn extract_panic_message(payload: &(dyn std::any::Any + Send)) -> String {
         .to_string()
 }
 
-/// Generate the default log-spaced redshift array for photon sweep (150 points from 1e3 to 5e6).
+/// Generates the default log-spaced redshift array for photon sweep (150 points from 1e3 to 5e6).
 fn default_photon_sweep_redshifts() -> Vec<f64> {
     let n = 150;
     (0..n)
@@ -1342,7 +1342,7 @@ fn default_photon_sweep_redshifts() -> Vec<f64> {
         .collect()
 }
 
-/// Deduplicate a `Vec<String>` while preserving first-occurrence order.
+/// Deduplicates a `Vec<String>` while preserving first-occurrence order.
 /// Used to compress repeated per-worker warnings (e.g. one identical
 /// "z_start in O(theta_e^2) regime" message per sweep redshift) into
 /// a single user-facing line.
@@ -1390,7 +1390,7 @@ fn diagnostic_flag_warnings(solver_opts: &SolverOpts) -> Vec<String> {
     out
 }
 
-/// Apply common solver flags from CLI options to a solver instance.
+/// Applies common solver flags from CLI options to a solver instance.
 fn apply_solver_flags(solver: &mut ThermalizationSolver, solver_opts: &SolverOpts) {
     solver.disable_dcbr = solver_opts.disable_dcbr;
     solver.number_conserving = solver_opts.number_conserving;
@@ -1409,7 +1409,7 @@ fn apply_solver_flags(solver: &mut ThermalizationSolver, solver_opts: &SolverOpt
     }
 }
 
-/// Validate a (config, grid, injection) combination the same way
+/// Validates a (config, grid, injection) combination the same way
 /// `SolverBuilder::build` does, returning the soft warnings that should
 /// surface to the user. Hard errors are propagated as `Err`.
 ///
@@ -1459,7 +1459,7 @@ fn validate_and_collect_warnings(
     Ok(warnings)
 }
 
-/// Execute a single PDE solve. Returns result without doing I/O.
+/// Executes a single PDE solve. Returns result without doing I/O.
 ///
 /// # Errors
 /// Returns `Err` if the cosmology options are invalid (see [`build_cosmology`]); if
@@ -1582,7 +1582,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     Ok(result)
 }
 
-/// Run `worker` over `items` on `n_threads` long-lived scoped threads pulling
+/// Runs `worker` over `items` on `n_threads` long-lived scoped threads pulling
 /// from a shared atomic work queue.
 ///
 /// Replaces the former `chunks(n_threads)` + per-chunk barrier scheme: per-item
@@ -1653,7 +1653,7 @@ where
         .collect()
 }
 
-/// Execute a sweep over multiple injection redshifts. Returns result without doing I/O.
+/// Executes a sweep over multiple injection redshifts. Returns result without doing I/O.
 ///
 /// # Errors
 /// Returns `Err` if the cosmology options are invalid (see [`build_cosmology`]), if
@@ -1756,7 +1756,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
     })
 }
 
-/// Execute a photon injection sweep over multiple injection redshifts at a fixed x_inj.
+/// Executes a photon injection sweep over multiple injection redshifts at a fixed x_inj.
 /// Returns result without doing I/O.
 ///
 /// # Errors
@@ -1875,7 +1875,7 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
     })
 }
 
-/// Execute a batch photon injection sweep over multiple x_inj values.
+/// Executes a batch photon injection sweep over multiple x_inj values.
 ///
 /// Flattens all (x_inj, z_h) pairs into a single thread pool, avoiding
 /// the overhead of spawning separate Rust processes per x_inj.

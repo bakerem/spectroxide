@@ -86,7 +86,7 @@ fn run_command(command: cli::Command) -> Result<(), String> {
     }
 }
 
-/// Get the output writer: file if --output specified, stdout otherwise.
+/// Gets the output writer: file if --output specified, stdout otherwise.
 fn output_writer(opts: &cli::OutputOpts) -> Result<Box<dyn Write>, String> {
     if let Some(ref path) = opts.output_path {
         let f = std::fs::File::create(path)
@@ -97,7 +97,7 @@ fn output_writer(opts: &cli::OutputOpts) -> Result<Box<dyn Write>, String> {
     }
 }
 
-/// Write any result type to the configured output destination and format.
+/// Writes any result type to the configured output destination and format.
 fn write_output(result: &dyn Serializable, opts: &cli::OutputOpts) -> Result<(), String> {
     let map_io = |e: std::io::Error| format!("Write error: {e}");
     match opts.format {
