@@ -17,8 +17,9 @@ A fresh session resumes from the first unchecked box below.
 
 ## Open decisions (EB)
 
-D1 spaced em dashes, D2 British keyword names in `firas.py`, D3 code font in single-identifier headings, D4 angle brackets in
-`--help`. None decided yet. Phases 1 to 4 do not depend on them.
+Decided by EB on 2026-09-21: D1 keep spaced em dashes (house style; fix only literal `---` and `--`); D2 add American keyword
+names in `firas.py`, keep British names as deprecated aliases; D3 keep code font in single-identifier headings. D4 (angle
+brackets stay in `--help`) follows the plan's recommendation; EB did not object. Do not push; commit only.
 
 ## Baselines, 2026-09-21, commit 2662954
 
@@ -67,7 +68,11 @@ Notes on the lint, so that nobody reads a count as a verdict:
 
 ## Findings for EB (behavior, not style; nothing changed in code)
 
-- **F-DS-1. `--cosmology PRESET` silently drops individual cosmology flags.** `build_cosmology` (`src/cli.rs`) returns the preset
+- **F-DS-1 (FIXED 2026-09-21, EB chose the code fix). `--cosmology PRESET` silently dropped individual cosmology flags.**
+  Now the preset is the base and each given flag overrides it; a preset with no override is returned bit-identical. Checked end
+  to end: `--cosmology planck2018 --t-cmb 3.0` gave the same μ and y as no override under the old code, and a different μ
+  (1.3878e-5 against 1.3968e-5) under the new code. Original finding:
+  `--cosmology PRESET` silently drops individual cosmology flags. `build_cosmology` (`src/cli.rs`) returns the preset
   before it reads `--h`, `--t-cmb`, and the rest. `docs/cli.rst` says "Individual parameters override the selected preset",
   which is false. Found by reading the code, confirmed by the physics-inquisitor; not run. Decide: fix the code (apply
   overrides on top of the preset, or reject the combination) or fix the sentence. The new `build_cosmology` doc comment states

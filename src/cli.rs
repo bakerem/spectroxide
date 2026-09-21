@@ -763,26 +763,35 @@ fn parse_output_opts(map: &HashMap<String, String>) -> Result<OutputOpts, String
 
 /// Build a Cosmology from CosmoOpts.
 ///
-/// If `opts.preset` is set, the preset is returned as is and the individual parameter
-/// fields of `opts` are not read.
+/// The preset (`default` if `opts.preset` is `None`) supplies every parameter, and each
+/// individual field of `opts` that is `Some` then overrides it. An `h` override without
+/// `omega_b` and `omega_m` keeps the preset's physical densities ω_b and ω_cdm, so the
+/// fractional Ω_b and Ω_m change with h².
 ///
 /// # Errors
 /// Returns `Err` if the preset name is not `default`, `planck2015`, or `planck2018`; if only
 /// one of `omega_b` and `omega_m` is given; if either lies outside [0, 1] or Ω_m < Ω_b; or
 /// if [`crate::cosmology::Cosmology::new`] rejects the resulting parameters.
 pub fn build_cosmology(opts: &CosmoOpts) -> Result<crate::cosmology::Cosmology, String> {
-    // Check for presets first
-    if let Some(ref preset) = opts.preset {
-        match preset.as_str() {
-            "planck2015" => return Ok(crate::cosmology::Cosmology::planck2015()),
-            "planck2018" => return Ok(crate::cosmology::Cosmology::planck2018()),
-            "default" => return Ok(crate::cosmology::Cosmology::default()),
-            _ => {
-                return Err(format!(
-                    "Unknown cosmology preset '{preset}'. Valid presets: default, planck2015, planck2018"
-                ));
-            }
+    // The preset is the base; individual parameters override it below.
+    let defaults = match opts.preset.as_deref() {
+        None | Some("default") => crate::cosmology::Cosmology::default(),
+        Some("planck2015") => crate::cosmology::Cosmology::planck2015(),
+        Some("planck2018") => crate::cosmology::Cosmology::planck2018(),
+        Some(preset) => {
+            return Err(format!(
+                "Unknown cosmology preset '{preset}'. Valid presets: default, planck2015, planck2018"
+            ));
         }
+    };
+    let has_override = opts.omega_b.is_some()
+        || opts.omega_m.is_some()
+        || opts.h.is_some()
+        || opts.n_eff.is_some()
+        || opts.y_p.is_some()
+        || opts.t_cmb.is_some();
+    if !has_override {
+        return Ok(defaults);
     }
 
     // CLI accepts fractional Ω_b and Ω_m; the internal Cosmology struct
@@ -800,7 +809,6 @@ pub fn build_cosmology(opts: &CosmoOpts) -> Result<crate::cosmology::Cosmology, 
         }
         _ => {}
     }
-    let defaults = crate::cosmology::Cosmology::default();
     let h = opts.h.unwrap_or(defaults.h);
     let h2 = h * h;
     let (omega_b_phys, omega_cdm_phys) = match (opts.omega_b, opts.omega_m) {
@@ -901,7 +909,7 @@ fn print_solver_options_help() {
 /// Shared COSMOLOGY help block.
 fn print_cosmo_options_help() {
     println!("COSMOLOGY:");
-    println!("  --cosmology <preset>  default, planck2015, planck2018");
+    println!("  --cosmology <preset>  default, planck2015, planck2018 (flags below override it)");
     println!("  --omega-b <val>       Fractional baryon density Omega_b (pass with --omega-m)");
     println!("  --omega-m <val>       Fractional total matter density Omega_m");
     println!("  --h <val>             Reduced Hubble parameter H0 / (100 km/s/Mpc)");
@@ -2325,6 +2333,44 @@ mod tests {
             ..CosmoOpts::default()
         });
         assert!(result.is_err(), "Unknown preset should return Err");
+
+        // Individual parameters override the selected preset; the rest of the
+        // preset survives.
+        let base = crate::cosmology::Cosmology::planck2018();
+        let over = build_cosmology(&CosmoOpts {
+            preset: Some("planck2018".into()),
+            t_cmb: Some(2.73),
+            ..CosmoOpts::default()
+        })
+        .unwrap();
+        assert_eq!(over.t_cmb, 2.73);
+        assert_eq!(over.h, base.h);
+        assert_eq!(over.omega_b, base.omega_b);
+        assert_eq!(over.omega_cdm, base.omega_cdm);
+        assert_eq!(over.n_eff, base.n_eff);
+        assert_eq!(over.y_p, base.y_p);
+        // An h override keeps the preset's physical densities.
+        let over_h = build_cosmology(&CosmoOpts {
+            preset: Some("planck2015".into()),
+            h: Some(0.70),
+            ..CosmoOpts::default()
+        })
+        .unwrap();
+        assert_eq!(over_h.h, 0.70);
+        assert_eq!(
+            over_h.omega_b,
+            crate::cosmology::Cosmology::planck2015().omega_b
+        );
+        // Fractional densities with a preset use the overriding or preset h.
+        let over_om = build_cosmology(&CosmoOpts {
+            preset: Some("planck2018".into()),
+            omega_b: Some(0.05),
+            omega_m: Some(0.30),
+            ..CosmoOpts::default()
+        })
+        .unwrap();
+        assert!((over_om.omega_b - 0.05 * base.h * base.h).abs() < 1e-12);
+        assert!((over_om.omega_cdm - 0.25 * base.h * base.h).abs() < 1e-12);
 
         // Custom params: CLI accepts fractional Ω_b, Ω_m and converts.
         let custom = build_cosmology(&CosmoOpts {
