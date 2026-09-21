@@ -12,7 +12,7 @@ touch Python, but the Rust API is useful when:
 * accessing intermediate solver state (electron temperature history,
   per-step diagnostics) that the Python wrapper does not expose.
 
-Browsing the crate documentation
+Browse the crate documentation
 --------------------------------
 
 The rustdoc output is the authoritative reference:

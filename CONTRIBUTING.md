@@ -21,7 +21,7 @@ The separation is deliberate. You need to understand *why* we do things a certai
 
 ## Workflow
 
-### Setting up your LLM
+### Set up your LLM
 
 1. **Include `CONTRIBUTING_CLAUDE.md` as context.** In Claude Code, this happens automatically through `CLAUDE.md`. For other tools (including ChatGPT, Copilot, and Cursor), paste the contents of `CONTRIBUTING_CLAUDE.md` into your system prompt or project instructions.
 
@@ -31,7 +31,7 @@ The separation is deliberate. You need to understand *why* we do things a certai
 
 4. **Run the full test suite.** `cargo test --release` must pass.
 
-### Adding a new energy injection scenario (the most common contribution)
+### Add a new energy injection scenario (the most common contribution)
 
 This is the contribution most likely to benefit from LLM assistance. The mechanical steps are:
 
@@ -44,7 +44,7 @@ This is the contribution most likely to benefit from LLM assistance. The mechani
 
 Your LLM can handle steps 1-3 and 5 reliably. Step 4 is where you must be actively involved — the test targets come from your physics knowledge, not from the code. Step 6 benefits from human judgment about what's pedagogically useful.
 
-### Modifying solver physics
+### Modify solver physics
 
 Changes to the core solver (`kompaneets.rs`, `double_compton.rs`, `bremsstrahlung.rs`, `electron_temp.rs`, `solver.rs`) require extra care:
 
@@ -52,7 +52,7 @@ Changes to the core solver (`kompaneets.rs`, `double_compton.rs`, `bremsstrahlun
 - **Check limiting cases.** Does your change preserve mu = 1.401 * Delta_rho/rho in the deep mu-era? Does it preserve energy conservation? Does it maintain stability at z > 10^6?
 - **Run convergence tests.** `cargo test --release convergence` exercises grid and timestep convergence.
 
-## Submitting a pull request
+## Submit a pull request
 
 All contributions go through pull requests to `main`. Here's the process:
 
@@ -122,7 +122,7 @@ We will not merge code where test targets cannot be traced to an independent sou
 
 The GitHub Actions CI runs automatically on every PR:
 
-- **Rust**: build, unit tests, science suite, convergence tests, doc tests, clippy, format check (Ubuntu + macOS)
+- **Rust**: build, unit tests, science suite, convergence tests, doc tests, Clippy, format check (Ubuntu + macOS)
 - **Python**: install, import tests, pytest, black format check
 - **Docs**: Sphinx + rustdoc build
 - **Coverage**: uploaded to Codecov

@@ -1,4 +1,4 @@
-# LLM Context File for spectroxide Contributors
+# LLM context file for spectroxide contributors
 
 This file is designed to be included as context when using an LLM (including Claude and GPT) to develop features for spectroxide. Copy its contents into your LLM's system prompt or project instructions before starting work.
 

@@ -234,7 +234,7 @@ class GreensTable:
 
         The convolution evaluates linearly in ``(log x, log z_h)`` against
         the *raw* cached ``G_th`` (no build-time NC strip), summed on the
-        cache's native ``self.x`` grid, then linearly interpolated to
+        cache's own ``self.x`` grid, then linearly interpolated to
         ``x_grid``.  No NC strip is applied; callers that want the
         number-conserving Δn should call :func:`~spectroxide.cosmotherm.strip_gbb`.
 

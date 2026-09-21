@@ -36,14 +36,14 @@ sources see :doc:`tutorials/index` or :doc:`cli`.
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Getting Started
+   :caption: Getting started
 
    installation
 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: User Guide
+   :caption: User guide
 
    tutorials/index
    cli

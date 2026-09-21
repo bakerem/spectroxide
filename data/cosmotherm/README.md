@@ -1,9 +1,9 @@
-# CosmoTherm Reference Data
+# CosmoTherm reference data
 
 Reference spectral distortion data from Jens Chluba's CosmoTherm code, used for
 validation of spectroxide predictions.
 
-## DI Files (included in repo)
+## DI files (included in repo)
 
 ASCII two-column files of frequency and distortion intensity (DI): `nu [GHz]` and `DI [Jy/sr]`. Lines starting with `#` are comments.
 
@@ -29,7 +29,7 @@ N_eff = 3.046, Omega_k = 0
 A_s = 2.207e-9, n_s = 0.9645, n_run = 0
 ```
 
-## Green's Function Database (NOT included - too large)
+## Green's function database (not included: too large)
 
 The precomputed Green's function database `Greens_data.dat` (~12 MB) is available
 from Chluba's website. Use the download script:

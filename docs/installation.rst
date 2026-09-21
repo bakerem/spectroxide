@@ -102,8 +102,8 @@ command-line interface (:term:`CLI`), and Python for the wrapper package.
       pip install -e "python/.[notebook]"
 
 
-Verifying the installation
---------------------------
+Verify the installation
+-----------------------
 
 After installation, verify both components work:
 

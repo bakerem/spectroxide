@@ -6,7 +6,7 @@ FIRAS data (``spectroxide.firas``)
 
 Loads the COBE Far Infrared Absolute Spectrophotometer (:term:`FIRAS`)
 monopole spectrum, residuals, and the full 43 × 43 frequency-frequency
-covariance matrix from the LAMBDA archive into clean numpy arrays. A
+covariance matrix from the LAMBDA archive into clean NumPy arrays. A
 :class:`FIRASData` instance is the primary handle: its attributes give
 the data itself, and its methods provide χ²-based constraint utilities
 for downstream analysis (including μ/y upper limits and joint fits over

@@ -1,4 +1,4 @@
-//! Adiabatic cooling sanity check.
+//! Adiabatic cooling consistency check.
 //!
 //! Prints a few cosmology-derived quantities at a representative redshift
 //! and the accumulated analytical Δρ/ρ from adiabatic cooling over the
