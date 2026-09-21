@@ -1115,7 +1115,7 @@ def load_or_build_greens_table(
         ``rebuild=True`` to regenerate after a code change.
     **kwargs
         Forwarded to the private ``_build_greens_table`` builder when a
-        new table needs to be generated (for example, ``z_h_grid``, ``n_threads``).
+        new table needs to be generated (for example, ``z_injections``, ``n_points``).
 
     Returns
     -------
@@ -1161,8 +1161,8 @@ def load_or_build_photon_greens_table(
         :class:`GreensTableHashMismatch` warning on mismatch.
     **kwargs
         Forwarded to the private ``_build_photon_greens_table`` builder
-        when a new table needs to be generated (for example, ``x_inj_grid``,
-        ``z_h_grid``, ``n_threads``).
+        when a new table needs to be generated (for example, ``x_inj_values``,
+        ``z_injections``, ``n_points``).
 
     Returns
     -------

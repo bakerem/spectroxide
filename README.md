@@ -141,7 +141,7 @@ result = solve(
     z_start=5e6, z_end=1e3,
 )
 
-# Dark photon oscillation (NWA resonant conversion)
+# Dark photon oscillation (resonant conversion, narrow-width approximation)
 result = solve(
     injection={"type": "dark_photon_resonance", "epsilon": 1e-7, "m_ev": 1e-5},
     z_end=1e3,  # z_start auto-set to z_res
@@ -269,13 +269,13 @@ src/
 ├── main.rs                # CLI binary entry
 ├── cli.rs                 # CLI argument parsing and dispatch
 ├── output.rs              # JSON serialization of solver results
-├── kompaneets.rs          # Compton scattering (IMEX Newton solver)
+├── kompaneets.rs          # Compton scattering (implicit-explicit Newton solver)
 ├── double_compton.rs      # DC emission (photon-number changing)
 ├── bremsstrahlung.rs      # BR emission (non-relativistic Gaunt factor)
 ├── solver.rs              # PDE integrator (coupled Kompaneets + DC/BR)
 ├── greens.rs              # Green's function approximation
 ├── energy_injection.rs    # Injection scenarios
-├── dark_photon.rs         # NWA helpers for γ↔A' (plasma freq, γ_con)
+├── dark_photon.rs         # Narrow-width-approximation helpers for γ↔A' (plasma freq, γ_con)
 ├── distortion.rs          # mu/y/DeltaT decomposition + intensity conversion
 ├── cosmology.rs           # Flat LCDM background
 ├── spectrum.rs            # Planck, Bose-Einstein, spectral shapes
@@ -292,8 +292,8 @@ python/spectroxide/
 ├── greens_table.py        # Precomputed Green's function tables
 ├── solver.py              # Rust binary wrapper + run_single()
 ├── firas.py               # FIRAS data and constraint utilities
-├── dark_photon.py         # NWA helpers (γ_con, z_res) — Python port
-├── axion.py               # γ↔a NWA helpers (experimental; PDE path needs --features axion)
+├── dark_photon.py         # Narrow-width-approximation helpers (γ_con, z_res) — Python port
+├── axion.py               # γ↔a narrow-width-approximation helpers (experimental; PDE path needs --features axion)
 ├── cosmotherm.py          # CosmoTherm data loaders (submodule import)
 ├── plot_params.py         # Plot constants (submodule import)
 ├── style.py               # Matplotlib style helpers

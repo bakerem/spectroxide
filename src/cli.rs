@@ -849,14 +849,14 @@ pub fn build_cosmology(opts: &CosmoOpts) -> Result<crate::cosmology::Cosmology, 
 /// (`spectroxide help > usage.txt` must capture it); runtime diagnostics
 /// stay on stderr.
 pub fn print_help() {
-    println!("spectroxide: CMB spectral distortion solver");
+    println!("spectroxide: cosmic microwave background (CMB) spectral distortion solver");
     println!();
     println!("USAGE:");
     println!("  spectroxide <subcommand> [options]");
     println!("  spectroxide <subcommand> --help    full option list for one subcommand");
     println!();
     println!("SUBCOMMANDS:");
-    println!("  solve <injection-type>  Single PDE solve for one injection scenario");
+    println!("  solve <injection-type>  Single partial differential equation (PDE) solve");
     println!("  sweep                   PDE sweep over heat-injection redshifts (single-burst)");
     println!("  photon-sweep            PDE sweep over redshifts at one photon frequency x_inj");
     println!("  photon-sweep-batch      photon-sweep for several x_inj values in parallel");

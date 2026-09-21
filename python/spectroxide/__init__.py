@@ -13,7 +13,7 @@ Quick start::
 
     from spectroxide import solve, greens_function
 
-    # Unified entry point (handles both GF and PDE modes)
+    # Unified entry point (handles both Green's function and PDE modes)
     result = solve(injection={'type': 'single_burst', 'z_h': 2e5}, delta_rho=1e-5)
     result_gf = solve(method="greens_function", z_h=2e5, delta_rho=1e-5)
 

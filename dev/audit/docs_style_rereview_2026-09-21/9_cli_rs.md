@@ -1,0 +1,21 @@
+## src/cli.rs (doc comments and CLI help-text strings)
+
+| Line | Rule | Severity | Quotation | Suggested fix |
+|---|---|---|---|---|
+| 852 | T12 | HIGH | `println!("spectroxide: CMB spectral distortion solver");` | Expand on first user-facing use: `println!("spectroxide: cosmic microwave background (CMB) spectral distortion solver");` — this is the first line every user sees from `spectroxide help`, and CMB is never expanded anywhere in the printed help text. |
+| 859–861 | T12 | HIGH | ``println!("  solve <injection-type>  Single PDE solve for one injection scenario");`` (and the following two lines: `PDE sweep over heat-injection redshifts`, `PDE sweep over redshifts at one photon frequency x_inj`) | "PDE" is used throughout the printed help (`print_help`, `print_subcommand_help` for `solve`, `sweep`, `photon-sweep`, `greens`) but is never expanded to "partial differential equation" anywhere in the CLI's own output — a user running only `spectroxide help` or `spectroxide <sub> --help` never learns what it stands for. Expand at first use, for example in the top `USAGE` banner: "PDE (partial differential equation) solve". |
+| 900–901 | T12 | MEDIUM | `println!("  --split-dcbr          Operator-split DC/BR instead of the coupled Newton solve");` / `println!("  --cn-dcbr             Crank-Nicolson DC/BR (can fail at low x; default is");` | "DC/BR" is used here without ever being spelled out in the help text (the preceding `--no-dcbr` line spells out "double-Compton + bremsstrahlung" but never attaches the "DC/BR" shorthand to it). Add the abbreviation once, for example on the `--no-dcbr` line: "Disable double-Compton and bremsstrahlung (DC/BR) emission". |
+| 1036 | T9 | MEDIUM | `println!("Accuracy vs the PDE: 2-5% for mu, ~5% for y; ~8-13% shape error in the");` | Replace "vs" with "versus" or rephrase: "Accuracy relative to the PDE solver: 2–5% for mu, ~5% for y...". |
+| 1219 | T6 | MEDIUM | `Never returns \`Err\` at present. The \`Result\` type matches the other \`execute_*\`` | Drop the timeless-text marker: "Never returns `Err`. The `Result` type matches..." |
+| 347 | A2 | MEDIUM | `Levenshtein edit distance, used only for "did you mean" suggestions.` | Lead with a verb: "Computes the Levenshtein edit distance, used only for 'did you mean' suggestions." |
+| 882 | A2 | MEDIUM | `Shared SOLVER OPTIONS help block (all PDE subcommands).` | Lead with a verb: "Prints the shared SOLVER OPTIONS help block (all PDE subcommands)." |
+| 909 | A2 | MEDIUM | `Shared COSMOLOGY help block.` | "Prints the shared COSMOLOGY help block." |
+| 921 | A2 | MEDIUM | `Shared OUTPUT help block.` | "Prints the shared OUTPUT help block." |
+| 168 | F11 | LOW | `` (`--cn-dcbr`). Diagnostic only — known to fail at low x. `` | Remove spaces around the em dash: "Diagnostic only—known to fail at low x." |
+
+### Systematic patterns
+
+- **T12 (undefined abbreviations in user-facing text) is the standout issue in this file.** The doc comments inside `cli.rs` itself correctly expand PDE, CMB, DC, and BR at first use (lines 1, 19–20), but the actual `println!` help text that ships to end users — a genuinely separate "document" from the source comments — never expands CMB or PDE, and uses "DC/BR" without ever spelling it out. Since CLI `--help` output is often the only documentation a user reads, this is more consequential than an undefined abbreviation buried in source comments.
+- Aside from the three "Shared ... help block" summaries (882, 909, 921) and the Levenshtein helper (347), the file's function docs consistently lead with a present-tense verb ("Parses...", "Builds...", "Executes...", "Validates...", "Applies...", "Runs...", "Generates...", "Deduplicates..."), and `# Errors` sections are unusually thorough — each names every distinct failure condition as a single, complete sentence (see lines 414–421, 1462–1470, 1656–1662, 1759–1767).
+- Only one em-dash-with-spaces instance found (line 168); no "we", "e.g.", "i.e.", "etc.", "utilize", or causal "since"/"as" misuse detected elsewhere in the doc comments.
+- CLI option help lines consistently give the flag name in code-like form (`--z-h <z>`) followed by a plain-English description — satisfies F1/F3 placeholder conventions (`<z>`, `<val>`, `<PATH>` are explained by context immediately after, and are consistently upper-case-in-angle-brackets style throughout).

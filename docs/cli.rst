@@ -9,7 +9,7 @@ default and writes it to stdout.
 
    cargo run --release --bin spectroxide -- SUBCOMMAND [OPTIONS]
 
-Replace ``SUBCOMMAND`` with one of the subcommands below, and ``OPTIONS`` with
+Replace ``SUBCOMMAND`` with one of the subcommands in the next section, and ``OPTIONS`` with
 any of the flags that the subcommand accepts.
 
 

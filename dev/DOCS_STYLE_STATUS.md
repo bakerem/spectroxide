@@ -13,7 +13,7 @@ A fresh session resumes from the first unchecked box below.
 - [x] Phase 5. Mechanical prose substitutions (2026-09-21): five commits; every lint rule reads zero
 - [x] Phase 6. House style recorded in `CONTRIBUTING.md`; `CLAUDE.md` script list updated (2026-09-21). CI wiring left for EB: `docs_style_lint.py --check` exits 1 on any hit
 - [x] Phase 7. `firas.py` keyword names (2026-09-21): American names, British names are deprecated aliases
-- [ ] Phase 8. Independent re-review
+- [x] Phase 8. Independent re-review (2026-09-21): run; HIGH criterion met after fixes, MEDIUM criterion NOT met (see the log)
 
 ## Open decisions (EB)
 
@@ -107,6 +107,47 @@ The five project-wide exceptions are listed in `CONTRIBUTING.md`, section "Docum
 - `//` (non-doc) Rust comments are out of scope and not linted.
 
 ## Log
+
+- 2026-09-21: phase 8 done. Nine fresh reviewers (no access to the plan, the first review, the lint, or git history) applied the
+  same rubric. Reports: `dev/audit/docs_style_rereview_2026-09-21/`.
+
+  | Section | HIGH | MEDIUM | LOW | DOMAIN |
+  |---|---|---|---|---|
+  | 1 README files | 1 | 9 | 9 | 2 |
+  | 2 Contributor guides | 1 | 38 | 22 | 4 |
+  | 3 Sphinx top-level | 1 | 35 | 12 | 2 |
+  | 4 Sphinx API pages | 0 | 32 | 42 | 11 |
+  | 5 Tutorial notebooks | 1 | 54 | 28 | 2 |
+  | 6 Python group A | 2 | 31 | 21 | 8 |
+  | 7 Python group B | 2 | 9 | 82 | 5 |
+  | 8 Rust physics | 0 | 129 | 29 | 2 |
+  | 9 Rust solver and CLI | 4 | 53 | 18 | 5 |
+  | Total | 12 (first review: about 74) | 390 | 263 | 41 |
+
+  **HIGH: all 12 fixed after the review**, so the criterion "zero HIGH" holds for the committed tree, but no second fresh pass
+  has confirmed it. They were: NWA and IMEX undefined inside README code blocks; COBE undefined in the glossary; CI undefined in
+  `CONTRIBUTING.md`; GF undefined in the package quick start; PDE undefined in one warning string and in the CLI help header
+  (CMB too); a second five-step procedure in tutorial 05 written as one sentence (phase 3 had fixed a different sentence);
+  two `greens_table.py` docstrings that named keyword arguments the builders do not have (`z_h_grid`, `n_threads`; now
+  `z_injections`, `n_points`); two `src/greens.rs` functions with an undocumented panic in the μ-y transition band. The lint
+  missed the abbreviation cases because it does not read code blocks or message strings.
+
+  **MEDIUM: criterion "fewer than 50" NOT met (390).** About 130 of these are recorded exceptions (spaced em dash about 105,
+  imperative Python summaries about 15, code font in headings about 16). The real residue, largest first:
+  1. Rust function summaries that are noun phrases ("Photon survival probability.") instead of a verb phrase ("Returns the
+     ..."): about 135. The first review counted only imperative summaries, so phase 5 did not touch these. Mechanical but needs
+     reading: a getter takes "Returns", a computation takes "Computes".
+  2. Bold run-in labels and bold terms in notebooks and Sphinx pages (F6): about 30. Google wants italics for a new term.
+  3. Dropped-subject fragments in notebooks ("Captures the ...") (T14): about 16.
+  4. Position words "above" and "below" in Rust and Python doc comments (T9): about 25. Six that phase 3 agents had introduced
+     in the notebooks and docs ("The table below") were fixed.
+  5. Agentless passives (T2): about 25. The plan said not to chase these.
+  6. Lists in Python docstrings with no introductory sentence (L2): about 8; unnumbered-set lists written as numbered (L1): 6.
+  A phase 9 that takes items 1 to 4 would bring MEDIUM under 50 outside the exceptions. Add lint rules for items 1 and 4 first.
+
+  Checks at close: full `cargo test --release` 482 passed, 0 failed, 3 ignored (run before the phase 8 fixes; after them:
+  Clippy clean in both configurations, doctests 3, `cli_integration` 4, CLI unit tests 11); pytest 345; Sphinx 0 warnings;
+  rustdoc 0 warnings; lint all zero.
 
 - 2026-09-21: phases 5 and 6 done. Phase 5 commits: third-person summaries; American spelling; word list; headings, real em
   dashes, word choices; person, tense, emphasis, symbols, link text. Subagents did the judgment rules by file group; I read

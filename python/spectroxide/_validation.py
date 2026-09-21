@@ -332,7 +332,8 @@ def warn_z_h_regime(z_h):
     if z_h is not None and z_h > 5e6:
         warnings.warn(
             f"z_h={z_h:.2e}: Green's function unreliable in deep thermalization "
-            "regime (J_bb* < 1e-2). Use the PDE solver: "
+            "regime (J_bb* < 1e-2). Use the partial differential equation (PDE) "
+            "solver: "
             "solve(injection={'type': ..., 'z_h': ...}, delta_rho=...).",
             stacklevel=3,
         )

@@ -589,6 +589,10 @@ fn in_photon_gf_transition_band(z_h: f64) -> bool {
 /// * `sigma_x` - extra Gaussian width for the surviving bump (0 for pure Compton)
 /// * `cosmo` - cosmological parameters (for Compton y_γ)
 ///
+/// # Panics
+/// Panics if `z_h` lies in the μ-y transition band, 5×10⁴ < z_h < 2×10⁵, where the μ and y
+/// decomposition misses the residual distortion. Use the PDE solver there.
+///
 /// References:
 ///   Chluba (2015), arXiv:1506.06582
 pub fn greens_function_photon(
@@ -682,6 +686,10 @@ pub fn greens_function_photon(
 ///   - x_inj > x₀ and P_s ≈ 1: μ > 0 (energy-dominated)
 ///   - x_inj < x₀ and P_s ≈ 1: μ < 0 (number-dominated, negative μ!)
 ///   - P_s ≈ 0 (soft photons absorbed): μ > 0 always (pure energy injection)
+///
+/// # Panics
+/// Panics if `z_h` lies in the μ-y transition band, 5×10⁴ < z_h < 2×10⁵, where the μ and y
+/// decomposition misses the residual distortion. Use the PDE solver there.
 ///
 /// Reference: Chluba (2015), Eq. C7
 pub fn mu_from_photon_injection(x_inj: f64, z_h: f64, delta_n_over_n: f64) -> f64 {

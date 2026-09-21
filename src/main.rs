@@ -45,7 +45,7 @@ fn main() {
         command,
         cli::Command::Help | cli::Command::HelpFor(_) | cli::Command::PhysicsHash
     ) {
-        eprintln!("spectroxide: CMB spectral distortion solver");
+        eprintln!("spectroxide: cosmic microwave background (CMB) spectral distortion solver");
         eprintln!("==========================================\n");
     }
 

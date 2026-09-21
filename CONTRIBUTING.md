@@ -60,7 +60,7 @@ All contributions go through pull requests to `main`. Here's the process:
 
 1. **Fork the repository** and create a feature branch (for example, `add-pbh-evaporation`).
 2. **Run the full test suite locally**: `cargo test --release`. All existing tests must pass. Do not skip tests or mark them `#[ignore]` to get a green build.
-3. **Run formatting and linting**: `cargo fmt` and `cargo clippy --all-targets -- -D warnings`. CI rejects unformatted code.
+3. **Run formatting and linting**: `cargo fmt` and `cargo clippy --all-targets -- -D warnings`. Continuous integration (CI) rejects unformatted code.
 4. **If you modified Python code**: from `python/`, run `black spectroxide/` and `pytest tests/`.
 
 ### What your PR must include

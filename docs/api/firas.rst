@@ -4,7 +4,8 @@ FIRAS data (``spectroxide.firas``)
 .. currentmodule:: spectroxide.firas
 
 
-Loads the COBE Far Infrared Absolute Spectrophotometer (:term:`FIRAS`)
+Loads the Cosmic Background Explorer (COBE) Far Infrared Absolute
+Spectrophotometer (:term:`FIRAS`)
 monopole spectrum, residuals, and the full 43 × 43 frequency-frequency
 covariance matrix from the LAMBDA archive into clean NumPy arrays. A
 :class:`FIRASData` instance is the primary handle: its attributes give

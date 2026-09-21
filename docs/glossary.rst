@@ -43,8 +43,9 @@ Abbreviations
       Dark matter.
 
    FIRAS
-      Far Infrared Absolute Spectrophotometer. The instrument on the COBE
-      satellite whose measurement of the CMB spectrum gives the present
+      Far Infrared Absolute Spectrophotometer. The instrument on the Cosmic
+      Background Explorer (COBE) satellite whose measurement of the CMB
+      spectrum gives the present
       limits :math:`|\mu| < 9\times 10^{-5}` and :math:`|y| < 1.5\times
       10^{-5}` (95% CL; Fixsen et al. 1996).
 

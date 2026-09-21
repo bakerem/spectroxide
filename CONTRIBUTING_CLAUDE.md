@@ -93,7 +93,7 @@ These rules exist because every major bug in spectroxide's history was missed by
 
 **Caution:** A test whose target was read off the code's own output passes even when the code is wrong. Derive every target from an analytic formula, a published value, or a dimensional argument.
 
-The comment below contrasts a bad test that locks in the code's own output with a good test that derives its target independently:
+The following code contrasts a bad test that locks in the code's own output with a good test that derives its target independently:
 
 ```rust
 // BAD: Running the code, seeing it outputs 42.7, then writing:
