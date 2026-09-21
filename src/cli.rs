@@ -1,4 +1,5 @@
-//! CLI argument parsing with subcommands (zero dependencies).
+//! Command-line interface (CLI) argument parsing with subcommands (zero
+//! dependencies).
 //!
 //! ```text
 //! spectroxide solve single-burst --z-h 2e5 --delta-rho 1e-5
@@ -14,6 +15,10 @@
 //! The first argument must be a known subcommand; anything else is an error
 //! (there is no legacy flat-flag mode). Every subcommand accepts `--help`,
 //! and unknown flags are rejected with a suggestion rather than ignored.
+//!
+//! Subcommands drive the partial differential equation (PDE) solver for
+//! cosmic microwave background (CMB) spectral distortions, including
+//! double Compton (DC) and bremsstrahlung (BR) emission diagnostics.
 
 use std::collections::HashMap;
 

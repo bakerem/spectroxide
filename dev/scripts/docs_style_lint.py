@@ -50,21 +50,21 @@ FILE_GLOBS = [
 # Abbreviation -> regex for its expansion. The first use in a file passes if the
 # expansion occurs within EXPANSION_WINDOW characters of it, or if it is a :term: role.
 ABBREVIATIONS = {
-    "PDE": r"partial[- ]differential[- ]equation",
-    "CMB": r"cosmic microwave background",
-    "DC": r"double[- ]Compton",
+    "PDE": r"partial[-\s]+differential[-\s]+equation",
+    "CMB": r"cosmic\s+microwave\s+background",
+    "DC": r"double[-\s]+Compton",
     "BR": r"bremsstrahlung",
-    "GF": r"Green'?s[- ]function",
-    "DM": r"dark[- ]matter",
-    "NWA": r"narrow[- ]width[- ]approximation",
-    "IC": r"initial[- ]condition",
-    "CLI": r"command[- ]line interface",
-    "FIRAS": r"Far[- ]Infrared Absolute Spectrophotometer",
-    "PIXIE": r"Primordial Inflation Explorer",
-    "IMEX": r"implicit[- ]explicit",
-    "ODE": r"ordinary[- ]differential[- ]equation",
-    "DI": r"distortion intensity|intensity distortion",
-    "CL": r"confidence level",
+    "GF": r"Green'?s[-\s]+function",
+    "DM": r"dark[-\s]+matter",
+    "NWA": r"narrow[-\s]+width[-\s]+approximation",
+    "IC": r"initial[-\s]+condition",
+    "CLI": r"command[-\s]+line\s+interface",
+    "FIRAS": r"Far[-\s]+Infrared\s+Absolute\s+Spectrophotometer",
+    "PIXIE": r"Primordial\s+Inflation\s+Explorer",
+    "IMEX": r"implicit[-\s]+explicit",
+    "ODE": r"ordinary[-\s]+differential[-\s]+equation",
+    "DI": r"distortion\s+intensity|intensity\s+distortion",
+    "CL": r"confidence\s+level",
 }
 EXPANSION_WINDOW = 120
 
@@ -139,8 +139,17 @@ RULES = [
 # line numbers survive. Notebook line numbers are "cell index * 1000 + line in cell".
 
 
+# Prefix on heading lines. The first-use rule skips headings, because Google style
+# puts the expansion in the first body sentence, not in the heading.
+HEADING_MARK = "\x02"
+MD_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+RST_UNDERLINE = re.compile(r"^([=\-~^\"'`#*+])\1{2,}\s*$")
+
+
 def _blank_inline(text, kind):
     if kind == "rst":
+        # Keep :term: roles; check_abbreviations treats them as a valid first use.
+        text = re.sub(r":term:`([^`<]*)`", "\x00\\1\x01", text)
         text = re.sub(
             r":(?:math|code|func|class|mod|meth|attr|data|obj|ref|doc):`[^`]*`",
             " ",
@@ -150,7 +159,7 @@ def _blank_inline(text, kind):
     text = re.sub(r"`[^`\n]*`", " ", text)
     text = re.sub(r"\$[^$\n]*\$", " ", text)
     text = re.sub(r"https?://\S+", " ", text)
-    return text
+    return text.replace("\x00", ":term:`").replace("\x01", "`")
 
 
 def prose_markdown(lines, first=1):
@@ -161,6 +170,8 @@ def prose_markdown(lines, first=1):
             out.append((i, ""))
         elif fence:
             out.append((i, ""))
+        elif MD_HEADING.match(line):
+            out.append((i, HEADING_MARK + _blank_inline(line, "md")))
         else:
             out.append((i, _blank_inline(line, "md")))
     return out
@@ -193,6 +204,10 @@ def prose_rst(lines, first=1):
             out.append((i, _blank_inline(line[: line.rstrip().rfind("::")], "rst")))
             continue
         if re.match(r"\s*\.\. _[^:]+:", line) or re.match(r"\s*:[a-z-]+:", line):
+            out.append((i, ""))
+            continue
+        if RST_UNDERLINE.match(line) and out and out[-1][1].strip():
+            out[-1] = (out[-1][0], HEADING_MARK + out[-1][1])
             out.append((i, ""))
             continue
         out.append((i, _blank_inline(line, "rst")))
@@ -297,7 +312,7 @@ def check_abbreviations(prose):
     text, starts = "", []
     for lineno, line in prose:
         starts.append((len(text), lineno))
-        text += line + "\n"
+        text += ("" if line.startswith(HEADING_MARK) else line) + "\n"
 
     def line_of(pos):
         lo = 0
@@ -354,10 +369,6 @@ def check_rust_summaries(path):
             if summary[-1] not in ".:?!":
                 no_period.append((start, summary))
     return imperative, no_period
-
-
-MD_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
-RST_UNDERLINE = re.compile(r"^([=\-~^\"'`#*+])\1{2,}\s*$")
 
 
 def headings(path):
@@ -485,7 +496,10 @@ def main():
     if args.paths:
         files = [Path(p).resolve() for p in args.paths]
     else:
-        files = sorted({f for g in FILE_GLOBS for f in ROOT.glob(g)})
+        # The glossary defines the abbreviations, so the first-use rule does not apply to it.
+        files = sorted(
+            {f for g in FILE_GLOBS for f in ROOT.glob(g)} - {ROOT / "docs/glossary.rst"}
+        )
 
     counts, totals = {}, defaultdict(int)
     for f in files:

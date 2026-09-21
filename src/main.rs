@@ -1,4 +1,4 @@
-//! Thin CLI dispatcher for spectroxide.
+//! Thin command-line interface dispatcher for spectroxide.
 //!
 //! All logic lives in the library (cli.rs, output.rs). This binary just
 //! parses args, calls execute_*, and writes output.

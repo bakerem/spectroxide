@@ -3,13 +3,13 @@
 
 .. warning::
    **Not part of the released feature set.** The Rust side lives behind the
-   off-by-default ``axion`` Cargo feature, so the PDE path below only works if
-   the binary was built with ``cargo build --release --features axion``. These
-   pure-Python helpers are importable regardless (they call no Rust). Treat as
-   experimental.
+   off-by-default ``axion`` Cargo feature, so the partial differential
+   equation path below only works if the binary was built with
+   ``cargo build --release --features axion``. These pure-Python helpers
+   are importable regardless (they call no Rust). Treat as experimental.
 
-Mirrors :mod:`spectroxide.dark_photon`. The PDE solver handles axion
-conversions through the initial-condition path: pass
+Mirrors :mod:`spectroxide.dark_photon`. The partial differential equation
+solver handles axion conversions through the initial-condition path: pass
 ``injection={"type": "axion_resonance", "g_agamma": g, "b_rms": B, "m_ev": m}``
 to :func:`spectroxide.solve` and the Rust solver computes ``γ_con``/``z_res``
 itself, installing the impulsive depletion

@@ -398,7 +398,7 @@ mod tests {
     /// was covered by the DC/BR literature anchor, so mutations to the latter —
     /// including one that scaled the DC rate by 1.53× — passed the whole suite.
     ///
-    /// Mirrors the equivalent BR check (`test_br_fast_matches_reference`).
+    /// Mirrors the equivalent bremsstrahlung check (`test_br_fast_matches_reference`).
     #[test]
     fn test_dc_prefactor_matches_emission_coefficient() {
         for &z in &[1e4, 1e5, 1e6, 3e6, 1e7] {

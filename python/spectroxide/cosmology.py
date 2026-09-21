@@ -2,10 +2,12 @@
 Flat ΛCDM background quantities.
 
 Cosmology presets, the Hubble rate, photon and baryon densities, the
-Saha + Peebles three-level-atom recombination history, and helpers
-derived from them (free-electron density, baryon-photon ratio, cosmic
-time). The Green's-function and PDE-table modules pull from this
-module rather than redefining cosmology themselves.
+Saha + Peebles three-level-atom recombination history (solved as an
+ordinary differential equation, ODE), and helpers derived from them
+(free-electron density, baryon-photon ratio, cosmic time). The
+Green's-function and partial differential equation (PDE) table
+modules pull from this module rather than redefining cosmology
+themselves.
 
 References
 ----------
@@ -87,8 +89,8 @@ class Cosmology:
         Density fractions are derived from the paper's physical densities
         (ω_b = 0.02225, ω_cdm = 0.1198) so they match the Rust
         ``Cosmology::planck2015``, including t_cmb = 2.7255 K.  For
-        CosmoTherm DI-file comparisons (which use t_cmb = 2.726 K) the
-        Rust side provides ``planck2015_cosmotherm()``.
+        CosmoTherm distortion intensity (DI) file comparisons (which use
+        t_cmb = 2.726 K) the Rust side provides ``planck2015_cosmotherm()``.
         """
         return cls(
             h=0.6727,
@@ -108,8 +110,9 @@ class Cosmology:
         ``Cosmology::planck2018`` exactly.  Note Ω_m here is ≈ 0.31377,
         not the paper's 0.3153: the paper's Ω_m includes the Σm_ν = 0.06 eV
         massive-neutrino contribution (ω_ν ≈ 0.00064), which this code does
-        not model.  Anchoring ω_b/ω_cdm/h (the CMB-calibrated early-universe
-        densities) is the consistent ν-less reduction for distortion physics.
+        not model.  Anchoring ω_b/ω_cdm/h (the early-universe densities
+        calibrated to the cosmic microwave background) is the consistent
+        ν-less reduction for distortion physics.
         """
         return cls(
             h=0.6736,
@@ -139,18 +142,18 @@ class Cosmology:
 # ---------------------------------------------------------------------------
 #
 # These dicts are the canonical input format consumed by the helpers below
-# (``_cosmo_hubble`` etc.) and by the Rust CLI.  Where the values match a
-# :class:`Cosmology` classmethod exactly, we derive the dict from it to keep
-# them in sync.  The two CosmoTherm-comparison presets intentionally differ
-# from the Planck dataclass values (n_eff = 3.04 to match CosmoTherm v1.0.3;
-# t_cmb = 2.726 to match the Fixsen 1996 value baked into CosmoTherm's DI
-# files) so they stay as standalone dict literals.
+# (``_cosmo_hubble`` etc.) and by the Rust command-line interface.  Where the
+# values match a :class:`Cosmology` classmethod exactly, we derive the dict
+# from it to keep them in sync.  The two CosmoTherm-comparison presets
+# intentionally differ from the Planck dataclass values (n_eff = 3.04 to
+# match CosmoTherm v1.0.3; t_cmb = 2.726 to match the Fixsen 1996 value
+# baked into CosmoTherm's DI files) so they stay as standalone dict literals.
 
 #: Chluba (2013) Green's-function paper parameters.
 DEFAULT_COSMO = Cosmology.default().to_dict()
 
 #: Matches CosmoTherm v1.0.3 (Greens.cpp uses ``N_eff = 3.04``). Use this
-#: when convolving against CosmoTherm's GF table.
+#: when convolving against CosmoTherm's Green's function table.
 COSMOTHERM_GF_COSMO = {**DEFAULT_COSMO, "n_eff": 3.04}
 
 #: Planck 2015 (Planck XIII, Table 4). ``T_CMB`` follows CosmoTherm's DI

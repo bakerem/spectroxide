@@ -1,8 +1,9 @@
 CLI reference
 =============
 
-The ``spectroxide`` binary provides a command-line interface to the PDE solver.
-Output is JSON by default and written to stdout.
+The ``spectroxide`` binary provides a command-line interface (:term:`CLI`) to the
+partial differential equation (:term:`PDE`) solver. Output is JSON by
+default and written to stdout.
 
 .. code-block:: bash
 

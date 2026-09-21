@@ -1,8 +1,8 @@
 //! # spectroxide
 //!
 //! An open-source solver for the cosmological thermalization problem:
-//! computing spectral distortions of the CMB from energy release in the
-//! early Universe.
+//! computing spectral distortions of the cosmic microwave background (CMB)
+//! from energy release in the early Universe.
 //!
 //! ## Overview
 //!
@@ -53,7 +53,7 @@
 ///
 /// Used to invalidate cached Green's function tables when the underlying
 /// physics code changes. See `build.rs` for the curated file list and the
-/// `physics-hash` CLI subcommand for runtime access.
+/// `physics-hash` command-line interface (CLI) subcommand for runtime access.
 pub const PHYSICS_HASH: &str = env!("PHYSICS_HASH");
 
 /// Resonant axion–photon conversion. Behind the off-by-default `axion` feature

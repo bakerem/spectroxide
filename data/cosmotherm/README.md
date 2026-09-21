@@ -5,7 +5,7 @@ validation of spectroxide predictions.
 
 ## DI Files (included in repo)
 
-ASCII two-column files: `nu [GHz]` and `DI [Jy/sr]`. Lines starting with `#` are comments.
+ASCII two-column files of frequency and distortion intensity (DI): `nu [GHz]` and `DI [Jy/sr]`. Lines starting with `#` are comments.
 
 | File | Description | Reference |
 |------|------------|-----------|

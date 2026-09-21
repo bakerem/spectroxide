@@ -15,6 +15,11 @@ constraint analyses.
    05_observational_constraints
    06_greens_table
 
+The table below covers the partial differential equation (:term:`PDE`)
+solver, dark matter (:term:`DM`) scenarios, and observational constraints
+from the Far Infrared Absolute Spectrophotometer (:term:`FIRAS`) and the
+Primordial Inflation Explorer (:term:`PIXIE`).
+
 .. list-table::
    :widths: 5 40
    :header-rows: 0

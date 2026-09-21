@@ -1,8 +1,10 @@
-"""FIRAS spectral-distortion constraints with full covariance matrix.
+"""Far Infrared Absolute Spectrophotometer (FIRAS) spectral-distortion
+constraints with full covariance matrix.
 
 Provides χ² fitting of arbitrary spectral distortions against the
-COBE/FIRAS monopole residuals using the full 43 × 43
-frequency-frequency covariance matrix from the LAMBDA archive.
+COBE/FIRAS cosmic microwave background (CMB) monopole residuals using
+the full 43 × 43 frequency-frequency covariance matrix from the LAMBDA
+archive.
 
 Data sources
 ------------
@@ -21,7 +23,7 @@ Usage
 >>> from spectroxide.firas import FIRASData
 >>> firas = FIRASData()
 >>> chi2 = firas.chi2(model_kJy)             # χ² for a model in kJy/sr
->>> mu_limit = firas.upper_limit_mu()        # 95% CL upper limit on |μ|
+>>> mu_limit = firas.upper_limit_mu()  # 95% confidence level (CL) upper limit on |μ|
 >>> result = firas.fit_distortion(delta_n_func)  # joint (μ, y, ΔT/T) fit
 
 Statistical conventions
@@ -748,8 +750,9 @@ class FIRASData:
     def chi2_from_solver(self, result) -> float:
         """``χ²`` of a solver distortion against the FIRAS residuals.
 
-        Bridges the gap between the PDE/Green's-function output and the
-        FIRAS likelihood: interpolates ``result.delta_n`` from the solver's
+        Bridges the gap between the partial differential equation solver's
+        or Green's-function output and the FIRAS likelihood: interpolates
+        ``result.delta_n`` from the solver's
         ``x`` grid onto the 43 FIRAS frequencies, converts ``Δn → ΔI`` in
         kJy/sr with the same ``ΔI = (2 h ν³ / c²) Δn`` convention used for
         the internal templates, and evaluates the full-covariance ``χ²``.

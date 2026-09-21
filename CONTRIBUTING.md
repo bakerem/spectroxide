@@ -35,7 +35,7 @@ This is the contribution most likely to benefit from LLM assistance. The mechani
 
 1. Add an enum variant to `InjectionScenario` in `src/energy_injection.rs`
 2. Implement match arms for all required methods (see `CONTRIBUTING_CLAUDE.md` for the full list)
-3. Wire into the CLI in `src/main.rs`
+3. Wire into the command-line interface (CLI) in `src/main.rs`
 4. Write integration tests with independently derived targets
 5. Add Python support in `python/spectroxide/solver.py`
 6. Add or update a tutorial notebook demonstrating the scenario
@@ -46,7 +46,7 @@ Your LLM can handle steps 1-3 and 5 reliably. Step 4 is where you must be active
 
 Changes to the core solver (`kompaneets.rs`, `double_compton.rs`, `bremsstrahlung.rs`, `electron_temp.rs`, `solver.rs`) require extra care:
 
-- **Read the existing code first.** These modules encode subtle numerical choices (e.g., backward Euler for DC/BR instead of Crank-Nicolson to avoid amplification instability). Ask your LLM to explain the existing approach before modifying it.
+- **Read the existing code first.** These modules encode subtle numerical choices (e.g., backward Euler for double Compton (DC) and bremsstrahlung (BR) instead of Crank-Nicolson to avoid amplification instability). Ask your LLM to explain the existing approach before modifying it.
 - **Check limiting cases.** Does your change preserve mu = 1.401 * Delta_rho/rho in the deep mu-era? Does it preserve energy conservation? Does it maintain stability at z > 10^6?
 - **Run convergence tests.** `cargo test --release convergence` exercises grid and timestep convergence.
 
@@ -75,7 +75,7 @@ Every PR that adds or modifies physics code must include:
 
 ### What your PR should include (when applicable)
 
-- **Cross-validation of PDE vs Green's function** for new injection scenarios where the GF is applicable (simple injection histories). Agreement within ~5% is expected.
+- **Cross-validation of partial differential equation (PDE) vs Green's function** for new injection scenarios where the GF is applicable (simple injection histories). Agreement within ~5% is expected.
 - **A notebook or script** demonstrating the new feature, especially for new injection scenarios.
 - **Updated docstrings** on any new public API (enum variants, methods).
 

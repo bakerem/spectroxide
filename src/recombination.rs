@@ -19,7 +19,7 @@
 //! - `alpha_recomb`: Case-B recombination coefficient (Péquignot fit)
 //! - `beta_ion`: Photoionization rate from n=2
 //! - `peebles_c`: Peebles C factor decomposed into competing rates
-//! - Saha-subtracted ODE form to avoid catastrophic cancellation
+//! - Saha-subtracted ordinary differential equation (ODE) form to avoid catastrophic cancellation
 //!
 //! The fudge factor F=1.125 follows Chluba & Thomas (2011, arXiv:1011.3758),
 //! matching DarkHistory. This gives ~1% accuracy in X_e, sufficient for

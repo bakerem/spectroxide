@@ -4,7 +4,7 @@
 //! The formalism is that of Cyr, Chluba & Manoj (2024), which mirrors the
 //! photon → dark-photon treatment of Chluba, Cyr & Johnson (2024): a resonant
 //! conversion occurs where the photon plasma mass matches the axion mass,
-//! `m_a ≃ ω_pl`, and the CMB monopole is depleted by the conversion
+//! `m_a ≃ ω_pl`, and the cosmic microwave background monopole is depleted by the conversion
 //! probability `P(x) = 1 − exp(−γ_con x)`.
 //!
 //! Two differences from the dark-photon case:
@@ -55,7 +55,7 @@ pub fn kappa_ev(g_agamma: f64, b_rms: f64) -> f64 {
     KAPPA_PER_EPSILON_EV * (g_agamma / 1.0e-10) * b_rms
 }
 
-/// NWA axion–photon conversion parameter `γ_con` (dimensionless).
+/// Narrow-width approximation axion–photon conversion parameter `γ_con` (dimensionless).
 ///
 /// γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [ m_a² H(z_res) |d ln ω_pl²/d ln a| ],
 /// following Cyr, Chluba & Manoj (2024), Eq. 3a in the monopole limit

@@ -54,7 +54,7 @@ pub struct SolverResult {
 impl SolverResult {
     /// Serialize to a JSON string (zero dependencies).
     ///
-    /// Output format matches the CLI convention used by the Python client:
+    /// Output format matches the command-line interface convention used by the Python client:
     /// `{"results":[{"pde_mu":..., "pde_y":..., "drho":..., ...}], "diag_newton_exhausted":N}`
     pub fn to_json(&self) -> String {
         let s = &self.snapshot;
@@ -134,7 +134,8 @@ impl SolverResult {
     }
 }
 
-/// One row of a sweep: PDE result + Green's function comparison at one z_h.
+/// One row of a sweep: partial differential equation result + Green's function
+/// comparison at one z_h.
 #[derive(Debug, Clone)]
 pub struct SweepRow {
     pub z_h: f64,
@@ -258,7 +259,8 @@ impl SweepResult {
     }
 }
 
-/// One row of a photon sweep: PDE result at one z_h for a fixed x_inj.
+/// One row of a photon sweep: partial differential equation result at one z_h
+/// for a fixed x_inj.
 #[derive(Debug, Clone)]
 pub struct PhotonSweepRow {
     pub z_h: f64,
@@ -639,7 +641,7 @@ fn write_json_string_array(out: &mut String, key: &str, arr: &[String]) {
     out.push(']');
 }
 
-/// Output format selected by the CLI `--format` flag.
+/// Output format selected by the command-line interface `--format` flag.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
     Json,

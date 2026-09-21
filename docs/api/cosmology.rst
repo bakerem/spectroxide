@@ -5,11 +5,11 @@ Cosmology (``spectroxide.cosmology``)
 
 
 Flat ΛCDM background quantities, cosmology presets and the typed
-:class:`Cosmology` dataclass. The Green's-function and PDE-table
-modules pull from this module rather than redefining cosmology
-themselves; users can either pass a :class:`Cosmology` instance or a
-plain ``dict`` with the same keys to anything that takes a ``cosmo=``
-argument.
+:class:`Cosmology` dataclass. The Green's-function and partial
+differential equation table modules pull from this module rather than
+redefining cosmology themselves; users can either pass a
+:class:`Cosmology` instance or a plain ``dict`` with the same keys to
+anything that takes a ``cosmo=`` argument.
 
 Quick example
 -------------
@@ -73,7 +73,7 @@ Plain-dict cosmology presets. Each contains the keys ``h``, ``omega_b``,
    * - ``DEFAULT_COSMO``
      - Chluba (2013): h=0.71, Ω_b=0.044, Ω_m=0.26, Y_p=0.24, T_CMB=2.726, N_eff=3.046.
    * - ``PLANCK2015_COSMO``
-     - Planck 2015 (matches CosmoTherm DI files): h=0.6727, Ω_b=0.04917, Ω_m=0.3139, Y_p=0.2467.
+     - Planck 2015 (matches the CosmoTherm reference files): h=0.6727, Ω_b=0.04917, Ω_m=0.3139, Y_p=0.2467.
    * - ``PLANCK2018_COSMO``
      - Planck 2018 (Planck VI 2020, TT,TE,EE+lowE+lensing): h=0.6736, Ω_b=0.04930, Ω_m=0.3153, Y_p=0.2454.
 
@@ -112,7 +112,7 @@ Recombination
 
 Free-electron fraction ``X_e(z)``: Saha for helium, Peebles three-level
 atom for hydrogen with fudge factor ``F = 1.125`` (Chluba & Thomas
-2011). The ODE table is cached per cosmology.
+2011). The ordinary differential equation table is cached per cosmology.
 
 .. autosummary::
    :nosignatures:

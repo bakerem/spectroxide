@@ -8,16 +8,19 @@ CosmoTherm reference-data loader.
    exists to support internal cross-checks against published reference
    data and is **not** part of the public spectroxide API. Loaders,
    conventions, and file paths can change without notice. End users
-   should use :mod:`spectroxide.solver` (PDE),
-   :mod:`spectroxide.greens` (analytic Green's function), or
-   :mod:`spectroxide.greens_table` (precomputed PDE Green's function)
-   instead.
+   should use :mod:`spectroxide.solver` (the partial differential equation
+   solver), :mod:`spectroxide.greens` (analytic Green's function), or
+   :mod:`spectroxide.greens_table` (precomputed partial differential
+   equation Green's function) instead.
 
 Loads and parses data files from Jens Chluba's CosmoTherm code:
 
-- **DI files** — predicted ΛCDM spectral distortions (ASCII, two columns).
+- **Distortion intensity (DI) files** — predicted cosmic microwave
+  background (CMB) spectral distortions (ASCII, two columns).
 - **Green's function database** — precomputed exact GF (large
   ASCII table).
+- **Dark matter (DM) heating-rate helpers** — CosmoTherm-convention
+  s-wave/p-wave annihilation heating rates for cross-checks.
 
 References
 ----------
@@ -517,9 +520,10 @@ def convolve_cosmotherm_gf(
 def strip_gbb(x: ArrayLike, delta_n: ArrayLike) -> Tuple[NDArray[np.float64], float]:
     """Remove the unobservable temperature-shift component of a spectrum.
 
-    FIRAS measures the CMB spectrum with the absolute temperature as a
-    free parameter, so a uniform shift ΔT/T is unobservable.  CosmoTherm
-    therefore defines the *distortion* as the number-conserving part of
+    The Far Infrared Absolute Spectrophotometer measures the CMB spectrum
+    with the absolute temperature as a free parameter, so a uniform shift
+    ΔT/T is unobservable.  CosmoTherm therefore defines the *distortion*
+    as the number-conserving part of
     ``Δn`` (Chluba & Sunyaev 2012, arXiv:1109.6552): the part satisfying
     ``∫ x² Δn dx = 0``.  Any nonzero photon-number perturbation is
     absorbed into ``α · G_bb(x)``.

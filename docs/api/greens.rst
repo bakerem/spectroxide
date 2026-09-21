@@ -8,10 +8,11 @@ Analytic Green's function (``spectroxide.greens``)
 
    This module is the **analytic three-component approximation** of
    Chluba (2013, MNRAS 436, 2232; arXiv:1304.6120), implemented in pure
-   Python. It is *not* the PDE solver — for production work prefer the
-   :doc:`PDE solver <solver>`. Use this module for fast estimates,
-   pedagogical exploration, and the spectral templates ``M(x)``,
-   ``Y_SZ(x)``, ``G_bb(x)`` that downstream code consumes.
+   Python. It is *not* the partial differential equation (:term:`PDE`)
+   solver — for production work prefer the :doc:`PDE solver <solver>`.
+   Use this module for fast estimates, pedagogical exploration, and the
+   spectral templates ``M(x)``, ``Y_SZ(x)``, ``G_bb(x)`` that downstream
+   code consumes.
 
 The Chluba ansatz decomposes the distortion into three channels — μ, y,
 and a temperature shift — weighted by redshift-dependent visibility /
@@ -87,7 +88,7 @@ presets are provided:
    * - ``DEFAULT_COSMO``
      - Chluba (2013): h=0.71, Ω_b=0.044, Ω_m=0.26, Y_p=0.24, T_CMB=2.726, N_eff=3.046.
    * - ``PLANCK2015_COSMO``
-     - Planck 2015 (matches CosmoTherm DI files): h=0.6727, Ω_b=0.04917, Ω_m=0.3139, Y_p=0.2467.
+     - Planck 2015 (matches the CosmoTherm reference files): h=0.6727, Ω_b=0.04917, Ω_m=0.3139, Y_p=0.2467.
    * - ``PLANCK2018_COSMO``
      - Planck 2018 (Planck VI 2020, TT,TE,EE+lowE+lensing): h=0.6736, Ω_b=0.04930, Ω_m=0.3153, Y_p=0.2454.
 
@@ -192,8 +193,9 @@ Photon injection
 ----------------
 
 Monochromatic photon injection at frequency ``x_inj`` and redshift
-``z_h`` (Chluba 2015). Includes critical frequencies for DC/BR
-absorption and the photon survival probability ``P_s``.
+``z_h`` (Chluba 2015). Includes critical frequencies for double
+Compton and bremsstrahlung absorption and the photon survival
+probability ``P_s``.
 
 .. autosummary::
    :nosignatures:
@@ -269,7 +271,8 @@ underlying routines are private (``_decompose_nonlinear_be`` /
 Number-conservation stripping
 -----------------------------
 
-FIRAS measures the CMB spectrum with the absolute temperature as a free
+The Far Infrared Absolute Spectrophotometer measures the cosmic
+microwave background spectrum with the absolute temperature as a free
 parameter, so a uniform shift :math:`\Delta T/T` is unobservable.
 CosmoTherm therefore defines the *distortion* as the number-conserving
 part of :math:`\Delta n` (the part satisfying

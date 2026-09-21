@@ -1,7 +1,8 @@
-//! Example: custom injection scenarios with the PDE solver.
+//! Example: custom injection scenarios with the partial differential equation
+//! solver.
 //!
 //! Demonstrates how to define arbitrary energy injection histories using
-//! `InjectionScenario::Custom` and evolve them through the full PDE.
+//! `InjectionScenario::Custom` and evolve them through the full solver.
 //!
 //! Four examples:
 //!   1. Power-law heating: d(Δρ/ρ)/dt ∝ (1+z)^α

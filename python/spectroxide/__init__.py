@@ -1,11 +1,13 @@
 """
-spectroxide: Python API for CMB spectral distortion calculations.
+spectroxide: Python API for cosmic microwave background (CMB) spectral distortion
+calculations.
 
 This package provides:
 
 - ``greens``: Pure-Python Green's function implementation for fast approximate
   spectral distortion calculations (ported from the Rust library).
-- ``solver``: Wrapper that calls the Rust PDE solver binary.
+- ``solver``: Wrapper that calls the Rust partial differential equation (PDE)
+  solver binary.
 
 Quick start::
 
@@ -25,7 +27,9 @@ injection); the Rust binary loops internally and parallelises across cores.
 function.
 
 G_bb stripping (``strip_gbb``) and style helpers (``apply_style``, ``C``,
-``SINGLE_COL``, ``DOUBLE_COL``) are re-exported at top level.
+``SINGLE_COL``, ``DOUBLE_COL``) are re-exported at top level, along with
+Far Infrared Absolute Spectrophotometer (FIRAS) constraint data
+(``FIRASData`` and the ``MU_FIRAS_*`` / ``Y_FIRAS_*`` confidence limits).
 
 CosmoTherm comparison utilities are available via submodule import::
 

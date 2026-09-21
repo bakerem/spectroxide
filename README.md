@@ -4,17 +4,17 @@
 [![codecov](https://codecov.io/gh/bakerem/spectroxide/graph/badge.svg?token=KUQLBC7733)](https://codecov.io/gh/bakerem/spectroxide)
 [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Numerical solver for **CMB spectral distortions** from energy and photon injection in the early Universe.
+Numerical solver for **cosmic microwave background (CMB) spectral distortions** from energy and photon injection in the early Universe.
 
 Energy released into the photon-baryon plasma at redshifts $z \sim 10^3 - 5 \times 10^6$ creates deviations from a perfect blackbody spectrum. These spectral distortions --- $\mu$-type (chemical potential) and $y$-type (Compton) --- encode information about early-universe physics, from the dissipation of primordial acoustic waves to exotic particle decays and dark sector interactions.
 
-spectroxide solves the coupled photon-electron Boltzmann equation including Compton scattering (Kompaneets equation), double Compton emission, bremsstrahlung, and Hubble expansion. It provides both a **full PDE solver** (Rust) and a **fast Green's function approximation** (Rust + Python).
+spectroxide solves the coupled photon-electron Boltzmann equation including Compton scattering (Kompaneets equation), double Compton emission, bremsstrahlung, and Hubble expansion. It provides both a **full partial differential equation (PDE) solver** (Rust) and a **fast Green's function approximation** (Rust + Python).
 
 ## Features
 
-- **Full PDE solver** in Rust: implicit Kompaneets + coupled DC/BR with adaptive stepping
+- **Full PDE solver** in Rust: implicit Kompaneets + coupled double Compton (DC) and bremsstrahlung (BR) with adaptive stepping
 - **Green's function** mode for fast approximate calculations (pure Python, no compilation needed)
-- **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), DM annihilation (s-wave/p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating via Rust API)
+- **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave/p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating via Rust API)
 - **Comprehensive test suite**: 480+ unit, integration, and doc-tests
 - **Zero production dependencies** in Rust (pure `std` library)
 
@@ -54,7 +54,7 @@ Run `./install.sh --help` to see all options (skip steps, verbose output, etc.).
 <details>
 <summary>Click to expand step-by-step instructions</summary>
 
-**Rust** (required for the PDE solver and CLI):
+**Rust** (required for the PDE solver and the command-line interface, or CLI):
 
 If you don't have Rust installed, the easiest way is via [rustup](https://rustup.rs/):
 
@@ -188,7 +188,7 @@ Output is written to stdout as JSON (pipe to a file with `> output.json`).
 | [`02_energy_injection.ipynb`](notebooks/tutorials/02_energy_injection.ipynb) | PDE: decaying particles, DM annihilation (s-wave, p-wave), amplitude scaling |
 | [`03_new_physics.ipynb`](notebooks/tutorials/03_new_physics.ipynb) | PDE: dark photon depletion, monochromatic photon injection, $\mu$ sign flip |
 | [`04_custom_scenarios.ipynb`](notebooks/tutorials/04_custom_scenarios.ipynb) | Custom injection scenarios and tabulated heating histories |
-| [`05_observational_constraints.ipynb`](notebooks/tutorials/05_observational_constraints.ipynb) | FIRAS/PIXIE limits, $\mu$-$y$ plane, mock PIXIE observation |
+| [`05_observational_constraints.ipynb`](notebooks/tutorials/05_observational_constraints.ipynb) | Far Infrared Absolute Spectrophotometer (FIRAS) and Primordial Inflation Explorer (PIXIE) limits, $\mu$-$y$ plane, mock PIXIE observation |
 | [`06_greens_table.ipynb`](notebooks/tutorials/06_greens_table.ipynb) | Precomputed Green's function tables for fast convolution |
 
 Additional notebooks in [`notebooks/physics/`](notebooks/physics/) (photon injection, dark photons) and [`notebooks/observational/`](notebooks/observational/) (FIRAS photon injection limits). Development and validation notebooks are in [`dev/notebooks/`](dev/notebooks/).

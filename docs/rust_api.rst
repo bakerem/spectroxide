@@ -1,10 +1,11 @@
 Rust API
 ========
 
-The Rust crate ``spectroxide`` is the PDE solver itself; the Python package is a
-thin wrapper that calls the Rust CLI for heavy computations and provides a
-pure-Python Green's function for quick estimates. Most users only touch Python,
-but the Rust API is useful when:
+The Rust crate ``spectroxide`` is the partial differential equation
+(:term:`PDE`) solver itself; the Python package is a thin wrapper that calls
+the Rust command-line interface (:term:`CLI`) for heavy computations and
+provides a pure-Python Green's function for quick estimates. Most users only
+touch Python, but the Rust API is useful when:
 
 * embedding the solver in a larger Rust program,
 * writing a custom injection scenario,

@@ -4,9 +4,10 @@ PDE solver (``spectroxide.solver``)
 .. currentmodule:: spectroxide.solver
 
 
-Python wrapper around the Rust ``spectroxide`` binary. Runs the full
-photon-Boltzmann PDE (Kompaneets + double Compton + bremsstrahlung)
-with adaptive redshift stepping and parses the JSON output.
+Python wrapper around ``spectroxide``, the Rust partial differential
+equation (:term:`PDE`) solver binary. Runs the full photon-Boltzmann
+PDE (Kompaneets + double Compton + bremsstrahlung) with adaptive
+redshift stepping and parses the JSON output.
 
 This page documents the **PDE solver only**. For the analytic Green's
 function approximation see :doc:`greens`; for the precomputed
@@ -84,9 +85,9 @@ For the physics behind each scenario and full derivations, see the
 Gaussian widths of the burst in redshift/frequency and default to
 narrow values when omitted.
 
-Each parameter name is mapped to the corresponding Rust CLI flag
-``--<kebab-case>`` (e.g. ``f_x → --f-x``, ``delta_n_over_n →
---delta-n-over-n``).
+Each parameter name is mapped to the corresponding Rust command-line
+interface flag ``--<kebab-case>`` (e.g. ``f_x → --f-x``,
+``delta_n_over_n → --delta-n-over-n``).
 
 
 Custom heating and photon-source callables

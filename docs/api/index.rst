@@ -1,9 +1,10 @@
 API reference
 =============
 
-The Python package ``spectroxide`` wraps the Rust PDE solver and provides
-a pure-Python analytic Green's-function implementation. Most users will
-only need the top-level import:
+The Python package ``spectroxide`` wraps the Rust partial differential
+equation (:term:`PDE`) solver and provides a pure-Python analytic
+Green's-function implementation. Most users will only need the
+top-level import:
 
 .. code-block:: python
 
@@ -36,9 +37,10 @@ Primary solver
 Approximations and helpers
 --------------------------
 
-The remaining modules support cross-checks, fast estimates, and
-publication-quality plotting. They are useful but secondary; the
-science targets are computed by the PDE solver above.
+The remaining modules support cross-checks, fast estimates,
+publication-quality plotting, and Far Infrared Absolute
+Spectrophotometer (FIRAS) data utilities. They are useful but
+secondary; the science targets are computed by the PDE solver above.
 
 .. grid:: 1 2 2 2
    :gutter: 3
@@ -59,8 +61,8 @@ science targets are computed by the PDE solver above.
 
       ``spectroxide.greens_table`` — precomputed numerical Green's
       function from the Rust PDE, tabulated for fast convolution. More
-      accurate than the analytic GF in the μ↔y transition region
-      (3 × 10⁴ < z < 10⁵).
+      accurate than the analytic Green's function in the μ↔y transition
+      region (3 × 10⁴ < z < 10⁵).
 
    .. grid-item-card:: FIRAS data
       :link: firas
@@ -84,15 +86,16 @@ science targets are computed by the PDE solver above.
       :link: dark_photon
       :link-type: doc
 
-      ``spectroxide.dark_photon`` — NWA helpers (ω_pl, z_res, γ_con) for
-      resonant γ↔A' conversion; the route to reproduce the dark-photon
-      constraint numbers.
+      ``spectroxide.dark_photon`` — narrow-width-approximation helpers
+      (ω_pl, z_res, γ_con) for resonant γ↔A' conversion; the route to
+      reproduce the dark-photon constraint numbers.
 
    .. grid-item-card:: Axion helpers (experimental)
       :link: axion
       :link-type: doc
 
-      ``spectroxide.axion`` — NWA helpers for resonant γ↔a conversion.
+      ``spectroxide.axion`` — narrow-width-approximation helpers for
+      resonant γ↔a conversion.
       **Experimental**; the PDE path needs a binary built with
       ``--features axion``.
 

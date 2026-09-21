@@ -6,12 +6,12 @@ A fresh session resumes from the first unchecked box below.
 ## Phase checklist
 
 - [x] Phase 0. Guardrails (2026-09-21): this file, baselines, `dev/scripts/docs_style_lint.py`. Lint is not in CI (revisit after phase 6).
-- [ ] Phase 1. Abbreviations and `docs/glossary.rst`
+- [x] Phase 1. Abbreviations and `docs/glossary.rst` (2026-09-21): `abbrev-first-use` 160 to 0
 - [ ] Phase 2. API reference gaps (one context, physics-inquisitor pass on added units and panic conditions)
 - [ ] Phase 3. Procedures, code-block introductions, page openings
 - [ ] Phase 4. Placeholders in `docs/cli.rst`
 - [ ] Phase 5. Mechanical prose substitutions (blocked on D1 for dashes only)
-- [ ] Phase 6. Record the house style in `CONTRIBUTING.md`; add the script to the `CLAUDE.md` list (20 to 21)
+- [ ] Phase 6. Record the house style in `CONTRIBUTING.md`; add the script to the `CLAUDE.md` list (20 to 22; see the log)
 - [ ] Phase 7. `firas.py` keyword names (blocked on D2)
 - [ ] Phase 8. Independent re-review
 
@@ -70,5 +70,21 @@ Notes on the lint, so that nobody reads a count as a verdict:
 None yet. Add one line per exception with the rule, the file, and the reason.
 
 ## Log
+
+- 2026-09-21: phase 1 done. Eight subagents, one per file group, then a review pass by hand. Checks equal the baseline: Sphinx 0
+  warnings (so every `:term:` link resolves), rustdoc 2 warnings in both configurations, Clippy clean in both, 3 doctests,
+  pytest 331 passed, `cargo fmt --check` and `black --check` clean. Proof that no code changed: zero changed Rust lines outside
+  `///` and `//!`; the Python AST with docstrings stripped is identical to HEAD for all 12 modules; in the notebooks only
+  Markdown cells differ (checked cell by cell against HEAD).
+  - Convention used: an abbreviation that a file uses once or twice is spelled out and never introduced; otherwise
+    "long form (ABBR)" at first use, with `:term:` in `docs/*.rst`. Headings are left alone and the first body sentence carries
+    the expansion.
+  - Three lint defects found and fixed during the phase: expansion patterns did not match across line breaks; `:term:` roles
+    were blanked with inline code; headings counted as first use. `docs/glossary.rst` is excluded from the lint.
+  - New helper `dev/scripts/nb_md_replace.py` edits one Markdown cell at the raw-text level and proves nothing else changed
+    (notebook 05 mixes escaped and raw non-ASCII, so a JSON load-and-dump rewrites output lines). Phase 6 must add two scripts
+    to the `CLAUDE.md` list, not one (20 to 22).
+  - One heading changed: tutorial 06, "4. Convolve with a DM-decay heating rate" to "... dark matter decay ...". No source
+    links to its anchor.
 
 - 2026-09-21: phase 0 done. No source or documentation file changed.

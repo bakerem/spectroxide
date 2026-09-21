@@ -1,9 +1,9 @@
 """
 Python wrappers around the Rust ``spectroxide`` binary.
 
-Provides convenience functions for running the full PDE solver from
-Python (subprocess + JSON over stdout) and for quick single-injection
-calculations using the pure-Python Green's function module.
+Provides convenience functions for running the full partial differential equation
+(PDE) solver from Python (subprocess + JSON over stdout) and for quick
+single-injection calculations using the pure-Python Green's function module.
 
 Conventions
 -----------
@@ -173,7 +173,7 @@ def _resolve_quality_settings(n_points, production_grid, dtau_max_photon_source,
 
 
 def _build_cosmo_args(cosmo_params):
-    """Translate a cosmology dict to Rust CLI flags.
+    """Translate a cosmology dict to Rust command-line interface (CLI) flags.
 
     Both layers use the same fractional convention (``omega_b`` = Ω_b,
     ``omega_m`` = Ω_m total matter), so the wrapper is a straight
@@ -782,7 +782,8 @@ def run_sweep(
         Below this redshift, photon-number conservation is relaxed.
         *None* uses the Rust default.
     no_dcbr : bool, optional
-        Disable DC+BR entirely (diagnostic).  Default *False*.
+        Disable double Compton and bremsstrahlung emission entirely
+        (diagnostic).  Default *False*.
     production_grid : bool, optional
         Use the production-quality frequency grid.  *None* inherits from
         the active preset.
@@ -1372,7 +1373,8 @@ def solve(
             {"type": "axion_resonance", "g_agamma": 1e-10, "b_rms": 1, "m_ev": 1e-7}
 
         both trigger the Rust solver to compute ``γ_con`` and ``z_res``
-        internally and install the impulsive depletion IC at ``z_res``.
+        internally and install the impulsive depletion initial condition
+        at ``z_res``.
     cosmo : Cosmology, Mapping, or None, optional
         Cosmological parameters.  Accepts a :class:`Cosmology` dataclass
         or a plain dict; *None* (default) uses Rust defaults.

@@ -3,7 +3,7 @@ Dark-photon helpers (``spectroxide.dark_photon``)
 
 .. currentmodule:: spectroxide.dark_photon
 
-Pure-Python narrow-width-approximation (NWA) helpers for resonant
+Pure-Python narrow-width-approximation helpers for resonant
 ``γ ↔ A'`` conversion. Mirror the Rust ``src/dark_photon.rs`` routines
 and are the documented route to reproduce the dark-photon constraint
 numbers. Not re-exported at the top level — import explicitly:

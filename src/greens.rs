@@ -6,7 +6,8 @@
 //! shift components using visibility/branching functions.
 //!
 //! The Green's function approach is "quasi-exact" for small distortions
-//! (Δρ/ρ << 1) and much faster than solving the full PDE.
+//! (Δρ/ρ << 1) and much faster than solving the full
+//! partial differential equation (PDE).
 //!
 //! Also includes the **photon injection** Green's function (Chluba 2015),
 //! which handles injection of photons at a specific frequency x_inj.
@@ -43,9 +44,10 @@ use crate::spectrum::{g_bb, mu_shape, y_shape};
 /// J_bb(z) = exp(−(z/z_μ)^{5/2})
 ///
 /// where z_μ ≈ 1.98×10⁶. Both z_μ and the exponent 5/2 are analytically
-/// derived: z_μ from equating the DC+BR photon production rate to the Hubble
-/// rate in radiation domination (Chluba & Sunyaev 2012), and 5/2 from the
-/// redshift scaling of the DC opacity ∝ (1+z)^{−9/2} vs H ∝ (1+z)^{−2}
+/// derived: z_μ from equating the double Compton (DC) + bremsstrahlung (BR)
+/// photon production rate to the Hubble rate in radiation domination
+/// (Chluba & Sunyaev 2012), and 5/2 from the redshift scaling of the DC
+/// opacity ∝ (1+z)^{−9/2} vs H ∝ (1+z)^{−2}
 /// (Danese & de Zotti 1982; Hu & Silk 1993). These are NOT fit parameters.
 pub fn visibility_j_bb(z: f64) -> f64 {
     let ratio = z / Z_MU;
@@ -532,10 +534,10 @@ fn broadened_bump(x_obs: f64, x_inj: f64, yg: f64) -> (f64, f64) {
     (bump, f_int)
 }
 
-/// Photon-injection GF is only valid in the deep μ-era (z_h ≳ 2×10⁵) or
-/// the y-era (z_h ≲ 5×10⁴). In the μ-y transition window, the simple
-/// μ+y decomposition misses residual (r-type) contributions; users must
-/// fall back to the PDE solver.
+/// Photon-injection Green's function (GF) is only valid in the deep μ-era
+/// (z_h ≳ 2×10⁵) or the y-era (z_h ≲ 5×10⁴). In the μ-y transition window,
+/// the simple μ+y decomposition misses residual (r-type) contributions;
+/// users must fall back to the PDE solver.
 const PHOTON_GF_Y_ERA_Z_MAX: f64 = 5.0e4;
 const PHOTON_GF_MU_ERA_Z_MIN: f64 = 2.0e5;
 
@@ -904,7 +906,8 @@ mod tests {
     ///
     /// `photon_survival_probability_numerical` short-circuits to the analytic
     /// μ-era form above z = 5×10⁴, so only z_h < 5×10⁴ exercises
-    /// `tau_ff_survival` — the branch that sets the FIRAS photon-injection
+    /// `tau_ff_survival` — the branch that sets the
+    /// Far Infrared Absolute Spectrophotometer (FIRAS) photon-injection
     /// limits in this fork's post-recombination regime. Every pre-audit test of
     /// it was a bound (0 ≤ P_s ≤ 1, "≈1 at large x"), and all 34 of its mutants
     /// survived the full suite. These are value/shape anchors instead.

@@ -1,7 +1,7 @@
 //! Frequency grid for the photon Boltzmann equation.
 //!
 //! Non-uniform grid in dimensionless frequency x = hν/(kT_z), with
-//! logarithmic spacing at low x (where DC/BR are important) and
+//! logarithmic spacing at low x (where double Compton and bremsstrahlung are important) and
 //! linear or log spacing at higher x.
 
 /// A localized region of extra grid points for resolving narrow features.

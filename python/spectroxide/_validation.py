@@ -368,9 +368,10 @@ def warn_x_inj_regime(x_inj):
 def warn_z_max_regime(z_max):
     """Warn if integration extends beyond reliable GF regime.
 
-    The PDE solver hard-errors at ``z_start > 1e7`` (Kompaneets Fokker-Planck
-    invalid for theta_e > 0.005), so the GF should warn well before that —
-    we mirror the PDE soft-warning threshold (``5e6``) and escalate at ``1e7``.
+    The partial differential equation (PDE) solver hard-errors at
+    ``z_start > 1e7`` (Kompaneets Fokker-Planck invalid for theta_e > 0.005),
+    so the GF should warn well before that — we mirror the PDE
+    soft-warning threshold (``5e6``) and escalate at ``1e7``.
     """
     if z_max > 1e7:
         warnings.warn(
@@ -533,10 +534,11 @@ def validate_pde_injection_grid_args(x, x_min, x_max, n_x, *, defaults):
     ``solve(injection={...})`` and ``solve(dn_planck=...)`` dispatch to the
     Rust binary, which builds its own frequency grid internally (fixed
     extent from :mod:`grid`, point count from ``n_points``/``production_grid``).
-    The Rust CLI has no ``--x-min``/``--x-max`` flags, so ``x``, ``x_min``,
-    ``x_max``, and ``n_x`` have zero effect on this path — passing anything
-    but their defaults silently produced the default-grid result with no
-    indication that the requested grid was never applied.
+    The Rust command-line interface (CLI) has no ``--x-min``/``--x-max``
+    flags, so ``x``, ``x_min``, ``x_max``, and ``n_x`` have zero effect on
+    this path — passing anything but their defaults silently produced the
+    default-grid result with no indication that the requested grid was
+    never applied.
 
     Parameters
     ----------

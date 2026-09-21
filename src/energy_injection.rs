@@ -10,6 +10,9 @@
 //!
 //! All heating rates are expressed as d(Δρ_γ/ρ_γ)/dt in units of 1/s.
 //!
+//! Each scenario also exposes a short name for the command-line interface (CLI) through
+//! `InjectionScenario::name`.
+//!
 //! References:
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294 [Eq. 22-30]
 
@@ -114,7 +117,8 @@ pub enum InjectionScenario {
     /// n_pl ≈ 1/x_inj ≫ 1, and is sub-percent for x_inj ≳ few.
     ///
     /// All injected photons are routed through `photon_source_rate()` and
-    /// are evolved self-consistently by the PDE solver (Compton + DC/BR).
+    /// are evolved self-consistently by the partial differential equation solver
+    /// (Compton scattering, double Compton (DC), and bremsstrahlung (BR)).
     ///
     /// Reference: Bolliet & Chluba (2021), MNRAS 507, 3148 [arXiv:2012.07292]
     DecayingParticlePhoton {
@@ -128,9 +132,9 @@ pub enum InjectionScenario {
     },
 
     /// Dark photon (γ ↔ A') resonant conversion in the narrow-width
-    /// approximation.
+    /// approximation (NWA).
     ///
-    /// Applied as an **initial condition** at the resonance redshift:
+    /// Applied as an **initial condition (IC)** at the resonance redshift:
     /// Δn(x) = -[1 - exp(-γ_con/x)] × n_pl(x) at z_start = z_res, where
     /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a|_{z_res} × T_γ(z_res) × H(z_res)).
     /// The solver then evolves this IC with Kompaneets + DC/BR.
@@ -188,7 +192,7 @@ pub enum InjectionScenario {
     ///
     /// This enables Python (or any external tool) to define arbitrary
     /// heating rates by writing a CSV table and passing it to the Rust
-    /// PDE solver.
+    /// partial differential equation solver.
     TabulatedHeating {
         /// Redshift grid (ascending)
         z_table: Vec<f64>,

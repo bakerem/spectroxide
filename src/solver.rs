@@ -1,8 +1,10 @@
-//! Main PDE solver for the cosmological thermalization problem.
+//! Main partial differential equation (PDE) solver for the cosmological
+//! thermalization problem.
 //!
 //! Key physics: energy injection → heats electrons (T_e > T_z) →
-//! Kompaneets source drives y-type distortion → DC/BR create photons
-//! to convert y → μ and approach Bose-Einstein equilibrium.
+//! Kompaneets source drives y-type distortion → double Compton (DC) and
+//! bremsstrahlung (BR) create photons to convert y → μ and approach
+//! Bose-Einstein equilibrium.
 //!
 //! The solver evolves the single Kompaneets operator at the full electron
 //! temperature θ_e = θ_z ρ_e, with ρ_e as an extra Newton unknown coupled to
@@ -49,9 +51,9 @@ pub struct SolverConfig {
     pub dz_min: f64,
     /// Maximum Compton optical depth per step. With exact exponential DC/BR
     /// (unconditionally stable), this primarily limits Kompaneets CN accuracy.
-    /// Default 10.0 matches the CLI default (the value used for all paper
-    /// runs). Raise to ~50 for exploratory runs where modest accuracy loss
-    /// is acceptable.
+    /// Default 10.0 matches the command-line interface (CLI) default (the
+    /// value used for all paper runs). Raise to ~50 for exploratory runs
+    /// where modest accuracy loss is acceptable.
     pub dtau_max: f64,
     /// Minimum redshift for number-conserving T-shift subtraction.
     /// Default 5e4: only subtract at z > nc_z_min where DC/BR is significant.
@@ -215,7 +217,8 @@ impl SolverSnapshot {
     }
 }
 
-/// Cached backward-Euler ODE coefficients for the ρ_e equation.
+/// Cached backward-Euler ordinary differential equation (ODE) coefficients
+/// for the ρ_e equation.
 ///
 /// Computed once per step in `update_temperatures()` and consumed by:
 /// 1. The DC/BR emission rate computation (needs ρ_dcbr corrected for injection).
@@ -256,7 +259,7 @@ pub struct SolverDiagnostics {
     pub warnings: Vec<String>,
 }
 
-/// Full PDE solver for CMB spectral distortions.
+/// Full PDE solver for cosmic microwave background (CMB) spectral distortions.
 ///
 /// Evolves the photon occupation number perturbation Δn(x, z) from `z_start`
 /// down to `z_end` using a coupled implicit scheme:
@@ -328,8 +331,9 @@ pub struct ThermalizationSolver {
     /// If true, disable DC/BR processes (Kompaneets only). For diagnostics.
     pub disable_dcbr: bool,
     /// If true (default), couple DC/BR into the Kompaneets Newton iteration
-    /// instead of operator splitting. Uses IMEX: Crank-Nicolson for Kompaneets
-    /// + backward Euler for DC/BR, solved simultaneously. More physically
+    /// instead of operator splitting. Uses an implicit-explicit (IMEX) scheme:
+    /// Crank-Nicolson for Kompaneets + backward Euler for DC/BR, solved
+    /// simultaneously. More physically
     /// consistent than operator splitting, especially at z > 2×10⁶.
     pub coupled_dcbr: bool,
     /// Pre-allocated work buffer for DC/BR emission rates (per step)

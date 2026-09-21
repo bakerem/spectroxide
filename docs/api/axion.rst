@@ -1,15 +1,15 @@
 .. warning::
    **Experimental.** Axion support is behind the off-by-default ``axion``
    Cargo feature (build with ``--features axion``). The pure-Python
-   helpers on this page import without any Rust build; only the PDE path
-   needs the feature-enabled binary.
+   helpers on this page import without any Rust build; only the partial
+   differential equation path needs the feature-enabled binary.
 
 Axion helpers (``spectroxide.axion``)
 =====================================
 
 .. currentmodule:: spectroxide.axion
 
-Pure-Python narrow-width-approximation (NWA) helpers for resonant
+Pure-Python narrow-width-approximation helpers for resonant
 ``γ ↔ a`` axion–photon conversion, following Cyr, Chluba & Manoj
 (2024, arXiv:2411.13701). Mirror the Rust ``src/axion.rs`` routines and
 reuse the plasma-frequency machinery of :mod:`spectroxide.dark_photon`

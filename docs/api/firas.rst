@@ -4,12 +4,13 @@ FIRAS data (``spectroxide.firas``)
 .. currentmodule:: spectroxide.firas
 
 
-Loads the COBE/FIRAS monopole spectrum, residuals, and the full 43 × 43
-frequency-frequency covariance matrix from the LAMBDA archive into clean
-numpy arrays. A :class:`FIRASData` instance is the primary handle: its
-attributes give the data itself, and its methods provide χ²-based
-constraint utilities for downstream analysis (μ/y upper limits, joint
-fits over a free CMB temperature, etc.).
+Loads the COBE Far Infrared Absolute Spectrophotometer (:term:`FIRAS`)
+monopole spectrum, residuals, and the full 43 × 43 frequency-frequency
+covariance matrix from the LAMBDA archive into clean numpy arrays. A
+:class:`FIRASData` instance is the primary handle: its attributes give
+the data itself, and its methods provide χ²-based constraint utilities
+for downstream analysis (μ/y upper limits, joint fits over a free
+cosmic microwave background temperature, etc.).
 
 Quick example
 -------------
@@ -35,8 +36,10 @@ Quick example
 Module-level upper limits
 -------------------------
 
-Precomputed FIRAS constraints (Fixsen et al. 1996) exposed as constants
-for quick use without constructing a :class:`FIRASData` object.
+Precomputed FIRAS constraints (Fixsen et al. 1996) exposed as
+constants for quick use without constructing a :class:`FIRASData`
+object. Limits are quoted at the confidence level (:term:`CL`) noted
+in the table.
 
 .. list-table::
    :header-rows: 1

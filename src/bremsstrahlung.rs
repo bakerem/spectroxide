@@ -3,7 +3,7 @@
 //! Photon-number-changing process: e + ion → e + ion + γ.
 //! Dominates over double Compton at lower redshifts (z < few × 10⁵).
 //!
-//! The BR emission coefficient:
+//! The bremsstrahlung (BR) emission coefficient:
 //!   K_BR(x, θ_e) = (α λ_e³ / (2π√(6π))) θ_e^{-7/2} e^{-xφ}/φ³ Σ_i Z_i² N_i g_ff(Z_i, x, θ_e)
 //!
 //! In the code, we express this as a rate per Thomson scattering time τ:

@@ -7,7 +7,7 @@ use crate::constants::*;
 /// Cosmological parameters with cached derived quantities.
 #[derive(Debug, Clone)]
 pub struct Cosmology {
-    /// CMB temperature today, in K.
+    /// Cosmic microwave background temperature today, in K.
     pub t_cmb: f64,
     /// Physical baryon density ω_b = Ω_b h²
     pub omega_b: f64,
@@ -184,7 +184,7 @@ impl Cosmology {
     /// `Cosmology.planck2015()` convention exactly (P0-6, resolved 2026-07-06).
     ///
     /// For CosmoTherm comparisons use [`Cosmology::planck2015_cosmotherm`]
-    /// instead: CosmoTherm's DI files bake in the Fixsen (1996) value
+    /// instead: CosmoTherm's distortion intensity (DI) files bake in the Fixsen (1996) value
     /// `T_CMB = 2.726 K`, so the CT-comparison tests route through that preset.
     pub fn planck2015() -> Self {
         Self::new_unchecked(2.7255, 0.02225, 0.1198, 0.6727, 3.046, 0.2467)
@@ -356,7 +356,7 @@ impl Cosmology {
     /// Compton y-parameter with a pre-built RecombinationHistory.
     ///
     /// Use this variant in loops to avoid rebuilding the recombination
-    /// table (~3000 ODE steps) on every call.
+    /// table (~3000 ordinary differential equation steps) on every call.
     pub fn compton_y_parameter_with_recomb(
         &self,
         z: f64,
@@ -431,8 +431,8 @@ impl Default for Cosmology {
     ///
     /// These are intentionally **not** the latest Planck values. The defaults
     /// match Chluba (2013) / CosmoTherm v1.0.3 (Y_p=0.24, T₀=2.726 K,
-    /// Ω_m=0.26, Ω_b=0.044, h=0.71) so that PDE output can be validated
-    /// against published CosmoTherm results without cosmology mismatch.
+    /// Ω_m=0.26, Ω_b=0.044, h=0.71) so that partial differential equation solver
+    /// output can be validated against published CosmoTherm results without cosmology mismatch.
     /// N_eff=3.046 follows the Chluba 2013 paper; CosmoTherm's Greens.cpp
     /// hard-codes 3.04 (a ~2×10⁻⁴ difference in Ω_rel, negligible for
     /// distortions; Python's COSMOTHERM_GF_COSMO carries 3.04 explicitly).

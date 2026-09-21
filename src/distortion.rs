@@ -1,7 +1,9 @@
 //! Distortion extraction and characterization.
 //!
 //! Given the photon distortion Δn(x), extract the standard distortion
-//! parameters (μ, y, temperature shift) and compute residuals.
+//! parameters (μ, y, temperature shift) and compute residuals. Includes
+//! helpers for the Primordial Inflation Explorer (PIXIE) decomposition band
+//! and the Far Infrared Absolute Spectrophotometer (FIRAS) limits on μ and y.
 
 use crate::constants::*;
 use crate::spectrum::{
@@ -420,7 +422,7 @@ pub fn decomposition_band_count(x_grid: &[f64]) -> usize {
     idx.len()
 }
 
-/// FIRAS 95% CL upper limit on |μ|.
+/// FIRAS 95% confidence level (CL) upper limit on |μ|.
 ///
 /// Reference: Fixsen et al. (1996), ApJ 473, 576
 pub const FIRAS_MU_LIMIT: f64 = 9.0e-5;

@@ -46,6 +46,10 @@ Run ``./install.sh --help`` for all options (skip steps, verbose output, etc.).
 Manual installation
 -------------------
 
+Building from source needs the Rust toolchain, which compiles the
+partial differential equation (:term:`PDE`) solver and its
+command-line interface (:term:`CLI`), and Python for the wrapper package.
+
 **Rust** (required for the PDE solver and CLI):
 
 If you don't have Rust installed, the easiest way is via `rustup <https://rustup.rs/>`_:

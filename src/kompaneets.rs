@@ -14,6 +14,9 @@
 //! Discretized with second-order conservative finite differences and solved
 //! with Crank-Nicolson time stepping → tridiagonal system.
 //!
+//! The in-place stepper also couples double Compton (DC) and bremsstrahlung (BR)
+//! emission implicitly, within the same Newton iteration, with backward Euler.
+//!
 //! References:
 //! - Kompaneets (1957), JETP
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294 [Eq. 4]
@@ -441,7 +444,7 @@ pub struct RhoECoupling {
     /// This is the rate at which Compton scattering drives ρ_e → ρ_eq,
     /// per unit Thomson optical depth.
     pub r_compton: f64,
-    /// Source term in the ρ_e ODE: R·ρ_eq + δρ_inj.
+    /// Source term in the ρ_e ordinary differential equation: R·ρ_eq + δρ_inj.
     pub rho_source: f64,
     /// Adiabatic cooling rate: H·t_C.
     pub lambda_exp: f64,

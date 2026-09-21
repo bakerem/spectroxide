@@ -10,7 +10,7 @@ This file is designed to be included as context when using an LLM (Claude, GPT, 
 
 ## Project overview
 
-spectroxide is a Rust PDE solver for CMB spectral distortions. It evolves the photon occupation number n(x, z) through the coupled Kompaneets (Compton scattering), double Compton, and bremsstrahlung equations from z ~ 10^6 to z ~ 100. It computes mu-, y-, and intermediate-type distortions from arbitrary energy injection histories. A fast Green's function mode is also available.
+spectroxide is a Rust partial differential equation (PDE) solver for cosmic microwave background (CMB) spectral distortions. It evolves the photon occupation number n(x, z) through the coupled Kompaneets (Compton scattering), double Compton, and bremsstrahlung equations from z ~ 10^6 to z ~ 100. It computes mu-, y-, and intermediate-type distortions from arbitrary energy injection histories. A fast Green's function mode is also available.
 
 **Key constraint:** Zero *production* Rust dependencies (pure std). Dev-dependencies are limited to `approx` (test float comparison) and `criterion` (benchmarks). Do not add new production crates.
 
@@ -32,13 +32,13 @@ cd python && pip install -e ".[plot]"
 ## Architecture (what you need to know)
 
 - **Physics modules** (`src/`): Each physical process has its own file — `kompaneets.rs`, `double_compton.rs`, `bremsstrahlung.rs`, `electron_temp.rs`, `recombination.rs`. Do not mix processes across files.
-- **Solver** (`src/solver.rs`): IMEX integrator coupling all processes. Crank-Nicolson for Kompaneets, backward Euler for DC/BR, Newton iteration.
+- **Solver** (`src/solver.rs`): implicit-explicit (IMEX) integrator coupling all processes. Crank-Nicolson for Kompaneets, backward Euler for double Compton (DC) and bremsstrahlung (BR), Newton iteration.
 - **Energy injection** (`src/energy_injection.rs`): All injection scenarios live here as variants of `InjectionScenario`. New scenarios go here.
 - **Grid** (`src/grid.rs`): Non-uniform frequency grid with optional `RefinementZone` for adaptive resolution near spectral features.
 - **Distortion decomposition** (`src/distortion.rs`): Extracts (mu, y, DeltaT/T) from the solved spectrum.
 - **Green's function** (`src/greens.rs`): Fast approximate mode. Visibility functions J_bb*, J_mu, J_y.
 - **Python** (`python/spectroxide/`): Wraps Rust binary + pure-Python Green's function.
-- **Tests** (`tests/`): 430+ Rust tests across 8 files (`heat_injection.rs` is the main integration file; others cover adversarial inputs, coverage gaps, CosmoTherm comparison, Green's-function checks, convergence order, CLI integration, and the science suite). A separate Python test suite lives under `python/tests/`.
+- **Tests** (`tests/`): 430+ Rust tests across 8 files (`heat_injection.rs` is the main integration file; others cover adversarial inputs, coverage gaps, CosmoTherm comparison, Green's-function checks, convergence order, command-line interface (CLI) integration, and the science suite). A separate Python test suite lives under `python/tests/`.
 
 ## How to add a new energy injection scenario
 
@@ -112,7 +112,7 @@ Before trusting any numerical output, verify that every rate coefficient has the
 
 ### 4. Cross-validate PDE against Green's function
 
-For simple injection histories, the PDE and GF should agree within ~5%. Large discrepancies indicate a bug.
+For simple injection histories, the PDE and the Green's function (GF) should agree within ~5%. Large discrepancies indicate a bug.
 
 ### 5. Never weaken a test to make it pass
 

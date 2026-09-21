@@ -1,4 +1,4 @@
-//! Spectral shapes and distributions for CMB spectral distortions.
+//! Spectral shapes and distributions for cosmic microwave background spectral distortions.
 //!
 //! All functions here take the dimensionless frequency `x = hν/(kT_z)` and
 //! return an occupation-number perturbation `Δn`. They are normalized so
@@ -16,8 +16,8 @@
 //!   the temperature-shift mode `δT/T`.
 //!
 //! Conventions match those used by [`crate::greens`] and the Python
-//! `spectroxide.greens` module so PDE and Green's-function results can be
-//! decomposed against the same basis.
+//! `spectroxide.greens` module so partial differential equation and Green's-function
+//! results can be decomposed against the same basis.
 
 use crate::constants::*;
 

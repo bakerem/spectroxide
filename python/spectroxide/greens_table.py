@@ -1,5 +1,6 @@
 """
-Precomputed Green's-function tables for CMB spectral distortions.
+Precomputed Green's-function tables for cosmic microwave background
+(CMB) spectral distortions.
 
 Two table classes
 -----------------
@@ -7,10 +8,11 @@ Two table classes
 - :class:`PhotonGreensTable` — 3-D photon-injection Green's function
   ``G_ph(x, x_inj, z_h)``.
 
-Tables are built by running the PDE solver at many injection redshifts,
-then interpolating for fast convolution of arbitrary injection
-histories.  This eliminates the ~8–13% shape errors of the analytic
-Green's function in the μ-to-y transition region ``3 × 10⁴ < z < 10⁵``
+Tables are built by running the partial differential equation (PDE)
+solver at many injection redshifts, then interpolating for fast
+convolution of arbitrary injection histories.  This eliminates the
+~8–13% shape errors of the analytic Green's function in the μ-to-y
+transition region ``3 × 10⁴ < z < 10⁵``
 (see :func:`spectroxide.greens.greens_function`).
 
 Usage::
@@ -456,7 +458,7 @@ class GreensTable:
 
 
 # ---------------------------------------------------------------------------
-# PhotonGreensTable — photon injection GF table (3D: x_obs * x_inj * z_h)
+# PhotonGreensTable — photon injection Green's function table (3D: x_obs * x_inj * z_h)
 # ---------------------------------------------------------------------------
 
 

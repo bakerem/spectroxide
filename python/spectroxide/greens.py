@@ -208,7 +208,8 @@ def y_shape(x: ArrayLike) -> NDArray[np.float64]:
 
     ``Y_SZ(x) = G_bb(x) · [x coth(x/2) − 4]``.
 
-    Crosses zero at ``x ≈ 3.83`` (the SZ null in the CMB intensity spectrum).
+    Crosses zero at ``x ≈ 3.83`` (the SZ null in the cosmic microwave
+    background intensity spectrum).
 
     Parameters
     ----------
@@ -265,9 +266,10 @@ def j_bb(z: ArrayLike) -> NDArray[np.float64]:
     thermalized into a blackbody by the present epoch.
 
     Both ``z_μ`` and the exponent 5/2 are analytically derived:
-    ``z_μ`` from equating the DC+BR photon production rate to the Hubble
-    rate (Chluba & Sunyaev 2012), and 5/2 from the DC opacity scaling
-    (Danese & de Zotti 1982; Hu & Silk 1993). These are *not* fit parameters.
+    ``z_μ`` from equating the double Compton (DC) and bremsstrahlung (BR)
+    photon production rate to the Hubble rate (Chluba & Sunyaev 2012), and
+    5/2 from the DC opacity scaling (Danese & de Zotti 1982; Hu & Silk 1993).
+    These are *not* fit parameters.
 
     Parameters
     ----------
@@ -347,10 +349,11 @@ def j_y(z: ArrayLike) -> NDArray[np.float64]:
     ``J_y(z) = 1 / (1 + ((1+z)/6.0 × 10⁴)^{2.58})``.
 
     Reference: Chluba (2013), arXiv:1304.6120, Eq. 5.  Least-squares fit
-    to the PDE Green's function in the μ–y transition era.  Approaches 1
-    for z ≪ 6 × 10⁴ (pure y-era) and 0 for z ≫ 6 × 10⁴.  The transition
-    scale z ~ 6 × 10⁴ is physically motivated by y_γ(z) ~ 1, but the
-    precise value and exponent are fit parameters.
+    to the partial differential equation (PDE) Green's function in the
+    μ–y transition era.  Approaches 1 for z ≪ 6 × 10⁴ (pure y-era) and 0
+    for z ≫ 6 × 10⁴.  The transition scale z ~ 6 × 10⁴ is physically
+    motivated by y_γ(z) ~ 1, but the precise value and exponent are fit
+    parameters.
 
     Note that ``J_y ≠ 1 − J_μ`` in the transition region; using the
     independent fit gives better spectral agreement with PDE results.
@@ -1138,7 +1141,7 @@ def greens_function_photon(
 
     alpha_x = ALPHA_RHO * x_inj
 
-    # Universal mu-y transition (same as heat injection GF)
+    # Universal mu-y transition (same as heat injection Green's function (GF))
     _j_mu = j_mu(z_h)
 
     # --- mu-era contribution ---
@@ -1599,7 +1602,7 @@ def _decompose_gram_schmidt(
     delta_n : array_like
         Spectral distortion ``Δn(x)``.
     x_min : float, optional
-        Lower band edge (default ``0.5``, PIXIE-like).
+        Lower band edge (default ``0.5``, Primordial Inflation Explorer-like).
     x_max : float, optional
         Upper band edge (default ``18.0``).
 
@@ -1868,7 +1871,8 @@ def delta_n_to_delta_I(
     dn : array_like
         Spectral distortion ``Δn(x)``.
     t_cmb : float, optional
-        CMB temperature today, in **K**.  Default 2.726.
+        Cosmic microwave background temperature today, in **K**.  Default
+        2.726.
 
     Returns
     -------

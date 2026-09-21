@@ -1,4 +1,4 @@
-//! Energy-conservation budget for the PDE solver.
+//! Energy-conservation budget for the partial differential equation solver.
 //!
 //! Decomposes the measured Δρ/ρ deviation into its actual sources instead of
 //! quoting a single number. Findings it was built to establish
@@ -7,8 +7,9 @@
 //!   * the x-quadrature and the analytic G₃ normalisation contribute ≲10⁻⁴ —
 //!     the deviation is not a bookkeeping error;
 //!   * the heat-injection deficit is the first-order-in-Δτ temporal error of
-//!     the coupled T_e / DC-BR step (`dtau_max` controls it; the grid does
-//!     not), and it is generated inside the injection window;
+//!     the coupled T_e / double Compton–bremsstrahlung step (`dtau_max`
+//!     controls it; the grid does not), and it is generated inside the
+//!     injection window;
 //!   * the photon-injection "1%" is mostly the finite width of the Gaussian
 //!     initial condition, whose exact energy is
 //!     α_ρ x₀ (ΔN/N)(1 + 3σ²/x₀²), not α_ρ x₀ (ΔN/N).
@@ -211,7 +212,7 @@ fn mode_heat() {
     println!();
 }
 
-/// Photon injection: split the IC's own energy content off the conservation error.
+/// Photon injection: split the initial condition's own energy content off the conservation error.
 fn mode_photon() {
     let z_h = 3.0e5;
     let dn_over_n = 1e-5;
@@ -357,7 +358,8 @@ fn mode_figure() {
 /// residual "survives Δτ→0 and is not the x-grid", but its tables refine one
 /// knob at a time and the two move the error in opposite directions — the
 /// joint limit was never taken. This mode takes it, for the two cases where
-/// the residual was reported: heat at z_h = 5e5 and photon IC at x_inj = 12.
+/// the residual was reported: heat at z_h = 5e5 and photon initial condition
+/// at x_inj = 12.
 fn mode_joint() {
     let drho_inj = 1e-5;
     println!("== joint dtau_max × N refinement, heat z_h = 5e5 (err_net, baseline-subtracted)");

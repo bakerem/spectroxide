@@ -5,7 +5,7 @@
 //! Grouped as:
 //! - **Fundamental**: `C_LIGHT`, `HBAR`, `HPLANCK`, `K_BOLTZMANN`, `M_ELECTRON`,
 //!   `M_PROTON`, `SIGMA_THOMSON`, `ALPHA_FS` — feed Compton scattering rates,
-//!   Planck normalisations, and DC/BR emission prefactors.
+//!   Planck normalisations, and double Compton and bremsstrahlung emission prefactors.
 //! - **Unit conversions**: `EV_IN_JOULES`.
 //! - **Atomic physics**: `E_RYDBERG_*`, `E_HE_*`, `LAMBDA_LYA`, `LAMBDA_2S1S` —
 //!   used by [`crate::recombination`] for the Peebles 3-level atom.
@@ -15,7 +15,7 @@
 //!   `I4_PLANCK = 4 G₃`), plus the derived μ-channel coefficients
 //!   `BETA_MU`, `KAPPA_C`, `ALPHA_RHO`, and the μ-distortion freeze-out
 //!   redshift `Z_MU`.
-//!   These are used by both the PDE solver and the Green's-function
+//!   These are used by both the partial differential equation solver and the Green's-function
 //!   visibility functions.
 
 // Fundamental constants (CODATA 2018)
@@ -72,7 +72,7 @@ pub const LAMBDA_ELECTRON: f64 = HPLANCK / (M_ELECTRON * C_LIGHT);
 pub const M_E_C2: f64 = M_ELECTRON * C_LIGHT * C_LIGHT;
 
 // Cosmological constants
-/// Default CMB temperature today, in K.
+/// Default cosmic microwave background temperature today, in K.
 ///
 /// Value 2.726 K (Mather et al. 1999) chosen for compatibility with
 /// CosmoTherm v1.0.3 reference data used in validation. Differs by 0.02%
@@ -146,7 +146,8 @@ pub const X_BALANCED: f64 = 4.0 / (3.0 * ALPHA_RHO); // ≈ 3.60
 /// μ-era thermalization redshift (Chluba 2013, MNRAS 434, 352)
 pub const Z_MU: f64 = 1.98e6;
 
-/// Dimensionless temperature at the *default* CMB temperature T_CMB_0 = 2.726 K.
+/// Dimensionless temperature at the *default* cosmic microwave background temperature
+/// T_CMB_0 = 2.726 K.
 ///
 /// Convenience helper for tests and quick calculations. Production code must
 /// use [`crate::cosmology::Cosmology::theta_z`] so that a user-supplied T_CMB

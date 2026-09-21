@@ -1,12 +1,13 @@
 //! Helpers for dark photon (γ ↔ A') conversion in the narrow-width approximation.
 //!
-//! The canonical way to model γ ↔ A' resonant conversion in the PDE solver is
+//! The canonical way to model γ ↔ A' resonant conversion in the partial
+//! differential equation solver is
 //! [`crate::energy_injection::InjectionScenario::DarkPhotonResonance`], which
 //! takes (ε, m_{A'}) and internally calls [`gamma_con`] / [`resonance_redshift`]
 //! to install the impulsive depletion
 //! Δn(x) = -[1 - exp(-γ_con/x)] × n_pl(x) at `z_start = z_res`.
 //!
-//! The 1/x factor in that IC captures the frequency dependence of the
+//! The 1/x factor in that initial condition captures the frequency dependence of the
 //! conversion probability P(x) ∝ 1/ω for ultrarelativistic photons.
 //!
 //! References:
@@ -73,7 +74,7 @@ pub fn dln_omega_pl_sq_dlna(z: f64, cosmo: &Cosmology) -> f64 {
     ((1.0 + z) * dlnxe_dz + 3.0).abs()
 }
 
-/// NWA dark-photon conversion parameter γ_con (dimensionless).
+/// Narrow-width approximation dark-photon conversion parameter γ_con (dimensionless).
 ///
 /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a|_{z_res} × T_γ(z_res) × H(z_res)),
 /// following Chluba, Cyr & Johnson (2024), MNRAS 535, 1874, Eq. 6. Returns

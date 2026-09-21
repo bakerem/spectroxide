@@ -1,7 +1,8 @@
 spectroxide
 ===========
 
-A PDE solver for CMB :math:`\mu`- and :math:`y`-type spectral
+A partial differential equation (:term:`PDE`) solver for cosmic microwave
+background (:term:`CMB`) :math:`\mu`- and :math:`y`-type spectral
 distortions from energy and photon injection between :math:`z \sim 10^3`
 and :math:`z \sim 5\times 10^6`.
 
@@ -52,3 +53,4 @@ sources see :doc:`tutorials/index` or :doc:`cli`.
 
    api/index
    rust_api
+   glossary
