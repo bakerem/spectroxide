@@ -12,7 +12,7 @@ A fresh session resumes from the first unchecked box below.
 - [x] Phase 4. Placeholders in `docs/cli.rst` (2026-09-21): 11 placeholders to UPPER_SNAKE_CASE with "Replace ..." sentences. `--help` left as is (D4 recommendation; reversible if EB decides otherwise)
 - [ ] Phase 5. Mechanical prose substitutions (blocked on D1 for dashes only)
 - [ ] Phase 6. Record the house style in `CONTRIBUTING.md`; add the script to the `CLAUDE.md` list (20 to 22; see the log)
-- [ ] Phase 7. `firas.py` keyword names (blocked on D2)
+- [x] Phase 7. `firas.py` keyword names (2026-09-21): American names, British names are deprecated aliases
 - [ ] Phase 8. Independent re-review
 
 ## Open decisions (EB)
@@ -99,6 +99,18 @@ Notes on the lint, so that nobody reads a count as a verdict:
 None yet. Add one line per exception with the rule, the file, and the reason.
 
 ## Log
+
+- 2026-09-21: phase 7 done. `marginalize_y`, `marginalize_mu`, `marginalize_gbb` (the plan missed this one),
+  `marginalize_galactic`, and `fit_amplitude_marginalized` are the API. A decorator maps the British keyword names with a
+  `DeprecationWarning` and raises `TypeError` if both spellings are passed; it maps only names the wrapped method accepts.
+  `fit_amplitude_marginalised` is a warning alias. 14 new tests (alias values equal, warning points at the caller, names stay
+  out of signatures). pytest 345 passed. The production-code-reviewer found five defects (all fixed), no numerical change.
+  H-5 was wrong for `dark_photon_constraints.ipynb`: it is maintained by hand, not generated, so its one call was changed in
+  the raw file (cell 9 source only; outputs identical). Stale: `dev/audit/TEST_PROVENANCE.md` lists three renamed tests;
+  regenerate with `dev/scripts/build_test_provenance.py` when its fragments are next built. Remove the aliases in the next
+  minor release.
+- 2026-09-21: phase 5, first two rules committed: third-person Rust summaries (141, `rs-imperative-summary` 136 to 0 after
+  adding five verbs to the table) and American spelling in prose (`british` 72 to 0).
 
 - 2026-09-21: CHECKPOINT after phase 4. Branch `docs-google-style`, five phase commits plus the `dy_max` doc fix. Next: phase 5
   (about 12 mechanical commits; start with `python dev/scripts/docs_style_lint.py --list rs-imperative-summary`), which needs

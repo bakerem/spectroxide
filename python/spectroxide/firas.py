@@ -33,8 +33,8 @@ this module:
 
 - ``upper_limit_*`` family: two-sided ``|Â| + 1.96 σ`` at 95%, Fixsen
   1996 style. Reproduces the literature 9e-5 / 1.5e-5 anchors only with
-  ``marginalise_y=False`` / ``marginalise_mu=False`` (Fixsen fit μ and y
-  separately); the joint-marginalisation defaults are ~1.8× looser.
+  ``marginalize_y=False`` / ``marginalize_mu=False`` (Fixsen fit μ and y
+  separately); the joint-marginalization defaults are ~1.8× looser.
 - ``profile_limit_floating_T``: one-sided profile likelihood
   (Δχ² = 2.71, z = 1.645 at 95%) with T floated, matching the modern
   Chluba, Cyr & Johnson 2024 practice.
@@ -45,6 +45,9 @@ quoted limit uses.
 
 from __future__ import annotations
 
+import functools
+import inspect
+import warnings
 from pathlib import Path
 from typing import Callable, Sequence, Tuple
 
@@ -57,6 +60,49 @@ from .greens import (
     y_shape as _y_shape,
     g_bb as _g_bb,
 )
+
+# British spellings of keyword arguments, accepted until the next minor release.
+_DEPRECATED_KWARGS = {
+    "marginalise_y": "marginalize_y",
+    "marginalise_mu": "marginalize_mu",
+    "marginalise_gbb": "marginalize_gbb",
+    "marginalise_galactic": "marginalize_galactic",
+}
+
+
+def _accept_deprecated_kwargs(func):
+    """Map deprecated British keyword names to their American spellings.
+
+    Emits a ``DeprecationWarning`` for each deprecated name.  Raises
+    ``TypeError`` if a call passes both spellings of one argument.  Only
+    the names whose American spelling ``func`` accepts are mapped, so a
+    keyword that ``func`` never had still fails under its own name.
+    """
+    parameters = inspect.signature(func).parameters
+    accepted = {
+        old: new for old, new in _DEPRECATED_KWARGS.items() if new in parameters
+    }
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        for old, new in accepted.items():
+            if old in kwargs:
+                if new in kwargs:
+                    raise TypeError(
+                        f"{func.__name__}() got both '{old}' and '{new}'; "
+                        f"pass only '{new}'"
+                    )
+                warnings.warn(
+                    f"'{old}' is deprecated and will be removed in the next "
+                    f"minor release; use '{new}'",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                kwargs[new] = kwargs.pop(old)
+        return func(*args, **kwargs)
+
+    return wrapper
+
 
 # Physical constants (must match greens.py)
 _H_PLANCK = 6.62607015e-34  # J s
@@ -91,7 +137,7 @@ def _load_monopole_data() -> Tuple[
     sigma_kJy : ndarray, shape (43,)
         1-σ uncertainty in **kJy/sr**.
     galaxy_kJy : ndarray, shape (43,)
-        Modelled galaxy spectrum at the poles in **kJy/sr**.
+        Modeled galaxy spectrum at the poles in **kJy/sr**.
     """
     fpath = _DATA_DIR / "firas_monopole_spec_v1.txt"
     data = np.loadtxt(fpath)
@@ -181,7 +227,7 @@ def _galactic_dust_template_kJy(
     Functional form from Fixsen et al. 1996, §6.1: the residual
     high-latitude galactic emission is fit by
     ``G(ν) = G₀ ν² B_ν(T = 9 K)``, with ``G₀`` profiled out of the
-    cosmological fit.  The absolute normalisation here is arbitrary
+    cosmological fit.  The absolute normalization here is arbitrary
     (``G₀`` is dimensionless and floats); only the *shape* matters for
     the profile likelihood.
 
@@ -195,7 +241,7 @@ def _galactic_dust_template_kJy(
     Returns
     -------
     ndarray of float64
-        Template values in **kJy/sr** with arbitrary normalisation.
+        Template values in **kJy/sr** with arbitrary normalization.
     """
     nu_hz = freq_cm * _C_LIGHT * 100  # cm^-1 -> Hz
     prefactor = 2.0 * _H_PLANCK * nu_hz**3 / _C_LIGHT**2  # W/m²/Hz/sr per (1/(e^x-1))
@@ -239,7 +285,7 @@ class FIRASData:
     sigma_kJy : ndarray of float64
         1-σ diagonal uncertainties in **kJy/sr**.
     galaxy_kJy : ndarray of float64
-        Modelled high-latitude galactic spectrum in **kJy/sr**.
+        Modeled high-latitude galactic spectrum in **kJy/sr**.
     cov : ndarray, shape (43, 43)
         Full monopole covariance matrix in ``(kJy/sr)²``.
     cov_inv : ndarray, shape (43, 43)
@@ -365,7 +411,7 @@ class FIRASData:
     def fit_amplitude(self, template_kJy: ArrayLike) -> dict:
         """Fit a single amplitude ``A`` to the FIRAS residuals.
 
-        Minimises ``χ² = (r − A t)ᵀ C⁻¹ (r − A t)`` analytically.
+        Minimizes ``χ² = (r − A t)ᵀ C⁻¹ (r − A t)`` analytically.
 
         Parameters
         ----------
@@ -427,15 +473,15 @@ class FIRASData:
         z_cl = norm.ppf(0.5 + cl / 2)  # two-sided
         return abs(fit["amplitude"]) + z_cl * fit["sigma"]
 
-    def fit_amplitude_marginalised(
+    def fit_amplitude_marginalized(
         self,
         template_kJy: ArrayLike,
         nuisance_kJy: Sequence[ArrayLike] | None = None,
     ) -> dict:
-        """Fit amplitude ``A`` marginalised over a list of nuisance templates.
+        """Fit amplitude ``A`` marginalized over a list of nuisance templates.
 
         Fits the model ``data = A · template + Σ_j b_j · nuisance_j`` and
-        returns the marginalised constraint on ``A`` (i.e. ``A`` after
+        returns the marginalized constraint on ``A`` (i.e. ``A`` after
         profiling over the ``b_j``).
 
         Parameters
@@ -443,7 +489,7 @@ class FIRASData:
         template_kJy : array_like, shape (43,)
             Signal template in **kJy/sr**.
         nuisance_kJy : sequence of array_like, optional
-            Nuisance templates to marginalise over.  Default
+            Nuisance templates to marginalize over.  Default
             ``[G_bb]`` — the temperature shift is always unobservable.
 
         Returns
@@ -481,41 +527,56 @@ class FIRASData:
             "snr": float(abs(a_hat) / sigma_a),
         }
 
+    def fit_amplitude_marginalised(self, *args, **kwargs) -> dict:
+        """Deprecated alias of :meth:`fit_amplitude_marginalized`.
+
+        Emits a ``DeprecationWarning``.  The alias will be removed in the
+        next minor release.
+        """
+        warnings.warn(
+            "'fit_amplitude_marginalised' is deprecated and will be removed "
+            "in the next minor release; use 'fit_amplitude_marginalized'",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.fit_amplitude_marginalized(*args, **kwargs)
+
+    @_accept_deprecated_kwargs
     def upper_limit_mu(
         self,
         cl: float = 0.95,
-        marginalise_y: bool = True,
-        marginalise_galactic: bool = True,
+        marginalize_y: bool = True,
+        marginalize_galactic: bool = True,
     ) -> float:
         """FIRAS upper limit on ``|μ|`` using the full covariance matrix.
 
-        With the default ``marginalise_y=True`` this returns ≈1.6e-4, which
+        With the default ``marginalize_y=True`` this returns ≈1.6e-4, which
         is ~1.8× looser than the module constant :data:`MU_FIRAS_95` = 9e-5
-        (Fixsen 1996); pass ``marginalise_y=False`` to reproduce the
+        (Fixsen 1996); pass ``marginalize_y=False`` to reproduce the
         literature limit. See the warning below.
 
-        Marginalises over ``G_bb`` (unobservable temperature shift).
-        Optionally also marginalises over ``y`` and over the galactic
+        Marginalizes over ``G_bb`` (unobservable temperature shift).
+        Optionally also marginalizes over ``y`` and over the galactic
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
         .. warning::
-            The default ``marginalise_y=True`` does **not** reproduce the
+            The default ``marginalize_y=True`` does **not** reproduce the
             literature limit |μ| < 9e-5. Fixsen 1996 §6.2 fit μ and y
             *separately* ("too similar to fit them simultaneously"); the
             severe μ–y shape degeneracy over the FIRAS band inflates σ_μ
-            by ~82% under joint marginalisation, giving a ~1.8× looser
-            (more conservative) limit. ``marginalise_y=False`` reproduces
+            by ~82% under joint marginalization, giving a ~1.8× looser
+            (more conservative) limit. ``marginalize_y=False`` reproduces
             Fixsen's μ̂ = −1e-5 ± 4e-5 and the 9e-5 limit to ≲8%.
 
         Parameters
         ----------
         cl : float, optional
             Confidence level (default 0.95).
-        marginalise_y : bool, optional
-            If *True* (default), also marginalise over y-distortion.
+        marginalize_y : bool, optional
+            If *True* (default), also marginalize over y-distortion.
             Use *False* to match the Fixsen 1996 recipe (see warning).
-        marginalise_galactic : bool, optional
-            If *True* (default), also marginalise over the galactic dust
+        marginalize_galactic : bool, optional
+            If *True* (default), also marginalize over the galactic dust
             template.
 
         Returns
@@ -526,31 +587,32 @@ class FIRASData:
         from scipy.stats import norm
 
         nuisance = [self._G_kJy]
-        if marginalise_y:
+        if marginalize_y:
             nuisance.append(self._Y_kJy)
-        if marginalise_galactic:
+        if marginalize_galactic:
             nuisance.append(self._gal_kJy)
-        fit = self.fit_amplitude_marginalised(self._M_kJy, nuisance)
+        fit = self.fit_amplitude_marginalized(self._M_kJy, nuisance)
         z_cl = norm.ppf(0.5 + cl / 2)
         return abs(fit["amplitude"]) + z_cl * fit["sigma"]
 
+    @_accept_deprecated_kwargs
     def upper_limit_y(
         self,
         cl: float = 0.95,
-        marginalise_mu: bool = True,
-        marginalise_galactic: bool = True,
+        marginalize_mu: bool = True,
+        marginalize_galactic: bool = True,
     ) -> float:
         """FIRAS upper limit on ``|y|`` using the full covariance matrix.
 
-        Marginalises over ``G_bb`` (unobservable temperature shift).
-        Optionally also marginalises over ``μ`` and over the galactic
+        Marginalizes over ``G_bb`` (unobservable temperature shift).
+        Optionally also marginalizes over ``μ`` and over the galactic
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
         .. warning::
-            The default ``marginalise_mu=True`` does **not** reproduce the
+            The default ``marginalize_mu=True`` does **not** reproduce the
             literature limit |y| < 1.5e-5: Fixsen 1996 fit μ and y
             *separately*, and the μ–y degeneracy inflates σ_y by ~82%
-            under joint marginalisation. ``marginalise_mu=False``
+            under joint marginalization. ``marginalize_mu=False``
             reproduces the Fixsen statistical fit (ŷ ± σ ≈ −0.3e-6 ±
             4.0e-6 vs the paper's −1e-6 ± 6e-6 statistical; the published
             15e-6 additionally folds in a 4e-6 systematic).
@@ -559,11 +621,11 @@ class FIRASData:
         ----------
         cl : float, optional
             Confidence level (default 0.95).
-        marginalise_mu : bool, optional
-            If *True* (default), also marginalise over μ-distortion.
+        marginalize_mu : bool, optional
+            If *True* (default), also marginalize over μ-distortion.
             Use *False* to match the Fixsen 1996 recipe (see warning).
-        marginalise_galactic : bool, optional
-            If *True* (default), also marginalise over the galactic dust
+        marginalize_galactic : bool, optional
+            If *True* (default), also marginalize over the galactic dust
             template.
 
         Returns
@@ -574,11 +636,11 @@ class FIRASData:
         from scipy.stats import norm
 
         nuisance = [self._G_kJy]
-        if marginalise_mu:
+        if marginalize_mu:
             nuisance.append(self._M_kJy)
-        if marginalise_galactic:
+        if marginalize_galactic:
             nuisance.append(self._gal_kJy)
-        fit = self.fit_amplitude_marginalised(self._Y_kJy, nuisance)
+        fit = self.fit_amplitude_marginalized(self._Y_kJy, nuisance)
         z_cl = norm.ppf(0.5 + cl / 2)
         return abs(fit["amplitude"]) + z_cl * fit["sigma"]
 
@@ -738,7 +800,7 @@ class FIRASData:
         delta_t : float, optional
             Temperature shift ``ΔT/T`` (default 0).
         extra_dn : callable or array_like, optional
-            Additional ``Δn(x)`` beyond the (μ, y, ΔT) parametrisation.
+            Additional ``Δn(x)`` beyond the (μ, y, ΔT) parametrization.
 
         Returns
         -------
@@ -780,12 +842,13 @@ class FIRASData:
     # Constraint on an arbitrary model spectrum
     # ------------------------------------------------------------------
 
+    @_accept_deprecated_kwargs
     def limit_on_model(
         self,
         spectrum_func: Callable[[ArrayLike], ArrayLike],
         cl: float = 0.95,
-        marginalise_gbb: bool = True,
-        marginalise_galactic: bool = True,
+        marginalize_gbb: bool = True,
+        marginalize_galactic: bool = True,
     ) -> dict:
         """Upper limit on the amplitude of an arbitrary spectral distortion.
 
@@ -798,11 +861,11 @@ class FIRASData:
             ``spectrum_func(x)`` returns ``Δn(x)`` at unit model amplitude.
         cl : float, optional
             Confidence level (default 0.95).
-        marginalise_gbb : bool, optional
-            If *True* (default), marginalise over ``G_bb`` (the
+        marginalize_gbb : bool, optional
+            If *True* (default), marginalize over ``G_bb`` (the
             unobservable temperature shift).
-        marginalise_galactic : bool, optional
-            If *True* (default), also marginalise over the galactic dust
+        marginalize_galactic : bool, optional
+            If *True* (default), also marginalize over the galactic dust
             template ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
         Returns
@@ -817,13 +880,13 @@ class FIRASData:
         model_kJy = _dn_to_dI_kJy(self.x, dn, self.t_cmb)
 
         nuisance = []
-        if marginalise_gbb:
+        if marginalize_gbb:
             nuisance.append(self._G_kJy)
-        if marginalise_galactic:
+        if marginalize_galactic:
             nuisance.append(self._gal_kJy)
 
         if nuisance:
-            fit = self.fit_amplitude_marginalised(model_kJy, nuisance)
+            fit = self.fit_amplitude_marginalized(model_kJy, nuisance)
             a_hat = fit["amplitude"]
             sigma_a = fit["sigma"]
         else:
@@ -844,12 +907,13 @@ class FIRASData:
     # Profile likelihood with floating blackbody temperature
     # ------------------------------------------------------------------
 
+    @_accept_deprecated_kwargs
     def profile_limit_floating_T(
         self,
         template_dn_func,
         cl=0.95,
         t_range=None,
-        marginalise_galactic=True,
+        marginalize_galactic=True,
         use_diagonal=False,
     ):
         """One-sided profile-likelihood upper limit with the CMB temperature floated.
@@ -865,8 +929,8 @@ class FIRASData:
         galactic dust foreground following Fixsen et al. (1996); residual
         galactic emission is not perfectly subtracted from the FIRAS
         monopole and is partially degenerate with broadband distortion
-        shapes, so when ``marginalise_galactic=True`` (default) we
-        marginalise over a fixed-shape ``ν² B(ν, T_d)`` template with
+        shapes, so when ``marginalize_galactic=True`` (default) we
+        marginalize over a fixed-shape ``ν² B(ν, T_d)`` template with
         ``T_d = 9 K`` and free amplitude ``G₀``.
 
         The CMB reference temperature ``T`` is itself a free parameter
@@ -875,7 +939,7 @@ class FIRASData:
         ``x(T) = hν/(k_B T)`` depend nonlinearly on ``T``.  We therefore
         profile over ``T`` by scanning a grid around ``T₀``; at each ``T``
         the best-fit ``A`` and ``G₀`` are obtained analytically (the
-        model is linear in both), and we take the ``T`` that minimises
+        model is linear in both), and we take the ``T`` that minimizes
         χ². The one-sided 95% CL upper limit corresponds to ``Δχ² = 2.71``
         on the profile likelihood ratio (Wilks' theorem).
 
@@ -889,7 +953,7 @@ class FIRASData:
         t_range : tuple of float, optional
             (T_min, T_max) search range for T [K].
             Default: (2.720, 2.732), well within FIRAS precision.
-        marginalise_galactic : bool
+        marginalize_galactic : bool
             If True (default), profile over a galactic dust normalization G₀
             with shape ν²·B_ν(T_dust). The dust template is independent of
             the trial T_CMB.
@@ -918,7 +982,7 @@ class FIRASData:
         fit = self._joint_fit_floating_T(
             template_dn_func,
             t_range=t_range,
-            marginalise_galactic=marginalise_galactic,
+            marginalize_galactic=marginalize_galactic,
             use_diagonal=use_diagonal,
         )
         a_hat = fit["amplitude"]
@@ -939,13 +1003,13 @@ class FIRASData:
         self,
         template_dn_func,
         t_range=None,
-        marginalise_galactic=True,
+        marginalize_galactic=True,
         use_diagonal=False,
     ):
         """Joint fit of (signal A, T_CMB) with dust amplitude profiled.
 
         Internal helper used by ``profile_limit_floating_T``. Returns the
-        best-fit signal amplitude, its 1-sigma uncertainty (marginalised
+        best-fit signal amplitude, its 1-sigma uncertainty (marginalized
         over T and G_0), the best-fit T_CMB, and the joint chi²_min.
 
         ``use_diagonal=True`` replaces the full covariance with diagonal
@@ -962,7 +1026,7 @@ class FIRASData:
 
         cov_inv = np.diag(1.0 / self.sigma_kJy**2) if use_diagonal else self.cov_inv
 
-        gal_kJy = self._gal_kJy if marginalise_galactic else None
+        gal_kJy = self._gal_kJy if marginalize_galactic else None
 
         def _chi2_profiled(T):
             x = _H_PLANCK * nu_hz / (_K_BOLTZMANN * T)

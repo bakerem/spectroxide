@@ -102,7 +102,7 @@ def firas_limit_drho(z, p):
     using the Green's function itself as the signal template and marginalising
     over the temperature shift and dust."""
     tmpl = _dn_to_dI_kJy(x_f, gf_dn(x_f, z, p, 1.0), firas.t_cmb)
-    r = firas.fit_amplitude_marginalised(tmpl, [T_dT, T_gal])
+    r = firas.fit_amplitude_marginalized(tmpl, [T_dT, T_gal])
     return abs(r["amplitude"]) + 1.959963985 * r["sigma"]
 
 

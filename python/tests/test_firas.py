@@ -4,6 +4,7 @@ Validates FIRASData loading, chi-squared calculations, single and
 multi-parameter fits, upper limits, and Fisher matrix operations.
 """
 
+import warnings
 from types import SimpleNamespace
 
 import numpy as np
@@ -317,27 +318,27 @@ class TestSingleParameterFits:
 
 
 # =========================================================================
-# Marginalised fits
+# Marginalized fits
 # =========================================================================
 
 
-class TestMarginalisedFits:
-    """Verify marginalised amplitude fitting."""
+class TestMarginalizedFits:
+    """Verify marginalized amplitude fitting."""
 
-    def test_marginalised_sigma_larger(self):
-        """Marginalised σ ≥ unmarginalised σ (profiling increases errors)."""
+    def test_marginalized_sigma_larger(self):
+        """Marginalized σ ≥ unmarginalized σ (profiling increases errors)."""
         firas = FIRASData()
         fit_raw = firas.fit_amplitude(firas.mu_template_kJy())
-        fit_marg = firas.fit_amplitude_marginalised(
+        fit_marg = firas.fit_amplitude_marginalized(
             firas.mu_template_kJy(), [firas.gbb_template_kJy()]
         )
-        # Marginalising over nuisance can only increase or leave σ unchanged
+        # Marginalizing over nuisance can only increase or leave σ unchanged
         assert fit_marg["sigma"] >= fit_raw["sigma"] - 1e-15
 
-    def test_marginalised_chi2_min_leq_null(self):
+    def test_marginalized_chi2_min_leq_null(self):
         """Best-fit χ² should be ≤ null χ²."""
         firas = FIRASData()
-        fit = firas.fit_amplitude_marginalised(firas.mu_template_kJy())
+        fit = firas.fit_amplitude_marginalized(firas.mu_template_kJy())
         assert fit["chi2_min"] <= fit["chi2_null"] + 1e-10
 
 
@@ -383,12 +384,12 @@ class TestUpperLimits:
         assert np.isfinite(lim)
         assert lim > 0
 
-    def test_upper_limit_mu_no_y_marginalisation(self):
-        """Can compute μ limit without marginalising over y."""
+    def test_upper_limit_mu_no_y_marginalization(self):
+        """Can compute μ limit without marginalizing over y."""
         firas = FIRASData()
-        mu_marg = firas.upper_limit_mu(cl=0.95, marginalise_y=True)
-        mu_no_marg = firas.upper_limit_mu(cl=0.95, marginalise_y=False)
-        # Without y marginalisation, limit should be tighter (less freedom)
+        mu_marg = firas.upper_limit_mu(cl=0.95, marginalize_y=True)
+        mu_no_marg = firas.upper_limit_mu(cl=0.95, marginalize_y=False)
+        # Without y marginalization, limit should be tighter (less freedom)
         assert mu_no_marg <= mu_marg + 1e-10
 
     def test_upper_limit_mu_fixsen_anchor(self):
@@ -400,7 +401,7 @@ class TestUpperLimits:
         allow 15% for convention slack (T₀ update, covariance source).
         """
         firas = FIRASData()
-        mu_lim = firas.upper_limit_mu(cl=0.95, marginalise_y=False)
+        mu_lim = firas.upper_limit_mu(cl=0.95, marginalize_y=False)
         assert abs(mu_lim - MU_FIRAS_95) / MU_FIRAS_95 < 0.15, (
             f"Fixsen-recipe mu limit {mu_lim:.3e} deviates >15% from "
             f"the literature anchor {MU_FIRAS_95:.3e}"
@@ -415,7 +416,7 @@ class TestUpperLimits:
         Audit finding P1-5 (dev/audit/firas_audit.md §2.4).
         """
         firas = FIRASData()
-        y_lim = firas.upper_limit_y(cl=0.95, marginalise_mu=False)
+        y_lim = firas.upper_limit_y(cl=0.95, marginalize_mu=False)
         y_anchor_stat = 1e-6 + 1.96 * 6e-6
         assert abs(y_lim - y_anchor_stat) / y_anchor_stat < 0.45, (
             f"Fixsen-recipe y limit {y_lim:.3e} deviates >45% from the "
@@ -424,22 +425,22 @@ class TestUpperLimits:
         # And it must sit below the published limit (which adds systematics)
         assert y_lim < Y_FIRAS_95 * 1.1
 
-    def test_upper_limit_default_marginalisation_is_looser(self):
-        """Document P1-5: joint-marginalisation defaults are ~1.8× looser.
+    def test_upper_limit_default_marginalization_is_looser(self):
+        """Document P1-5: joint-marginalization defaults are ~1.8× looser.
 
-        The μ–y degeneracy inflates σ by ~82% when cross-marginalising.
+        The μ–y degeneracy inflates σ by ~82% when cross-marginalizing.
         This test pins the ratio so a future change to the default
         convention is caught rather than silently shifting quoted limits.
         """
         firas = FIRASData()
         ratio_mu = firas.upper_limit_mu(cl=0.95) / firas.upper_limit_mu(
-            cl=0.95, marginalise_y=False
+            cl=0.95, marginalize_y=False
         )
         ratio_y = firas.upper_limit_y(cl=0.95) / firas.upper_limit_y(
-            cl=0.95, marginalise_mu=False
+            cl=0.95, marginalize_mu=False
         )
-        assert 1.4 < ratio_mu < 2.5, f"mu marginalisation ratio {ratio_mu:.2f}"
-        assert 1.4 < ratio_y < 2.6, f"y marginalisation ratio {ratio_y:.2f}"
+        assert 1.4 < ratio_mu < 2.5, f"mu marginalization ratio {ratio_mu:.2f}"
+        assert 1.4 < ratio_y < 2.6, f"y marginalization ratio {ratio_y:.2f}"
 
 
 # =========================================================================
@@ -598,7 +599,7 @@ class TestLimitOnModel:
         from spectroxide.greens import mu_shape
 
         firas = FIRASData()
-        result = firas.limit_on_model(mu_shape, cl=0.95, marginalise_gbb=True)
+        result = firas.limit_on_model(mu_shape, cl=0.95, marginalize_gbb=True)
         assert np.isfinite(result["upper_limit"])
         assert result["upper_limit"] > 0
         assert result["sigma"] > 0
@@ -609,10 +610,10 @@ class TestLimitOnModel:
         result = firas.limit_on_model(lambda x: np.ones_like(x), cl=0.95)
         assert np.isfinite(result["upper_limit"])
 
-    def test_limit_no_gbb_marginalisation(self):
-        """Can disable G_bb marginalisation."""
+    def test_limit_no_gbb_marginalization(self):
+        """Can disable G_bb marginalization."""
         firas = FIRASData()
-        result = firas.limit_on_model(lambda x: np.ones_like(x), marginalise_gbb=False)
+        result = firas.limit_on_model(lambda x: np.ones_like(x), marginalize_gbb=False)
         assert np.isfinite(result["upper_limit"])
 
 
@@ -695,21 +696,21 @@ class TestGalacticTemplate:
         np.testing.assert_allclose(firas.galactic_template_kJy(), ref, rtol=1e-12)
 
 
-class TestGalacticMarginalisation:
+class TestGalacticMarginalization:
     """Verify limits relax when profiling over galactic dust."""
 
     def test_mu_limit_relaxes_or_equal(self):
         """μ limit with galactic marg ≥ without."""
         firas = FIRASData()
-        lim_with = firas.upper_limit_mu(cl=0.95, marginalise_galactic=True)
-        lim_without = firas.upper_limit_mu(cl=0.95, marginalise_galactic=False)
+        lim_with = firas.upper_limit_mu(cl=0.95, marginalize_galactic=True)
+        lim_without = firas.upper_limit_mu(cl=0.95, marginalize_galactic=False)
         assert lim_with >= lim_without - 1e-15
 
     def test_y_limit_relaxes_or_equal(self):
         """y limit with galactic marg ≥ without."""
         firas = FIRASData()
-        lim_with = firas.upper_limit_y(cl=0.95, marginalise_galactic=True)
-        lim_without = firas.upper_limit_y(cl=0.95, marginalise_galactic=False)
+        lim_with = firas.upper_limit_y(cl=0.95, marginalize_galactic=True)
+        lim_without = firas.upper_limit_y(cl=0.95, marginalize_galactic=False)
         assert lim_with >= lim_without - 1e-15
 
     def test_limit_on_model_relaxes_or_equal(self):
@@ -718,21 +719,21 @@ class TestGalacticMarginalisation:
 
         firas = FIRASData()
         with_gal = firas.limit_on_model(
-            mu_shape, cl=0.95, marginalise_gbb=True, marginalise_galactic=True
+            mu_shape, cl=0.95, marginalize_gbb=True, marginalize_galactic=True
         )
         without_gal = firas.limit_on_model(
-            mu_shape, cl=0.95, marginalise_gbb=True, marginalise_galactic=False
+            mu_shape, cl=0.95, marginalize_gbb=True, marginalize_galactic=False
         )
         assert with_gal["upper_limit"] >= without_gal["upper_limit"] - 1e-15
 
-    def test_default_is_marginalised(self):
-        """Default behaviour marginalises over galactic (FIRAS-consistent)."""
+    def test_default_is_marginalized(self):
+        """Default behavior marginalizes over galactic (FIRAS-consistent)."""
         from spectroxide.greens import mu_shape
 
         firas = FIRASData()
         default = firas.limit_on_model(mu_shape, cl=0.95)
         explicit_on = firas.limit_on_model(
-            mu_shape, cl=0.95, marginalise_gbb=True, marginalise_galactic=True
+            mu_shape, cl=0.95, marginalize_gbb=True, marginalize_galactic=True
         )
         np.testing.assert_allclose(default["upper_limit"], explicit_on["upper_limit"])
 
@@ -754,7 +755,7 @@ class TestGalacticMarginalisation:
 
         firas = FIRASData()
         result = firas.profile_limit_floating_T(
-            mu_shape, cl=0.95, marginalise_galactic=True
+            mu_shape, cl=0.95, marginalize_galactic=True
         )
         assert np.isfinite(result["upper_limit"])
         assert result["upper_limit"] > 0
@@ -767,9 +768,104 @@ class TestGalacticMarginalisation:
 
         firas = FIRASData()
         with_gal = firas.profile_limit_floating_T(
-            mu_shape, cl=0.95, marginalise_galactic=True
+            mu_shape, cl=0.95, marginalize_galactic=True
         )
         without_gal = firas.profile_limit_floating_T(
-            mu_shape, cl=0.95, marginalise_galactic=False
+            mu_shape, cl=0.95, marginalize_galactic=False
         )
         assert with_gal["upper_limit"] >= without_gal["upper_limit"] - 1e-15
+
+
+class TestDeprecatedBritishSpellings:
+    """British keyword and method names still work, with a DeprecationWarning."""
+
+    def test_keyword_alias_matches_american_name(self):
+        firas = FIRASData()
+        expected = firas.upper_limit_mu(cl=0.95, marginalize_y=False)
+        with pytest.warns(DeprecationWarning, match="marginalise_y"):
+            got = firas.upper_limit_mu(cl=0.95, marginalise_y=False)
+        assert got == expected
+
+    @pytest.mark.parametrize(
+        "method, kwarg",
+        [
+            ("upper_limit_mu", "marginalise_y"),
+            ("upper_limit_mu", "marginalise_galactic"),
+            ("upper_limit_y", "marginalise_mu"),
+            ("upper_limit_y", "marginalise_galactic"),
+        ],
+    )
+    def test_each_keyword_alias_warns(self, method, kwarg):
+        firas = FIRASData()
+        american = kwarg.replace("marginalise", "marginalize")
+        expected = getattr(firas, method)(**{american: False})
+        with pytest.warns(DeprecationWarning, match=kwarg):
+            got = getattr(firas, method)(**{kwarg: False})
+        assert got == expected
+
+    @pytest.mark.parametrize(
+        "method, kwarg",
+        [
+            ("limit_on_model", "marginalise_gbb"),
+            ("limit_on_model", "marginalise_galactic"),
+            ("profile_limit_floating_T", "marginalise_galactic"),
+        ],
+    )
+    def test_template_method_aliases(self, method, kwarg):
+        firas = FIRASData()
+        american = kwarg.replace("marginalise", "marginalize")
+        expected = getattr(firas, method)(mu_shape, **{american: False})
+        with pytest.warns(DeprecationWarning, match=kwarg):
+            got = getattr(firas, method)(mu_shape, **{kwarg: False})
+        assert got["upper_limit"] == expected["upper_limit"]
+        # The keyword reaches the fit: turning the nuisance off changes the limit.
+        default = getattr(firas, method)(mu_shape)
+        assert got["upper_limit"] != default["upper_limit"]
+
+    def test_wrong_method_keyword_fails_under_its_own_name(self):
+        """A British name the method never had is not remapped."""
+        firas = FIRASData()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            with pytest.raises(TypeError, match="marginalise_gbb"):
+                firas.upper_limit_mu(marginalise_gbb=False)
+
+    def test_deprecated_names_stay_out_of_signatures(self):
+        import inspect
+
+        for method in (
+            "upper_limit_mu",
+            "upper_limit_y",
+            "limit_on_model",
+            "profile_limit_floating_T",
+        ):
+            names = inspect.signature(getattr(FIRASData, method)).parameters
+            assert not [n for n in names if "marginalise" in n], method
+
+    def test_warning_points_at_caller(self):
+        firas = FIRASData()
+        with pytest.warns(DeprecationWarning) as record:
+            firas.upper_limit_mu(marginalise_y=False)
+        assert record[0].filename == __file__
+        with pytest.warns(DeprecationWarning) as record:
+            firas.fit_amplitude_marginalised(firas.mu_template_kJy())
+        assert record[0].filename == __file__
+
+    def test_both_spellings_raise(self):
+        firas = FIRASData()
+        with pytest.raises(TypeError, match="both"):
+            firas.upper_limit_mu(marginalise_y=False, marginalize_y=False)
+
+    def test_method_alias(self):
+        firas = FIRASData()
+        expected = firas.fit_amplitude_marginalized(firas.mu_template_kJy())
+        with pytest.warns(DeprecationWarning, match="fit_amplitude_marginalised"):
+            got = firas.fit_amplitude_marginalised(firas.mu_template_kJy())
+        assert got["amplitude"] == expected["amplitude"]
+        assert got["sigma"] == expected["sigma"]
+
+    def test_american_names_do_not_warn(self):
+        firas = FIRASData()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            firas.upper_limit_mu(marginalize_y=False, marginalize_galactic=False)
