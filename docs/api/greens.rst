@@ -38,6 +38,8 @@ specific functional forms and references.
 Quick example
 -------------
 
+This example computes the distortion from a single delta-function injection and from a decaying heating history:
+
 .. code-block:: python
 
    import numpy as np

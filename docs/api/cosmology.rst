@@ -14,6 +14,8 @@ anything that takes a ``cosmo=`` argument.
 Quick example
 -------------
 
+This example computes background quantities from the default preset and from a typed Planck 2018 instance:
+
 .. code-block:: python
 
    from spectroxide.cosmology import (

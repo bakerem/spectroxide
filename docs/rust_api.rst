@@ -36,6 +36,8 @@ re-exports everything you typically need: ``Cosmology``,
 Quick Rust example
 ------------------
 
+This example builds a solver for a single-burst injection and reads the resulting mu value from a snapshot:
+
 .. code-block:: rust
 
    use spectroxide::prelude::*;

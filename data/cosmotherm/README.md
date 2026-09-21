@@ -17,6 +17,8 @@ ASCII two-column files of frequency and distortion intensity (DI): `nu [GHz]` an
 
 ## Cosmology (Planck 2015)
 
+These are the Planck 2015 cosmological parameters used to generate the reference files:
+
 ```
 Y_p = 0.2467, T_CMB = 2.726 K
 Omega_cdm = 0.264737, Omega_b = 0.049169, h = 0.6727

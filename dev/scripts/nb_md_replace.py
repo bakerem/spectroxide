@@ -9,6 +9,7 @@ instead, then proves that only the target cell's source changed.
 Usage:
     python dev/scripts/nb_md_replace.py --show NOTEBOOK           # print Markdown cells
     python dev/scripts/nb_md_replace.py NOTEBOOK CELL OLD NEW     # replace OLD with NEW
+    python dev/scripts/nb_md_replace.py --insert NOTEBOOK CELL TEXT  # new Markdown cell before CELL
 
 CELL is the zero-based cell index. OLD must lie within one source line of that cell
 and must occur exactly once in the raw file (add context until it does). NEW may
@@ -17,6 +18,7 @@ contain newlines; each becomes a new source line.
 
 import json
 import sys
+import uuid
 from pathlib import Path
 
 
@@ -84,10 +86,49 @@ def replace(path, index, old, new):
     print(f"{path.name}: cell {index} updated")
 
 
+def insert(path, index, text):
+    """Insert a new Markdown cell holding TEXT before cell INDEX."""
+    raw = path.read_text(encoding="utf-8")
+    before = json.loads(raw)
+    decoder = json.JSONDecoder()
+    pos = raw.index("[", raw.index('"cells"')) + 1
+    for _ in range(index):
+        _, pos = decoder.raw_decode(raw, pos + len(raw[pos:]) - len(raw[pos:].lstrip()))
+        pos = raw.index(",", pos) + 1
+    pos += len(raw[pos:]) - len(raw[pos:].lstrip())
+    line_start = raw.rfind("\n", 0, pos) + 1
+    indent = raw[line_start:pos]
+
+    lines = text.split("\n")
+    cell = {"cell_type": "markdown"}
+    if any("id" in c for c in before["cells"]):
+        cell["id"] = uuid.uuid4().hex[:8]
+    cell["metadata"] = {}
+    cell["source"] = [l + "\n" for l in lines[:-1]] + [lines[-1]]
+    ascii_only = "\\u" in raw and not any(ord(ch) > 127 for ch in raw)
+    body = json.dumps(cell, indent=1, ensure_ascii=ascii_only)
+    body = body.replace("\n", "\n" + indent)
+    raw_new = raw[:pos] + body + ",\n" + indent + raw[pos:]
+
+    after = json.loads(raw_new)
+    if after["cells"][:index] + after["cells"][index + 1 :] != before["cells"]:
+        sys.exit("internal error: an existing cell changed")
+    if after["cells"][index]["cell_type"] != "markdown":
+        sys.exit("internal error: inserted cell is not Markdown")
+    if {k: v for k, v in after.items() if k != "cells"} != {
+        k: v for k, v in before.items() if k != "cells"
+    }:
+        sys.exit("internal error: notebook structure changed")
+    path.write_text(raw_new, encoding="utf-8")
+    print(f"{path.name}: Markdown cell inserted at index {index}")
+
+
 def main():
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "--show":
         show(Path(args[1]))
+    elif len(args) == 4 and args[0] == "--insert":
+        insert(Path(args[1]), int(args[2]), args[3])
     elif len(args) == 4:
         replace(Path(args[0]), int(args[1]), args[2], args[3])
     else:

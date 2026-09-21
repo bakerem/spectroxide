@@ -19,6 +19,8 @@ For physical background and derivations, see the
 Quick example
 -------------
 
+This example runs a single-burst injection and prints the resulting :math:`\mu` and :math:`y` values:
+
 .. code-block:: python
 
    from spectroxide import solve

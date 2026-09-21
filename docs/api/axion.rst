@@ -1,13 +1,15 @@
+Axion helpers (``spectroxide.axion``)
+=====================================
+
+.. currentmodule:: spectroxide.axion
+
+This page documents pure-Python helpers for resonant axion-photon conversion.
+
 .. warning::
    **Experimental.** Axion support is behind the off-by-default ``axion``
    Cargo feature (build with ``--features axion``). The pure-Python
    helpers on this page import without any Rust build; only the partial
    differential equation path needs the feature-enabled binary.
-
-Axion helpers (``spectroxide.axion``)
-=====================================
-
-.. currentmodule:: spectroxide.axion
 
 Pure-Python narrow-width-approximation helpers for resonant
 ``γ ↔ a`` axion–photon conversion, following Cyr, Chluba & Manoj

@@ -18,6 +18,8 @@ expensive). For one-off solves, run :doc:`the PDE directly <solver>`.
 Quick example
 -------------
 
+This example loads or builds the cached Green's function table, then convolves it with a heating history:
+
 .. code-block:: python
 
    from spectroxide.greens_table import load_or_build_greens_table

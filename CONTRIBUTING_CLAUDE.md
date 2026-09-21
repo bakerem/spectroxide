@@ -16,6 +16,8 @@ spectroxide is a Rust partial differential equation (PDE) solver for cosmic micr
 
 ## Build and test
 
+Run these commands to build and test the project:
+
 ```bash
 cargo build --release
 cargo test --release                      # Always use --release; some tests are slow in debug
@@ -45,6 +47,8 @@ cd python && pip install -e ".[plot]"
 This is the most common contribution. Follow these steps exactly:
 
 ### Step 1: Add the variant to `InjectionScenario` in `src/energy_injection.rs`
+
+Add a new variant to the enum, with doc comments describing the scenario and each parameter:
 
 ```rust
 /// Your scenario description with references.
@@ -86,6 +90,8 @@ Update `python/spectroxide/solver.py` to accept your scenario's parameters and p
 These rules exist because every major bug in spectroxide's history was missed by tests that violated them.
 
 ### 1. NEVER calibrate test targets from the code itself
+
+The comment below contrasts a bad test that locks in the code's own output with a good test that derives its target independently:
 
 ```rust
 // BAD: Running the code, seeing it outputs 42.7, then writing:

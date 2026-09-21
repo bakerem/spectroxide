@@ -7,8 +7,8 @@ A fresh session resumes from the first unchecked box below.
 
 - [x] Phase 0. Guardrails (2026-09-21): this file, baselines, `dev/scripts/docs_style_lint.py`. Lint is not in CI (revisit after phase 6).
 - [x] Phase 1. Abbreviations and `docs/glossary.rst` (2026-09-21): `abbrev-first-use` 160 to 0
-- [ ] Phase 2. API reference gaps (one context, physics-inquisitor pass on added units and panic conditions)
-- [ ] Phase 3. Procedures, code-block introductions, page openings
+- [x] Phase 2. API reference gaps (2026-09-21): all plan items; physics-inquisitor pass done, 17 corrections applied
+- [x] Phase 3. Procedures, code-block introductions, page openings (2026-09-21): `heading-then-code` 28 to 0, `nb-code-no-intro` 6 to 0
 - [ ] Phase 4. Placeholders in `docs/cli.rst`
 - [ ] Phase 5. Mechanical prose substitutions (blocked on D1 for dashes only)
 - [ ] Phase 6. Record the house style in `CONTRIBUTING.md`; add the script to the `CLAUDE.md` list (20 to 22; see the log)
@@ -65,11 +65,44 @@ Notes on the lint, so that nobody reads a count as a verdict:
 - `via`, `vs`, and `etc` hits include legitimate uses; phase 5 records the exception count per rule here.
 - Python docstrings are excluded from the imperative rule on purpose (PEP 257; recorded exception).
 
+## Findings for EB (behavior, not style; nothing changed in code)
+
+- **F-DS-1. `--cosmology PRESET` silently drops individual cosmology flags.** `build_cosmology` (`src/cli.rs`) returns the preset
+  before it reads `--h`, `--t-cmb`, and the rest. `docs/cli.rst` says "Individual parameters override the selected preset",
+  which is false. Found by reading the code, confirmed by the physics-inquisitor; not run. Decide: fix the code (apply
+  overrides on top of the preset, or reject the combination) or fix the sentence. The new `build_cosmology` doc comment states
+  the real behavior.
+- **F-DS-2. `warn_table_z_density` stays silent for a table with no point in `3e4 <= z <= 2e5`**, the worst case it exists for
+  (`if in_transition.size > 0` guard). The docstring now says so.
+- **F-DS-3. `warn_convolution_resolution` skips the check when `z_min == 0`**, which `validate_z_range` accepts, so nothing reports
+  a coarse grid there. The inline comment "Will be caught by validate_z_range" is wrong for that case.
+- **F-DS-4. `cosmotherm_gf_distortion` loads the database before it checks `scenario`**, so a bad scenario name with no database
+  raises `FileNotFoundError`, not `ValueError`. A missing `params` key raises `KeyError` from inside the convolution.
+- **F-DS-5. Stale doc fixed:** `DcbrCoupling::dem_drho_eq` told callers to pass an empty slice for the legacy behavior; an empty
+  slice panics at the entry asserts. The doc now says to pass zeros. The claim that zeros reproduce the legacy Picard behavior
+  follows from how the term enters the Jacobian; not run.
+
 ## Recorded exceptions
 
 None yet. Add one line per exception with the rule, the file, and the reason.
 
 ## Log
+
+- 2026-09-21: phase 3 done. README manual installation is a numbered procedure (a clone step added; `docs/installation.rst`
+  mirrors it and now says `cargo test --release`). Introductory sentences before every bare block in the README, the
+  contributor guides, the `.rst` pages, and the notebooks (seven new Markdown cells, inserted with the new `--insert` mode of
+  `nb_md_replace.py`; code cells and outputs proven identical to HEAD). `docs/api/axion.rst` reordered, `CONTRIBUTING.md`
+  requirement list bulleted, seven empty `docs/cli.rst` default cells filled from `src/cli.rs`. One agent sentence described a
+  plot wrongly (notebook 05, dark-photon plot) and was corrected by hand after reading the code cell. Known limit of
+  `nb_md_replace.py`: a cell whose `source` is one JSON string, not a line list (tutorial 06 Summary), breaks multi-line
+  replace; the script refuses to write in that case. Not checked: the README render on GitHub.
+- 2026-09-21: phase 2 done. Checks: rustdoc now 0 warnings in both configurations (the two baseline warnings are fixed), Clippy
+  clean in both, 3 doctests, pytest 331, fmt and black clean, zero changed Rust code lines. The physics-inquisitor found 17
+  wrong or incomplete statements in the first draft (K_BR called a rate, which is wrong by x³; `base_factor` formula missing
+  exp(−xφ); He⁺ density formula; "all per Thomson time" on `DcbrCoupling`; θ_e time-centering; photon conservation only up to
+  edge flux; NaN return on a degenerate bordered system; several missing error paths). All applied. The review's own guesses
+  were also wrong in places (it said the table loaders reject unsorted z; they sort), as H-8 predicted.
+  `rs-oneline-no-period` 86 to 0.
 
 - 2026-09-21: phase 1 done. Eight subagents, one per file group, then a review pass by hand. Checks equal the baseline: Sphinx 0
   warnings (so every `:term:` link resolves), rustdoc 2 warnings in both configurations, Clippy clean in both, 3 doctests,

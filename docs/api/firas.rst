@@ -15,6 +15,8 @@ cosmic microwave background temperature, etc.).
 Quick example
 -------------
 
+This example loads the FIRAS data, computes a χ² value for a model, and finds the upper limits on μ and y:
+
 .. code-block:: python
 
    from spectroxide.firas import FIRASData

@@ -102,6 +102,8 @@ outside the integration range are treated as zero.
 ``dq_dz`` — energy-injection history
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Pass a ``dq_dz`` callable to run a custom heating history through the PDE solver:
+
 .. code-block:: python
 
    solve(dq_dz=lambda z: dQ_dz(z), method="pde",
@@ -123,6 +125,8 @@ outside the integration range are treated as zero.
 
 ``photon_source`` — frequency-dependent photon injection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pass a ``photon_source`` callable to inject photons at specific frequencies and redshifts:
 
 .. code-block:: python
 

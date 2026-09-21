@@ -10,6 +10,8 @@ This guide and its companion file exist to prevent you from repeating those mist
 
 ## Two files, two audiences
 
+Use the following table to find the right file for your role:
+
 | File | Audience | Purpose |
 |------|----------|---------|
 | `CONTRIBUTING.md` (this file) | **You**, the human contributor | Explains the philosophy, workflow, and expectations |
@@ -65,13 +67,13 @@ All contributions go through pull requests to `main`. Here's the process:
 
 Every PR that adds or modifies physics code must include:
 
-1. **Tests with independently justified targets.** Each test comment should state where the expected value comes from (e.g., "Eq. 15 of Chluba 2015", "y-era limit: y = drho/(4*rho)", "dimensional analysis: K_BR is dimensionless"). A test that asserts a value without justification will be asked to add one during review.
+- **Tests with independently justified targets.** Each test comment should state where the expected value comes from (e.g., "Eq. 15 of Chluba 2015", "y-era limit: y = drho/(4*rho)", "dimensional analysis: K_BR is dimensionless"). A test that asserts a value without justification will be asked to add one during review.
 
-2. **A dimensional analysis check** for any new rate coefficient or physical formula. This can be a comment in the code or a note in the PR description showing the units work out.
+- **A dimensional analysis check** for any new rate coefficient or physical formula. This can be a comment in the code or a note in the PR description showing the units work out.
 
-3. **Energy conservation verification** for new injection scenarios: `mu/1.401 + 4y + 4*DeltaT/T = Delta_rho/rho` to within a few percent.
+- **Energy conservation verification** for new injection scenarios: `mu/1.401 + 4y + 4*DeltaT/T = Delta_rho/rho` to within a few percent.
 
-4. **No new crate dependencies.** The zero-dependency constraint is a hard rule, not a preference. If you think an exception is warranted, open an issue to discuss before implementing.
+- **No new crate dependencies.** The zero-dependency constraint is a hard rule, not a preference. If you think an exception is warranted, open an issue to discuss before implementing.
 
 ### What your PR should include (when applicable)
 

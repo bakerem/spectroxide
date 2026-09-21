@@ -52,38 +52,66 @@ Run `./install.sh --help` to see all options (skip steps, verbose output, etc.).
 ### Manual installation
 
 <details>
-<summary>Click to expand step-by-step instructions</summary>
+<summary>Expand the manual installation steps</summary>
 
-**Rust** (required for the PDE solver and the command-line interface, or CLI):
+The Rust toolchain builds the PDE solver and the command-line interface (CLI). Python 3.9
+or later runs the wrapper package and the notebooks.
 
-If you don't have Rust installed, the easiest way is via [rustup](https://rustup.rs/):
+1. Optional: If you do not have Rust, install it with [rustup](https://rustup.rs/):
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-```
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source "$HOME/.cargo/env"
+   ```
 
-**Python 3.9+** (required for the Python package and notebooks):
+2. Optional: Create and activate a conda environment for the Python package:
 
-```bash
-conda create -n spectroxide python=3.11
-conda activate spectroxide
-```
+   ```bash
+   conda create -n spectroxide python=3.11
+   conda activate spectroxide
+   ```
 
-**Build and install:**
+3. Clone the repository and enter it:
 
-```bash
-cargo build --release                 # build Rust PDE solver
-cargo test --release                  # run all tests (some solver tests are slow in debug)
-pip install -e "python/.[plot]"       # Python package with matplotlib
-pip install -e "python/.[notebook]"   # ... or with Jupyter too
-```
+   ```bash
+   git clone https://github.com/bakerem/spectroxide.git
+   cd spectroxide
+   ```
+
+4. Build the Rust solver:
+
+   ```bash
+   cargo build --release
+   ```
+
+5. Optional: Run the Rust tests. Use `--release`, because some solver tests are slow in a
+   debug build:
+
+   ```bash
+   cargo test --release
+   ```
+
+6. Install the Python package. For plotting support (matplotlib), run:
+
+   ```bash
+   pip install -e "python/.[plot]"
+   ```
+
+   To also install Jupyter for the notebooks, run this command instead:
+
+   ```bash
+   pip install -e "python/.[notebook]"
+   ```
 
 </details>
 
 ## Quick start
 
 ### Python: PDE solver
+
+The `solve` function runs the Rust solver for one injection scenario and returns the
+distortion parameters and the spectrum. The `run_sweep` function runs many injection
+redshifts in one call:
 
 ```python
 from spectroxide import solve, run_sweep
@@ -127,6 +155,9 @@ print(f"z_h = {r['z_h']:.1e}: mu = {r['pde_mu']:.3e}, y = {r['pde_y']:.3e}")
 
 ### Python: Green's function (fast approximate, no Rust needed)
 
+The Green's function mode is pure Python. It gives $\mu$ and $y$ in milliseconds, at the
+cost of accuracy in the $\mu$-$y$ transition era:
+
 ```python
 from spectroxide import run_single, mu_from_heating, y_from_heating
 import numpy as np
@@ -142,6 +173,8 @@ y = y_from_heating(dq_dz, 1e3, 5e6)
 ```
 
 ### Rust API
+
+To call the solver from Rust, import the prelude, which re-exports the main types:
 
 ```rust
 use spectroxide::prelude::*;
@@ -163,6 +196,8 @@ let snapshots = solver.run_with_snapshots(&[1e3]);
 
 ### CLI
 
+The `spectroxide` binary exposes the same solver through subcommands:
+
 ```bash
 # Show help and available subcommands
 cargo run --release --bin spectroxide
@@ -181,6 +216,8 @@ cargo run --release --bin spectroxide -- greens --z-h 2e5 --delta-rho 1e-5
 Output is written to stdout as JSON (pipe to a file with `> output.json`).
 
 ## Example notebooks
+
+The tutorial notebooks in `notebooks/tutorials/` are numbered in the suggested reading order:
 
 | Notebook | Description |
 |----------|-------------|
@@ -224,7 +261,9 @@ result exposes these directly as `result.mu` / `result.y`).
 
 ## Architecture
 
-```
+The repository is laid out as follows:
+
+```text
 src/
 ├── lib.rs                 # Library root + prelude
 ├── main.rs                # CLI binary entry

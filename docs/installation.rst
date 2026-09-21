@@ -1,6 +1,9 @@
 Installation
 ============
 
+This page covers two ways to install spectroxide: an automated script, and a manual
+step-by-step setup of the Rust toolchain and the Python package.
+
 Quick install (recommended)
 ---------------------------
 
@@ -50,30 +53,53 @@ Building from source needs the Rust toolchain, which compiles the
 partial differential equation (:term:`PDE`) solver and its
 command-line interface (:term:`CLI`), and Python for the wrapper package.
 
-**Rust** (required for the PDE solver and CLI):
+#. Optional: If you do not have Rust, install it with
+   `rustup <https://rustup.rs/>`_:
 
-If you don't have Rust installed, the easiest way is via `rustup <https://rustup.rs/>`_:
+   .. code-block:: bash
 
-.. code-block:: bash
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      source "$HOME/.cargo/env"
 
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   source "$HOME/.cargo/env"
+#. Optional: Create and activate a conda environment for Python 3.9+:
 
-**Python 3.9+** (required for the Python package and notebooks):
+   .. code-block:: bash
 
-.. code-block:: bash
+      conda create -n spectroxide python=3.11
+      conda activate spectroxide
 
-   conda create -n spectroxide python=3.11
-   conda activate spectroxide
+#. Clone the repository and enter it:
 
-**Build and install:**
+   .. code-block:: bash
 
-.. code-block:: bash
+      git clone https://github.com/bakerem/spectroxide.git
+      cd spectroxide
 
-   cargo build --release                 # build Rust PDE solver
-   cargo test                            # run all tests
-   pip install -e "python/.[plot]"       # Python package with matplotlib
-   pip install -e "python/.[notebook]"   # ... or with Jupyter too
+#. Build the Rust PDE solver:
+
+   .. code-block:: bash
+
+      cargo build --release
+
+#. Optional: Run the Rust tests. Use ``--release``, because some solver tests
+   are slow in a debug build:
+
+   .. code-block:: bash
+
+      cargo test --release
+
+#. Install the Python package. For plotting support (matplotlib), run:
+
+   .. code-block:: bash
+
+      pip install -e "python/.[plot]"
+
+   Optional: To also install Jupyter for the notebooks, run this command
+   instead:
+
+   .. code-block:: bash
+
+      pip install -e "python/.[notebook]"
 
 
 Verifying the installation

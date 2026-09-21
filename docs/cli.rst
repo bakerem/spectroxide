@@ -119,10 +119,10 @@ These flags apply to ``solve``, ``sweep``, ``photon-sweep``, and
      - (preset)
      - Frequency-grid point count. Overrides the active fast/production preset.
    * - ``--production-grid``
-     -
+     - off
      - Use the high-resolution production grid preset (4000 points).
    * - ``--dy-max <val>``
-     -
+     - 0.02
      - Cap on the adaptive ``y_C`` step.
    * - ``--dtau-max <val>``
      - 10
@@ -131,26 +131,28 @@ These flags apply to ``solve``, ``sweep``, ``photon-sweep``, and
      - 1.0
      - Cap on ``dτ`` while a photon source is active (tighter near a δ-line source).
    * - ``--no-dcbr``
-     -
+     - off
      - Disable double Compton and bremsstrahlung (diagnostic).
    * - ``--split-dcbr``
-     -
+     - off
      - Operator-split DC/BR instead of coupled Newton iteration.
    * - ``--no-number-conserving``
-     -
+     - off
      - Disable the number-conserving :math:`T`-shift subtraction (on by default).
    * - ``--nc-z-min <z>``
      - 5e4
      - Below this redshift the number-conserving correction is suppressed.
    * - ``--no-auto-refine``
-     -
+     - off
      - Disable automatic grid refinement near photon-injection features.
    * - ``--threads <n>``
-     -
+     - all cores
      - Threads for parallel sweep execution.
 
 Cosmology options
 -----------------
+
+These flags select a cosmology preset or override individual parameters:
 
 .. code-block:: bash
 
@@ -172,6 +174,8 @@ density is derived from their difference.
 Output options
 --------------
 
+These flags control the output format and destination:
+
 .. list-table::
    :widths: 30 60
    :header-rows: 1
@@ -186,6 +190,8 @@ Output options
 
 Examples
 --------
+
+The following commands show common ways to run the solver from the command line:
 
 .. code-block:: bash
 
