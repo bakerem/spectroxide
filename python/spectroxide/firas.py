@@ -32,8 +32,8 @@ Two distinct — and mutually inconsistent — limit conventions coexist in
 this module:
 
 - ``upper_limit_*`` family: two-sided ``|Â| + 1.96 σ`` at 95%, Fixsen
-  1996 style. Reproduces the literature 9e-5 / 1.5e-5 anchors only with
-  ``marginalize_y=False`` / ``marginalize_mu=False`` (Fixsen fit μ and y
+  1996 style. Reproduces the literature 9e-5 and 1.5e-5 anchors only with
+  ``marginalize_y=False`` and ``marginalize_mu=False`` (Fixsen fit μ and y
   separately); the joint-marginalization defaults are ~1.8× looser.
 - ``profile_limit_floating_T``: one-sided profile likelihood
   (Δχ² = 2.71, z = 1.645 at 95%) with T floated, matching the modern
@@ -108,10 +108,10 @@ def _accept_deprecated_kwargs(func):
 _H_PLANCK = 6.62607015e-34  # J s
 _K_BOLTZMANN = 1.380649e-23  # J/K
 _C_LIGHT = 2.99792458e8  # m/s
-# NOTE: 2.726 K is this package's CosmoTherm-convention default, NOT the
+# NOTE: 2.726 K is this package's CosmoTherm-convention default, not the
 # FIRAS-calibration value — Fixsen & Mather (2002) give T0 = 2.725 K, and the
 # monopole residuals in data/firas are defined w.r.t. 2.725 K. The 0.037%
-# offset is absorbed by the floating-T / ΔT fit parameters in every fit here.
+# offset is absorbed by the floating-T or ΔT fit parameters in every fit here.
 _T_CMB = 2.726  # K
 
 _DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
@@ -560,7 +560,7 @@ class FIRASData:
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
         .. warning::
-            The default ``marginalize_y=True`` does **not** reproduce the
+            The default ``marginalize_y=True`` does not reproduce the
             literature limit |μ| < 9e-5. Fixsen 1996 §6.2 fit μ and y
             *separately* ("too similar to fit them simultaneously"); the
             severe μ–y shape degeneracy over the FIRAS band inflates σ_μ
@@ -609,7 +609,7 @@ class FIRASData:
         dust nuisance ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).
 
         .. warning::
-            The default ``marginalize_mu=True`` does **not** reproduce the
+            The default ``marginalize_mu=True`` does not reproduce the
             literature limit |y| < 1.5e-5: Fixsen 1996 fit μ and y
             *separately*, and the μ–y degeneracy inflates σ_y by ~82%
             under joint marginalization. ``marginalize_mu=False``
@@ -929,17 +929,17 @@ class FIRASData:
         galactic dust foreground following Fixsen et al. (1996); residual
         galactic emission is not perfectly subtracted from the FIRAS
         monopole and is partially degenerate with broadband distortion
-        shapes, so when ``marginalize_galactic=True`` (default) we
-        marginalize over a fixed-shape ``ν² B(ν, T_d)`` template with
+        shapes, so when ``marginalize_galactic=True`` (default) this method
+        marginalizes over a fixed-shape ``ν² B(ν, T_d)`` template with
         ``T_d = 9 K`` and free amplitude ``G₀``.
 
         The CMB reference temperature ``T`` is itself a free parameter
         (it encodes the unobservable temperature shift), and both the
         residuals and the template shape ``𝒯(x(T))`` with
-        ``x(T) = hν/(k_B T)`` depend nonlinearly on ``T``.  We therefore
-        profile over ``T`` by scanning a grid around ``T₀``; at each ``T``
-        the best-fit ``A`` and ``G₀`` are obtained analytically (the
-        model is linear in both), and we take the ``T`` that minimizes
+        ``x(T) = hν/(k_B T)`` depend nonlinearly on ``T``.  This method
+        therefore profiles over ``T`` by scanning a grid around ``T₀``; at
+        each ``T`` the best-fit ``A`` and ``G₀`` are obtained analytically
+        (the model is linear in both), and the method takes the ``T`` that minimizes
         χ². The one-sided 95% CL upper limit corresponds to ``Δχ² = 2.71``
         on the profile likelihood ratio (Wilks' theorem).
 
@@ -1132,7 +1132,7 @@ class FIRASData:
 # Scalar bounds (for quick checks without loading data)
 MU_FIRAS_95 = 9e-5  # Fixsen et al. 1996, 95% CL
 Y_FIRAS_95 = 1.5e-5  # Fixsen et al. 1996, 95% CL
-# Convention: half the 95% values, NOT published 68% numbers (Fixsen's
+# Convention: half the 95% values, not published 68% numbers (Fixsen's
 # actual 1-sigma is sigma_mu ~ 4e-5). Kept for backward compatibility.
 MU_FIRAS_68 = 4.5e-5
 Y_FIRAS_68 = 7.5e-6

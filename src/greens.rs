@@ -3,13 +3,13 @@
 //! Provides a fast, approximate method for computing spectral distortions
 //! from arbitrary energy release histories. The distortion from a delta-function
 //! energy injection at redshift z_h is decomposed into μ, y, and temperature
-//! shift components using visibility/branching functions.
+//! shift components using visibility and branching functions.
 //!
 //! The Green's function approach is "quasi-exact" for small distortions
 //! (Δρ/ρ << 1) and much faster than solving the full
 //! partial differential equation (PDE).
 //!
-//! Also includes the **photon injection** Green's function (Chluba 2015),
+//! Also includes the photon injection Green's function (Chluba 2015),
 //! which handles injection of photons at a specific frequency x_inj.
 //! Unlike pure energy injection, photon injection changes both energy
 //! and number, producing negative μ when x_inj < x₀ ≈ 3.60.
@@ -18,7 +18,7 @@
 //!
 //! The temperature-shift coefficient uses J_T = 1 − J_bb* following Chluba (2013).
 //! The y-component uses the independently fitted J_y of Chluba (2013) Eq. 5,
-//! which is NOT simply (1 − J_μ) × J_bb*. As a result, the three branching
+//! which is not simply (1 − J_μ) × J_bb*. As a result, the three branching
 //! ratios do not sum to unity:
 //!
 //!   J_μ × J_bb* + J_y + (1 − J_bb*) ≠ 1
@@ -44,11 +44,11 @@ use crate::spectrum::{g_bb, mu_shape, y_shape};
 /// J_bb(z) = exp(−(z/z_μ)^{5/2})
 ///
 /// where z_μ ≈ 1.98×10⁶. Both z_μ and the exponent 5/2 are analytically
-/// derived: z_μ from equating the double Compton (DC) + bremsstrahlung (BR)
+/// derived: z_μ from equating the double Compton (DC) and bremsstrahlung (BR)
 /// photon production rate to the Hubble rate in radiation domination
 /// (Chluba & Sunyaev 2012), and 5/2 from the redshift scaling of the DC
 /// opacity ∝ (1+z)^{−9/2} compared with H ∝ (1+z)^{−2}
-/// (Danese & de Zotti 1982; Hu & Silk 1993). These are NOT fit parameters.
+/// (Danese & de Zotti 1982; Hu & Silk 1993). These are not fit parameters.
 pub fn visibility_j_bb(z: f64) -> f64 {
     let ratio = z / Z_MU;
     (-ratio.powf(2.5)).exp()
@@ -537,7 +537,7 @@ fn broadened_bump(x_obs: f64, x_inj: f64, yg: f64) -> (f64, f64) {
 /// Photon-injection Green's function (GF) is only valid in the deep μ-era
 /// (z_h ≳ 2×10⁵) or the y-era (z_h ≲ 5×10⁴). In the μ-y transition window,
 /// the simple μ+y decomposition misses residual (r-type) contributions;
-/// users must fall back to the PDE solver.
+/// callers must fall back to the PDE solver.
 const PHOTON_GF_Y_ERA_Z_MAX: f64 = 5.0e4;
 const PHOTON_GF_MU_ERA_Z_MIN: f64 = 2.0e5;
 
@@ -902,7 +902,7 @@ mod tests {
         );
     }
 
-    /// Value anchors on the **low-z** τ_ff integral (R2 mutation audit, fix P2).
+    /// Value anchors on the low-z τ_ff integral (R2 mutation audit, fix P2).
     ///
     /// `photon_survival_probability_numerical` short-circuits to the analytic
     /// μ-era form above z = 5×10⁴, so only z_h < 5×10⁴ exercises
@@ -910,7 +910,7 @@ mod tests {
     /// Far Infrared Absolute Spectrophotometer (FIRAS) photon-injection
     /// limits in this fork's post-recombination regime. Every pre-audit test of
     /// it was a bound (0 ≤ P_s ≤ 1, "≈1 at large x"), and all 34 of its mutants
-    /// survived the full suite. These are value/shape anchors instead.
+    /// survived the full suite. These are value and shape anchors instead.
     ///
     /// The scaling anchor is textbook, not read off the code: in the
     /// Rayleigh–Jeans limit the free-free absorption coefficient goes as ν⁻²
@@ -1044,7 +1044,7 @@ mod tests {
     /// 25 mutants in `distortion_from_heating`/`mu_y_from_heating` survived the
     /// full suite: the pre-audit tests check only *linearity* in Δρ/ρ, which is
     /// invariant under any overall rescaling of the integrand, and these two
-    /// functions are not covered by the Rust↔Python parity fixture (only the
+    /// functions are not covered by the Rust-to-Python parity fixture (only the
     /// scalar `greens_function` is).
     ///
     /// The heating bump is Gaussian in ln(1+z) with σ = 0.005, integrated over
@@ -1229,7 +1229,7 @@ mod tests {
         }
     }
 
-    /// Characterization test for the bump's **first** moment (finding F-PC-1,
+    /// Characterization test for the bump's first moment (finding F-PC-1,
     /// `dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`).
     ///
     /// `test_compton_broadening_identities` pins the *variance* to the exact
@@ -1251,7 +1251,7 @@ mod tests {
     /// Matching this requires f(x′) = x′/(e^{x′}−1); Arsenadze et al. use
     /// e^{−x′}(1+x′²/2), which is exact only at x′ → 0 and x′ → ∞.
     ///
-    /// **We keep the published form.** Swapping in the exact f changes the
+    /// **Note:** The code keeps the published form. Swapping in the exact f changes the
     /// photon Green's function by ≤0.83% in L2 (measured at z_h = 3×10⁴, where
     /// y_γ = 0.039 maximizes the effect), ≲0.05% at z_h ≤ 2×10³, ~0 at
     /// z_h ≥ 2×10⁵ where the √(1+x′y_γ) suppression takes over, and μ by

@@ -3,9 +3,9 @@
 //! Provides [`SolverResult`], [`SweepResult`], [`GreensResult`],
 //! [`PhotonSweepResult`] (with [`PhotonSweepRow`]), and
 //! [`PhotonSweepBatchResult`] as owned, self-contained representations of
-//! completed runs, with zero-dependency JSON/CSV/table serialization.
+//! completed runs, with zero-dependency JSON, CSV, or table serialization.
 //!
-//! All result types implement [`Serializable`] for uniform JSON/CSV/table output.
+//! All result types implement [`Serializable`] for uniform JSON, CSV, or table output.
 //!
 //! # JSON field naming
 //!
@@ -134,7 +134,7 @@ impl SolverResult {
     }
 }
 
-/// One row of a sweep: partial differential equation result + Green's function
+/// One row of a sweep: partial differential equation result and Green's function
 /// comparison at one z_h.
 #[derive(Debug, Clone)]
 pub struct SweepRow {
@@ -393,7 +393,7 @@ pub struct PhotonSweepBatchResult {
 impl PhotonSweepBatchResult {
     /// Serializes to a JSON object containing per-x_inj results and aggregated warnings.
     ///
-    /// Pre-warnings format was a bare JSON array. With warnings we wrap into
+    /// Pre-warnings format was a bare JSON array. With warnings, the output wraps into
     /// `{"results":[...], "warnings":[...]}`. Python wrappers tolerate both.
     pub fn to_json(&self) -> String {
         let mut out = String::with_capacity(self.results.len() * 4096);
@@ -744,7 +744,7 @@ mod tests {
         }
     }
 
-    /// Counts opening braces/brackets against closing ones in a JSON string, ignoring
+    /// Counts opening braces and brackets against closing ones in a JSON string, ignoring
     /// contents inside double-quoted strings. Used to catch the audit H7
     /// class of bug (`}}]}` emitting one too many closing braces) without
     /// taking a serde_json dev-dependency.

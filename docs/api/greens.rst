@@ -6,7 +6,7 @@ Analytic Green's function (``spectroxide.greens``)
 
 .. important::
 
-   This module is the **analytic three-component approximation** of
+   This module is the analytic three-component approximation of
    Chluba (2013, MNRAS 436, 2232; arXiv:1304.6120), implemented in pure
    Python. It is *not* the partial differential equation (:term:`PDE`)
    solver — for production work prefer the :doc:`PDE solver <solver>`.
@@ -78,8 +78,8 @@ Cosmology presets
 ~~~~~~~~~~~~~~~~~
 
 All routines that take a ``cosmo`` argument expect a plain ``dict`` with
-keys ``h``, ``omega_b``, ``omega_m``, ``y_p``, ``t_cmb``, ``n_eff``. Three
-presets are provided:
+keys ``h``, ``omega_b``, ``omega_m``, ``y_p``, ``t_cmb``, ``n_eff``. The module
+provides three presets:
 
 .. list-table::
    :header-rows: 1
@@ -242,8 +242,8 @@ Decompose an arbitrary Δn(x) into (μ, y, ΔT/T) components and convert
 to intensity units (Jy/sr).
 
 .. note::
-   The Python :func:`delta_n_to_delta_I` returns **Jy/sr**, whereas the
-   Rust ``distortion.rs`` converter returns **MJy/sr** (a factor of 10⁶).
+   The Python :func:`delta_n_to_delta_I` returns Jy/sr, whereas the
+   Rust ``distortion.rs`` converter returns MJy/sr (a factor of 10⁶).
    Mind the difference when comparing across languages.
 
 .. autosummary::
@@ -278,8 +278,8 @@ microwave background spectrum with the absolute temperature as a free
 parameter, so a uniform shift :math:`\Delta T/T` is unobservable.
 CosmoTherm therefore defines the *distortion* as the number-conserving
 part of :math:`\Delta n` (the part satisfying
-:math:`\int x^2 \Delta n\,dx = 0`); any nonzero photon-number
-perturbation is absorbed into :math:`\alpha \cdot G_{bb}(x)`.
+:math:`\int x^2 \Delta n\,dx = 0`); CosmoTherm absorbs any nonzero
+photon-number perturbation into :math:`\alpha \cdot G_{bb}(x)`.
 ``strip_gbb`` performs this projection in occupation-number space.
 
 .. autosummary::
@@ -297,5 +297,5 @@ Convenience wrapper
 analytic Green's function that bundles single-burst and custom-heating
 calculations into a single dict-returning call. It is documented on the
 :doc:`PDE-solver page <solver>` for proximity with the other ``solver``
-entry points; despite living there, it does **not** invoke the Rust
+entry points; despite living there, it does not invoke the Rust
 PDE.

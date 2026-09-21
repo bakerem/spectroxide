@@ -2,7 +2,7 @@
 Python wrappers around the Rust ``spectroxide`` binary.
 
 Provides convenience functions for running the full partial differential equation
-(PDE) solver from Python (subprocess + JSON over stdout) and for quick
+(PDE) solver from Python (subprocess and JSON over stdout) and for quick
 single-injection calculations using the pure-Python Green's function module.
 
 Conventions
@@ -147,7 +147,7 @@ def _apply_settings(kwargs, debug=False):
     Returns
     -------
     dict
-        Merged kwargs (original dict is **not** mutated).
+        Merged kwargs (original dict is not mutated).
     """
     preset = DEBUG if debug else PRODUCTION
     merged = dict(preset)
@@ -195,7 +195,7 @@ def _build_cosmo_args(cosmo_params):
             Cosmology(**_known)  # raises ValueError on invalid input
 
     # The Rust CLI computes ω_cdm = (Ω_m − Ω_b) h², so it requires both
-    # together. Mirror that invariant here so the user gets a Python-side
+    # together. Mirror that invariant here so you get a Python-side
     # error instead of a CLI-parsing error.
     has_b = "omega_b" in cosmo_params
     has_m = "omega_m" in cosmo_params
@@ -378,7 +378,7 @@ def _run_rust_binary(cmd, *, cwd, timeout=600):
     except json.JSONDecodeError as e:
         # Surface a useful context window instead of an opaque decoder message
         # (audit I2). The bespoke Rust serializer has a history of emitting
-        # unbalanced braces, NaN/Inf, or truncated output on panic.
+        # unbalanced braces, NaN or Inf, or truncated output on panic.
         pos = e.pos
         context = stdout[max(0, pos - 80) : pos + 80]
         stderr_tail = (result.stderr or "").strip()[-500:]
@@ -396,7 +396,7 @@ def _run_rust_binary(cmd, *, cwd, timeout=600):
 def _emit_solver_warnings(parsed):
     """Re-emit Rust solver diagnostic warnings using warnings.warn.
 
-    The Rust ``SolverResult`` / ``SweepResult`` / ``PhotonSweepResult`` /
+    The Rust ``SolverResult``, ``SweepResult``, ``PhotonSweepResult``, and
     ``GreensResult`` types each carry an optional ``warnings`` field
     populated from ``SolverDiagnostics.warnings``, including Newton
     non-convergence, rho_e clamping, x_inj-out-of-grid, and untested-regime
@@ -740,10 +740,10 @@ def run_sweep(
 
     For other PDE workloads use :func:`solve` instead:
 
-    - Custom injection scenario → ``solve(injection={...})``.
-    - Tabulated heating history → ``solve(dq_dz=callable, method="pde")``.
-    - Frequency-dependent photon source → ``solve(photon_source=callable)``.
-    - Monochromatic photon injection sweep → :func:`run_photon_sweep`.
+    - Custom injection scenario: use ``solve(injection={...})``.
+    - Tabulated heating history: use ``solve(dq_dz=callable, method="pde")``.
+    - Frequency-dependent photon source: use ``solve(photon_source=callable)``.
+    - Monochromatic photon injection sweep: use :func:`run_photon_sweep`.
 
     Parameters
     ----------
@@ -913,7 +913,7 @@ def run_photon_sweep(
     Raises
     ------
     ValueError
-        If ``x_inj`` ≤ 0 / non-finite, ``sigma_x`` ≤ 0, or ``dy_max``
+        If ``x_inj`` ≤ 0 or non-finite, ``sigma_x`` ≤ 0, or ``dy_max``
         is outside ``(0, 0.1]``.
     """
     _val.validate_x_inj(x_inj)
@@ -1052,7 +1052,7 @@ def run_photon_sweep_batch(
     ------
     ValueError
         If ``x_inj_values`` is empty, contains non-finite or non-positive
-        entries, or if ``sigma_x``/``dy_max`` are out of range.
+        entries, or if ``sigma_x`` or ``dy_max`` are out of range.
     """
     x_inj_arr = np.asarray(list(x_inj_values), dtype=float)
     if x_inj_arr.size == 0:
@@ -1147,7 +1147,7 @@ def run_single(
 
     **Custom heating** — provide ``dq_dz``, a callable returning
     ``d(Δρ/ρ)/dz`` (positive for heating).  The spectrum is computed
-    with :func:`spectroxide.greens.distortion_from_heating` and ``μ``/``y``
+    with :func:`spectroxide.greens.distortion_from_heating`; ``μ`` and ``y``
     are extracted by separate integrations.
 
     Parameters
@@ -1445,7 +1445,7 @@ def solve(
     ------
     ValueError
         If incompatible arguments are supplied (for example, ``method="pde"``
-        but neither ``injection`` nor ``dq_dz``/``photon_source``).
+        but neither ``injection`` nor ``dq_dz`` nor ``photon_source``).
     TypeError
         If ``table`` is neither :class:`GreensTable`,
         :class:`PhotonGreensTable`, str, Path, nor *None*.

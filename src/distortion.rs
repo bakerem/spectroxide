@@ -77,7 +77,7 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
 ///   3. e_T  = G⊥  / |G⊥|,   with G⊥  = G  − (G·e_y) e_y − (G·e_μ) e_μ
 /// under the inner product ⟨a, b⟩ = ∫_{x_min}^{x_max} a(x) b(x) dx
 /// (trapezoidal rule on the supplied grid). This generalizes CJ2014's
-/// uniform-channel flat sum to our non-uniform x-grid and reduces to it in
+/// uniform-channel flat sum to the solver's non-uniform x-grid and reduces to it in
 /// the continuum limit.
 ///
 /// After projection, the coefficients (a_y, a_μ, a_T) = (⟨Δn, e_y⟩, ⟨Δn, e_μ⟩,
@@ -219,8 +219,8 @@ pub fn decompose_gram_schmidt(
 /// In the small-(μ, δ, y) limit the model reduces to a linear fit of
 ///   Δn ≈ δ·G(x) + μ·(−G(x)/x) + y·Y_SZ(x),
 /// which spans the same 3-D subspace as the CJ2014 basis (Y_SZ, M, G) since
-/// M(x) = G(x)/β_μ − G(x)/x. The two methods therefore give the SAME μ and y
-/// to O(μ²), but a DIFFERENT ΔT/T: a pure B&F BE distortion with chemical
+/// M(x) = G(x)/β_μ − G(x)/x. The two methods therefore give the same μ and y
+/// to O(μ²), but a different ΔT/T: a pure B&F BE distortion with chemical
 /// potential μ_BF has ΔT/T = 0 in the B&F parameterization and ΔT/T = −μ_BF/β_μ
 /// in CJ2014. Concretely: δ_BF = δ_CJ + μ/β_μ.
 pub fn decompose_nonlinear_be(
@@ -390,12 +390,12 @@ pub fn decompose_nonlinear_be(
 ///
 /// Note: B&F absorbs μ inside the Bose-Einstein exponential, so the returned
 /// μ is the physical chemical potential (matching FIRAS-convention fits) —
-/// NOT Chluba's orthogonalized "M-shape" μ. The relation is μ_BF = μ_M to
+/// not Chluba's orthogonalized "M-shape" μ. The relation is μ_BF = μ_M to
 /// leading order; at μ ≳ 0.1 (rare in practice) the nonlinear BE shape
 /// diverges from linear M(x) and the methods materially differ.
 ///
 /// Domain of validity: for spectra with support outside span{M, Y_SZ, G_bb} —
-/// for example, frozen/locked-in photon-injection bumps from z < 1100 that never
+/// for example, frozen or locked-in photon-injection bumps from z < 1100 that never
 /// Comptonized — the returned (μ, y, ΔT/T) is the in-band L² best fit, not a
 /// physical decomposition. Inspect `residual` before interpreting the triple
 /// in that regime.

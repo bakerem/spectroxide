@@ -7,7 +7,7 @@ Cosmology (``spectroxide.cosmology``)
 Flat ΛCDM background quantities, cosmology presets and the typed
 :class:`Cosmology` dataclass. The Green's-function and partial
 differential equation table modules pull from this module rather than
-redefining cosmology themselves; users can either pass a
+redefining cosmology themselves; you can either pass a
 :class:`Cosmology` instance or a plain ``dict`` with the same keys to
 anything that takes a ``cosmo=`` argument.
 
@@ -114,7 +114,7 @@ Recombination
 
 Free-electron fraction ``X_e(z)``: Saha for helium, Peebles three-level
 atom for hydrogen with fudge factor ``F = 1.125`` (Chluba & Thomas
-2011). The ordinary differential equation table is cached per cosmology.
+2011). The module caches the ordinary differential equation table per cosmology.
 
 .. autosummary::
    :nosignatures:

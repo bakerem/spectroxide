@@ -38,7 +38,7 @@ pub enum Command {
     Sweep(SweepOpts),
     /// Run a Green's function calculation (no PDE).
     Greens(GreensOpts),
-    /// Print cosmology/solver info.
+    /// Print cosmology and solver info.
     Info(InfoOpts),
     /// Print the compile-time physics-source hash and exit.
     PhysicsHash,
@@ -158,9 +158,9 @@ pub struct SolverOpts {
     /// Cap on adaptive optical-depth step `--dtau-max`.
     pub dtau_max: Option<f64>,
     /// Frequency-grid point count `--n-points`. Overrides the built-in
-    /// `fast` / `production` presets.
+    /// `fast` or `production` presets.
     pub n_points: Option<usize>,
-    /// Disable double-Compton + bremsstrahlung emission/absorption (`--no-dcbr`).
+    /// Disable double-Compton and bremsstrahlung emission and absorption (`--no-dcbr`).
     pub disable_dcbr: bool,
     /// Split the DC/BR step into separate DC and BR substeps (`--split-dcbr`).
     pub split_dcbr: bool,
@@ -179,7 +179,7 @@ pub struct SolverOpts {
     /// Use the high-resolution `production` grid preset (`--production-grid`).
     pub production_grid: bool,
     /// Override the initial-condition Δn at z_start (`--dn-planck`); used
-    /// for adiabatic / baseline diagnostics.
+    /// for adiabatic and baseline diagnostics.
     pub dn_planck: Option<f64>,
     /// Disable automatic grid refinement for photon-injection scenarios
     /// (`--no-auto-refine`).
@@ -414,7 +414,7 @@ fn validate_known_flags(
 /// Parses CLI arguments into a Command.
 ///
 /// # Errors
-/// Returns `Err` with a message for the user if the first argument is not a known
+/// Returns `Err` with a message for the caller if the first argument is not a known
 /// subcommand, a flag is not valid for that subcommand, a required flag or the injection type
 /// is missing (for example `--z-h` for `greens`), a value does not parse as the expected number
 /// or list, a list flag parses to an empty list, `--format` names an unknown format, or a
@@ -1411,10 +1411,10 @@ fn apply_solver_flags(solver: &mut ThermalizationSolver, solver_opts: &SolverOpt
 
 /// Validates a (config, grid, injection) combination the same way
 /// `SolverBuilder::build` does, returning the soft warnings that should
-/// surface to the user. Hard errors are propagated as `Err`.
+/// surface to the caller. Hard errors are propagated as `Err`.
 ///
 /// The CLI used to bypass this entirely by going through
-/// `ThermalizationSolver::new` + `set_config`; this helper restores the
+/// `ThermalizationSolver::new` and `set_config`; this helper restores the
 /// validation chain without forcing every call site to use the builder.
 fn validate_and_collect_warnings(
     config: &SolverConfig,
@@ -1585,7 +1585,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
 /// Runs `worker` over `items` on `n_threads` long-lived scoped threads pulling
 /// from a shared atomic work queue.
 ///
-/// Replaces the former `chunks(n_threads)` + per-chunk barrier scheme: per-item
+/// Replaces the former `chunks(n_threads)` and per-chunk barrier scheme: per-item
 /// cost in the sweeps spans ~128 to ~80,000 solver steps (z_start ≈ z_h + 7σ,
 /// and step count grows steeply with z), so a barrier left most cores idle
 /// while the heaviest points ran alone. Threads here grab the next undone item

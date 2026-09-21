@@ -14,10 +14,10 @@ Use the following table to find the right file for your role:
 
 | File | Audience | Purpose |
 |------|----------|---------|
-| `CONTRIBUTING.md` (this file) | **You**, the human contributor | Explains the philosophy, workflow, and expectations |
-| `CONTRIBUTING_CLAUDE.md` | **Your LLM** | Technical context to include in your LLM's system prompt |
+| `CONTRIBUTING.md` (this file) | You, the human contributor | Explains the philosophy, workflow, and expectations |
+| `CONTRIBUTING_CLAUDE.md` | Your LLM | Technical context to include in your LLM's system prompt |
 
-The separation is deliberate. You need to understand *why* we do things a certain way. Your LLM needs to know *what* to do and *what not to do*. These are different documents for different readers.
+The separation is deliberate. You need to understand *why* the project works a certain way. Your LLM needs to know *what* to do and *what not to do*. These are different documents for different readers.
 
 ## Workflow
 
@@ -60,14 +60,14 @@ All contributions go through pull requests to `main`. Here's the process:
 
 1. **Fork the repository** and create a feature branch (for example, `add-pbh-evaporation`).
 2. **Run the full test suite locally**: `cargo test --release`. All existing tests must pass. Do not skip tests or mark them `#[ignore]` to get a green build.
-3. **Run formatting and linting**: `cargo fmt` and `cargo clippy --all-targets -- -D warnings`. CI will reject unformatted code.
+3. **Run formatting and linting**: `cargo fmt` and `cargo clippy --all-targets -- -D warnings`. CI rejects unformatted code.
 4. **If you modified Python code**: from `python/`, run `black spectroxide/` and `pytest tests/`.
 
 ### What your PR must include
 
 Every PR that adds or modifies physics code must include:
 
-- **Tests with independently justified targets.** Each test comment should state where the expected value comes from (such as "Eq. 15 of Chluba 2015", "y-era limit: y = drho/(4*rho)", or "dimensional analysis: K_BR is dimensionless"). A test that asserts a value without justification will be asked to add one during review.
+- **Tests with independently justified targets.** Each test comment should state where the expected value comes from (such as "Eq. 15 of Chluba 2015", "y-era limit: y = drho/(4*rho)", or "dimensional analysis: K_BR is dimensionless"). A test that asserts a value without justification is asked to add one during review.
 
 - **A dimensional analysis check** for any new rate coefficient or physical formula. This can be a comment in the code or a note in the PR description showing the units work out.
 
@@ -77,7 +77,7 @@ Every PR that adds or modifies physics code must include:
 
 ### What your PR should include (when applicable)
 
-- **Cross-validation of partial differential equation (PDE) versus Green's function** for new injection scenarios where the GF is applicable (simple injection histories). Agreement within ~5% is expected.
+- **Cross-validation of partial differential equation (PDE) versus Green's function** for new injection scenarios where the GF is applicable (simple injection histories). Agreement within about 5% is expected.
 - **A notebook or script** demonstrating the new feature, especially for new injection scenarios.
 - **Updated docstrings** on any new public API (enum variants, methods).
 
@@ -116,7 +116,7 @@ PRs are reviewed for:
 2. **Numerical soundness** — Does the implementation respect the solver's conventions (Thomson time normalization, perturbative T_e, backward Euler for stiff terms)?
 3. **Code quality** — Does it follow existing patterns? Is it tested? Does CI pass?
 
-We will not merge code where test targets cannot be traced to an independent source. This is the one rule we will not bend on, because it is the one that would have prevented every major bug in the project's history.
+This project does not merge code where test targets cannot be traced to an independent source. This is the one rule that is never relaxed, because it is the one that would have prevented every major bug in the project's history.
 
 ### CI pipeline
 
@@ -124,7 +124,7 @@ The GitHub Actions CI runs automatically on every PR:
 
 - **Rust**: build, unit tests, science suite, convergence tests, doc tests, Clippy, format check (Ubuntu + macOS)
 - **Python**: install, import tests, pytest, black format check
-- **Docs**: Sphinx + rustdoc build
+- **Docs**: Sphinx and rustdoc build
 - **Coverage**: uploaded to Codecov
 
 All checks must pass before merge. If CI fails, fix the issue — do not ask for the check to be skipped.
@@ -137,6 +137,6 @@ Use a short `type: subject` style — typical types are `fix:`, `docs:`, `polish
 
 - **Paper**: Baker, Liu & Mishra-Sharma (2026), Sec. 6 documents the AI development process and failure modes
 - **Tutorial notebooks**: `notebooks/tutorials/` — start with `01_getting_started.ipynb`
-- **CosmoTherm**: Chluba (2012), the reference implementation we validate against
+- **CosmoTherm**: Chluba (2012), the reference implementation used for validation
 - **Chluba & Sunyaev (2012)**, MNRAS 419, 1294 — primary reference for the equations
 - **Chluba (2013)**, MNRAS 434, 352 — Green's function formalism

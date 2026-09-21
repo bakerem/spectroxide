@@ -6,10 +6,10 @@ PDE solver (``spectroxide.solver``)
 
 Python wrapper around ``spectroxide``, the Rust partial differential
 equation (:term:`PDE`) solver binary. Runs the full photon-Boltzmann
-PDE (Kompaneets + double Compton + bremsstrahlung) with adaptive
+PDE (Kompaneets, double Compton, and bremsstrahlung) with adaptive
 redshift stepping and parses the JSON output.
 
-This page documents the **PDE solver only**. For the analytic Green's
+This page documents the PDE solver only. For the analytic Green's
 function approximation see :doc:`greens`; for the precomputed
 PDE-based numerical Green's function tables see :doc:`greens_table`.
 
@@ -56,9 +56,9 @@ Injection scenarios
 
 The ``injection`` argument to :func:`solve` is a ``dict`` with a
 ``"type"`` key and scenario-specific parameter keys.
-``delta_rho`` is always a **top-level** argument (not an injection key).
+``delta_rho`` is always a top-level argument (not an injection key).
 For the physics behind each scenario and full derivations, see the
-`paper <https://arxiv.org/abs/2604.24838>`_.
+`spectroxide paper (arXiv:2604.24838) <https://arxiv.org/abs/2604.24838>`_.
 
 .. list-table::
    :header-rows: 1
@@ -85,7 +85,7 @@ For the physics behind each scenario and full derivations, see the
 Gaussian widths of the burst in redshift/frequency and default to
 narrow values when omitted.
 
-Each parameter name is mapped to the corresponding Rust command-line
+The wrapper maps each parameter name to the corresponding Rust command-line
 interface flag ``--<kebab-case>`` (such as ``f_x → --f-x`` and
 ``delta_n_over_n → --delta-n-over-n``).
 
@@ -95,9 +95,9 @@ Custom heating and photon-source callables
 
 For arbitrary heating histories or frequency-dependent photon sources,
 pass a Python callable to :func:`solve` instead of using the
-``injection`` dict.  Both are tabulated on a log-spaced grid and
-dispatched to the corresponding Rust ``tabulated-*`` subcommand; values
-outside the integration range are treated as zero.
+``injection`` dict.  The wrapper tabulates both on a log-spaced grid and
+dispatches them to the corresponding Rust ``tabulated-*`` subcommand; the
+solver treats values outside the integration range as zero.
 
 ``dq_dz`` — energy-injection history
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,8 +119,8 @@ Pass a ``dq_dz`` callable to run a custom heating history through the PDE solver
 * **Tabulation grid**: log-spaced in :math:`(1+z)` from ``max(z_end,
   z_min)`` to ``z_max`` with ``n_z`` points. Defaults
   :math:`z_{\min}=10^3`, :math:`z_{\max}=3\times10^6`, :math:`n_z=5000`.
-* **Mode**: with ``method="pde"`` the callable is tabulated and the Rust
-  PDE solver integrates it. Without ``method="pde"``, ``solve`` falls
+* **Mode**: with ``method="pde"`` the wrapper tabulates the callable and the
+  Rust PDE solver integrates it. Without ``method="pde"``, ``solve`` falls
   back to the analytic Green's function (no Rust binary).
 
 ``photon_source`` — frequency-dependent photon injection
@@ -260,7 +260,7 @@ Structured return value from :func:`solve`. Bundles the frequency grid,
 distortion ``Δn(x)``, scalar ``μ`` and ``y``, and a convenience property
 converting to intensity units. Note ``accumulated_delta_t`` is a
 PDE-only diagnostic (the temperature shift absorbed from photon-number
-non-conservation), **not** a full ΔT/T fit component and typically 0.0;
+non-conservation), not a full ΔT/T fit component and typically 0.0;
 for the ``(μ, y, ΔT/T)`` decomposition of ``Δn`` call
 :func:`spectroxide.greens.decompose_distortion` on ``result.x,
 result.delta_n``.
@@ -281,8 +281,8 @@ Convenience wrapper
 -------------------
 
 ``spectroxide.solver`` also exports :func:`run_single`, a thin wrapper
-around the **analytic** Green's function in :mod:`spectroxide.greens`.
-Despite living in the solver module, it does **not** invoke the Rust
+around the analytic Green's function in :mod:`spectroxide.greens`.
+Despite living in the solver module, it does not invoke the Rust
 PDE — it bundles single-burst and custom-heating calculations into a
 single dict-returning call.
 

@@ -1,5 +1,5 @@
 """
-Shared matplotlib styling for spectroxide notebooks and figures.
+Shared Matplotlib styling for spectroxide notebooks and figures.
 
 Usage::
 
@@ -25,7 +25,7 @@ from .plot_params import (
 
 
 def apply_style(*, usetex=True):
-    """Apply publication-quality matplotlib style.
+    """Apply publication-quality Matplotlib style.
 
     Parameters
     ----------
@@ -37,9 +37,9 @@ def apply_style(*, usetex=True):
     Raises
     ------
     ImportError
-        If matplotlib is not installed.  It is an optional dependency:
+        If Matplotlib is not installed.  It is an optional dependency:
         ``pip install spectroxide[plot]``.  The import lives inside this
-        function so that the base package (numpy + scipy only) imports
+        function so that the base package (NumPy and SciPy only) imports
         without it — ``spectroxide/__init__.py`` re-exports this module
         unconditionally.
     RuntimeError

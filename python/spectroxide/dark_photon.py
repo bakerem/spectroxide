@@ -3,7 +3,7 @@
 The partial differential equation solver handles dark-photon oscillations
 through the initial-condition path: pass
 ``injection={"type": "dark_photon_resonance", "epsilon": ε, "m_ev": m}`` to
-:func:`spectroxide.solve` and the Rust solver computes ``γ_con``/``z_res``
+:func:`spectroxide.solve` and the Rust solver computes ``γ_con`` and ``z_res``
 itself, applying ``Δn(x) = −[1 − exp(−γ_con/x)] × n_pl(x)`` at ``z_start =
 z_res`` and evolving forward in time. Use :func:`gamma_con` for standalone
 diagnostics that need the conversion probability without running the

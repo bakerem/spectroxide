@@ -5,7 +5,7 @@
 //! - Decaying particles (heat or photon channel)
 //! - Annihilating dark matter (s-wave and p-wave)
 //! - Monochromatic photon injection
-//! - Tabulated heating / photon source (from external data)
+//! - Tabulated heating or photon source (from external data)
 //! - Custom (user-supplied function)
 //!
 //! All heating rates are expressed as d(Δρ_γ/ρ_γ)/dt in units of 1/s.
@@ -69,14 +69,14 @@ pub enum InjectionScenario {
         f_ann: f64,
     },
 
-    /// Monochromatic photon injection/removal at a specific frequency.
+    /// Monochromatic photon injection or removal at a specific frequency.
     ///
     /// Injects ΔN/N photons as a Gaussian in both frequency and redshift,
     /// approximating a delta-function injection at (x_inj, z_h). This creates
-    /// both energy AND photon number perturbations, producing qualitatively
+    /// both energy and photon number perturbations, producing qualitatively
     /// different spectral distortions from pure energy injection.
     ///
-    /// Key physics: injection at x < x₀ ≈ 3.60 produces **negative** μ.
+    /// Key physics: injection at x < x₀ ≈ 3.60 produces negative μ.
     ///
     /// The heating rate method returns the energy injection rate from the
     /// photon injection: d(Δρ/ρ)/dt = (α_ρ × x_inj) × d(ΔN/N)/dt.
@@ -109,8 +109,8 @@ pub enum InjectionScenario {
     ///
     /// where S(z) = exp(-Γ_X × t(z)) is the vacuum survival fraction.
     ///
-    /// **NOTE**: Stimulated emission (Bose enhancement) is NOT included.
-    /// Because X → γγ deposits **both** final-state photons into the same
+    /// **Note:** Stimulated emission (Bose enhancement) is not included.
+    /// Because X → γγ deposits both final-state photons into the same
     /// mode at x_inj, the physical rate carries a factor (1 + n(x_inj))²
     /// (one (1+n) per emitted photon, squared because both land in the
     /// same occupied mode). This is significant at x_inj ≪ 1 where
@@ -134,10 +134,10 @@ pub enum InjectionScenario {
     /// Dark photon (γ ↔ A') resonant conversion in the narrow-width
     /// approximation (NWA).
     ///
-    /// Applied as an **initial condition (IC)** at the resonance redshift:
+    /// Applied as an initial condition (IC) at the resonance redshift:
     /// Δn(x) = -[1 - exp(-γ_con/x)] × n_pl(x) at z_start = z_res, where
     /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a|_{z_res} × T_γ(z_res) × H(z_res)).
-    /// The solver then evolves this IC with Kompaneets + DC/BR.
+    /// The solver then evolves this IC with Kompaneets and DC/BR.
     ///
     /// The 1/x factor in the conversion probability captures the frequency
     /// dependence P(x) ∝ 1/ω for ultrarelativistic photons.
@@ -156,15 +156,15 @@ pub enum InjectionScenario {
     /// Resonant axion–photon (γ ↔ a) conversion in the narrow-width
     /// (Landau–Zener) approximation.
     ///
-    /// Applied as an **initial condition** at the resonance redshift, exactly
+    /// Applied as an initial condition at the resonance redshift, exactly
     /// like [`Self::DarkPhotonResonance`]:
     /// Δn(x) = -[1 - exp(-γ_con·x)] × n_pl(x) at z_start = z_res, where
     /// γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [m_a² H(z_res) |d ln ω_pl²/d ln a|]
     /// and κ = g_aγγ B_rms.
     ///
-    /// The **x** in the conversion probability (as opposed to the dark
+    /// The x in the conversion probability (as opposed to the dark
     /// photon's 1/x) means high-frequency (Wien-tail) photons convert
-    /// preferentially into axions. Monopole / plasma-frequency treatment only
+    /// preferentially into axions. Monopole (plasma-frequency) treatment only
     /// (m_γ² ≈ ω_pl²); frequency-dependent atomic corrections are not modeled.
     ///
     /// Reference: Cyr, Chluba & Manoj (2024), arXiv:2411.13701, Eqs. 2, 3.
@@ -877,7 +877,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Frequency-dependent photon injection/removal rate.
+    /// Frequency-dependent photon injection or removal rate.
     ///
     /// Returns d(Δn)/dt at frequency x, in units of [1/s].
     /// This is the direct modification to the photon occupation number at
@@ -968,7 +968,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Whether this scenario has frequency-dependent photon injection/depletion.
+    /// Whether this scenario has frequency-dependent photon injection or depletion.
     pub fn has_photon_source(&self) -> bool {
         matches!(
             self,
@@ -1315,7 +1315,7 @@ impl InjectionScenario {
     /// integration range `[z_end, z_start]`.
     ///
     /// `interp_log_z` / `interp_2d` return 0.0 outside the table — a silent
-    /// extrapolation that produces zero injection at redshifts the user may
+    /// extrapolation that produces zero injection at redshifts the caller may
     /// have intended to cover. Surface the mismatch as a warning at build
     /// time so it can't go unnoticed.
     pub fn warn_tabulated_coverage(&self, z_start: f64, z_end: f64) -> Vec<String> {
@@ -1377,11 +1377,11 @@ impl InjectionScenario {
     /// Computes the physical d(Δρ/ρ)/dz.
     ///
     /// **Sign convention**: For positive energy injection (heating_rate > 0),
-    /// this returns a NEGATIVE value because energy enters as z decreases
+    /// this returns a negative value because energy enters as z decreases
     /// (dt > 0, dz < 0). This is the correct physical sign.
     ///
-    /// **WARNING**: The Green's function routines (`mu_from_heating`, `y_from_heating`,
-    /// `mu_y_from_heating`) expect a POSITIVE dq/dz for heating.
+    /// **Warning:** The Green's function routines (`mu_from_heating`, `y_from_heating`,
+    /// `mu_y_from_heating`) expect a positive dq/dz for heating.
     /// Use `heating_rate_per_redshift().abs()`
     /// or pass a positive Gaussian directly when calling Green's function methods.
     pub fn heating_rate_per_redshift(&self, z: f64, cosmo: &Cosmology) -> f64 {
@@ -1601,13 +1601,13 @@ mod tests {
     /// `photon_source_rate` for MonochromaticPhotonInjection must match its
     /// closed-form definition at the peak, not just be "> 1e-20".
     ///
-    /// Oracle:             From Chluba 2015 / the scenario definition, at
+    /// Oracle:             From Chluba 2015 or the scenario definition, at
     ///                     (x=x_inj, z=z_h) both Gaussians peak and the rate is
     ///                       r_peak = (ΔN/N) · G₂ / x_inj² ·
     ///                                [1/(σ_x √2π)] · [1/(σ_z √2π)] ·
     ///                                H(z_h) · (1+z_h)
-    /// Expected:           r_peak computed from CODATA + Planck 2018 cosmology
-    ///                     at z=3e5, x=5, σ_x=0.5, σ_z=100 → r_peak ≈ 3.7e6 s⁻¹
+    /// Expected:           r_peak computed from CODATA and Planck 2018 cosmology
+    ///                     at z=3e5, x=5, σ_x=0.5, σ_z=100 gives r_peak ≈ 3.7e6 s⁻¹
     /// Oracle uncertainty: 1e-14 relative (exact closed form, f64 roundoff only)
     /// Tolerance:          1e-10 relative
     ///

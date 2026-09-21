@@ -21,7 +21,7 @@ Quick start::
     dn = greens_function(3.0, 2e5)
 
 For redshift sweeps use ``run_sweep()`` (single-burst energy injection) or
-``run_photon_sweep()`` / ``run_photon_sweep_batch()`` (monochromatic photon
+``run_photon_sweep()`` or ``run_photon_sweep_batch()`` (monochromatic photon
 injection); the Rust binary loops internally and parallelizes across cores.
 ``run_single()`` is a thin convenience wrapper around the analytic Green's
 function.
@@ -29,7 +29,7 @@ function.
 G_bb stripping (``strip_gbb``) and style helpers (``apply_style``, ``C``,
 ``SINGLE_COL``, ``DOUBLE_COL``) are re-exported at top level, along with
 Far Infrared Absolute Spectrophotometer (FIRAS) constraint data
-(``FIRASData`` and the ``MU_FIRAS_*`` / ``Y_FIRAS_*`` confidence limits).
+(``FIRASData`` and the ``MU_FIRAS_*`` and ``Y_FIRAS_*`` confidence limits).
 
 CosmoTherm comparison utilities are available through submodule import::
 

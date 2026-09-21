@@ -2,8 +2,8 @@ CLI reference
 =============
 
 The ``spectroxide`` binary provides a command-line interface (:term:`CLI`) to the
-partial differential equation (:term:`PDE`) solver. Output is JSON by
-default and written to stdout.
+partial differential equation (:term:`PDE`) solver. The CLI outputs JSON by
+default and writes it to stdout.
 
 .. code-block:: bash
 
@@ -169,15 +169,15 @@ These flags select a cosmology preset or override individual parameters:
    --omega-b 0.044  --omega-m 0.26  --h 0.71  --y-p 0.24  --t-cmb 2.726  --n-eff 3.046
 
 Individual parameters override the selected preset. The CLI uses the
-**same convention** as the Python API: ``--omega-b`` is the fractional
+same convention as the Python API: ``--omega-b`` is the fractional
 baryon density :math:`\Omega_b` and ``--omega-m`` is fractional total
 matter :math:`\Omega_m = \Omega_b + \Omega_\mathrm{cdm}`. The CLI
 converts to physical densities :math:`\omega_b = \Omega_b h^2` and
 :math:`\omega_\mathrm{cdm} = (\Omega_m - \Omega_b)\,h^2` before
 constructing the internal cosmology.
 
-``--omega-b`` and ``--omega-m`` must be supplied together — the CDM
-density is derived from their difference.
+``--omega-b`` and ``--omega-m`` must be supplied together — the CLI derives the CDM
+density from their difference.
 
 
 Output options

@@ -4,8 +4,8 @@ Rust API
 The Rust crate ``spectroxide`` is the partial differential equation
 (:term:`PDE`) solver itself; the Python package is a thin wrapper that calls
 the Rust command-line interface (:term:`CLI`) for heavy computations and
-provides a pure-Python Green's function for quick estimates. Most users only
-touch Python, but the Rust API is useful when:
+provides a pure-Python Green's function for quick estimates. You typically only
+need Python, but the Rust API is useful when:
 
 * embedding the solver in a larger Rust program,
 * writing a custom injection scenario,
@@ -30,8 +30,8 @@ The rustdoc output is the authoritative reference:
 The crate root (``spectroxide``) contains an overview, and ``spectroxide::prelude``
 re-exports everything you typically need: ``Cosmology``,
 ``ThermalizationSolver``, ``SolverConfig``, ``GridConfig``, ``FrequencyGrid``,
-``InjectionScenario``, ``RefinementZone``, and the ``SolverBuilder`` /
-``SolverDiagnostics`` / output types.
+``InjectionScenario``, ``RefinementZone``, and the ``SolverBuilder``,
+``SolverDiagnostics``, and output types.
 
 Quick Rust example
 ------------------

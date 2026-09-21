@@ -1,4 +1,4 @@
-//! Generate Rust↔Python parity fixtures (validation-audit Part B2).
+//! Generate Rust-to-Python parity fixtures (validation-audit Part B2).
 //!
 //! Evaluates every Rust function that has a pure-Python mirror in
 //! `python/spectroxide/` on a deterministic input grid and writes the results
@@ -6,7 +6,7 @@
 //! same inputs and asserts agreement to the per-group tolerance declared here.
 //!
 //! Usage:
-//!   cargo run --release --example generate_parity_fixtures -- [output.json]
+//!   `cargo run --release --example generate_parity_fixtures -- [output.json]`
 //!
 //! Default output: python/tests/data/parity_fixtures.json (committed). The CI
 //! parity job regenerates the fixture from the current Rust and re-runs the

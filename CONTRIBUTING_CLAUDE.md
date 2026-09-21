@@ -39,7 +39,7 @@ cd python && pip install -e ".[plot]"
 - **Grid** (`src/grid.rs`): Non-uniform frequency grid with optional `RefinementZone` for adaptive resolution near spectral features.
 - **Distortion decomposition** (`src/distortion.rs`): Extracts (mu, y, DeltaT/T) from the solved spectrum.
 - **Green's function** (`src/greens.rs`): Fast approximate mode. Visibility functions J_bb*, J_mu, J_y.
-- **Python** (`python/spectroxide/`): Wraps Rust binary + pure-Python Green's function.
+- **Python** (`python/spectroxide/`): Wraps Rust binary and pure-Python Green's function.
 - **Tests** (`tests/`): 430+ Rust tests across 8 files (`heat_injection.rs` is the main integration file; others cover adversarial inputs, coverage gaps, CosmoTherm comparison, Green's-function checks, convergence order, command-line interface (CLI) integration, and the science suite). A separate Python test suite lives under `python/tests/`.
 
 ## How to add a new energy injection scenario
@@ -62,7 +62,7 @@ MyScenario {
 
 ### Step 2: Implement required methods
 
-You must add match arms to ALL of these methods on `InjectionScenario`:
+You must add match arms to all of these methods on `InjectionScenario`:
 
 - `name(&self)` — string identifier for CLI/output
 - `validate(&self)` — parameter validation, return `Err(String)` for invalid inputs
@@ -75,9 +75,9 @@ You must add match arms to ALL of these methods on `InjectionScenario`:
 
 ### Step 3: Wire into CLI (`src/cli.rs`)
 
-CLI subcommands are `solve`, `sweep`, `greens`, `photon-sweep`, `photon-sweep-batch`, `info`, `help` (entry point in `src/main.rs`, dispatch in `src/cli.rs`). New scenarios usually plug into `solve` and `sweep` through the existing `--scenario` / `--params` machinery; photon-source scenarios additionally go through the photon-sweep subcommands.
+CLI subcommands are `solve`, `sweep`, `greens`, `photon-sweep`, `photon-sweep-batch`, `info`, `help` (entry point in `src/main.rs`, dispatch in `src/cli.rs`). New scenarios usually plug into `solve` and `sweep` through the existing `--scenario` or `--params` machinery; photon-source scenarios additionally go through the photon-sweep subcommands.
 
-### Step 4: Write tests with INDEPENDENT targets
+### Step 4: Write tests with independent targets
 
 This is the most important step. See the next section.
 
@@ -89,7 +89,9 @@ Update `python/spectroxide/solver.py` to accept your scenario's parameters and p
 
 These rules exist because every major bug in spectroxide's history was missed by tests that violated them.
 
-### 1. NEVER calibrate test targets from the code itself
+### 1. Never calibrate test targets from the code itself
+
+**Caution:** A test whose target was read off the code's own output passes even when the code is wrong. Derive every target from an analytic formula, a published value, or a dimensional argument.
 
 The comment below contrasts a bad test that locks in the code's own output with a good test that derives its target independently:
 
@@ -103,7 +105,7 @@ let expected_y = 1e-4 / 4.0;
 assert!((result.y - expected_y).abs() / expected_y < 0.05);
 ```
 
-### 2. Always check dimensions FIRST
+### 2. Always check dimensions first
 
 Before trusting any numerical output, verify that every rate coefficient has the correct dimensions. Thomson time normalization (dividing by n_e * sigma_T * c) cancels:
 - One density factor for two-body processes (BR: e + ion), leaving N_ion * lambda_e^3 (dimensionless)
@@ -118,15 +120,15 @@ Before trusting any numerical output, verify that every rate coefficient has the
 
 ### 4. Cross-validate PDE against Green's function
 
-For simple injection histories, the PDE and the Green's function (GF) should agree within ~5%. Large discrepancies indicate a bug.
+For simple injection histories, the PDE and the Green's function (GF) should agree within about 5%. Large discrepancies indicate a bug.
 
 ### 5. Never weaken a test to make it pass
 
-If a test fails, investigate the root cause. Do not relax tolerances, restrict comparison ranges, or delete failing cases without understanding WHY they fail.
+If a test fails, investigate the root cause. Do not relax tolerances, restrict comparison ranges, or delete failing cases without understanding why they fail.
 
-## Numerical pitfalls you MUST know about
+## Numerical pitfalls you must know about
 
-`CLAUDE.md` enumerates **10 critical numerical pitfalls** in full, with the algebraic expansions and code-level requirements. That list is mandatory reading and is the canonical source — do not paraphrase it from memory. The summaries below are the workflow-relevant tips; consult `CLAUDE.md` for the rest (CFL/implicit Kompaneets, NaN-hiding with `f64::max`, x_max ≥ 30 for G₃, the BR dimensional-analysis war story, the unsafe-indexing/`assert!` invariants in `kompaneets.rs`, and the "tests calibrated to code output" failure mode).
+`CLAUDE.md` enumerates 10 critical numerical pitfalls in full, with the algebraic expansions and code-level requirements. That list is mandatory reading and is the canonical source — do not paraphrase it from memory. The summaries below are the workflow-relevant tips; consult `CLAUDE.md` for the rest (CFL/implicit Kompaneets, NaN-hiding with `f64::max`, x_max ≥ 30 for G₃, the BR dimensional-analysis war story, the unsafe-indexing/`assert!` invariants in `kompaneets.rs`, and the "tests calibrated to code output" failure mode).
 
 1. **Kompaneets cancellation**: The flux must use the Planck identity dn_pl/dx + n_pl(1+n_pl) = 0 analytically. Finite-difference error (~0.003) is 1000x the physical signal (~1e-5).
 
@@ -136,7 +138,7 @@ If a test fails, investigate the root cause. Do not relax tolerances, restrict c
 
 4. **DC/BR source near-cancellation**: n_pl(x/rho_e) - n_pl(x) subtracts nearly-equal numbers. Use analytical expansion when |rho_e - 1| < 0.01.
 
-5. **Energy routing**: Injected photon energy absorbed by DC/BR must flow through T_e -> Kompaneets -> mu/y. Do NOT shortcut this by adding G_bb corrections or routing through heating_rate(). The solver must handle arbitrary source terms without special-casing.
+5. **Energy routing**: Injected photon energy absorbed by DC/BR must flow through T_e to Kompaneets to mu/y. Do not shortcut this by adding G_bb corrections or routing through heating_rate(). The solver must handle arbitrary source terms without special-casing.
 
 ## Dimensionless variables
 
@@ -150,10 +152,10 @@ If a test fails, investigate the root cause. Do not relax tolerances, restrict c
 
 h=0.71, Omega_b=0.044, Omega_m=0.26, Y_p=0.24, T_cmb=2.726, N_eff=3.046 (Chluba 2013 conventions). Planck 2015 and 2018 presets also available.
 
-## What NOT to do
+## What not to do
 
 - **Do not add external crate dependencies.** The zero-dependency constraint is deliberate.
-- **Do not route soft photons through `heating_rate()`.** This is a scenario-specific hack. Photon injection must go through `photon_source_rate()` -> DC/BR absorption -> T_e -> Kompaneets.
+- **Do not route soft photons through `heating_rate()`.** This is a scenario-specific hack. Photon injection must go through `photon_source_rate()` to DC/BR absorption to T_e to Kompaneets.
 - **Do not use ad hoc numerical fixes.** If the solver can't handle a source term, fix the solver, not the source.
 - **Do not compare only Green's function results.** Always validate with the full PDE solver.
 - **Do not weaken or delete tests** to make the code pass. Fix the code.

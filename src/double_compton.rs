@@ -69,7 +69,7 @@ pub fn dc_high_freq_suppression(x: f64) -> f64 {
 ///
 /// K_DC = (4α/3π) θ_z² g_dc(x, θ_z, θ_e)
 ///
-/// The emission/absorption term in the photon equation is:
+/// The emission and absorption term in the photon equation is:
 ///   dn/dτ|_DC = (K_DC / x³) [n_eq - n]
 ///
 /// where n_eq is the equilibrium distribution (Planck at the electron temperature).
@@ -99,7 +99,7 @@ pub fn dc_emission_coefficient_fast(x: f64, dc_pre: f64) -> f64 {
 ///
 /// Production code uses the coupled inplace solver with precomputed rates.
 ///
-/// **Do not promote this to production.** The naive `(e^{x_e} − 1)` form used
+/// **Caution:** Do not promote this to production. The naive `(e^{x_e} − 1)` form used
 /// here loses precision as `|ρ_e − 1| → 0` because the source term subtracts
 /// two nearly equal numbers. `solver.rs::compute_emission_rates` switches to
 /// the analytical Taylor expansion `x(ρ_e−1)/ρ_e · n_pl(1+n_pl)` when
@@ -183,7 +183,7 @@ mod tests {
     /// Detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
     ///
     /// DC emission and absorption must cancel identically when the photon field
-    /// is a Planck spectrum at the **electron** temperature, for any ρ_e. In the
+    /// is a Planck spectrum at the electron temperature, for any ρ_e. In the
     /// code's normalization x = hν/kT_z that spectrum is
     ///   n_eq(x) = 1/(exp(x·φ) − 1),  φ ≡ θ_z/θ_e = 1/ρ_e.
     ///
@@ -418,8 +418,8 @@ mod tests {
     /// The DC relativistic correction (1 + 14.16 θ_z)⁻¹ must actually be applied.
     ///
     /// Every pre-audit Gaunt test passed `theta_z = 0.0`, where the correction is
-    /// identically 1, so `/`→`*` and `+`→`-` inside it were unobservable. Probe
-    /// it where it matters: at z = 10⁷, 14.16 θ_z ≈ 6.5%.
+    /// identically 1, so replacing `/` with `*` and `+` with `-` inside it would go
+    /// unnoticed. Probe it where it matters: at z = 10⁷, 14.16 θ_z ≈ 6.5%.
     ///
     /// Reference: Chluba, Sazonov & Sunyaev (2007), A&A 468, 785.
     #[test]
@@ -496,7 +496,7 @@ mod tests {
     /// The Horner-form code computes this as:
     ///   exp(-2x) * (1 + x*(1.5 + x*(29/24 + x*(11/16 + x*(5/12)))))
     ///
-    /// We verify both forms agree and check specific values.
+    /// This test verifies both forms agree and checks specific values.
     #[test]
     fn test_dc_polynomial_coefficients_cs2012() {
         // Coefficients from CS2012 Eq. 13

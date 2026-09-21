@@ -33,6 +33,6 @@ Primordial Inflation Explorer (:term:`PIXIE`).
    * - **04**
      - **Custom scenarios** --- Tabulated heating histories, custom injection closures.
    * - **05**
-     - **Observational constraints** --- FIRAS/PIXIE limits, :math:`\mu`--:math:`y` exclusion plane, mock PIXIE observation.
+     - **Observational constraints** --- FIRAS and PIXIE limits, :math:`\mu`--:math:`y` exclusion plane, mock PIXIE observation.
    * - **06**
      - **Green's function tables** --- Precomputed PDE-based tables for fast convolution.

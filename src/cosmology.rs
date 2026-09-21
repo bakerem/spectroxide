@@ -1,6 +1,6 @@
 //! Background cosmology: Hubble rate, cosmic time, number densities.
 //!
-//! Implements a flat ΛCDM background with radiation (photons + neutrinos).
+//! Implements a flat ΛCDM background with radiation (photons and neutrinos).
 
 use crate::constants::*;
 
@@ -123,7 +123,7 @@ impl Cosmology {
     ///
     /// Escape hatch for hardcoded presets and test fixtures where the inputs
     /// are known a priori to be valid. Using non-finite or zero `h` / `y_p`
-    /// here will produce `NaN`/`Inf` in derived quantities — prefer [`Self::new`]
+    /// here produces `NaN`/`Inf` in derived quantities — prefer [`Self::new`]
     /// for any input the caller does not fully control.
     pub fn new_unchecked(
         t_cmb: f64,
@@ -190,7 +190,7 @@ impl Cosmology {
         Self::new_unchecked(2.7255, 0.02225, 0.1198, 0.6727, 3.046, 0.2467)
     }
 
-    /// Planck-2015 parameters with the **CosmoTherm** `T_CMB = 2.726 K`
+    /// Planck-2015 parameters with the CosmoTherm `T_CMB = 2.726 K`
     /// convention (Fixsen 1996, baked into CosmoTherm v1.0.3 DI files).
     ///
     /// Identical to [`Cosmology::planck2015`] except for `T_CMB`. Use this for
@@ -237,7 +237,7 @@ impl Cosmology {
         self.cached_omega_gamma
     }
 
-    /// Ω_rel (all relativistic species: photons + neutrinos).
+    /// Ω_rel (all relativistic species: photons and neutrinos).
     #[inline]
     pub fn omega_rel(&self) -> f64 {
         self.cached_omega_rel
@@ -429,7 +429,7 @@ impl Cosmology {
 impl Default for Cosmology {
     /// Default parameters matching Chluba (2013) Green's function paper.
     ///
-    /// These are intentionally **not** the latest Planck values. The defaults
+    /// These are intentionally not the latest Planck values. The defaults
     /// match Chluba (2013) / CosmoTherm v1.0.3 (Y_p=0.24, T₀=2.726 K,
     /// Ω_m=0.26, Ω_b=0.044, h=0.71) so that partial differential equation solver
     /// output can be validated against published CosmoTherm results without cosmology mismatch.

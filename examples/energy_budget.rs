@@ -104,7 +104,7 @@ fn run_heat(cfg: &HeatCfg, z_h: f64, drho_inj: f64) -> HeatOut {
 }
 
 /// Exact shape moments on the solver grid: ∫x³G_bb dx = 4G₃, ∫x³M dx = (κ_c/3)G₃.
-/// Bounds the quadrature + truncation contribution to every Δρ/ρ in the suite.
+/// Bounds the quadrature and truncation contribution to every Δρ/ρ in the suite.
 fn mode_quad() {
     println!("== quadrature of the exact shape moments (relative error)");
     for (label, gc) in [

@@ -89,7 +89,7 @@ pub const F_HE: f64 = Y_P / (4.0 * (1.0 - Y_P));
 /// Effective number of neutrino species (dimensionless).
 pub const N_EFF: f64 = 3.046;
 
-/// km/s/Mpc → 1/s.
+/// km/s/Mpc to 1/s.
 pub const KM_PER_MPC: f64 = 3.240_779_29e-20;
 
 // Spectral integral constants (for Planck distribution)

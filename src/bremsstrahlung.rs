@@ -6,7 +6,7 @@
 //! The bremsstrahlung (BR) emission coefficient:
 //!   K_BR(x, θ_e) = (α λ_e³ / (2π√(6π))) θ_e^{-7/2} e^{-xφ}/φ³ Σ_i Z_i² N_i g_ff(Z_i, x, θ_e)
 //!
-//! In the code, we express this as a rate per Thomson scattering time τ:
+//! The code expresses this as a rate per Thomson scattering time τ:
 //!   K_BR(x) = prefactor × Σ_i Z_i² (N_i/N_e) g_ff(Z_i, x, θ_e)
 //!
 //! References:
@@ -448,7 +448,7 @@ pub fn br_emission_coefficient_fast_preln(x: f64, ln_x: f64, pre: &BrPrecomputed
 ///
 /// Production code uses the coupled inplace solver with precomputed rates.
 ///
-/// **Do not promote this to production.** Same near-cancellation hazard as
+/// **Caution:** Do not promote this to production. Same near-cancellation hazard as
 /// `double_compton::dc_rhs`: the naive `(e^{x_e} − 1)` form loses precision
 /// near `ρ_e = 1`. The production path (`solver.rs::compute_emission_rates`)
 /// uses the analytical Taylor expansion when `|ρ_e − 1| < 0.01`.
@@ -563,7 +563,7 @@ mod tests {
     /// Detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
     ///
     /// BR emission and absorption must cancel identically for a Planck spectrum
-    /// at the **electron** temperature, n_eq(x) = 1/(exp(x·φ) − 1) with
+    /// at the electron temperature, n_eq(x) = 1/(exp(x·φ) − 1) with
     /// φ = θ_z/θ_e, at any ρ_e. The test above only covers ρ_e = 1, where φ = 1
     /// and a wrong φ convention is unobservable. Mirrors
     /// `double_compton::test_dc_detailed_balance_at_shifted_electron_temperature`.

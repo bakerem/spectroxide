@@ -101,10 +101,10 @@ Caching
 
 Tables are expensive to build (one PDE solve per ``z_h``), so the
 ``load_or_build_*`` entry points cache results on disk and reuse them
-across sessions. Each cached table is tagged with a hash of the physics
-configuration used to generate it; on load, the hash is checked against
-the current code and a :class:`GreensTableHashMismatch` warning is
-emitted if they disagree, so stale caches from earlier code versions do
+across sessions. The loader tags each cached table with a hash of the physics
+configuration used to generate it; on load, the loader checks the hash against
+the current code and emits a :class:`GreensTableHashMismatch` warning
+if they disagree, so stale caches from earlier code versions do
 not silently shadow updated physics. Pass ``rebuild=True`` to force a
 fresh build, or delete the cache file to start over.
 

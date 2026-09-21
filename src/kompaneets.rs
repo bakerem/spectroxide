@@ -12,7 +12,7 @@
 //!   dΔn/dτ|_C = (θ_e / x²) ∂/∂x [x⁴ (∂Δn/∂x + φ(2n_pl+1)Δn)] + source
 //!
 //! Discretized with second-order conservative finite differences and solved
-//! with Crank-Nicolson time stepping → tridiagonal system.
+//! with Crank-Nicolson time stepping, producing a tridiagonal system.
 //!
 //! The in-place stepper also couples double Compton (DC) and bremsstrahlung (BR)
 //! emission implicitly, within the same Newton iteration, with backward Euler.
@@ -239,7 +239,7 @@ pub fn thomas_solve_inplace(
 /// once and advances both right-hand sides inside it, so the two RHS
 /// recurrences overlap instead of serializing.
 ///
-/// **Bit-identical** to two `thomas_solve_inplace` calls: each element is
+/// Bit-identical to two `thomas_solve_inplace` calls: each element is
 /// produced by the same operations on the same operands in the same order.
 /// `denom` depends only on `(lower, diag, upper)`, so sharing it changes
 /// nothing numerically.
@@ -529,7 +529,7 @@ impl KompaneetsWorkspace {
 /// DC/BR coupling data for implicit backward Euler within the Kompaneets step.
 ///
 /// Instead of a precomputed frozen source `dcbr_source[i] = (neq-Δn_old)(1-e^{-dτ·em})`,
-/// we pass the emission rates and equilibrium targets so DC/BR is solved implicitly
+/// the caller passes the emission rates and equilibrium targets so DC/BR is solved implicitly
 /// (backward Euler) inside the Newton iteration. This ensures DC/BR and Kompaneets
 /// see the same evolving Δn, matching CosmoTherm's approach.
 pub struct DcbrCoupling<'a> {
@@ -567,7 +567,7 @@ pub struct DcbrCoupling<'a> {
     pub cn_dcbr: bool,
 }
 
-/// In-place Kompaneets + DC/BR step using pre-allocated workspace.
+/// In-place Kompaneets and DC/BR step using pre-allocated workspace.
 ///
 /// Modifies `delta_n` from old values to new values.
 /// Identical physics to `kompaneets_step_nonlinear_coupled` but avoids
@@ -1270,7 +1270,7 @@ mod tests {
 
     /// When T_e > T_z, all Kompaneets solver variants must produce Δρ/ρ > 0
     /// (energy flows from electrons to photons through upscattering).
-    /// Tests CN (kompaneets_step), backward Euler (kompaneets_tridiagonal + Thomas),
+    /// Tests CN (kompaneets_step), backward Euler (kompaneets_tridiagonal and Thomas),
     /// and nonlinear (kompaneets_step_nonlinear) in a single test.
     #[test]
     fn test_kompaneets_te_gt_tz_positive_drho_all_solvers() {
@@ -1577,7 +1577,7 @@ mod tests {
     // the *full* suite). See dev/audit/highprec_numerics.md R4.2.
 
     /// Thomas solver over a ~40-wide SPD tridiagonal system (loop body, not
-    /// just the 2x2/3x3 corner cases) — exercises the forward/back-substitution
+    /// just the 2x2/3x3 corner cases) — exercises the forward and back-substitution
     /// `get_unchecked` accesses across many interior indices under Miri.
     #[test]
     fn miri_kernel_thomas_wide() {
@@ -1628,7 +1628,7 @@ mod tests {
     }
 
     /// Coupled step with DC/BR active and a nonzero equilibrium offset, tiny N.
-    /// Exercises the DC/BR branch of the Newton assembly + inner loop.
+    /// Exercises the DC/BR branch of the Newton assembly and inner loop.
     #[test]
     fn miri_kernel_coupled_with_dcbr() {
         let grid = FrequencyGrid::log_uniform(1e-3, 30.0, 48);

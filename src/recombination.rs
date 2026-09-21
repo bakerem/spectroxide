@@ -5,7 +5,7 @@
 //!
 //! ## Physical picture
 //!
-//! - z > 8000: Fully ionized (H + He). Helium is doubly ionized (He²⁺).
+//! - z > 8000: Fully ionized (H and He). Helium is doubly ionized (He²⁺).
 //! - z ~ 6000: He²⁺ recombines to He⁺ (54.4 eV Saha).
 //! - z ~ 2000: He⁺ recombines to He (24.6 eV Saha).
 //! - z ~ 1500–800: Hydrogen recombines. Saha equilibrium breaks down
@@ -49,7 +49,7 @@ fn thermal_de_broglie(t: f64) -> f64 {
 
 /// Solves the Saha quadratic X²/(1−X) = S for the ionized fraction X.
 ///
-/// Handles extreme limits to avoid overflow/underflow. Used by the hydrogen
+/// Handles extreme limits to avoid overflow or underflow. Used by the hydrogen
 /// Saha (where the self-ionization n_e = X·n_H is exact at z ≳ 1500 because
 /// H dominates the electron budget).
 #[inline]
@@ -83,7 +83,7 @@ fn solve_saha_linear(s: f64) -> f64 {
 /// He⁺ ground state (1s, hydrogen-like), g=2 (electron spin).
 /// Free electron, g=2 (spin).
 ///
-/// Uses the standard (RECFAST/Seager+1999) total free-electron Saha form
+/// Uses the standard (RECFAST, Seager et al. 1999) total free-electron Saha form
 /// y / (1 − y) = K(T) / n_e, where n_e ≈ n_H + (1 + y_II)·n_He is dominated
 /// by H⁺ at z ≳ 1500 (H is fully ionized throughout He recombination since
 /// χ_I(H) = 13.6 eV ≪ χ_II(He) = 54.4 eV). Using n_e = n_H + 2·n_He
@@ -118,7 +118,7 @@ pub fn saha_he_ii(z: f64, cosmo: &Cosmology) -> f64 {
 /// Uses the standard total free-electron Saha form y / (1 − y) = K(T) / n_e.
 /// At z ~ 2000 where He⁺ recombines, H is still fully ionized (Saha X_H ≈ 1
 /// down to z ~ 1500) and He²⁺ has already recombined to He⁺, so
-/// n_e ≈ n_H + y_I·n_He; we approximate y_I = 1 to keep the equation linear,
+/// n_e ≈ n_H + y_I·n_He; the code approximates y_I = 1 to keep the equation linear,
 /// which introduces ≲4% error in n_e.
 pub fn saha_he_i(z: f64, cosmo: &Cosmology) -> f64 {
     let t = cosmo.t_cmb * (1.0 + z);
@@ -191,7 +191,7 @@ fn alpha_recomb(t: f64) -> f64 {
 ///
 /// where E_{n=2} = E_Rydberg/4 = 3.4 eV is the ionization energy from n=2.
 ///
-/// **Important**: This uses the radiation temperature T_CMB, NOT the matter
+/// **Important**: This uses the radiation temperature T_CMB, not the matter
 /// temperature, because the photoionizing radiation field is thermal at T_CMB.
 fn beta_ion(t_rad: f64) -> f64 {
     let alpha = alpha_recomb(t_rad);
@@ -306,8 +306,8 @@ fn peebles_step(z_new: f64, x_h: f64, dz: f64, cosmo: &Cosmology) -> f64 {
 
 /// Finds the redshift where the Saha hydrogen X_e first drops below 0.99.
 ///
-/// This is where the Peebles correction becomes significant and we
-/// switch from the Saha equation to the TLA ODE.
+/// This is where the Peebles correction becomes significant; the solver
+/// switches from the Saha equation to the TLA ODE here.
 fn find_saha_switch(cosmo: &Cosmology) -> f64 {
     let mut z = 1800.0;
     while z > 1000.0 {
@@ -321,20 +321,20 @@ fn find_saha_switch(cosmo: &Cosmology) -> f64 {
 
 /// Ionization fraction X_e(z) with Peebles TLA correction.
 ///
-/// Returns the total free electron fraction (hydrogen + helium) per
+/// Returns the total free electron fraction (hydrogen and helium) per
 /// hydrogen atom.
 ///
 /// ## Regimes
 ///
 /// - z > 8000: Fully ionized H; He from Saha equations.
-/// - z_switch < z ≤ 8000: Saha equilibrium for H + He.
+/// - z_switch < z ≤ 8000: Saha equilibrium for H and He.
 /// - z ≤ z_switch: Peebles three-level atom ODE for H, plus Saha He.
 ///
 /// ## Saha-subtracted ODE
 ///
 /// The raw Peebles ODE has catastrophic cancellation: α_B n_H X_e²
 /// and β_B (1−X_e) are both ~10² s⁻¹ but their difference is ~10⁻⁴.
-/// Using the Saha relation β_B = α_B X_S² n_H / (1−X_S), we rewrite:
+/// The Saha relation β_B = α_B X_S² n_H / (1−X_S) rewrites the ODE as:
 ///
 ///   dX_e/dz = C × α_B × n_H / (H(1+z)) × [X_e² − X_S² (1−X_e)/(1−X_S)]
 ///
@@ -380,7 +380,7 @@ pub fn ionization_fraction(z: f64, cosmo: &Cosmology) -> f64 {
 /// Precomputed recombination history for fast X_e(z) lookups.
 ///
 /// Integrates the Peebles ODE once on construction and stores a table
-/// of (z, X_e) pairs. Subsequent lookups use binary search + linear
+/// of (z, X_e) pairs. Subsequent lookups use binary search and linear
 /// interpolation, making each call O(log N) instead of O(N_ode).
 ///
 /// For z above the Peebles regime (z > z_switch ~ 1575), the cheap
@@ -388,9 +388,9 @@ pub fn ionization_fraction(z: f64, cosmo: &Cosmology) -> f64 {
 pub struct RecombinationHistory {
     /// Redshifts in descending order (z_switch, z_switch − dz, ..., 1.0).
     z_table: Vec<f64>,
-    /// Total X_e (hydrogen + helium) at each redshift.
+    /// Total X_e (hydrogen and helium) at each redshift.
     x_e_table: Vec<f64>,
-    /// Redshift where Saha → Peebles switch occurs.
+    /// Redshift where the switch from Saha to Peebles occurs.
     z_switch: f64,
     /// Uniform spacing of z_table (descending): z_table[i] = z_switch − i·dz_table.
     dz_table: f64,
@@ -402,7 +402,7 @@ impl RecombinationHistory {
     /// Builds the recombination history table for a given cosmology.
     ///
     /// Integrates the Peebles ODE from z_switch down to z=1 with dz=0.5,
-    /// storing total X_e (H + He) at each step.
+    /// storing total X_e (H and He) at each step.
     pub fn new(cosmo: &Cosmology) -> Self {
         let z_switch = find_saha_switch(cosmo);
         let z_end = 1.0_f64;
@@ -442,7 +442,7 @@ impl RecombinationHistory {
     /// Looks up X_e(z) using the cached table.
     ///
     /// - z > 8000: fully ionized (Saha for He)
-    /// - z_switch < z ≤ 8000: Saha for H + He (cheap, no table)
+    /// - z_switch < z ≤ 8000: Saha for H and He (cheap, no table)
     /// - z ≤ z_switch: interpolate from precomputed table
     pub fn x_e(&self, z: f64) -> f64 {
         if z > 8000.0 {
@@ -658,10 +658,10 @@ mod tests {
     ///
     /// Anchors are HyRec-2 (github.com/nanoomlee/HyRec-2, run 2026-07-05) on
     /// the exact default cosmology (T_CMB=2.726, Ω_b=0.044, Ω_m=0.26, h=0.71,
-    /// Y_p=0.24, N_eff=3.046); table + input archived in
+    /// Y_p=0.24, N_eff=3.046); table and input archived in
     /// dev/output/hyrec2_xe_default_cosmo.dat. HyRec values:
     ///   X_e(1100) = 0.14324,  X_e(800) = 3.4785e-3,  X_e(200) = 3.2685e-4.
-    /// Measured Peebles-TLA↔HyRec disagreement is ≤ 1.9% for 200 ≤ z ≤ 1600
+    /// Measured Peebles-TLA-to-HyRec disagreement is ≤ 1.9% for 200 ≤ z ≤ 1600
     /// (see dev/audit/xe_hyrec_comparison.md); the ±6% band gives ~3× slack.
     /// The post-freeze-out tail (z ≲ 50) diverges up to 33% — a documented
     /// α_B(T_rad) convention with negligible observable impact — and is
@@ -682,7 +682,7 @@ mod tests {
         }
     }
 
-    /// X_e through the **helium** recombination epoch, against the same HyRec-2
+    /// X_e through the helium recombination epoch, against the same HyRec-2
     /// run (R2 mutation audit, fix B4).
     ///
     /// The milestone test above probes only z = 1100/800/200 — all hydrogen-
@@ -695,7 +695,7 @@ mod tests {
     /// HyRec-2 values read from dev/output/hyrec2_xe_default_cosmo.dat (same run
     /// and cosmology as above). Bands follow the measured per-band disagreement
     /// in xe_hyrec_comparison.md with ~1.5× slack: ≤0.14% for 3000–5000 (He²⁺/He⁺
-    /// Saha, where both codes are in equilibrium) and 5.7% at z≈2300 (our Saha
+    /// Saha, where both codes are in equilibrium) and 5.7% at z≈2300 (this code's Saha
     /// against HyRec's non-equilibrium He⁺→He⁰ — HyRec recombines later, the expected
     /// direction).
     #[test]

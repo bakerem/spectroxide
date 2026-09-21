@@ -11,7 +11,7 @@
 Mirrors :mod:`spectroxide.dark_photon`. The partial differential equation
 solver handles axion conversions through the initial-condition path: pass
 ``injection={"type": "axion_resonance", "g_agamma": g, "b_rms": B, "m_ev": m}``
-to :func:`spectroxide.solve` and the Rust solver computes ``γ_con``/``z_res``
+to :func:`spectroxide.solve` and the Rust solver computes ``γ_con`` and ``z_res``
 itself, installing the impulsive depletion
 ``Δn(x) = −[1 − exp(−γ_con·x)] × n_pl(x)`` at ``z_start = z_res`` and evolving
 forward in time. Use :func:`gamma_con_axion` for standalone diagnostics.
@@ -24,7 +24,7 @@ Two differences from the dark-photon case (Cyr, Chluba & Manoj 2024):
 2. The ``γ_con`` prefactor replaces ``ε² m²`` with ``κ² (1+z)⁴ T_CMB(z)``,
    where ``κ = g_aγγ B_rms`` (Eq. 3b).
 
-This is the monopole / plasma-frequency treatment (``m_γ² ≈ ω_pl²``); the
+This is the monopole (plasma-frequency) treatment (``m_γ² ≈ ω_pl²``); the
 frequency-dependent HI/HeI/HeII corrections (paper Sec. II B) are not modeled.
 
 References

@@ -4,17 +4,17 @@
 [![codecov](https://codecov.io/gh/bakerem/spectroxide/graph/badge.svg?token=KUQLBC7733)](https://codecov.io/gh/bakerem/spectroxide)
 [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Numerical solver for **cosmic microwave background (CMB) spectral distortions** from energy and photon injection in the early Universe.
+Numerical solver for cosmic microwave background (CMB) spectral distortions from energy and photon injection in the early Universe.
 
 Energy released into the photon-baryon plasma at redshifts $z \sim 10^3 - 5 \times 10^6$ creates deviations from a perfect blackbody spectrum. These spectral distortions — $\mu$-type (chemical potential) and $y$-type (Compton) — encode information about early-universe physics, from the dissipation of primordial acoustic waves to exotic particle decays and dark sector interactions.
 
-spectroxide solves the coupled photon-electron Boltzmann equation including Compton scattering (Kompaneets equation), double Compton emission, bremsstrahlung, and Hubble expansion. It provides both a **full partial differential equation (PDE) solver** (Rust) and a **fast Green's function approximation** (Rust + Python).
+spectroxide solves the coupled photon-electron Boltzmann equation including Compton scattering (Kompaneets equation), double Compton emission, bremsstrahlung, and Hubble expansion. It provides both a full partial differential equation (PDE) solver (Rust) and a fast Green's function approximation (Rust and Python).
 
 ## Features
 
-- **Full PDE solver** in Rust: implicit Kompaneets + coupled double Compton (DC) and bremsstrahlung (BR) with adaptive stepping
+- **Full PDE solver** in Rust: implicit Kompaneets and coupled double Compton (DC) and bremsstrahlung (BR) with adaptive stepping
 - **Green's function** mode for fast approximate calculations (pure Python, no compilation needed)
-- **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave/p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating through the Rust API)
+- **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave or p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating through the Rust API)
 - **Comprehensive test suite**: 480+ unit, integration, and doc-tests
 - **Zero production dependencies** in Rust (pure `std` library)
 
@@ -213,7 +213,7 @@ cargo run --release --bin spectroxide -- sweep --delta-rho 1e-5
 cargo run --release --bin spectroxide -- greens --z-h 2e5 --delta-rho 1e-5
 ```
 
-Output is written to stdout as JSON (pipe to a file with `> output.json`).
+The CLI writes output to stdout as JSON (pipe to a file with `> output.json`).
 
 ## Example notebooks
 
@@ -228,13 +228,13 @@ The tutorial notebooks in `notebooks/tutorials/` are numbered in the suggested r
 | [`05_observational_constraints.ipynb`](notebooks/tutorials/05_observational_constraints.ipynb) | Far Infrared Absolute Spectrophotometer (FIRAS) and Primordial Inflation Explorer (PIXIE) limits, $\mu$-$y$ plane, mock PIXIE observation |
 | [`06_greens_table.ipynb`](notebooks/tutorials/06_greens_table.ipynb) | Precomputed Green's function tables for fast convolution |
 
-Additional notebooks in [`notebooks/physics/`](notebooks/physics/) (photon injection, dark photons) and [`notebooks/observational/`](notebooks/observational/) (FIRAS photon injection limits). Development and validation notebooks are in [`dev/notebooks/`](dev/notebooks/).
+Additional notebooks cover [physics topics](notebooks/physics/) (photon injection, dark photons) and [observational constraints](notebooks/observational/) (FIRAS photon injection limits). Development and validation notebooks are in the [development notebooks directory](dev/notebooks/).
 
 ## Injection scenarios
 
 The Python `solve(injection={"type": ...})` dict uses the snake_case `type`
 key in the middle column (not the Rust CamelCase name in the first column).
-Arbitrary sources are passed as callables instead of an `injection` dict.
+Pass arbitrary sources as callables instead of an `injection` dict.
 
 | Scenario (Rust) | Python entry point | Key parameters |
 |----------|----------|---------------|
@@ -249,13 +249,13 @@ Arbitrary sources are passed as callables instead of an `injection` dict.
 | `TabulatedPhotonSource` | `photon_source=` callable | photon source $S(x, z)$ |
 | `Custom` | — (Rust API only) | user-defined closure |
 
-Units: $f_X$ [eV] is the energy released **per baryon** ($\Gamma_X$ [1/s] the
+Units: $f_X$ [eV] is the energy released per baryon ($\Gamma_X$ [1/s] the
 decay rate); $f_{\rm ann}$ [eV/s] is energy per baryon per second;
 $\Delta N/N$ is the fractional photon-number injection.
 
 To recover the scalar $(\mu, y, \Delta T/T)$ decomposition from any
 distortion $\Delta n(x)$, use `decompose_distortion(x, delta_n)` (a `solve`
-result exposes these directly as `result.mu` / `result.y`).
+result exposes these directly as `result.mu` and `result.y`).
 
 
 
@@ -344,8 +344,8 @@ checks), the LLM supplies the implementation, and the human is responsible for
 verifying that tests have *independent* targets rather than ones calibrated to
 the code's own output.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. If you are using an
-LLM, also drop [CONTRIBUTING_CLAUDE.md](CONTRIBUTING_CLAUDE.md) into its system
+See [the contributing guide](CONTRIBUTING.md) for full details. If you are using an
+LLM, also drop [the LLM context file](CONTRIBUTING_CLAUDE.md) into its system
 prompt — it encodes the numerical pitfalls and review rules that have caught
 real bugs during development.
 

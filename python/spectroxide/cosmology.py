@@ -2,7 +2,7 @@
 Flat ΛCDM background quantities.
 
 Cosmology presets, the Hubble rate, photon and baryon densities, the
-Saha + Peebles three-level-atom recombination history (solved as an
+Saha and Peebles three-level-atom recombination history (solved as an
 ordinary differential equation, ODE), and helpers derived from them
 (free-electron density, baryon-photon ratio, cosmic time). The
 Green's-function and partial differential equation (PDE) table
@@ -143,8 +143,8 @@ class Cosmology:
 #
 # These dicts are the canonical input format consumed by the helpers below
 # (such as ``_cosmo_hubble``) and by the Rust command-line interface.  Where the
-# values match a :class:`Cosmology` classmethod exactly, we derive the dict
-# from it to keep them in sync.  The two CosmoTherm-comparison presets
+# values match a :class:`Cosmology` classmethod exactly, the preset derives the
+# dict from it to keep them in sync.  The two CosmoTherm-comparison presets
 # intentionally differ from the Planck dataclass values (n_eff = 3.04 to
 # match CosmoTherm v1.0.3; t_cmb = 2.726 to match the Fixsen 1996 value
 # baked into CosmoTherm's DI files) so they stay as standalone dict literals.
@@ -212,7 +212,7 @@ def _cosmo_omega_gamma(cosmo):
 
 
 def _cosmo_omega_rel(cosmo):
-    """Relativistic density parameter (photons + neutrinos)."""
+    """Relativistic density parameter (photons and neutrinos)."""
     og = _cosmo_omega_gamma(cosmo)
     return og * (1.0 + cosmo["n_eff"] * (7.0 / 8.0) * (4.0 / 11.0) ** (4.0 / 3.0))
 
@@ -456,7 +456,7 @@ def ionization_fraction(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOr
     Returns
     -------
     float or ndarray of float64
-        Total free-electron fraction (H + He) per hydrogen atom.  Returns
+        Total free-electron fraction (H and He) per hydrogen atom.  Returns
         a Python float when ``z`` is a scalar, otherwise an array shaped
         like ``z``.
     """

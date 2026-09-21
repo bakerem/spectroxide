@@ -1,9 +1,9 @@
 //! Main partial differential equation (PDE) solver for the cosmological
 //! thermalization problem.
 //!
-//! Key physics: energy injection → heats electrons (T_e > T_z) →
-//! Kompaneets source drives y-type distortion → double Compton (DC) and
-//! bremsstrahlung (BR) create photons to convert y → μ and approach
+//! Key physics: energy injection heats electrons (T_e > T_z), which drives a
+//! Kompaneets-sourced y-type distortion; double Compton (DC) and
+//! bremsstrahlung (BR) then create photons that convert y → μ and approach
 //! Bose-Einstein equilibrium.
 //!
 //! The solver evolves the single Kompaneets operator at the full electron
@@ -30,7 +30,7 @@ use crate::spectrum::planck;
 /// Tunable solver parameters.
 ///
 /// Defaults are production-quality and match the values used for all paper
-/// runs. The fields that most users will want to change are [`Self::z_start`],
+/// runs. The fields most callers want to change are [`Self::z_start`],
 /// [`Self::z_end`], and [`Self::dtau_max`].
 #[derive(Debug, Clone)]
 pub struct SolverConfig {
@@ -63,7 +63,7 @@ pub struct SolverConfig {
     /// Limits the Kompaneets Δn² nonlinearity at the injection spike,
     /// which causes timestep-dependent wake formation at intermediate x.
     /// Default 1.0 (production quality, ~1% from converged).
-    /// Set to 10.0 for exploratory/fast runs (~3% from converged).
+    /// Set to 10.0 for exploratory and fast runs (~3% from converged).
     pub dtau_max_photon_source: f64,
     /// Maximum number of Newton iterations per Kompaneets step.
     /// Default 10. Increase for extreme injection parameters.
@@ -295,7 +295,7 @@ pub struct SolverDiagnostics {
 /// # Field visibility (unstable API)
 ///
 /// Many fields are currently `pub` for use by examples, tests, and diagnostic
-/// tooling. These are **not part of the stable public API** and may become
+/// tooling. These are not part of the stable public API and may become
 /// `pub(crate)` in a future release. Mutating state fields (`delta_n`, `z`,
 /// `electron_temp`, `snapshots`, `step_count`, `accumulated_delta_t`) between
 /// `run_with_snapshots` calls can break Newton-solver invariants; prefer the
@@ -332,7 +332,7 @@ pub struct ThermalizationSolver {
     pub disable_dcbr: bool,
     /// If true (default), couple DC/BR into the Kompaneets Newton iteration
     /// instead of operator splitting. Uses an implicit-explicit (IMEX) scheme:
-    /// Crank-Nicolson for Kompaneets + backward Euler for DC/BR, solved
+    /// Crank-Nicolson for Kompaneets and backward Euler for DC/BR, solved
     /// simultaneously. More physically
     /// consistent than operator splitting, especially at z > 2×10⁶.
     pub coupled_dcbr: bool,
@@ -347,7 +347,7 @@ pub struct ThermalizationSolver {
     dem_drho_eq: Vec<f64>,
     /// d(n_eq_minus_n_pl)/d(ρ_eq), analytical. See `dem_drho_eq`.
     dneq_drho_eq: Vec<f64>,
-    /// Pre-allocated Kompaneets workspace (grid-constant arrays + per-step buffers).
+    /// Pre-allocated Kompaneets workspace (grid-constant arrays and per-step buffers).
     komp_ws: KompaneetsWorkspace,
     /// Precomputed Planck spectrum on the grid: planck(x[i]).
     planck_grid: Vec<f64>,
@@ -703,7 +703,7 @@ impl ThermalizationSolver {
     ///
     /// Panics if any entry is non-finite — silently passing NaN/Inf into the
     /// solver causes a deep panic in the Newton step where the source isn't
-    /// obvious. Caught early here so the user sees the real culprit.
+    /// obvious. Caught early here so the caller sees the real culprit.
     pub fn set_initial_delta_n(&mut self, delta_n: Vec<f64>) {
         assert_eq!(
             delta_n.len(),
@@ -726,7 +726,7 @@ impl ThermalizationSolver {
     ///
     /// Restores all configuration flags to their defaults: a reset solver
     /// behaves identically to a freshly constructed one (aside from the
-    /// cached grid/recombination tables, which are preserved for speed).
+    /// cached grid and recombination tables, which are preserved for speed).
     pub fn reset(&mut self) {
         for v in self.delta_n.iter_mut() {
             *v = 0.0;
@@ -844,7 +844,7 @@ impl ThermalizationSolver {
         dz.max(self.config.dz_min).min(self.z * 0.05)
     }
 
-    /// Updates ρ_e from distortion feedback + injection.
+    /// Updates ρ_e from distortion feedback and injection.
     ///
     /// Two modes selected automatically by distortion amplitude:
     /// - **Small Δn** (|ΔG₃/G₃| ≤ 0.1): Perturbative Δρ_eq = ΔI₄/(4G₃) - ΔG₃/G₃.
@@ -1071,8 +1071,8 @@ impl ThermalizationSolver {
     /// photon number conservation: ∫x² Δn dx = 0.
     ///
     /// DC/BR creates photons at low x that accumulate as a temperature
-    /// shift in Δn. This growing T-shift feeds back: ρ_e rises → DC/BR
-    /// equilibrium target rises → more photon creation → larger T-shift.
+    /// shift in Δn. This growing T-shift feeds back: as ρ_e rises, the DC/BR
+    /// equilibrium target rises, producing more photon creation and a larger T-shift.
     /// Subtracting the T-shift breaks this positive feedback loop.
     ///
     /// Algorithm:
@@ -1108,7 +1108,7 @@ impl ThermalizationSolver {
 
     /// Advances the solver by a single adaptively-chosen timestep.
     ///
-    /// Returns the `dz` taken. Most users should call [`Self::run`] or
+    /// Returns the `dz` taken. Most callers should call [`Self::run`] or
     /// [`Self::run_with_snapshots`] instead of stepping manually.
     pub fn step(&mut self) -> f64 {
         let dz = self.adaptive_dz();
@@ -1720,7 +1720,7 @@ impl ThermalizationSolver {
     /// with a single snapshot at `z_obs`.
     ///
     /// This is the preferred entry point: the result does not borrow the
-    /// solver and has built-in JSON/CSV/table serialization. For runs that
+    /// solver and has built-in JSON, CSV, or table serialization. For runs that
     /// need multiple intermediate snapshots, call
     /// [`Self::run_with_snapshots`] directly and inspect
     /// [`Self::snapshots`].
@@ -1763,7 +1763,7 @@ impl ThermalizationSolver {
 /// Fluent builder for [`ThermalizationSolver`].
 ///
 /// Groups all configuration into a chainable API. The existing
-/// `ThermalizationSolver::new()` + manual field mutation still works;
+/// `ThermalizationSolver::new()` and manual field mutation still works;
 /// this is a convenience layer on top.
 pub struct SolverBuilder {
     cosmo: Cosmology,

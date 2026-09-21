@@ -35,12 +35,12 @@ Two differences from the dark-photon case:
 
 .. note::
 
-   This is the **monopole / plasma-frequency** treatment
+   This is the monopole (plasma-frequency) treatment
    (``m_γ² ≈ ω_pl²``), valid for ``m_a ≳ few×10⁻¹⁰ eV`` in the
    fully-ionized era. The frequency-dependent HI/HeI/HeII corrections to
    the photon mass (paper Sec. II B, Eqs. 7–12) — which shift the
    conversion redshift and produce multiple crossings near recombination —
-   are **not** modeled.
+   are not modeled.
 
 .. autosummary::
    :nosignatures:

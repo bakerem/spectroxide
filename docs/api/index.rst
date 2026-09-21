@@ -3,14 +3,14 @@ API reference
 
 The Python package ``spectroxide`` wraps the Rust partial differential
 equation (:term:`PDE`) solver and provides a pure-Python analytic
-Green's-function implementation. Most users will only need the
+Green's-function implementation. You need only the
 top-level import:
 
 .. code-block:: python
 
    import spectroxide
 
-Plot styling lives in submodules and must be imported explicitly:
+Import plot styling explicitly from its submodule:
 
 .. code-block:: python
 
@@ -28,10 +28,10 @@ Primary solver
       :link-type: doc
 
       ``spectroxide.solver``. The full photon-Boltzmann PDE
-      (Kompaneets + double Compton + bremsstrahlung) with adaptive
+      (Kompaneets, double Compton, and bremsstrahlung) with adaptive
       redshift stepping. Handles single-burst, custom-scenario,
-      photon-injection, and tabulated-heating runs. **This is what
-      you almost certainly want.**
+      photon-injection, and tabulated-heating runs. This is what
+      you almost certainly want.
 
 
 Approximations and helpers
@@ -52,8 +52,8 @@ secondary; the science targets are computed by the PDE solver above.
       ``spectroxide.greens`` — pure-Python implementation of the
       three-component analytic Green's function of Chluba (2013, MNRAS
       436, 2232). Spectral shapes, μ/y/T branching functions,
-      energy-injection and photon-injection convolutions. **An
-      approximation** — accuracy is documented on that page.
+      energy-injection and photon-injection convolutions. An
+      approximation — accuracy is documented on that page.
 
    .. grid-item-card:: PDE-based numerical Green's function
       :link: greens_table
@@ -78,8 +78,8 @@ secondary; the science targets are computed by the PDE solver above.
 
       ``spectroxide.cosmology`` — flat ΛCDM background quantities
       (Hubble rate, densities, recombination history), the
-      ``Cosmology`` dataclass, and the ``DEFAULT_COSMO`` /
-      ``PLANCK2015_COSMO`` / ``PLANCK2018_COSMO`` presets that other
+      ``Cosmology`` dataclass, and the ``DEFAULT_COSMO``,
+      ``PLANCK2015_COSMO``, and ``PLANCK2018_COSMO`` presets that other
       modules pull from.
 
    .. grid-item-card:: Dark photon
@@ -96,7 +96,7 @@ secondary; the science targets are computed by the PDE solver above.
 
       ``spectroxide.axion`` — narrow-width-approximation helpers for
       resonant γ↔a conversion.
-      **Experimental**; the PDE path needs a binary built with
+      Experimental; the PDE path needs a binary built with
       ``--features axion``.
 
    .. grid-item-card:: Plotting

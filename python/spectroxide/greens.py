@@ -4,7 +4,7 @@ Green's function for the cosmological thermalization problem.
 Provides a fast, approximate method for computing spectral distortions
 from arbitrary energy release histories. The distortion from a delta-function
 energy injection at redshift ``z_h`` is decomposed into mu, y, and temperature
-shift components using visibility/branching functions.
+shift components using visibility or branching functions.
 
 Ported from ``src/greens.rs`` and ``src/spectrum.rs``.
 
@@ -49,7 +49,7 @@ def _call_vectorized(
     Tries ``func(z_arr)`` first. Only specific broadcasting failure modes,
     such as "cannot broadcast" or "only integer scalar arrays can be converted",
     and shape mismatches trigger the scalar-loop fallback. Other
-    TypeError/ValueError exceptions are assumed to be genuine bugs in
+    TypeError or ValueError exceptions are assumed to be genuine bugs in
     ``func`` and are re-raised, preventing audit I3 (silently running
     a buggy user callable point-by-point and producing a misleading
     traceback).
@@ -89,7 +89,7 @@ def _call_vectorized(
         return result
     # Scalar return or shape mismatch: fall back to per-element calls.
     # A downstream shape mismatch in the per-element result would raise a
-    # clear error, which is what we want.
+    # clear error, which is the intended behavior.
     return np.array([func(float(z)) for z in z_arr], dtype=np.float64)
 
 
@@ -657,8 +657,8 @@ def y_from_heating(
 
 # Cosmology background, presets, recombination history, and physical
 # constants live in ``spectroxide.cosmology``. Re-imported here so legacy imports
-# such as ``from spectroxide.greens import hubble`` / ``cosmic_time`` /
-# ``DEFAULT_COSMO`` / ``_C_LIGHT`` keep working.
+# such as ``from spectroxide.greens import hubble``, ``cosmic_time``,
+# ``DEFAULT_COSMO``, or ``_C_LIGHT`` keep working.
 # DEPRECATED back-compat shim: prefer the canonical path
 # ``from spectroxide import cosmic_time`` (or ``spectroxide.cosmology``).
 # Remove once no in-repo docs/notebooks import cosmology names through
@@ -1414,8 +1414,10 @@ def decompose_distortion(
     **``method="gf_fit"`` (requires z_h):** Three-component Green's-function
     spectral fit for visibility-function calibration against PDE spectra.
     NC-strips the spectrum, fixes J_y from Chluba (2013) Eq. 5, then fits
-    J_μ and J_bb* by minimizing the x³-weighted residual. Use this for
-    visibility calibration, NOT for production μ/y extraction.
+    J_μ and J_bb* by minimizing the x³-weighted residual.
+
+    **Caution:** use this method for visibility calibration, not for
+    production μ/y extraction.
 
     Parameters
     ----------

@@ -41,7 +41,7 @@ impl ElectronTemperature {
 
     /// Sets ρ_e from the full Compton-equilibrium form I₄/(4G₃).
     ///
-    /// **Not used by the production solver.** The full form has ~0.1%
+    /// **Caution:** Not used by the production solver. The full form has ~0.1%
     /// numerical error from near-cancellation of the two integrals, which
     /// swamps the O(10⁻⁵) physical distortion signal. Retained only as a
     /// reference for off-path tests and verification; the solver uses the
@@ -80,7 +80,7 @@ mod tests {
     /// Analytic anchor: for n_BE(x, μ) = 1/(e^{x+μ}-1), n(1+n) = −dn/dx, so
     /// integrating by parts gives I₄ = ∫x⁴ n(1+n)dx = 4∫x³ n dx = 4G₃
     /// identically — a BE spectrum is the Kompaneets stationary state, so its
-    /// Compton-equilibrium temperature is T_z for ALL μ. Any deviation of
+    /// Compton-equilibrium temperature is T_z for all μ. Any deviation of
     /// ρ_e = I₄/(4G₃) from 1 is pure O(dx²) quadrature error, which must be
     /// μ-independent at this order and shrink under grid refinement.
     /// (Validation-audit finding P1-3: an earlier version asserted

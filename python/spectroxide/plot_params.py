@@ -41,7 +41,7 @@ ANNOT_SIZE = 7  # annotations and inset text
 
 # ── Line widths (pt) ──────────────────────────────────────────────
 LW = 1.2  # primary data lines
-LW_THIN = 0.8  # secondary/reference lines
+LW_THIN = 0.8  # secondary or reference lines
 LW_THICK = 1.8  # emphasized curves
 LW_AXIS = 0.5  # zero lines, axhline
 LW_SPINE = 0.6  # axes spines

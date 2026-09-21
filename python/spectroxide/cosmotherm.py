@@ -3,12 +3,12 @@ CosmoTherm reference-data loader.
 
 .. warning::
 
-   **Development / cross-validation use only.** This module is a thin
+   **Development or cross-validation use only.** This module is a thin
    wrapper around output files from Jens Chluba's CosmoTherm code. It
    exists to support internal cross-checks against published reference
-   data and is **not** part of the public spectroxide API. Loaders,
-   conventions, and file paths can change without notice. End users
-   should use :mod:`spectroxide.solver` (the partial differential equation
+   data and is not part of the public spectroxide API. Loaders,
+   conventions, and file paths can change without notice. Use
+   :mod:`spectroxide.solver` (the partial differential equation
    solver), :mod:`spectroxide.greens` (analytic Green's function), or
    :mod:`spectroxide.greens_table` (precomputed partial differential
    equation Green's function) instead.
@@ -20,7 +20,7 @@ Loads and parses data files from Jens Chluba's CosmoTherm code:
 - **Green's function database** — precomputed exact GF (large
   ASCII table).
 - **Dark matter (DM) heating-rate helpers** — CosmoTherm-convention
-  s-wave/p-wave annihilation heating rates for cross-checks.
+  s-wave and p-wave annihilation heating rates for cross-checks.
 
 References
 ----------
@@ -140,10 +140,10 @@ def load_greens_database(path=None, include_metadata=False):
 
     .. note::
 
-        The database stores Green's function entries WITHOUT the G_bb
+        The database stores Green's function entries without the G_bb
         temperature shift component (``add_G_term`` is disabled in
         Greens.cpp). The temperature shift is tracked separately through
-        the Tgin/Tglast metadata in the header. Use ``include_metadata=True``
+        the Tgin and Tglast metadata in the header. Use ``include_metadata=True``
         and :func:`reconstruct_full_gf` to get the full GF including
         the temperature shift.
 
@@ -167,7 +167,7 @@ def load_greens_database(path=None, include_metadata=False):
         Dimensionless frequencies.
     g_th : ndarray, shape (N_x, N_z)
         Green's function G_th(x, z_h) — the residual mu+y spectral
-        distortion, WITHOUT the G_bb temperature shift.
+        distortion, without the G_bb temperature shift.
     metadata : dict, optional
         Only returned if ``include_metadata=True``. Contains:
 
@@ -307,13 +307,13 @@ def _compute_g_bb_jy(x, t_cmb=T_CMB_DEFAULT):
 def reconstruct_full_gf(x, g_th, z_h, metadata, apply_exp=True, t_cmb=T_CMB_DEFAULT):
     """Add the G_bb temperature shift back to CosmoTherm GF entries.
 
-    CosmoTherm's ``Greens_data.dat`` stores GF entries WITHOUT the G_bb
+    CosmoTherm's ``Greens_data.dat`` stores GF entries without the G_bb
     temperature shift component (``add_G_term`` is disabled by default in
     Greens.cpp). This function reconstructs the full *physical* GF by:
 
     1. Optionally applying ``exp(-(z/2e6)^{5/2})`` to the stored mu+y part
        (CosmoTherm applies this during convolution, not during storage).
-    2. Adding back the G_bb temperature shift from the Tgin/Tglast metadata.
+    2. Adding back the G_bb temperature shift from the Tgin and Tglast metadata.
 
     The result follows CosmoTherm's ``output_Greens_function``
     (Greens.cpp lines 871-884) with ``add_G_term`` enabled::
@@ -322,7 +322,7 @@ def reconstruct_full_gf(x, g_th, z_h, metadata, apply_exp=True, t_cmb=T_CMB_DEFA
                             + G_bb(x) * (Tglast - Tgin) / Tgin / Drho
 
     Note: the exp factor suppresses the mu+y residual at high z, but the
-    G_bb temperature shift is NOT suppressed (it is physical).
+    G_bb temperature shift is not suppressed (it is physical).
 
     Parameters
     ----------
@@ -382,7 +382,7 @@ def cosmotherm_gf_to_delta_n(x, gf_jy, t_cmb=T_CMB_DEFAULT):
     """Convert CosmoTherm GF database values (Jy/sr) to occupation number Δn.
 
     The CosmoTherm GF database stores G_th in units of ΔI [Jy/sr] per Δρ/ρ.
-    Our analytical Green's function returns Δn (dimensionless) per Δρ/ρ.
+    The spectroxide analytical Green's function returns Δn (dimensionless) per Δρ/ρ.
     This function converts: Δn = ΔI / (2hν³/c² × 1e26).
 
     Parameters
@@ -537,7 +537,7 @@ def strip_gbb(x: ArrayLike, delta_n: ArrayLike) -> Tuple[NDArray[np.float64], fl
     ``∫ x² Δn dx = 0``.  Any nonzero photon-number perturbation is
     absorbed into ``α · G_bb(x)``.
 
-    This projection is **orthogonal** to ``μ`` and ``y`` because both
+    This projection is orthogonal to ``μ`` and ``y`` because both
     ``M(x)`` and ``Y_SZ(x)`` conserve photon number
     (``∫ x² M dx ≈ 0``, ``∫ x² Y dx ≈ 0``), so there is no cross-talk.
 
@@ -713,7 +713,7 @@ def cosmotherm_gf_distortion(
     cosmo=None,
     gf_path=None,
 ):
-    """Convenience wrapper: load GF database + convolve for a DM scenario.
+    """Convenience wrapper: load GF database and convolve for a DM scenario.
 
     Parameters
     ----------
@@ -722,12 +722,12 @@ def cosmotherm_gf_distortion(
     params : dict
         Scenario parameters:
 
-        - ``"swave"``/``"pwave"``: ``{"f_ann_CT": float}``
+        - ``"swave"`` or ``"pwave"``: ``{"f_ann_CT": float}``
         - ``"decay"``: ``{"f_x_eV": float, "gamma_x": float}``
 
     z_h, x, g_th : ndarray, optional
         Pre-loaded database arrays. If None, loads from ``gf_path``.
-    z_min, z_max, n_z : float/int, optional
+    z_min, z_max, n_z : float or int, optional
         Integration range and resolution.
     x_out : ndarray, optional
         Output frequency grid.

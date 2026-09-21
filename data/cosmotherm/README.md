@@ -9,7 +9,7 @@ ASCII two-column files of frequency and distortion intensity (DI): `nu [GHz]` an
 
 | File | Description | Reference |
 |------|------------|-----------|
-| `DI_damping.dat` | Acoustic damping + adiabatic cooling | Chluba (2016), Fig. 1 |
+| `DI_damping.dat` | Acoustic damping and adiabatic cooling | Chluba (2016), Fig. 1 |
 | `DI_cooling.dat` | Adiabatic cooling only | Chluba (2016), Fig. 1 |
 | `DI_CRR.dat` | Cosmological recombination radiation (CosmoSpec) | Chluba & Ali-Haimoud (2016) |
 | `DI_y_late.dat` | Late-time y-distortion (y = 2e-6) | Chluba (2016) |
@@ -31,7 +31,7 @@ A_s = 2.207e-9, n_s = 0.9645, n_run = 0
 
 ## Green's function database (not included: too large)
 
-The precomputed Green's function database `Greens_data.dat` (~12 MB) is available
+The precomputed Green's function database `Greens_data.dat` (about 12 MB) is available
 from Chluba's website. Use the download script:
 
 ```bash
@@ -40,7 +40,7 @@ from Chluba's website. Use the download script:
 
 Source: https://www.jb.man.ac.uk/~jchluba/Science/CosmoTherm/Download.html
 
-The GF database uses our default cosmology (h=0.71, Omega_b=0.044) matching
+The Green's function (GF) database uses spectroxide's default cosmology (h=0.71, Omega_b=0.044) matching
 Chluba (2013), MNRAS 434, 352.
 
 ## References

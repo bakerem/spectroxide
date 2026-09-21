@@ -11,7 +11,7 @@
 //!   4. Tabulated heating loaded from a CSV file (Python interface mechanism)
 //!
 //! Run with:
-//!   cargo run --release --example custom_injection
+//!   `cargo run --release --example custom_injection`
 
 use spectroxide::prelude::*;
 

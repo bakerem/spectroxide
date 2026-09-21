@@ -189,7 +189,7 @@ def validate_cosmology(cosmo: Mapping[str, float] | Any | None) -> None:
     ----------
     cosmo : Mapping or Cosmology or None
         Either a dict-like object or a :class:`spectroxide.Cosmology`
-        dataclass.  Required keys/attributes (when present): ``h``,
+        dataclass.  Required keys or attributes (when present): ``h``,
         ``omega_b``, ``omega_m``, ``y_p``, ``t_cmb``, ``n_eff``.  *None*
         is accepted and short-circuited.
 
@@ -277,8 +277,8 @@ def validate_dq_dz_callable(
     """Spot-check a heating-rate callable for non-finite output.
 
     Evaluates ``dq_dz`` at five log-spaced redshifts in
-    ``[z_min, z_max]``.  Catches the common bug where users return
-    ``np.inf`` or ``np.nan`` for redshifts where their formula has a
+    ``[z_min, z_max]``.  Catches the common bug where the callable returns
+    ``np.inf`` or ``np.nan`` for redshifts where its formula has a
     division by zero.
 
     Parameters
@@ -384,8 +384,8 @@ def warn_z_max_regime(z_max):
 
     The partial differential equation (PDE) solver hard-errors at
     ``z_start > 1e7`` (Kompaneets Fokker-Planck invalid for theta_e > 0.005),
-    so the GF should warn well before that — we mirror the PDE
-    soft-warning threshold (``5e6``) and escalate at ``1e7``.
+    so the GF should warn well before that — this function mirrors the PDE
+    soft-warning threshold (``5e6``) and escalates at ``1e7``.
 
     Parameters
     ----------
@@ -416,7 +416,7 @@ def validate_photon_gf_regime(z_h: float | None) -> None:
 
     The simple ``μ + y`` decomposition is not valid for
     ``5 × 10⁴ < z_h < 2 × 10⁵`` — residual r-type contributions become
-    important and users must run the PDE solver there.
+    important and you must run the PDE solver there.
 
     Parameters
     ----------
@@ -430,7 +430,7 @@ def validate_photon_gf_regime(z_h: float | None) -> None:
     """
     if z_h is None:
         return
-    # Fractional slack absorbs log/exp roundoff at the boundaries.
+    # Fractional slack absorbs log and exp roundoff at the boundaries.
     tol = 1.0e-6
     lo = PHOTON_GF_Y_ERA_Z_MAX * (1.0 + tol)
     hi = PHOTON_GF_MU_ERA_Z_MIN * (1.0 - tol)
@@ -585,8 +585,8 @@ def validate_pde_injection_grid_args(x, x_min, x_max, n_x, *, defaults):
 
     ``solve(injection={...})`` and ``solve(dn_planck=...)`` dispatch to the
     Rust binary, which builds its own frequency grid internally (fixed
-    extent from :mod:`grid`, point count from ``n_points``/``production_grid``).
-    The Rust command-line interface (CLI) has no ``--x-min``/``--x-max``
+    extent from :mod:`grid`, point count from ``n_points`` or ``production_grid``).
+    The Rust command-line interface (CLI) has no ``--x-min`` or ``--x-max``
     flags, so ``x``, ``x_min``, ``x_max``, and ``n_x`` have zero effect on
     this path — passing anything but their defaults silently produced the
     default-grid result with no indication that the requested grid was
@@ -606,7 +606,7 @@ def validate_pde_injection_grid_args(x, x_min, x_max, n_x, *, defaults):
     Raises
     ------
     TypeError
-        If ``x`` is not *None*, or ``x_min``/``x_max``/``n_x`` differ from
+        If ``x`` is not *None*, or ``x_min``, ``x_max``, or ``n_x`` differ from
         their defaults.
     """
     x_min_default, x_max_default, n_x_default = defaults
