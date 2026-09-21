@@ -20,7 +20,7 @@ use crate::spectrum::compton_equilibrium_ratio;
 /// State of the electron temperature solver.
 #[derive(Debug, Clone)]
 pub struct ElectronTemperature {
-    /// Current T_e/T_z ratio
+    /// Current T_e/T_z ratio.
     pub rho_e: f64,
 }
 

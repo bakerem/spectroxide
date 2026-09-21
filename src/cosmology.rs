@@ -9,15 +9,15 @@ use crate::constants::*;
 pub struct Cosmology {
     /// Cosmic microwave background temperature today, in K.
     pub t_cmb: f64,
-    /// Physical baryon density ω_b = Ω_b h²
+    /// Physical baryon density ω_b = Ω_b h².
     pub omega_b: f64,
-    /// Physical CDM density ω_cdm = Ω_cdm h²
+    /// Physical CDM density ω_cdm = Ω_cdm h².
     pub omega_cdm: f64,
-    /// Dimensionless Hubble parameter h = H₀/(100 km/s/Mpc)
+    /// Dimensionless Hubble parameter h = H₀/(100 km/s/Mpc).
     pub h: f64,
-    /// Effective number of neutrino species
+    /// Effective number of neutrino species.
     pub n_eff: f64,
-    /// Primordial helium mass fraction Y_p
+    /// Primordial helium mass fraction Y_p.
     pub y_p: f64,
 
     // --- Cached derived quantities (computed once at construction) ---
@@ -28,13 +28,13 @@ pub struct Cosmology {
     cached_omega_gamma: f64,
     cached_omega_rel: f64,
     cached_omega_lambda: f64,
-    /// (1-Y_p) * rho_b0 / M_PROTON — multiply by (1+z)³ to get n_H(z)
+    /// (1-Y_p) * rho_b0 / M_PROTON — multiply by (1+z)³ to get n_H(z).
     cached_n_h_prefactor: f64,
-    /// Y_p / (4(1-Y_p))
+    /// Y_p / (4(1-Y_p)).
     cached_f_he: f64,
-    /// 3 Ω_b / (4 Ω_γ) — multiply by 1/(1+z) to get R(z)
+    /// 3 Ω_b / (4 Ω_γ) — multiply by 1/(1+z) to get R(z).
     cached_baryon_photon_prefactor: f64,
-    /// ρ_γ(z=0) = (π²/15)(kT₀)⁴/(ℏc)³ — multiply by (1+z)⁴ to get ρ_γ(z)
+    /// ρ_γ(z=0) = (π²/15)(kT₀)⁴/(ℏc)³ — multiply by (1+z)⁴ to get ρ_γ(z).
     cached_rho_gamma_0: f64,
 }
 
@@ -207,49 +207,49 @@ impl Cosmology {
         Self::new_unchecked(2.7255, 0.02237, 0.1200, 0.6736, 3.044, 0.2454)
     }
 
-    /// H₀ in 1/s
+    /// H₀ in 1/s.
     #[inline]
     pub fn h0(&self) -> f64 {
         self.cached_h0
     }
 
-    /// Ω_b = ω_b / h²
+    /// Ω_b = ω_b / h².
     #[inline]
     pub fn omega_b_frac(&self) -> f64 {
         self.cached_omega_b_frac
     }
 
-    /// Ω_cdm = ω_cdm / h²
+    /// Ω_cdm = ω_cdm / h².
     #[inline]
     pub fn omega_cdm_frac(&self) -> f64 {
         self.cached_omega_cdm_frac
     }
 
-    /// Ω_m = Ω_b + Ω_cdm
+    /// Ω_m = Ω_b + Ω_cdm.
     #[inline]
     pub fn omega_m(&self) -> f64 {
         self.cached_omega_m
     }
 
-    /// Ω_γ (photon density parameter)
+    /// Ω_γ (photon density parameter).
     #[inline]
     pub fn omega_gamma(&self) -> f64 {
         self.cached_omega_gamma
     }
 
-    /// Ω_rel (all relativistic species: photons + neutrinos)
+    /// Ω_rel (all relativistic species: photons + neutrinos).
     #[inline]
     pub fn omega_rel(&self) -> f64 {
         self.cached_omega_rel
     }
 
-    /// Ω_Λ = 1 - Ω_m - Ω_rel (flat universe)
+    /// Ω_Λ = 1 - Ω_m - Ω_rel (flat universe).
     #[inline]
     pub fn omega_lambda(&self) -> f64 {
         self.cached_omega_lambda
     }
 
-    /// E(z) = H(z)/H₀ = sqrt(Ω_m(1+z)³ + Ω_rel(1+z)⁴ + Ω_Λ)
+    /// E(z) = H(z)/H₀ = sqrt(Ω_m(1+z)³ + Ω_rel(1+z)⁴ + Ω_Λ).
     #[inline]
     pub fn e_of_z(&self, z: f64) -> f64 {
         let opz = 1.0 + z;
@@ -266,18 +266,18 @@ impl Cosmology {
         crate::constants::K_BOLTZMANN * self.t_cmb * (1.0 + z) / crate::constants::M_E_C2
     }
 
-    /// Hubble rate H(z) in 1/s
+    /// Hubble rate H(z) in 1/s.
     #[inline]
     pub fn hubble(&self, z: f64) -> f64 {
         self.cached_h0 * self.e_of_z(z)
     }
 
-    /// dt/dz in seconds
+    /// dt/dz in seconds.
     pub fn dt_dz(&self, z: f64) -> f64 {
         -1.0 / (self.hubble(z) * (1.0 + z))
     }
 
-    /// Matter-radiation equality redshift
+    /// Matter-radiation equality redshift.
     pub fn z_eq(&self) -> f64 {
         self.cached_omega_m / self.cached_omega_rel - 1.0
     }
@@ -296,7 +296,7 @@ impl Cosmology {
         self.cached_f_he * self.n_h(z)
     }
 
-    /// Helium-to-hydrogen ratio f_He = Y_p / (4(1-Y_p))
+    /// Helium-to-hydrogen ratio f_He = Y_p / (4(1-Y_p)).
     #[inline]
     pub fn f_he(&self) -> f64 {
         self.cached_f_he
@@ -314,13 +314,13 @@ impl Cosmology {
         1.0 / (SIGMA_THOMSON * self.n_e(z, x_e) * C_LIGHT)
     }
 
-    /// Photon energy density ρ_γ at z [J/m³]
+    /// Photon energy density ρ_γ at z [J/m³].
     #[inline]
     pub fn rho_gamma(&self, z: f64) -> f64 {
         self.cached_rho_gamma_0 * (1.0 + z).powi(4)
     }
 
-    /// Photon number density n_γ at z [1/m³]
+    /// Photon number density n_γ at z [1/m³].
     pub fn n_gamma(&self, z: f64) -> f64 {
         // n_γ = (2ζ(3)/π²) (kT/ℏc)³
         let kt_over_hbar_c = K_BOLTZMANN * self.t_cmb * (1.0 + z) / (HBAR * C_LIGHT);

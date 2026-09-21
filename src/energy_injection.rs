@@ -41,7 +41,7 @@ pub enum InjectionScenario {
         sigma_z: f64,
     },
 
-    /// Decaying particle with lifetime 1/Γ_X
+    /// Decaying particle with lifetime 1/Γ_X.
     DecayingParticle {
         /// f*_X: energy per baryon released, in eV.
         f_x: f64,
@@ -49,7 +49,7 @@ pub enum InjectionScenario {
         gamma_x: f64,
     },
 
-    /// Annihilating dark matter (s-wave, <σv> = const)
+    /// Annihilating dark matter (s-wave, <σv> = const).
     AnnihilatingDM {
         /// f_ann: energy injection rate parameter [eV/s].
         /// Defined as f_eff × ⟨σv⟩ × m_χ × n_χ,0² / n_H,0 (paper convention).
@@ -87,15 +87,15 @@ pub enum InjectionScenario {
     ///   Chluba (2015), arXiv:1506.06582
     ///   Arsenadze et al. (2025), arXiv:2409.12940, Appendix C+D
     MonochromaticPhotonInjection {
-        /// Injection frequency (dimensionless x = hν/(kT_z))
+        /// Injection frequency (dimensionless x = hν/(kT_z)).
         x_inj: f64,
-        /// Total fractional photon number to inject: ΔN/N
+        /// Total fractional photon number to inject: ΔN/N.
         delta_n_over_n: f64,
-        /// Central injection redshift
+        /// Central injection redshift.
         z_h: f64,
-        /// Gaussian width in redshift
+        /// Gaussian width in redshift.
         sigma_z: f64,
-        /// Gaussian width in frequency (should match grid resolution)
+        /// Gaussian width in frequency (should match grid resolution).
         sigma_x: f64,
     },
 
@@ -122,12 +122,12 @@ pub enum InjectionScenario {
     ///
     /// Reference: Bolliet & Chluba (2021), MNRAS 507, 3148 [arXiv:2012.07292]
     DecayingParticlePhoton {
-        /// x_inj,0 = E_γ/(kT_0) = m_X c²/(2kT_0)
+        /// x_inj,0 = E_γ/(kT_0) = m_X c²/(2kT_0).
         x_inj_0: f64,
         /// Dimensionless injection amplitude (Eq. 5 of B&C 2021).
         /// f_inj ≈ 2(Ω_cdm/Ω_γ) × f_dm × G₃/(G₂ × x_inj,0)
         f_inj: f64,
-        /// Γ_X: vacuum decay rate [1/s]
+        /// Γ_X: vacuum decay rate [1/s].
         gamma_x: f64,
     },
 
@@ -147,7 +147,7 @@ pub enum InjectionScenario {
     ///   Chluba, Cyr & Johnson (2024), MNRAS 535, 1874
     ///   Arsenadze et al. (2025), JHEP 03, 018
     DarkPhotonResonance {
-        /// Kinetic mixing parameter ε
+        /// Kinetic mixing parameter ε.
         epsilon: f64,
         /// Dark photon mass m_{A'}, in eV.
         m_ev: f64,
@@ -194,9 +194,9 @@ pub enum InjectionScenario {
     /// heating rates by writing a CSV table and passing it to the Rust
     /// partial differential equation solver.
     TabulatedHeating {
-        /// Redshift grid (ascending)
+        /// Redshift grid (ascending).
         z_table: Vec<f64>,
-        /// d(Δρ/ρ)/dz at each z (positive = heating)
+        /// d(Δρ/ρ)/dz at each z (positive = heating).
         rate_table: Vec<f64>,
     },
 
@@ -205,15 +205,15 @@ pub enum InjectionScenario {
     /// The source function is defined on a 2D grid (z, x), with bilinear
     /// interpolation.  Returns 0 outside the table bounds.
     TabulatedPhotonSource {
-        /// Redshift grid (ascending)
+        /// Redshift grid (ascending).
         z_table: Vec<f64>,
-        /// Frequency grid (ascending)
+        /// Frequency grid (ascending).
         x_grid: Vec<f64>,
         /// Source rate: `source_2d[iz][ix] = d(Δn)/dz` at `(z_table[iz], x_grid[ix])`.
         source_2d: Vec<Vec<f64>>,
     },
 
-    /// Custom heating function
+    /// Custom heating function.
     Custom(Box<dyn Fn(f64, &Cosmology) -> f64 + Send + Sync>),
 }
 
@@ -308,6 +308,16 @@ fn interp_2d(z: f64, x: f64, z_table: &[f64], x_grid: &[f64], source_2d: &[Vec<f
 /// The z column must be positive. Data is sorted ascending by z.
 ///
 /// Returns `TabulatedHeating` variant.
+///
+/// # Errors
+/// Returns `Err` with a message that names the file or the line if:
+/// * the file cannot be read;
+/// * a data row has fewer than two comma-separated fields;
+/// * the z or the rate field does not parse as a number.
+///
+/// The loader sorts rows by z, so unsorted input is not an error. It does not check the sign
+/// of z, duplicate z values, or an empty table; [`InjectionScenario::validate`] does that when the
+/// scenario is installed.
 pub fn load_heating_table(path: &str) -> Result<InjectionScenario, String> {
     let content = std::fs::read_to_string(path)
         .map_err(|e| format!("Failed to read heating table '{path}': {e}"))?;
@@ -367,6 +377,16 @@ pub fn load_heating_table(path: &str) -> Result<InjectionScenario, String> {
 ///   Each row: `z_i,source(x1,z_i),source(x2,z_i),...,source(xN,z_i)`
 ///
 /// Returns `TabulatedPhotonSource` variant.
+///
+/// # Errors
+/// Returns `Err` with a message if:
+/// * the file cannot be read, or it has no header line;
+/// * the header has fewer than two fields, or an x value in it does not parse as a number;
+/// * a data row has fewer fields than the header;
+/// * a z or source value does not parse as a number.
+///
+/// The loader sorts rows by z, so unsorted input is not an error. Range checks on z and x
+/// are left to [`InjectionScenario::validate`].
 pub fn load_photon_source_table(path: &str) -> Result<InjectionScenario, String> {
     let content = std::fs::read_to_string(path)
         .map_err(|e| format!("Failed to read photon source table '{path}': {e}"))?;

@@ -386,15 +386,15 @@ pub fn ionization_fraction(z: f64, cosmo: &Cosmology) -> f64 {
 /// For z above the Peebles regime (z > z_switch ~ 1575), the cheap
 /// Saha formula is used directly (no table needed).
 pub struct RecombinationHistory {
-    /// Redshifts in descending order (z_switch, z_switch − dz, ..., 1.0)
+    /// Redshifts in descending order (z_switch, z_switch − dz, ..., 1.0).
     z_table: Vec<f64>,
-    /// Total X_e (hydrogen + helium) at each redshift
+    /// Total X_e (hydrogen + helium) at each redshift.
     x_e_table: Vec<f64>,
-    /// Redshift where Saha → Peebles switch occurs
+    /// Redshift where Saha → Peebles switch occurs.
     z_switch: f64,
-    /// Uniform spacing of z_table (descending): z_table[i] = z_switch − i·dz_table
+    /// Uniform spacing of z_table (descending): z_table[i] = z_switch − i·dz_table.
     dz_table: f64,
-    /// Reference cosmology (needed for Saha evaluations above z_switch)
+    /// Reference cosmology (needed for Saha evaluations above z_switch).
     cosmo: Cosmology,
 }
 

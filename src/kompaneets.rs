@@ -543,9 +543,11 @@ pub struct DcbrCoupling<'a> {
     /// reflects how the DC/BR absorption rate shifts when the Newton
     /// updates the ρ_e iterate. Dominant term:
     ///   d(em)/d(ρ_eq) = -(K/x³) · exp(x/ρ_eq) · x/ρ_eq².
-    /// Pass `None` (empty slice) to retain the legacy Picard-in-ρ_e
-    /// behaviour, which is correct to O(Δρ_e per step) but only linearly
-    /// convergent at z ≳ 10⁶.
+    /// The slice must hold at least `grid.n` entries; an empty slice panics
+    /// at the entry asserts of `kompaneets_step_coupled_inplace`. A slice
+    /// of zeros drops this Jacobian term, which is the legacy Picard-in-ρ_e
+    /// behaviour: correct to O(Δρ_e per step) but only linearly convergent
+    /// at z ≳ 10⁶.
     pub dem_drho_eq: &'a [f64],
     /// Analytical derivative d(n_eq_minus_n_pl)/d(ρ_eq). Formula:
     ///   d(neq)/d(ρ_eq) = n_pl(x/ρ_eq)(1 + n_pl(x/ρ_eq)) · x/ρ_eq².
@@ -577,10 +579,48 @@ pub struct DcbrCoupling<'a> {
 /// stable (amplification → 0 for stiff rates), avoiding the oscillation
 /// that Crank-Nicolson would produce for the stiff DC/BR absorption at low x.
 ///
-/// `max_dn_abs` is the current max|Δn| used for adaptive Newton tolerance.
-/// Pass 0.0 for the tightest tolerance (equivalent to old fixed 1e-14).
+/// # Arguments
+/// * `grid` - frequency grid with `grid.n` ≥ 3 points
+/// * `delta_n` - distortion Δn = n − n_pl on `grid`. Holds the old values on entry and the
+///   new values on return.
+/// * `theta_e` - electron temperature kT_e/(m_e c²) (dimensionless). With `rho_coupling`, this
+///   is only the initial Newton guess for ρ_e = θ_e/θ_z.
+/// * `theta_z` - reference temperature kT_z/(m_e c²) (dimensionless)
+/// * `dtau` - step size in Thomson optical depth, dτ = N_e σ_T c dt (dimensionless, ≥ 0)
+/// * `dcbr` - DC/BR coupling data. `emission_rates` is a rate per Thomson time,
+///   `n_eq_minus_n_pl` is an occupation-number offset, and `photon_source` is already
+///   integrated over the step. `None` gives a pure Kompaneets step. The operator is in
+///   flux-divergence form, so that step conserves photon number up to the flux through the two
+///   grid-edge cells, whose Δn is held fixed. With x_min ≪ 1 and x_max ≥ 30 that leakage is
+///   negligible.
+/// * `rho_coupling` - if `Some`, ρ_e = T_e/T_z becomes an extra unknown of the bordered Newton
+///   system. `rho_e_old` then sets φ in the old Crank-Nicolson flux and also the Comptonization
+///   prefactor θ_e for the whole step; only φ = 1/ρ_e inside the new flux is iterated (see the
+///   time-centering note in the body). If `None`, T_e is held at `theta_e` over the whole step.
+/// * `ws` - workspace from [`KompaneetsWorkspace::new`] built for the same `grid`
+/// * `max_dn_abs` - current max|Δn|, used for the adaptive Newton tolerance. Pass 0.0 for the
+///   tightest tolerance (equivalent to the old fixed 1e-14).
+/// * `max_newton_iter` - cap on the number of Newton iterations
 ///
-/// Returns `(converged, rho_e, last_correction)`. **Note:** the third field
+/// # Panics
+/// Panics if `delta_n`, one of the `ws` buffers asserted at the top of the function, or a
+/// slice in `dcbr` is shorter than `grid.n` (`grid.n − 1` for the half-point buffers). The
+/// old-step DC/BR buffers are checked only when `dcbr.cn_dcbr` is set, and `photon_source` only
+/// when it is `Some`. These entry `assert!` guards are what make the `get_unchecked` indexing
+/// in the hot loops sound, so keep them in step with any new buffer. The tridiagonal solve
+/// asserts separately, also in release builds, on a zero pivot; a workspace built for a
+/// different grid triggers that one.
+/// Debug builds also panic on a non-finite or non-positive `theta_e` or `theta_z`, a negative
+/// or non-finite `dtau`, a non-finite `max_dn_abs`, or `grid.n < 3`. Release builds strip
+/// those checks.
+///
+/// # Returns
+/// `(converged, rho_e, last_correction)`. `rho_e` is the solved T_e/T_z if `rho_coupling` is
+/// `Some`, and `theta_e / theta_z` otherwise. If the bordered system is degenerate
+/// (|d − b'·v| ≤ 1e-30) or a Newton correction is not finite, `converged` is `false`, `rho_e` and
+/// `last_correction` are NaN, and `delta_n` holds NaN. Check `converged` before using either.
+///
+/// **Note:** the third field
 /// is the size of the last Newton *correction* `|δx|`, not the residual
 /// `|F(x)|`. At convergence `|δx| < tol` by construction; if the Newton
 /// loop exits via `max_newton_iter`, `last_correction` is the final step

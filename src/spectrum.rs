@@ -21,7 +21,7 @@
 
 use crate::constants::*;
 
-/// Planck (blackbody) occupation number: n_pl(x) = 1/(e^x - 1)
+/// Planck (blackbody) occupation number: n_pl(x) = 1/(e^x - 1).
 #[inline]
 pub fn planck(x: f64) -> f64 {
     if x < 1e-6 {
@@ -36,7 +36,7 @@ pub fn planck(x: f64) -> f64 {
     }
 }
 
-/// Bose-Einstein distribution: n_BE(x, μ) = 1/(e^(x+μ) - 1)
+/// Bose-Einstein distribution: n_BE(x, μ) = 1/(e^(x+μ) - 1).
 #[inline]
 pub fn bose_einstein(x: f64, mu: f64) -> f64 {
     let y = x + mu;
@@ -159,12 +159,12 @@ fn weighted_integral(x_grid: &[f64], delta_n: &[f64], power: i32, norm: f64) -> 
     integral / norm
 }
 
-/// Compute fractional energy in distortion: Δρ/ρ = ∫x³ Δn dx / G₃
+/// Compute fractional energy in distortion: Δρ/ρ = ∫x³ Δn dx / G₃.
 pub fn delta_rho_over_rho(x_grid: &[f64], delta_n: &[f64]) -> f64 {
     weighted_integral(x_grid, delta_n, 3, G3_PLANCK)
 }
 
-/// Compute fractional photon number change: ΔN/N = ∫x² Δn dx / G₂
+/// Compute fractional photon number change: ΔN/N = ∫x² Δn dx / G₂.
 pub fn delta_n_over_n(x_grid: &[f64], delta_n: &[f64]) -> f64 {
     weighted_integral(x_grid, delta_n, 2, G2_PLANCK)
 }

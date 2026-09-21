@@ -412,6 +412,13 @@ fn validate_known_flags(
 }
 
 /// Parse CLI arguments into a Command.
+///
+/// # Errors
+/// Returns `Err` with a message for the user if the first argument is not a known
+/// subcommand, a flag is not valid for that subcommand, a required flag or the injection type
+/// is missing (for example `--z-h` for `greens`), a value does not parse as the expected number
+/// or list, a list flag parses to an empty list, `--format` names an unknown format, or a
+/// removed flag such as `--omega-cdm` is used.
 pub fn parse_command(args: &[String]) -> Result<Command, String> {
     if args.is_empty() {
         return Ok(Command::Help);
@@ -755,6 +762,14 @@ fn parse_output_opts(map: &HashMap<String, String>) -> Result<OutputOpts, String
 }
 
 /// Build a Cosmology from CosmoOpts.
+///
+/// If `opts.preset` is set, the preset is returned as is and the individual parameter
+/// fields of `opts` are not read.
+///
+/// # Errors
+/// Returns `Err` if the preset name is not `default`, `planck2015`, or `planck2018`; if only
+/// one of `omega_b` and `omega_m` is given; if either lies outside [0, 1] or Ω_m < Ω_b; or
+/// if [`crate::cosmology::Cosmology::new`] rejects the resulting parameters.
 pub fn build_cosmology(opts: &CosmoOpts) -> Result<crate::cosmology::Cosmology, String> {
     // Check for presets first
     if let Some(ref preset) = opts.preset {
@@ -1043,6 +1058,9 @@ pub fn print_subcommand_help(subcommand: &str) {
 }
 
 /// Print cosmology info.
+///
+/// # Errors
+/// Returns `Err` if `opts.cosmology` is not a known preset name (see [`build_cosmology`]).
 pub fn print_info(opts: &InfoOpts) -> Result<(), String> {
     let cosmo = build_cosmology(&CosmoOpts {
         preset: Some(opts.cosmology.clone()),
@@ -1187,6 +1205,10 @@ pub fn build_injection_scenario(
 }
 
 /// Execute a Green's function calculation. Returns result without doing I/O.
+///
+/// # Errors
+/// Never returns `Err` at present. The `Result` type matches the other `execute_*`
+/// functions so that the dispatcher treats all subcommands alike.
 pub fn execute_greens(opts: &GreensOpts) -> Result<GreensResult, String> {
     let z_h = opts.z_h;
     let delta_rho = opts.delta_rho;
@@ -1430,6 +1452,14 @@ fn validate_and_collect_warnings(
 }
 
 /// Execute a single PDE solve. Returns result without doing I/O.
+///
+/// # Errors
+/// Returns `Err` if the cosmology options are invalid (see [`build_cosmology`]); if
+/// `--delta-rho` or the `--dn-planck` amplitude is not a finite number; if the injection type
+/// is unknown or its parameters fail `InjectionScenario::validate`; if a resonant-conversion
+/// scenario has no resonance redshift in [50, 3e6]; if the solver or grid configuration fails
+/// validation; or if `z_start` lies below, or `z_end` above, the upper edge of the injection
+/// window, so that the solve would miss the injection.
 pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     let cosmo = build_cosmology(&opts.cosmo)?;
     let delta_rho: f64 = opts
@@ -1616,6 +1646,12 @@ where
 }
 
 /// Execute a sweep over multiple injection redshifts. Returns result without doing I/O.
+///
+/// # Errors
+/// Returns `Err` if the cosmology options are invalid (see [`build_cosmology`]), if
+/// `delta_rho` is not finite, if the solver, grid, or injection configuration fails
+/// validation at any redshift, if a solve produces no snapshot, or if a worker thread panics
+/// (the panic is converted to an `Err`, not propagated).
 pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
     let cosmo = build_cosmology(&opts.cosmo)?;
     let delta_rho = opts.delta_rho;
@@ -1714,6 +1750,13 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
 
 /// Execute a photon injection sweep over multiple injection redshifts at a fixed x_inj.
 /// Returns result without doing I/O.
+///
+/// # Errors
+/// Returns `Err` if the cosmology options are invalid (see [`build_cosmology`]), if `x_inj`
+/// is not positive and finite, if `delta_n_over_n` is not finite, if the solver, grid, or
+/// injection configuration fails validation at any redshift, if a solve produces no
+/// snapshot, or if a worker thread panics (the panic is converted to an `Err`, not
+/// propagated).
 pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult, String> {
     let cosmo = build_cosmology(&opts.cosmo)?;
     let x_inj = opts.x_inj;

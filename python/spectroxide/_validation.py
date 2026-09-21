@@ -321,7 +321,14 @@ def validate_dq_dz_callable(
 
 
 def warn_z_h_regime(z_h):
-    """Warn if z_h is outside the reliable Green's function regime."""
+    """Warn if z_h is outside the reliable Green's function regime.
+
+    Parameters
+    ----------
+    z_h : float or None
+        Injection redshift.  Warns above ``3e6`` (escalates above ``5e6``)
+        and below ``1100``.  *None* is accepted and produces no warning.
+    """
     if z_h is not None and z_h > 5e6:
         warnings.warn(
             f"z_h={z_h:.2e}: Green's function unreliable in deep thermalization "
@@ -349,7 +356,14 @@ def warn_z_h_regime(z_h):
 
 
 def warn_x_inj_regime(x_inj):
-    """Warn if injection frequency is in extreme regime."""
+    """Warn if injection frequency is in extreme regime.
+
+    Parameters
+    ----------
+    x_inj : float
+        Dimensionless injection frequency ``h nu / (k T_z)``.  Warns below
+        ``0.01`` and above ``150``.
+    """
     if x_inj < 0.01:
         warnings.warn(
             f"x_inj={x_inj:.2e}: DC/BR absorption extremely strong at this "
@@ -366,12 +380,18 @@ def warn_x_inj_regime(x_inj):
 
 
 def warn_z_max_regime(z_max):
-    """Warn if integration extends beyond reliable GF regime.
+    """Warn if integration extends beyond reliable Green's function (GF) regime.
 
     The partial differential equation (PDE) solver hard-errors at
     ``z_start > 1e7`` (Kompaneets Fokker-Planck invalid for theta_e > 0.005),
     so the GF should warn well before that — we mirror the PDE
     soft-warning threshold (``5e6``) and escalate at ``1e7``.
+
+    Parameters
+    ----------
+    z_max : float
+        Upper redshift bound of the integration.  Warns above ``5e6``
+        (escalates above ``1e7``).
     """
     if z_max > 1e7:
         warnings.warn(
@@ -423,7 +443,14 @@ def validate_photon_gf_regime(z_h: float | None) -> None:
 
 
 def warn_x_grid_narrow(x_grid):
-    """Warn if frequency grid is too narrow for decomposition."""
+    """Warn if frequency grid is too narrow for decomposition.
+
+    Parameters
+    ----------
+    x_grid : array_like
+        Dimensionless frequency grid.  Warns if it is non-empty and its
+        maximum is below ``10``.
+    """
     x_grid = np.asarray(x_grid)
     if x_grid.size > 0 and x_grid.max() < 10:
         warnings.warn(
@@ -445,6 +472,12 @@ def warn_analytic_gf_heating(z_min, z_max):
     transition era (3e4 < z < 2e5) because it decomposes into pure mu +
     pure y + temperature shift.  The PDE-based Green's function table
     (GreensTable) captures the true intermediate shapes.
+
+    Parameters
+    ----------
+    z_min, z_max : float
+        Redshift bounds of the integration.  Warns if the range overlaps
+        ``3e4 < z < 2e5``.
     """
     # Only warn if the integration range overlaps the transition region
     if z_min < 2e5 and z_max > 3e4:
@@ -464,6 +497,15 @@ def warn_table_z_density(z_injections):
     Cubic spline interpolation in log(z_h) needs adequate sampling,
     especially in the transition region (3e4-2e5) where the Green's
     function shape changes rapidly.
+
+    Parameters
+    ----------
+    z_injections : array_like
+        Injection redshifts of the table.  Warns if there are fewer than
+        two points, if the table has points within ``3e4 <= z <= 2e5`` but
+        fewer than 10 of them per log-decade of that band (a table with no
+        point there is not flagged), or if it has fewer than 15 points per
+        log-decade overall.
     """
     z = np.asarray(z_injections)
     if z.size < 2:
@@ -509,6 +551,16 @@ def warn_convolution_resolution(n_z, z_min, z_max):
     Trapezoidal integration in ln(1+z) needs sufficient sampling to
     resolve features in the heating rate and the Green's function
     visibility transitions.
+
+    Parameters
+    ----------
+    n_z : int or None
+        Number of redshift points in the convolution integral.
+    z_min, z_max : float or None
+        Redshift bounds of the integral.  Warns if ``n_z`` gives fewer than
+        500 points per decade of ``1 + z``.  No warning if any argument is
+        *None*, if ``z_max <= z_min`` (``validate_z_range`` rejects that),
+        or if ``z_min <= 0``.
     """
     if n_z is None or z_min is None or z_max is None:
         return
@@ -581,6 +633,16 @@ def warn_grid_resolution_photon(n_points, injection_type):
     Monochromatic photon injection creates sharp spectral features that
     require fine frequency grids to resolve. The DEBUG preset (1000 points)
     gives ~10% errors at injection peaks.
+
+    Parameters
+    ----------
+    n_points : int or None
+        Number of frequency grid points.  Warns below ``2000`` for a photon
+        injection type.  *None* produces no warning.
+    injection_type : str or None
+        Injection type name.  Only ``monochromatic_photon`` and
+        ``decaying_particle_photon`` (underscore or hyphen spelling) are
+        checked.
     """
     photon_types = {
         "monochromatic_photon",
@@ -607,6 +669,16 @@ def warn_table_z_coverage(z_injections, z_min_query, z_max_query):
 
     Extrapolation beyond the table edges uses cubic spline extrapolation,
     which can produce large errors.
+
+    Parameters
+    ----------
+    z_injections : array_like
+        Injection redshifts of the table.  An empty array produces no
+        warning.
+    z_min_query, z_max_query : float
+        Redshift bounds of the requested convolution.  Warns if
+        ``z_min_query`` is more than 10% below the table minimum or
+        ``z_max_query`` is more than 10% above the table maximum.
     """
     z = np.asarray(z_injections)
     if z.size == 0:

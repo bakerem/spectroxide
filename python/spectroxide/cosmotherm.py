@@ -175,6 +175,15 @@ def load_greens_database(path=None, include_metadata=False):
         - ``tglast``: ndarray, shape (N_z,) — last blackbody temperature [K]
           (diverges from tgin at high z where thermalization occurs)
         - ``rho``: ndarray, shape (N_z,) — Delta-rho/rho used for each entry
+
+    Raises
+    ------
+    FileNotFoundError
+        If the database file does not exist at the resolved path.  The
+        message names the download script.
+    ValueError
+        If a data row holds a field that is not a number, for example
+        after a truncated download.
     """
     if path is None:
         path = _DATA_DIR / "Greens_data.dat"
@@ -735,6 +744,19 @@ def cosmotherm_gf_distortion(
         Frequency in GHz.
     di_jy : ndarray
         Spectral distortion ΔI [Jy/sr].
+
+    Raises
+    ------
+    FileNotFoundError
+        If any of ``z_h``, ``x``, or ``g_th`` is omitted and the Green's
+        function database cannot be found (see
+        :func:`load_greens_database`).  The database is loaded before
+        ``scenario`` is checked.
+    ValueError
+        If ``scenario`` is not ``'swave'``, ``'pwave'``, or ``'decay'``.
+    KeyError
+        If ``params`` lacks a key that the scenario needs.  This surfaces
+        during the convolution, not at call time.
     """
     # Load database if not provided
     if z_h is None or x is None or g_th is None:

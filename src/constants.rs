@@ -39,7 +39,7 @@ pub const SIGMA_THOMSON: f64 = 6.652_458_7321e-29;
 pub const ALPHA_FS: f64 = 7.297_352_5693e-3;
 
 // Unit conversions
-/// 1 eV in Joules (exact by 2019 SI redefinition)
+/// 1 eV in Joules (exact by 2019 SI redefinition).
 pub const EV_IN_JOULES: f64 = 1.602_176_634e-19;
 
 // Hydrogen atomic physics
@@ -51,7 +51,7 @@ pub const E_RYDBERG: f64 = E_RYDBERG_EV * EV_IN_JOULES;
 pub const E_ION_N2: f64 = E_RYDBERG_EV / 4.0 * EV_IN_JOULES;
 /// Lyman-alpha wavelength, in m.
 pub const LAMBDA_LYA: f64 = 1.215_670e-7;
-/// 2s→1s two-photon decay rate [s⁻¹]
+/// 2s→1s two-photon decay rate [s⁻¹].
 pub const LAMBDA_2S1S: f64 = 8.2245809;
 
 // Mathematical constants
@@ -65,10 +65,10 @@ pub const E_HE_II_ION_EV: f64 = 54.4178;
 pub const E_HE_I_ION_EV: f64 = 24.5874;
 
 // Derived constants
-/// Electron Compton wavelength: h / (m_e * c)
+/// Electron Compton wavelength: h / (m_e * c), in m.
 pub const LAMBDA_ELECTRON: f64 = HPLANCK / (M_ELECTRON * C_LIGHT);
 
-/// m_e c^2 in Joules
+/// m_e c^2 in Joules.
 pub const M_E_C2: f64 = M_ELECTRON * C_LIGHT * C_LIGHT;
 
 // Cosmological constants
@@ -80,32 +80,32 @@ pub const M_E_C2: f64 = M_ELECTRON * C_LIGHT * C_LIGHT;
 /// [`crate::cosmology::Cosmology::planck2018`] preset overrides this.
 pub const T_CMB_0: f64 = 2.726;
 
-/// Helium mass fraction
+/// Helium mass fraction (dimensionless).
 pub const Y_P: f64 = 0.24;
 
-/// Helium number fraction relative to hydrogen: f_He = Y_p / (4*(1-Y_p))
+/// Helium number fraction relative to hydrogen: f_He = Y_p / (4*(1-Y_p)) (dimensionless).
 pub const F_HE: f64 = Y_P / (4.0 * (1.0 - Y_P));
 
-/// Effective number of neutrino species
+/// Effective number of neutrino species (dimensionless).
 pub const N_EFF: f64 = 3.046;
 
-/// km/s/Mpc → 1/s
+/// km/s/Mpc → 1/s.
 pub const KM_PER_MPC: f64 = 3.240_779_29e-20;
 
 // Spectral integral constants (for Planck distribution)
-/// G_1 = ∫₀^∞ x n_pl(x) dx = π²/6 = ζ(2)
+/// G_1 = ∫₀^∞ x n_pl(x) dx = π²/6 = ζ(2).
 pub const G1_PLANCK: f64 = 1.644_934_066_848_226_4; // π²/6
 
-/// G_2 = ∫₀^∞ x² n_pl(x) dx = 2ζ(3)
+/// G_2 = ∫₀^∞ x² n_pl(x) dx = 2ζ(3).
 pub const G2_PLANCK: f64 = 2.404_113_806_319_188_6; // 2*ζ(3)
 
-/// G_3 = ∫₀^∞ x³ n_pl(x) dx = π⁴/15
+/// G_3 = ∫₀^∞ x³ n_pl(x) dx = π⁴/15.
 pub const G3_PLANCK: f64 = 6.493_939_402_266_829; // π⁴/15
 
-/// I_4 = ∫₀^∞ x⁴ n_pl (1+n_pl) dx = 4π⁴/15
+/// I_4 = ∫₀^∞ x⁴ n_pl (1+n_pl) dx = 4π⁴/15.
 pub const I4_PLANCK: f64 = 4.0 * G3_PLANCK;
 
-/// β_μ = 3ζ(3)/ζ(2) ≈ 2.1923 — frequency of μ-distortion zero crossing
+/// β_μ = 3ζ(3)/ζ(2) ≈ 2.1923 — frequency of μ-distortion zero crossing.
 pub const BETA_MU: f64 = 3.0 * ZETA_3 / G1_PLANCK;
 
 /// κ_c = 3 ∫x³ M(x) dx / G₃ = 12/β_μ − 9G₂/G₃ ≈ 2.1419
@@ -143,7 +143,7 @@ pub const ALPHA_RHO: f64 = G2_PLANCK / G3_PLANCK; // ≈ 0.3702
 pub const X_BALANCED: f64 = 4.0 / (3.0 * ALPHA_RHO); // ≈ 3.60
 
 // Thermalization redshifts (approximate)
-/// μ-era thermalization redshift (Chluba 2013, MNRAS 434, 352)
+/// μ-era thermalization redshift (Chluba 2013, MNRAS 434, 352).
 pub const Z_MU: f64 = 1.98e6;
 
 /// Dimensionless temperature at the *default* cosmic microwave background temperature

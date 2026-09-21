@@ -1,3 +1,16 @@
+//! Diagnostic for monochromatic photon injection at low frequency.
+//!
+//! Injects ΔN/N = 1e-5 photons at x_inj = 1e-3 and z_h = 3e5 on a grid refined around the
+//! line, then prints the (μ, y, ΔT/T, Δρ/ρ) decomposition and the peak intensity twice: for
+//! the raw spectrum, and after removing the number-conserving temperature shift (the G_bb
+//! component fixed by ∫x² Δn dx). A table of both spectra against frequency follows.
+//!
+//! The example then repeats the solve as a single-burst heat injection with the same
+//! Δρ/ρ = 3.7022e-9, prints 1.401 Δρ/ρ (the μ-era expectation) for comparison, and checks
+//! that the stripped spectrum carries ΔN/N ≈ 0.
+//!
+//! Run with `cargo run --release --example photon_diag`.
+
 use spectroxide::constants::*;
 use spectroxide::distortion::{decompose_distortion, delta_n_to_intensity_mjy};
 use spectroxide::energy_injection::InjectionScenario;

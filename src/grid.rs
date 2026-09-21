@@ -7,11 +7,11 @@
 /// A localized region of extra grid points for resolving narrow features.
 #[derive(Debug, Clone)]
 pub struct RefinementZone {
-    /// Center of the refinement region
+    /// Center of the refinement region.
     pub x_center: f64,
-    /// Half-width of the refinement region
+    /// Half-width of the refinement region.
     pub x_width: f64,
-    /// Number of extra points to add in this zone
+    /// Number of extra points to add in this zone.
     pub n_points: usize,
 }
 
@@ -144,15 +144,15 @@ impl GridConfig {
 /// The frequency grid with precomputed helper arrays.
 #[derive(Debug, Clone)]
 pub struct FrequencyGrid {
-    /// Grid points x_i
+    /// Grid points x_i.
     pub x: Vec<f64>,
-    /// Grid spacing dx_i = x_{i+1} - x_i (length n-1)
+    /// Grid spacing dx_i = x_{i+1} - x_i (length n-1).
     pub dx: Vec<f64>,
-    /// Cell-center values: x_{i+1/2} = (x_i + x_{i+1}) / 2  (length n-1)
+    /// Cell-center values: x_{i+1/2} = (x_i + x_{i+1}) / 2  (length n-1).
     pub x_half: Vec<f64>,
     /// Precomputed `x_half[j]³` (length n-1).
     pub x_half_cubed: Vec<f64>,
-    /// Number of points
+    /// Number of points.
     pub n: usize,
 }
 

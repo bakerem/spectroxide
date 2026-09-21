@@ -28,10 +28,10 @@ const BR_PREFACTOR: f64 = ALPHA_FS * LAMBDA_ELECTRON * LAMBDA_ELECTRON * LAMBDA_
 /// Precomputed √3/π for Gaunt factor formula.
 const S3_PI: f64 = 0.5513_2889_5421_7921;
 
-/// Precomputed ln(2.25) for Z=1 Gaunt factor: ln(2.25/x) = LN_2_25 - ln(x)
+/// Precomputed ln(2.25) for Z=1 Gaunt factor: ln(2.25/x) = LN_2_25 - ln(x).
 const LN_2_25: f64 = 0.8109_3021_6216_3288;
 
-/// Precomputed ln(2.25/2) = ln(1.125) for Z=2 Gaunt factor
+/// Precomputed ln(2.25/2) = ln(1.125) for Z=2 Gaunt factor.
 const LN_1_125: f64 = 0.1177_8303_5656_3834;
 
 /// Non-relativistic thermally-averaged free-free Gaunt factor.
@@ -118,6 +118,14 @@ fn softplus(arg: f64) -> f64 {
 /// * `n_he` - helium number density [1/m³]
 /// * `n_e` - electron number density [1/m³]
 /// * `x_e_frac` - ionization fraction X_e = N_e/N_H
+/// * `cosmo` - background cosmology. Only `cosmo.t_cmb` and the densities that the Saha
+///   helium equations need are read: `theta_z` is mapped back to a redshift through
+///   `cosmo.t_cmb`, and that redshift sets the He⁺ and He²⁺ fractions.
+///
+/// # Returns
+/// K_BR (dimensionless). K_BR is not itself a rate: the emission and absorption rate per
+/// Thomson time is (K_BR / x³)(e^{x_e} − 1). Returns `0.0` if `theta_e < 1e-30` or
+/// `n_e < 1e-30`.
 pub fn br_emission_coefficient(
     x: f64,
     theta_e: f64,
@@ -214,14 +222,19 @@ pub fn br_emission_coefficient_with_he(
 /// for each grid point. This hoists θ_e^{-7/2}/φ³ and species densities
 /// out of the inner loop.
 pub struct BrPrecomputed {
-    /// BR_PREFACTOR × θ_e^{-7/2} / φ³
+    /// BR_PREFACTOR × θ_e^{-7/2} / φ³ \[m³\]. K_BR = base_factor × exp(−xφ) × Σ_i Z_i² N_i g_ff,
+    /// so the species sum [1/m³] makes K_BR dimensionless.
     pub base_factor: f64,
-    /// φ = θ_z / θ_e (for the exp(-xφ) x-dependent part)
+    /// φ = θ_z / θ_e (for the exp(-xφ) x-dependent part). Dimensionless.
     pub phi: f64,
+    /// Number density of H⁺ (Z = 1) [1/m³]: min(X_e, 1) × N_H.
     pub n_hii: f64,
+    /// Number density of He²⁺ (Z = 2) [1/m³]: the doubly ionized helium fraction × N_He.
     pub n_heiii: f64,
+    /// Number density of He⁺ (Z = 1) [1/m³]: max(y_he_i − y_he_ii, 0) × N_He, where `y_he_i` is
+    /// the fraction of helium that is at least singly ionized.
     pub n_heii: f64,
-    /// 0.5 * ln(θ_e), precomputed for fast Gaunt factor evaluation
+    /// 0.5 * ln(θ_e), precomputed for fast Gaunt factor evaluation.
     pub half_ln_theta_e: f64,
     /// `exp(S3_PI·(ln 2.25 + ½lnθ_e) + 1.425)` — the x-independent half of
     /// `exp(arg)` for Z = 1. See [`gaunt_expc_factor`].
@@ -246,8 +259,8 @@ pub struct BrPrecomputed {
 /// both `exp()` calls from every Gaunt evaluation, leaving only the `ln(1+e)`.
 ///
 /// Returns `0.0` for `ln_x < −69` (i.e. `x < 1e-30`), which propagates through
-/// [`gaunt_from_expc`] as `g = 1`, reproducing the guard in
-/// [`gaunt_ff_nr_fast_preln`] exactly.
+/// `gaunt_from_expc` as `g = 1`, reproducing the guard in
+/// `gaunt_ff_nr_fast_preln` exactly.
 #[inline]
 pub fn gaunt_expc_factor(ln_x: f64) -> f64 {
     if ln_x < -69.0 {
@@ -282,6 +295,22 @@ fn gaunt_from_expc(expc: f64, ea: f64) -> f64 {
 }
 
 /// Precompute x-independent BR factors.
+///
+/// # Arguments
+/// * `theta_e` - electron temperature kT_e/(m_e c²)
+/// * `theta_z` - reference temperature kT_z/(m_e c²)
+/// * `n_h` - hydrogen number density [1/m³]
+/// * `n_he` - helium number density [1/m³]
+/// * `n_e` - electron number density [1/m³]. Used only for the early-return guard.
+/// * `x_e_frac` - ionization fraction X_e = N_e/N_H
+/// * `y_he_ii` - fraction of helium that is doubly ionized (He²⁺), from `saha_he_ii`
+/// * `y_he_i` - fraction of helium that is at least singly ionized (He⁺ or He²⁺), from
+///   `saha_he_i`
+///
+/// # Returns
+/// `None` if `theta_e < 1e-30` or `n_e < 1e-30`. In that case there is no free-free emission
+/// and the caller must treat K_BR as zero (the same guard that makes
+/// [`br_emission_coefficient`] return `0.0`). Otherwise `Some`.
 pub fn br_precompute(
     theta_e: f64,
     theta_z: f64,

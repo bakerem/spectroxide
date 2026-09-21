@@ -651,6 +651,10 @@ pub enum OutputFormat {
 
 impl OutputFormat {
     /// Parse an output format from a string (`json`, `csv`, `table`).
+    ///
+    /// # Errors
+    /// Returns `Err` if `s` is not exactly `json`, `csv`, or `table` (the match is
+    /// case-sensitive).
     pub fn from_str(s: &str) -> Result<Self, String> {
         match s {
             "json" => Ok(OutputFormat::Json),

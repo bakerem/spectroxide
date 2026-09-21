@@ -321,9 +321,9 @@ pub struct ThermalizationSolver {
     pub snapshots: Vec<SolverSnapshot>,
     /// Number of timesteps taken in the current run.
     pub step_count: usize,
-    /// Compton equilibrium ρ_eq = I₄/(4G₃) from the photon spectrum
+    /// Compton equilibrium ρ_eq = I₄/(4G₃) from the photon spectrum.
     rho_eq: f64,
-    /// Cached recombination history for fast X_e(z) lookups
+    /// Cached recombination history for fast X_e(z) lookups.
     recomb: RecombinationHistory,
     /// Initial photon perturbation Δn(x) to use instead of zeros.
     /// Consumed (taken) by run_with_snapshots on first call.
@@ -336,9 +336,9 @@ pub struct ThermalizationSolver {
     /// simultaneously. More physically
     /// consistent than operator splitting, especially at z > 2×10⁶.
     pub coupled_dcbr: bool,
-    /// Pre-allocated work buffer for DC/BR emission rates (per step)
+    /// Pre-allocated work buffer for DC/BR emission rates (per step).
     emission_rates: Vec<f64>,
-    /// Pre-allocated work buffer for DC/BR equilibrium minus Planck
+    /// Pre-allocated work buffer for DC/BR equilibrium minus Planck.
     n_eq_minus_n_pl: Vec<f64>,
     /// d(emission_rates)/d(ρ_eq), analytical. Used by the bordered Newton
     /// c-vector to close the Δn-row Jacobian on ρ_e (otherwise the solve
@@ -347,9 +347,9 @@ pub struct ThermalizationSolver {
     dem_drho_eq: Vec<f64>,
     /// d(n_eq_minus_n_pl)/d(ρ_eq), analytical. See `dem_drho_eq`.
     dneq_drho_eq: Vec<f64>,
-    /// Pre-allocated Kompaneets workspace (grid-constant arrays + per-step buffers)
+    /// Pre-allocated Kompaneets workspace (grid-constant arrays + per-step buffers).
     komp_ws: KompaneetsWorkspace,
-    /// Precomputed Planck spectrum on the grid: planck(x[i])
+    /// Precomputed Planck spectrum on the grid: planck(x[i]).
     planck_grid: Vec<f64>,
     /// Subtract the temperature shift component from Δn after each
     /// DC/BR step at z > 5×10⁴, enforcing photon number conservation

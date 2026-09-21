@@ -23,17 +23,17 @@ pub const DEFAULT_DECOMP_X_MAX: f64 = 18.0;
 /// Complete distortion decomposition result.
 #[derive(Debug, Clone)]
 pub struct DistortionParams {
-    /// Chemical potential μ
+    /// Chemical potential μ.
     pub mu: f64,
-    /// Compton y-parameter
+    /// Compton y-parameter.
     pub y: f64,
-    /// Temperature shift ΔT/T
+    /// Temperature shift ΔT/T.
     pub delta_t_over_t: f64,
-    /// Fractional energy: Δρ/ρ
+    /// Fractional energy: Δρ/ρ.
     pub delta_rho_over_rho: f64,
-    /// Fractional photon number change: ΔN/N
+    /// Fractional photon number change: ΔN/N.
     pub delta_n_over_n: f64,
-    /// Residual distortion (not captured by μ, y, T)
+    /// Residual distortion (not captured by μ, y, T).
     pub residual: Vec<f64>,
 }
 
