@@ -9,7 +9,7 @@ A fresh session resumes from the first unchecked box below.
 - [x] Phase 1. Abbreviations and `docs/glossary.rst` (2026-09-21): `abbrev-first-use` 160 to 0
 - [x] Phase 2. API reference gaps (2026-09-21): all plan items; physics-inquisitor pass done, 17 corrections applied
 - [x] Phase 3. Procedures, code-block introductions, page openings (2026-09-21): `heading-then-code` 28 to 0, `nb-code-no-intro` 6 to 0
-- [ ] Phase 4. Placeholders in `docs/cli.rst`
+- [x] Phase 4. Placeholders in `docs/cli.rst` (2026-09-21): 11 placeholders to UPPER_SNAKE_CASE with "Replace ..." sentences. `--help` left as is (D4 recommendation; reversible if EB decides otherwise)
 - [ ] Phase 5. Mechanical prose substitutions (blocked on D1 for dashes only)
 - [ ] Phase 6. Record the house style in `CONTRIBUTING.md`; add the script to the `CLAUDE.md` list (20 to 22; see the log)
 - [ ] Phase 7. `firas.py` keyword names (blocked on D2)
@@ -87,6 +87,8 @@ Notes on the lint, so that nobody reads a count as a verdict:
 None yet. Add one line per exception with the rule, the file, and the reason.
 
 ## Log
+
+- 2026-09-21: phase 4 done. `docs/cli.rst` only; Sphinx 0 warnings. `src/cli.rs` help text and `tests/cli_integration.rs` untouched.
 
 - 2026-09-21: phase 3 done. README manual installation is a numbered procedure (a clone step added; `docs/installation.rst`
   mirrors it and now says `cargo test --release`). Introductory sentences before every bare block in the README, the

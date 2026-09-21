@@ -7,7 +7,10 @@ default and written to stdout.
 
 .. code-block:: bash
 
-   cargo run --release --bin spectroxide -- <subcommand> [options]
+   cargo run --release --bin spectroxide -- SUBCOMMAND [OPTIONS]
+
+Replace ``SUBCOMMAND`` with one of the subcommands below, and ``OPTIONS`` with
+any of the flags that the subcommand accepts.
 
 
 Subcommands
@@ -20,7 +23,11 @@ Run the PDE solver for a specific injection scenario.
 
 .. code-block:: bash
 
-   spectroxide solve <injection-type> [options]
+   spectroxide solve INJECTION_TYPE [OPTIONS]
+
+Replace ``INJECTION_TYPE`` with a name from the first column of the following
+table, and ``OPTIONS`` with that scenario's flags and any solver, cosmology, or
+output options.
 
 **Injection types:**
 
@@ -100,7 +107,9 @@ Solver options
 --------------
 
 These flags apply to ``solve``, ``sweep``, ``photon-sweep``, and
-``photon-sweep-batch``:
+``photon-sweep-batch``. In the Flag column, an
+uppercase word such as ``Z``, ``N``, or ``VALUE`` stands for the value that you
+supply:
 
 .. list-table::
    :widths: 30 15 45
@@ -109,25 +118,25 @@ These flags apply to ``solve``, ``sweep``, ``photon-sweep``, and
    * - Flag
      - Default
      - Description
-   * - ``--z-start <z>``
+   * - ``--z-start Z``
      - (varies)
      - Starting redshift
-   * - ``--z-end <z>``
+   * - ``--z-end Z``
      - 500
      - Final redshift
-   * - ``--n-points <n>``
+   * - ``--n-points N``
      - (preset)
      - Frequency-grid point count. Overrides the active fast/production preset.
    * - ``--production-grid``
      - off
      - Use the high-resolution production grid preset (4000 points).
-   * - ``--dy-max <val>``
+   * - ``--dy-max VALUE``
      - 0.02
      - Cap on the adaptive ``y_C`` step.
-   * - ``--dtau-max <val>``
+   * - ``--dtau-max VALUE``
      - 10
      - Cap on the dimensionless Compton optical-depth step (use 3 for ``<0.1%`` precision).
-   * - ``--dtau-max-photon-source <val>``
+   * - ``--dtau-max-photon-source VALUE``
      - 1.0
      - Cap on ``dτ`` while a photon source is active (tighter near a δ-line source).
    * - ``--no-dcbr``
@@ -139,13 +148,13 @@ These flags apply to ``solve``, ``sweep``, ``photon-sweep``, and
    * - ``--no-number-conserving``
      - off
      - Disable the number-conserving :math:`T`-shift subtraction (on by default).
-   * - ``--nc-z-min <z>``
+   * - ``--nc-z-min Z``
      - 5e4
      - Below this redshift the number-conserving correction is suppressed.
    * - ``--no-auto-refine``
      - off
      - Disable automatic grid refinement near photon-injection features.
-   * - ``--threads <n>``
+   * - ``--threads N``
      - all cores
      - Threads for parallel sweep execution.
 
@@ -174,7 +183,8 @@ density is derived from their difference.
 Output options
 --------------
 
-These flags control the output format and destination:
+These flags control the output format and destination. Replace ``PATH`` with the
+file to write:
 
 .. list-table::
    :widths: 30 60
@@ -184,7 +194,7 @@ These flags control the output format and destination:
      - Description
    * - ``--format json|csv|table``
      - Output format (default: ``json``)
-   * - ``--output <path>``
+   * - ``--output PATH``
      - Write to file instead of stdout
 
 
