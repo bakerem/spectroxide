@@ -13,6 +13,7 @@ Requires scipy for interpolation. Tests are skipped if scipy is not installed.
 
 import json
 import tempfile
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -794,3 +795,72 @@ class TestPhysicsHashVerification:
             np.testing.assert_array_equal(loaded.g_th, table.g_th)
         finally:
             Path(path).unlink(missing_ok=True)
+
+
+# =========================================================================
+# Section 12: photon table between x_inj nodes (review finding P-7)
+# =========================================================================
+
+
+def _make_photon_table_default_nodes(z_max=3.0e4):
+    """Synthetic photon table on the builder's default nodes.
+
+    Uses the default x grid (500 log points on [0.01, 30]), the default
+    10 x_inj nodes, and the default z_h nodes up to ``z_max`` (the y-era
+    part of the grid; the analytic photon GF refuses the μ–y band).
+    ``number_conserving=False`` so that each node conserves energy
+    exactly by construction: ``∫ x³ G dx / G₃ = α_ρ x_inj`` with
+    ``α_ρ = G₂/G₃`` (see ``greens.greens_function_photon``: the smooth
+    part carries ``α_ρ x_inj (1 − P_s f_int)`` and the surviving line
+    ``α_ρ x_inj P_s f_int``).
+    """
+    from spectroxide.greens_table import _DEFAULT_PHOTON_X_INJ, _DEFAULT_Z_INJECTIONS
+
+    x = np.logspace(np.log10(0.01), np.log10(30.0), 500)
+    x_inj = _DEFAULT_PHOTON_X_INJ.copy()
+    z_h = _DEFAULT_Z_INJECTIONS[_DEFAULT_Z_INJECTIONS <= z_max]
+    g_ph = np.zeros((len(x), len(x_inj), len(z_h)))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)  # post-recombination z_h
+        for k, xi in enumerate(x_inj):
+            for j, zh in enumerate(z_h):
+                g_ph[:, k, j] = greens.greens_function_photon(x, xi, zh)
+    return PhotonGreensTable(z_h=z_h, x=x, x_inj=x_inj, g_ph=g_ph, metadata={})
+
+
+@pytest.fixture(scope="module")
+def default_node_photon_table():
+    return _make_photon_table_default_nodes()
+
+
+class TestPhotonTableBetweenNodes:
+    """A y-era query midway between x_inj nodes must keep a single bump.
+
+    Targets are independent of the table code: the peak must sit at the
+    queried injection frequency, and the energy must equal the injected
+    ``α_ρ x_inj`` (per unit ΔN/N), with ``α_ρ = G₂/G₃ = 2ζ(3)/(π⁴/15)``.
+    """
+
+    X_INJ = 2.55  # geometric midpoint of the default nodes 1.90 and 3.42
+    Z_H = 1.0e4
+
+    def _query(self, table):
+        x = np.logspace(np.log10(0.01), np.log10(30.0), 8000)
+        return x, table.greens_function_photon(x, self.X_INJ, self.Z_H)
+
+    def test_query_is_off_node(self, default_node_photon_table):
+        assert np.min(np.abs(default_node_photon_table.x_inj - self.X_INJ)) > 0.5
+
+    def test_peak_at_x_inj(self, default_node_photon_table):
+        x, g = self._query(default_node_photon_table)
+        x_peak = x[np.argmax(x**3 * g)]
+        assert abs(x_peak / self.X_INJ - 1.0) < 0.05, f"peak at x = {x_peak:.3f}"
+
+    def test_energy_equals_alpha_rho_x_inj(self, default_node_photon_table):
+        g2 = 2.0 * 1.2020569031595942  # 2 ζ(3)
+        g3 = np.pi**4 / 15.0
+        target = g2 / g3 * self.X_INJ
+        x, g = self._query(default_node_photon_table)
+        trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
+        energy = trapz(x**3 * g, x) / g3
+        assert abs(energy / target - 1.0) < 0.01, f"energy ratio {energy / target:.4f}"
