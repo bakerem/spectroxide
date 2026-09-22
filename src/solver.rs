@@ -192,8 +192,12 @@ pub struct SolverSnapshot {
     pub mu: f64,
     /// Compton y-parameter distortion amplitude.
     pub y: f64,
-    /// Fractional energy injected by the active scenario up to this
-    /// redshift, `Δρ / ρ`.
+    /// Fractional energy `Δρ / ρ` measured in the spectrum at this redshift:
+    /// `∫ x³ Δn dx / G₃` plus `4 ΔT/T` for the accumulated temperature shift.
+    /// This is the energy the solver holds, not the scenario's nominal
+    /// injected energy. The two differ by the solver's energy-conservation
+    /// error and by adiabatic cooling, which removes energy even when
+    /// nothing is injected.
     pub delta_rho_over_rho: f64,
     /// Cumulative temperature shift `ΔT/T` subtracted by the number-conserving
     /// machinery (non-zero only when `number_conserving` is enabled).

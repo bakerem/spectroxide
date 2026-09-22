@@ -124,8 +124,17 @@ pub enum InjectionScenario {
     DecayingParticlePhoton {
         /// x_inj,0 = E_γ/(kT_0) = m_X c²/(2kT_0).
         x_inj_0: f64,
-        /// Dimensionless injection amplitude (Eq. 5 of B&C 2021).
-        /// f_inj ≈ 2(Ω_cdm/Ω_γ) × f_dm × G₃/(G₂ × x_inj,0)
+        /// Dimensionless injection amplitude: photons injected per CMB photon
+        /// today, if every particle decayed (Bolliet & Chluba 2021, Eq. 5):
+        ///
+        /// f_inj = f_γ N_X,0 / N_γ,0 = (G₃/G₂) (ε / x_inj,0) (ρ_X,0 / ρ_γ,0)
+        ///       ≈ 1.31×10⁴ ε f_dm / x_inj,0 × (Ω_cdm h² / 0.12),
+        ///
+        /// where ε is the fraction of the rest mass that goes into photons,
+        /// f_dm = ρ_X,0 / ρ_cdm,0, and ρ_X,0 is the density the particles would
+        /// have today without decay. The two photons per decay cancel against
+        /// m_X = 2E_γ, so there is no factor of 2. With this f_inj the
+        /// scenario injects d(Δρ/ρ)/dt = ε f_dm (Ω_cdm/Ω_γ) Γ_X S(z) / (1+z).
         f_inj: f64,
         /// Γ_X: vacuum decay rate [1/s].
         gamma_x: f64,

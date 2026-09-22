@@ -10609,6 +10609,103 @@ fn test_decaying_particle_photon_hard_pde() {
     );
 }
 
+/// DecayingParticlePhoton: with f_inj set from the Bolliet & Chluba (2021)
+/// equation, the PDE holds the energy the decays release (review finding P-2).
+///
+/// Oracle:             f_inj = (G₃/G₂)(ε/x_inj,0)(ρ_X,0/ρ_γ,0) with
+///                     ρ_X,0/ρ_γ,0 = f_dm Ω_cdm/Ω_γ (arXiv:2012.07292). Each
+///                     decay at redshift z puts rest-mass energy ε m_X into
+///                     photons, and ρ_X/ρ_γ scales as 1/(1+z), so the energy
+///                     released between z_start and z_end is
+///                     Δρ/ρ = ε f_dm (Ω_cdm/Ω_γ) ∫ Γ e^{−Γt} dt/(1+z).
+///                     The test evaluates that integral with its own
+///                     quadrature of t(z) = ∫ dz/((1+z)H), and types G₃ = π⁴/15
+///                     and G₂ = 2ζ(3) as literals. It does not call the
+///                     source term. Ω_cdm/Ω_γ enters f_inj and the target
+///                     identically, so taking it from `Cosmology` cannot hide
+///                     an error. The factor of 2 in the old doc recipe would
+///                     give a ratio of 2.
+/// Regime:             hard photons in the y-era. x_inj runs from 3 at
+///                     z = 6×10⁴ to 30 at z = 6×10³, inside the grid and above
+///                     the DC/BR absorption range, so the energy stays in Δn
+///                     and the measured Δρ/ρ is the injected energy up to the
+///                     solver's energy-conservation error (≤ 0.5%) and the
+///                     adiabatic-cooling baseline (−1.3×10⁻⁹ measured over this
+///                     window, 10⁻⁴ of the signal). Measured ratio: 0.9994.
+/// Tolerance:          1%.
+#[test]
+fn test_decaying_particle_photon_f_inj_energy() {
+    let cosmo = Cosmology::default();
+
+    let z_start: f64 = 6.0e4;
+    let z_end: f64 = 6.0e3;
+    let x_inj_0 = 3.0 * (1.0 + z_start); // x_inj(z_start) = 3, x_inj(z_end) ≈ 30
+    let gamma_x = 1.0e-11; // lifetime ≈ t(z = 1.5×10⁴)
+    let f_dm = 4.0e-5;
+    let epsilon = 1.0;
+
+    // Bolliet & Chluba (2021): f_inj = (G₃/G₂)(ε/x_inj,0)(ρ_X,0/ρ_γ,0).
+    let g3 = std::f64::consts::PI.powi(4) / 15.0;
+    let g2 = 2.0 * 1.202_056_903_159_594_3; // 2ζ(3)
+    let omega_ratio = cosmo.omega_cdm_frac() / cosmo.omega_gamma();
+    let f_inj = (g3 / g2) * (epsilon / x_inj_0) * f_dm * omega_ratio;
+
+    // Target: ε f_dm (Ω_cdm/Ω_γ) ∫_{z_end}^{z_start} Γ e^{−Γt} (dt/dz) dz/(1+z).
+    // Work in u = ln(1+z), where dt = −du/H. Accumulate t(u) by the
+    // trapezoid rule from u = ln(1+10¹⁰) down to u = ln(1+z_end).
+    let u_top = (1.0 + 1.0e10_f64).ln();
+    let u_end = (1.0 + z_end).ln();
+    let u_start = (1.0 + z_start).ln();
+    let n = 400_000;
+    let du = (u_top - u_end) / n as f64;
+    let inv_h = |u: f64| 1.0 / cosmo.hubble(u.exp() - 1.0);
+    let mut t = 0.0;
+    let mut integral = 0.0;
+    let mut prev_u = u_top;
+    let mut prev_integrand = 0.0;
+    for i in 1..=n {
+        let u = u_top - i as f64 * du;
+        t += 0.5 * du * (inv_h(prev_u) + inv_h(u));
+        // Integrand of ∫ Γ e^{−Γt} e^{−u} du / H over the solver window.
+        let integrand = gamma_x * (-gamma_x * t).exp() * (-u).exp() * inv_h(u);
+        if prev_u <= u_start + 1e-12 {
+            integral += 0.5 * du * (prev_integrand + integrand);
+        }
+        prev_u = u;
+        prev_integrand = integrand;
+    }
+    let drho_expected = epsilon * f_dm * omega_ratio * integral;
+
+    let mut solver = ThermalizationSolver::new(cosmo, GridConfig::default());
+    solver
+        .set_injection(InjectionScenario::DecayingParticlePhoton {
+            x_inj_0,
+            f_inj,
+            gamma_x,
+        })
+        .unwrap();
+    solver.set_config(SolverConfig {
+        z_start,
+        z_end,
+        ..SolverConfig::default()
+    });
+    solver.run_with_snapshots(&[z_end]);
+    let snap = solver.snapshots.last().unwrap();
+
+    let ratio = snap.delta_rho_over_rho / drho_expected;
+    eprintln!(
+        "DecayPhoton f_inj energy: f_inj={f_inj:.4e}, Δρ/ρ measured={:.6e}, \
+         expected={drho_expected:.6e}, ratio={ratio:.5}",
+        snap.delta_rho_over_rho
+    );
+    assert!(
+        (ratio - 1.0).abs() < 0.01,
+        "Δρ/ρ from f_inj (B&C 2021) off by more than 1%: measured {:.6e}, \
+         expected {drho_expected:.6e}, ratio {ratio:.5}",
+        snap.delta_rho_over_rho
+    );
+}
+
 // (test_decaying_particle_photon_moderate_x_pde removed in 2026-04 triage:
 // only `is_finite()` assertions — NaN guard, not physics.)
 

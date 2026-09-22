@@ -801,7 +801,9 @@ def run_sweep(
     dict
         Parsed JSON output.  Each per-redshift entry in ``results``
         carries keys ``z_h``, ``pde_mu``, ``pde_y``, ``drho``, ``x``,
-        ``delta_n``.
+        ``delta_n``. ``drho`` is the energy ``Δρ/ρ`` measured in the final
+        spectrum; the top-level ``delta_rho_inj`` is the ``delta_rho``
+        input.
 
     Raises
     ------
@@ -1267,7 +1269,13 @@ class SolverResult:
     y : float
         Compton ``y``-parameter (dimensionless).
     delta_rho_over_rho : float
-        Fractional energy perturbation ``Δρ/ρ``.
+        Fractional energy ``Δρ/ρ`` measured in the returned spectrum, not
+        the requested injection. For ``"pde"`` it is the Rust ``drho``
+        field: ``∫ x³ Δn dx / G₃`` plus ``4 ΔT/T`` for any accumulated
+        temperature shift, so it includes the solver's energy-conservation
+        error and adiabatic cooling. For ``"greens_function"`` and
+        ``"table"`` it is ``∫ x³ Δn dx / G₃`` of ``delta_n`` by the
+        trapezoid rule on ``x``.
     method : str
         Solver method used: one of ``"pde"``, ``"greens_function"``,
         ``"table"``.

@@ -9,12 +9,19 @@
 //!
 //! # JSON field naming
 //!
-//! For historical compatibility with the Python client, the injected energy
-//! Δρ/ρ appears under three names depending on the format: `drho` in
-//! per-row JSON objects, `delta_rho_inj` at the top level of sweep JSON, and
-//! `delta_rho_over_rho` in CSV header comments. All three are the same
-//! quantity; renaming any of them would break existing consumers, so the
-//! aliases are documented here instead.
+//! Two different energies appear in the output, and the names do not say
+//! which is which. Renaming them would break existing consumers, so this
+//! section documents them instead.
+//!
+//! - `drho` in per-row JSON objects and CSV columns, `delta_rho_over_rho` in
+//!   CSV header comments, and `delta_rho/rho` and `PDE_drho` in the table
+//!   output are all the measured energy
+//!   [`SolverSnapshot::delta_rho_over_rho`]: `∫ x³ Δn dx / G₃` of the final
+//!   spectrum plus `4 ΔT/T` for any accumulated temperature shift. It includes
+//!   the solver's energy-conservation error and adiabatic cooling.
+//! - `delta_rho_inj` at the top level of sweep JSON is the input: the
+//!   `--delta-rho` amplitude of each single burst, copied from the command
+//!   line and never computed.
 
 use crate::solver::SolverSnapshot;
 
@@ -151,6 +158,9 @@ pub struct SweepRow {
 #[derive(Debug, Clone)]
 #[must_use]
 pub struct SweepResult {
+    /// Nominal injected energy `Δρ/ρ` of each burst: the `--delta-rho` input,
+    /// serialized as `delta_rho_inj`. Each row's measured energy is in
+    /// `snapshot.delta_rho_over_rho`.
     pub delta_rho: f64,
     pub rows: Vec<SweepRow>,
     /// Aggregated diagnostic warnings across all sweep workers.
