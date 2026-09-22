@@ -82,7 +82,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 ### Integration tests (tests/)
 
-- `heat_injection.rs` — 200 integration tests (196 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
+- `heat_injection.rs` — 201 integration tests (197 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 17 tests: edge cases, invalid inputs, boundary conditions.
 - `coverage_gaps.rs` — 14 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement).
 - `cosmotherm_comparison.rs` — 7 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ).
