@@ -33,7 +33,7 @@ dependencies = ["numpy", "scipy"]
 [project.optional-dependencies]
 plot = ["matplotlib"]
 notebook = ["matplotlib", "jupyter"]
-dev = ["matplotlib", "jupyter", "pytest", "mutmut"]
+dev = ["matplotlib", "jupyter", "pytest", "mutmut", "black==26.5.1"]
 doc = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
