@@ -913,6 +913,9 @@ fn print_cosmo_options_help() {
     println!("  --omega-b <val>       Fractional baryon density Omega_b (pass with --omega-m)");
     println!("  --omega-m <val>       Fractional total matter density Omega_m");
     println!("  --h <val>             Reduced Hubble parameter H0 / (100 km/s/Mpc)");
+    println!("                        With a preset, --h alone keeps omega_b and omega_cdm");
+    println!("                        fixed; also pass --omega-b and --omega-m to fix the");
+    println!("                        fractional densities");
     println!("  --n-eff <val>         Effective relativistic species count");
     println!("  --y-p <val>           Helium mass fraction");
     println!("  --t-cmb <K>           CMB temperature today in kelvin");
@@ -2432,6 +2435,27 @@ mod tests {
             err.contains("--omega-cdm is no longer accepted"),
             "expected migration message, got: {err}"
         );
+    }
+
+    #[test]
+    fn test_build_cosmology_override_n_eff_y_p() {
+        // Overriding n_eff and y_p on a preset must change only those two
+        // fields; every other field must equal the unmodified preset.
+        let base = crate::cosmology::Cosmology::planck2015();
+        let over = build_cosmology(&CosmoOpts {
+            preset: Some("planck2015".into()),
+            n_eff: Some(3.5),
+            y_p: Some(0.25),
+            ..CosmoOpts::default()
+        })
+        .unwrap();
+
+        assert_eq!(over.n_eff, 3.5);
+        assert_eq!(over.y_p, 0.25);
+        assert_eq!(over.t_cmb, base.t_cmb);
+        assert_eq!(over.omega_b, base.omega_b);
+        assert_eq!(over.omega_cdm, base.omega_cdm);
+        assert_eq!(over.h, base.h);
     }
 
     // ---- Injection scenario building ----

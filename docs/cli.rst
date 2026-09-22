@@ -179,6 +179,9 @@ constructing the internal cosmology.
 ``--omega-b`` and ``--omega-m`` must be supplied together — the CLI derives the CDM
 density from their difference.
 
+With a preset, ``--h`` alone keeps :math:`\omega_b` and :math:`\omega_\mathrm{cdm}`
+fixed. To fix the fractional densities, also pass ``--omega-b`` and ``--omega-m``.
+
 
 Output options
 --------------
