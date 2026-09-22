@@ -38,7 +38,7 @@ use crate::constants::*;
 use crate::cosmology::Cosmology;
 use crate::spectrum::{g_bb, mu_shape, y_shape};
 
-/// Thermalization visibility: probability that energy injection at z is
+/// Computes the thermalization visibility: probability that energy injection at z is
 /// fully thermalized into a blackbody (temperature shift).
 ///
 /// J_bb(z) = exp(−(z/z_μ)^{5/2})
@@ -54,7 +54,7 @@ pub fn visibility_j_bb(z: f64) -> f64 {
     (-ratio.powf(2.5)).exp()
 }
 
-/// Improved thermalization visibility with correction factor.
+/// Computes the improved thermalization visibility with a correction factor.
 ///
 /// J_bb*(z) = 0.983 · J_bb(z) · (1 − 0.0381 (z/z_μ)^{2.29})
 ///
@@ -70,7 +70,8 @@ pub fn visibility_j_bb_star(z: f64) -> f64 {
     (0.983 * visibility_j_bb(z) * (1.0 - 0.0381 * ratio.powf(2.29))).max(0.0)
 }
 
-/// y-distortion branching ratio: fraction of energy going into y-type distortion.
+/// Computes the y-distortion branching ratio: fraction of energy going into y-type
+/// distortion.
 ///
 /// J_y(z) = [1 + ((1+z)/6.0×10⁴)^{2.58}]^{−1}
 ///
@@ -86,7 +87,8 @@ pub fn visibility_j_y(z: f64) -> f64 {
     1.0 / (1.0 + ((1.0 + z) / 6.0e4).powf(2.58))
 }
 
-/// μ-distortion branching ratio: fraction of energy going into μ-type distortion.
+/// Computes the μ-distortion branching ratio: fraction of energy going into μ-type
+/// distortion.
 ///
 /// J_μ(z) = 1 − exp(−((1+z)/5.8×10⁴)^{1.88})
 ///
@@ -97,7 +99,8 @@ pub fn visibility_j_mu(z: f64) -> f64 {
     1.0 - (-((1.0 + z) / 5.8e4).powf(1.88)).exp()
 }
 
-/// Temperature shift branching: fraction of energy going into temperature shift.
+/// Computes the temperature-shift branching: fraction of energy going into temperature
+/// shift.
 ///
 /// J_T(z) = 1 − J_bb*(z)
 ///
@@ -299,7 +302,7 @@ where
 //   Chluba (2015), arXiv:1506.06582
 //   Arsenadze et al. (2025), arXiv:2409.12940, Appendix C+D
 
-/// Critical frequency for double Compton absorption.
+/// Computes the critical frequency for double Compton absorption.
 ///
 /// x_c_DC(z) = 8.60×10⁻³ × [(1+z)/(2×10⁶)]^{1/2}
 ///
@@ -308,7 +311,7 @@ pub fn x_c_dc(z: f64) -> f64 {
     8.60e-3 * ((1.0 + z) / 2.0e6).powf(0.5)
 }
 
-/// Critical frequency for bremsstrahlung absorption.
+/// Computes the critical frequency for bremsstrahlung absorption.
 ///
 /// x_c_BR(z) = 1.23×10⁻³ × [(1+z)/(2×10⁶)]^{−0.672}
 ///
@@ -317,7 +320,7 @@ pub fn x_c_br(z: f64) -> f64 {
     1.23e-3 * ((1.0 + z) / 2.0e6).powf(-0.672)
 }
 
-/// Combined critical frequency for photon absorption.
+/// Computes the combined critical frequency for photon absorption.
 ///
 /// x_c² = x_c_DC² + x_c_BR²  (quadrature addition)
 ///
@@ -330,7 +333,7 @@ pub fn x_c(z: f64) -> f64 {
     (dc * dc + br * br).sqrt()
 }
 
-/// Photon survival probability P_s(x, z).
+/// Returns the photon survival probability P_s(x, z).
 ///
 /// P_s(x, z) = exp(−x_c(z)/x)
 ///
@@ -347,7 +350,8 @@ pub fn photon_survival_probability(x: f64, z: f64) -> f64 {
     (-ratio).exp()
 }
 
-/// Photon survival probability: numerical τ_ff in the y-era, analytic at higher z.
+/// Returns the photon survival probability: numerical τ_ff in the y-era, analytic at
+/// higher z.
 ///
 /// At z ≤ 5×10⁴ (y-era): P_s = exp(−τ_ff) where τ_ff is the integrated DC+BR
 /// absorption optical depth (Chluba 2015, Eq. 29/32). The raw absorption integral
@@ -462,14 +466,14 @@ fn tau_ff_survival(x: f64, z_h: f64, cosmo: &Cosmology) -> f64 {
 // Compton broadening helpers for surviving photon bump
 // ---------------------------------------------------------------------------
 
-/// Compton scattering helper: f(x) = exp(-x)(1 + x²/2).
+/// Computes a Compton scattering helper: f(x) = exp(-x)(1 + x²/2).
 ///
 /// Reference: Arsenadze et al. (2025), Eq. D14
 fn f_cs(x: f64) -> f64 {
     (-x).exp() * (1.0 + x * x / 2.0)
 }
 
-/// Compton broadening parameter α(x', y_γ).
+/// Computes the Compton broadening parameter α(x', y_γ).
 ///
 /// α = (3 − 2f(x')) / sqrt(1 + x'·y_γ)
 ///
@@ -478,7 +482,7 @@ fn alpha_cs(x_inj: f64, yg: f64) -> f64 {
     (3.0 - 2.0 * f_cs(x_inj)) / (1.0 + x_inj * yg).sqrt()
 }
 
-/// Compton broadening parameter β(x', y_γ).
+/// Computes the Compton broadening parameter β(x', y_γ).
 ///
 /// β = 1 / (1 + x'·y_γ·(1 − f(x')))
 ///
@@ -557,7 +561,7 @@ fn assert_photon_gf_regime(z_h: f64) {
     );
 }
 
-/// Whether `z_h` is inside the μ-y transition band where the photon GF is invalid.
+/// Reports whether `z_h` is inside the μ-y transition band where the photon GF is invalid.
 #[inline]
 fn in_photon_gf_transition_band(z_h: f64) -> bool {
     const TOL: f64 = 1.0e-6;
@@ -566,7 +570,7 @@ fn in_photon_gf_transition_band(z_h: f64) -> bool {
     z_h > lo && z_h < hi
 }
 
-/// Green's function for monochromatic photon injection.
+/// Computes the Green's function for monochromatic photon injection.
 ///
 /// Returns Δn(x_obs) per unit ΔN/N injected at frequency x_inj and
 /// redshift z_h. Uses the universal μ-y visibility function J_μ(z)
@@ -910,7 +914,7 @@ mod tests {
         );
     }
 
-    /// Value anchors on the low-z τ_ff integral (R2 mutation audit, fix P2).
+    /// Checks value anchors for the low-z τ_ff integral (R2 mutation audit, fix P2).
     ///
     /// `photon_survival_probability_numerical` short-circuits to the analytic
     /// μ-era form above z = 5×10⁴, so only z_h < 5×10⁴ exercises
@@ -1038,7 +1042,7 @@ mod tests {
         }
     }
 
-    /// The heating convolution must reduce to the single-burst Green's function
+    /// Checks that the heating convolution reduces to the single-burst Green's function
     /// (R2 mutation audit, fix B3).
     ///
     /// For a narrow normalized heating history at z_h,
@@ -1107,7 +1111,7 @@ mod tests {
         }
     }
 
-    /// Compton-broadening helpers: transcription and moment identities
+    /// Checks the Compton-broadening helper transcription and moment identities
     /// (R2 mutation audit, fix P3).
     ///
     /// `f_cs`, `alpha_cs`, `beta_cs` and `broadened_bump` appeared nowhere in
@@ -1237,7 +1241,7 @@ mod tests {
         }
     }
 
-    /// Characterization test for the bump's first moment (finding F-PC-1,
+    /// Checks the bump's first moment as a characterization test (finding F-PC-1,
     /// `dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`).
     ///
     /// `test_compton_broadening_identities` pins the *variance* to the exact

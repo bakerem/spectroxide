@@ -155,6 +155,8 @@ docstrings, Rust doc comments, and help text. The main rules are:
   or **Warning:** notice.
 - Start a Rust function summary with a third-person verb ("Computes", "Returns"). State the
   units of every physical quantity, and document every `Err`, `None`, and panic condition.
+- Do not use "above" or "below" to point at a place on the page. Name the thing instead:
+  "see `update_equilibrium`", "the following table".
 
 The project departs from the guide in five places, on purpose:
 

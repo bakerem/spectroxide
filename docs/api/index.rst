@@ -40,7 +40,7 @@ Approximations and helpers
 The remaining modules support cross-checks, fast estimates,
 publication-quality plotting, and Far Infrared Absolute
 Spectrophotometer (FIRAS) data utilities. They are useful but
-secondary; the science targets are computed by the PDE solver above.
+secondary; the PDE solver computes the science targets.
 
 .. grid:: 1 2 2 2
    :gutter: 3

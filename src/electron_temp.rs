@@ -7,7 +7,7 @@
 //!
 //!   Δρ_eq = ΔI₄/(4 G₃) − ΔG₃/G₃ × (I₄/(4G₃))
 //!
-//! computed from Δn only. The full form ρ_eq = I₄/(4G₃) (below) has
+//! computed from Δn only. The full form ρ_eq = I₄/(4G₃) (`update_equilibrium`) has
 //! ~0.1% numerical error from near-cancellation that swamps the O(10⁻⁵)
 //! physical signal — do not use it in the solver. It is retained here only
 //! as a verification tool for off-path consistency checks and tests.
@@ -31,7 +31,7 @@ impl Default for ElectronTemperature {
 }
 
 impl ElectronTemperature {
-    /// θ_e from a precomputed θ_z value (cosmology-aware).
+    /// Returns θ_e from a precomputed θ_z value (cosmology-aware).
     ///
     /// Pass `cosmo.theta_z(z)` so a non-default T_CMB is honored.
     #[inline]
@@ -122,7 +122,7 @@ mod tests {
         );
     }
 
-    /// `update_equilibrium` must recover a *non-unity* temperature ratio.
+    /// Checks that `update_equilibrium` recovers a *non-unity* temperature ratio.
     ///
     /// Analytic anchor: a Planck spectrum sampled at a shifted temperature,
     /// n(x) = n_pl(x/a) = 1/(e^{x/a}−1), is the Bose-Einstein stationary state

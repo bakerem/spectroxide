@@ -553,7 +553,7 @@ class FIRASData:
         With the default ``marginalize_y=True`` this returns ≈1.6e-4, which
         is ~1.8× looser than the module constant :data:`MU_FIRAS_95` = 9e-5
         (Fixsen 1996); pass ``marginalize_y=False`` to reproduce the
-        literature limit. See the warning below.
+        literature limit. See the warning in this docstring.
 
         Marginalizes over ``G_bb`` (unobservable temperature shift).
         Optionally also marginalizes over ``y`` and over the galactic

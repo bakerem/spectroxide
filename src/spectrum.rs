@@ -21,7 +21,7 @@
 
 use crate::constants::*;
 
-/// Planck (blackbody) occupation number: n_pl(x) = 1/(e^x - 1).
+/// Computes the Planck (blackbody) occupation number: n_pl(x) = 1/(e^x - 1).
 #[inline]
 pub fn planck(x: f64) -> f64 {
     if x < 1e-6 {
@@ -36,7 +36,7 @@ pub fn planck(x: f64) -> f64 {
     }
 }
 
-/// Bose-Einstein distribution: n_BE(x, μ) = 1/(e^(x+μ) - 1).
+/// Computes the Bose-Einstein distribution: n_BE(x, μ) = 1/(e^(x+μ) - 1).
 #[inline]
 pub fn bose_einstein(x: f64, mu: f64) -> f64 {
     let y = x + mu;
@@ -49,7 +49,7 @@ pub fn bose_einstein(x: f64, mu: f64) -> f64 {
     }
 }
 
-/// Blackbody derivative: G_bb(x) = x e^x / (e^x - 1)²
+/// Computes the blackbody derivative: G_bb(x) = x e^x / (e^x - 1)².
 /// This is -x ∂n_pl/∂x = x²/(4T) ∂B_ν/∂T normalized
 #[inline]
 pub fn g_bb(x: f64) -> f64 {
@@ -65,7 +65,7 @@ pub fn g_bb(x: f64) -> f64 {
     }
 }
 
-/// μ-distortion spectral shape: M(x) = (x/β_μ - 1) · e^x / (e^x - 1)²
+/// Computes the μ-distortion spectral shape: M(x) = (x/β_μ - 1) · e^x / (e^x - 1)².
 ///
 /// The chemical potential distortion; crosses zero at x = β_μ ≈ 2.19.
 /// Normalized such that μ = 1.401 × (Δρ/ρ) for energy injection in μ-era.
@@ -75,7 +75,7 @@ pub fn mu_shape(x: f64) -> f64 {
     (x / BETA_MU - 1.0) * g_bb(x) / x
 }
 
-/// Y-distortion (Sunyaev-Zeldovich) spectral shape:
+/// Computes the Y-distortion (Sunyaev-Zeldovich) spectral shape:
 /// Y_SZ(x) = G_bb(x) · [x·coth(x/2) - 4]
 ///
 /// This is the classic SZ spectral function; crosses zero at x ≈ 3.83.
@@ -92,7 +92,7 @@ pub fn y_shape(x: f64) -> f64 {
     }
 }
 
-/// Numerical integral of x^n * n_pl(x) over [x_min, x_max] using the
+/// Computes the numerical integral of x^n * n_pl(x) over [x_min, x_max] using the
 /// trapezoidal rule on a logarithmic grid. Used for validation against
 /// analytic G_n values (which are the [0, ∞) integrals; choose x_min small
 /// and x_max ≳ 30 accordingly).
@@ -147,7 +147,7 @@ pub fn compton_equilibrium_ratio(x_grid: &[f64], n: &[f64]) -> f64 {
     i4 / (4.0 * g3)
 }
 
-/// Trapezoidal integral of x^power × Δn over the grid, divided by norm.
+/// Computes the trapezoidal integral of x^power × Δn over the grid, divided by norm.
 fn weighted_integral(x_grid: &[f64], delta_n: &[f64], power: i32, norm: f64) -> f64 {
     let mut integral = 0.0;
     for i in 1..x_grid.len() {
@@ -173,7 +173,7 @@ pub fn delta_n_over_n(x_grid: &[f64], delta_n: &[f64]) -> f64 {
 mod tests {
     use super::*;
 
-    /// Planck identity: dn_pl/dx + n_pl(1 + n_pl) = 0 exactly.
+    /// Checks the Planck identity: dn_pl/dx + n_pl(1 + n_pl) = 0 exactly.
     ///
     /// This cancellation underpins the Kompaneets flux-split (CLAUDE.md
     /// pitfall #1). Using finite differences would introduce O(dx²) ≈ 3e-3

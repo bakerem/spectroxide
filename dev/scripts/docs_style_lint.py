@@ -105,7 +105,7 @@ IMPERATIVE_VERBS = set("""
     rebuild recompute record reduce refine register remove render replace report rescale
     reset resolve return round run sample save scale scan search seed select send
     serialize set shift show skip smooth snap solve sort split start step stop store
-    strip subdivide subtract sum swap tabulate tag take test toggle trace track transform
+    strip subdivide subtract suggest sum swap tabulate tag take test toggle trace track transform
     trim truncate try unpack update use validate verify warn weight wrap write zero
     """.split())
 
@@ -128,10 +128,22 @@ SIMPLE_RULES = {
     "and-or": re.compile(r"\band/or\b", re.IGNORECASE),
     "vs": re.compile(r"\bvs\b\.?", re.IGNORECASE),
     "paren-s": re.compile(r"\w\(s\)"),
+    # Rule T9: "above" and "below" as a position on the page. A comparison
+    # ("below z = 1e4", "above the threshold") is fine, so the word must close a
+    # clause or follow a pointer word. Inline code is blanked to spaces, so
+    # "above `1e7`." must not match: no whitespace is allowed before the punctuation.
+    "position-word": re.compile(
+        r"\b(?:(?:see|as|shown|listed|described|noted|given|defined|mentioned|discussed)"
+        r"\s+(?:above|below)\b|(?:above|below)[.,:;)]"
+        r"|the\s+(?:above|below)\b"
+        r"|(?:table|figure|list|example|section|equation|formula|snippet|block|code|cell"
+        r"|options?|steps?|notes?)\s+(?:above|below)\b)",
+        re.IGNORECASE,
+    ),
 }
 RULES = [
     "abbrev-first-use", *SIMPLE_RULES, "british",
-    "rs-imperative-summary", "rs-oneline-no-period",
+    "rs-imperative-summary", "rs-noun-summary", "rs-oneline-no-period",
     "heading-then-code", "nb-code-no-intro", "title-case-heading",
 ]  # fmt: skip
 
@@ -352,9 +364,19 @@ def check_british(prose):
     return hits
 
 
+def _third_person(word):
+    """True if `word` is the third-person singular of a verb in IMPERATIVE_VERBS."""
+    if not word.endswith("s"):
+        return False
+    stems = {word[:-1], word[:-2] if word.endswith("es") else ""}
+    if word.endswith("ies"):
+        stems.add(word[:-3] + "y")
+    return bool(stems & IMPERATIVE_VERBS)
+
+
 def check_rust_summaries(path):
     lines = path.read_text(encoding="utf-8").split("\n")
-    imperative, no_period = [], []
+    imperative, noun, no_period = [], [], []
     for start, block, item in rust_doc_blocks(lines):
         if not block or lines[start - 1].lstrip().startswith("//!"):
             continue
@@ -363,6 +385,10 @@ def check_rust_summaries(path):
             first = re.match(r"[A-Za-z]+", summary)
             if first and first.group(0).lower() in IMPERATIVE_VERBS:
                 imperative.append((start, summary))
+            elif not (first and _third_person(first.group(0).lower())):
+                # Rule A2, second half: a function summary opens with a verb
+                # ("Returns the ..."), not with a noun phrase.
+                noun.append((start, summary))
         if (
             len(block) == 1
             and summary
@@ -370,7 +396,7 @@ def check_rust_summaries(path):
         ):
             if summary[-1] not in ".:?!":
                 no_period.append((start, summary))
-    return imperative, no_period
+    return imperative, noun, no_period
 
 
 def headings(path):
@@ -474,9 +500,11 @@ def lint(path):
                 hits[rule].append((lineno, line.strip()[:100]))
     hits["british"] = check_british(prose)
     if path.suffix == ".rs":
-        hits["rs-imperative-summary"], hits["rs-oneline-no-period"] = (
-            check_rust_summaries(path)
-        )
+        (
+            hits["rs-imperative-summary"],
+            hits["rs-noun-summary"],
+            hits["rs-oneline-no-period"],
+        ) = check_rust_summaries(path)
     if path.suffix in (".md", ".rst", ".ipynb"):
         hits["heading-then-code"], hits["title-case-heading"] = check_headings(path)
     if path.suffix == ".ipynb":

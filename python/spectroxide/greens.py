@@ -10,6 +10,8 @@ Ported from ``src/greens.rs`` and ``src/spectrum.rs``.
 
 Conventions
 -----------
+This module uses the following conventions:
+
 - Frequency variable: x = h ν / (k_B T_z), dimensionless.
 - Redshift z is dimensionless; ``z_h`` denotes the *injection* redshift.
 - All cosmology routines accept either ``DEFAULT_COSMO`` (Chluba 2013),
@@ -395,6 +397,8 @@ def greens_function(x: ArrayLike, z_h: float) -> NDArray[np.float64]:
 
     Accuracy (compared with PDE)
     ----------------------------
+    Compared with the PDE solver, the accuracy is:
+
     - Deep μ-era (z_h > 2 × 10⁵): spectral shape accurate to <5%.
     - y-era (z_h < 10⁴): spectral shape accurate to <1%.
     - Transition era (z_h ~ 3 × 10⁴–10⁵): ~8–13% shape error.
@@ -1105,7 +1109,7 @@ def greens_function_photon(
         ``(5e4, 2e5)``; otherwise a :class:`ValueError` is raised.
     sigma_x : float, optional
         Intrinsic Gaussian width of the surviving photon line (default 0;
-        the line is still drawn with a minimal width — see above).
+        the line is still drawn with a width of ``0.005 x_inj``).
     number_conserving : bool, optional
         If True, drop the temperature-shift component so the result
         satisfies ``∫ x² G dx ≈ 0`` (CosmoTherm convention for stored
@@ -1223,6 +1227,8 @@ def mu_from_photon_injection(x_inj: float, z_h: float, delta_n_over_n: float) ->
 
     Sign behavior
     --------------
+    The sign of μ depends on the regime:
+
     - ``x_inj > x₀`` and ``P_s ≈ 1``: ``μ > 0`` (energy-dominated).
     - ``x_inj < x₀`` and ``P_s ≈ 1``: ``μ < 0`` (number-dominated).
     - ``P_s ≈ 0`` (soft photons absorbed): ``μ > 0`` always (pure energy

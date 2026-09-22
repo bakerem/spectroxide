@@ -243,7 +243,7 @@ fn interp_log_z(z: f64, z_table: &[f64], val_table: &[f64]) -> f64 {
     val_table[idx] + t * (val_table[idx + 1] - val_table[idx])
 }
 
-/// Bilinear interpolation on a 2D table (z ascending, x ascending).
+/// Interpolates bilinearly on a 2D table (z ascending, x ascending).
 /// Returns 0 outside bounds.
 fn interp_2d(z: f64, x: f64, z_table: &[f64], x_grid: &[f64], source_2d: &[Vec<f64>]) -> f64 {
     if z_table.is_empty() || x_grid.is_empty() {
@@ -459,7 +459,7 @@ pub fn load_photon_source_table(path: &str) -> Result<InjectionScenario, String>
 }
 
 impl InjectionScenario {
-    /// CLI-friendly name for this injection scenario.
+    /// Returns the CLI-friendly name for this injection scenario.
     pub fn name(&self) -> &str {
         match self {
             InjectionScenario::SingleBurst { .. } => "single-burst",
@@ -877,7 +877,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Frequency-dependent photon injection or removal rate.
+    /// Computes the frequency-dependent photon injection or removal rate.
     ///
     /// Returns d(Δn)/dt at frequency x, in units of [1/s].
     /// This is the direct modification to the photon occupation number at
@@ -968,7 +968,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Whether this scenario has frequency-dependent photon injection or depletion.
+    /// Reports whether this scenario has frequency-dependent photon injection or depletion.
     pub fn has_photon_source(&self) -> bool {
         matches!(
             self,
@@ -1036,7 +1036,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Dark-photon NWA parameters (γ_con, z_res), if applicable.
+    /// Returns the dark-photon NWA parameters (γ_con, z_res), if applicable.
     ///
     /// Returns `Some((γ_con, z_res))` for `DarkPhotonResonance`,
     /// `None` for all other scenarios. Returns `None` if the resonance
@@ -1050,7 +1050,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Axion NWA parameters (γ_con, z_res), if applicable.
+    /// Returns the axion NWA parameters (γ_con, z_res), if applicable.
     ///
     /// Returns `Some((γ_con, z_res))` for `AxionResonance`, `None` otherwise
     /// (or if the resonance falls outside the supported redshift range).
@@ -1066,7 +1066,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Axion NWA parameters — always `None` without the `axion` feature.
+    /// Returns the axion NWA parameters — always `None` without the `axion` feature.
     ///
     /// Kept present in both configurations so `resonance_params` and the
     /// solver/CLI warning paths need no `cfg` of their own.
@@ -1075,7 +1075,7 @@ impl InjectionScenario {
         None
     }
 
-    /// True for scenarios that install an impulsive depletion IC at `z_res`:
+    /// Returns true for scenarios that install an impulsive depletion IC at `z_res`:
     /// `DarkPhotonResonance`, plus `AxionResonance` when the `axion` feature is
     /// enabled. Callers use this to distinguish "resonant scenario whose
     /// resonance was not found" from "non-resonant scenario".
@@ -1088,8 +1088,8 @@ impl InjectionScenario {
         }
     }
 
-    /// Impulsive-resonance NWA parameters (γ_con, z_res) for whichever resonant
-    /// channel applies (dark photon or axion), or `None` for other scenarios.
+    /// Returns the impulsive-resonance NWA parameters (γ_con, z_res) for whichever
+    /// resonant channel applies (dark photon or axion), or `None` for other scenarios.
     ///
     /// Both resonant scenarios install a depletion IC at `z_start = z_res`; the
     /// solver and CLI use this to auto-set `z_start` and to hard-error when no
@@ -1099,7 +1099,7 @@ impl InjectionScenario {
             .or_else(|| self.axion_params(cosmo))
     }
 
-    /// Initial-condition perturbation Δn(x) to be installed at `z_start`.
+    /// Returns the initial-condition perturbation Δn(x) to be installed at `z_start`.
     ///
     /// Scenarios that deposit their distortion as an impulsive event (notably
     /// `DarkPhotonResonance`) return `Some(Δn_init)` here; the solver applies
@@ -1138,7 +1138,7 @@ impl InjectionScenario {
         }
     }
 
-    /// Suggest a lower `x_min` for the frequency grid when needed.
+    /// Suggests a lower `x_min` for the frequency grid when needed.
     ///
     /// Low-frequency photon injection can be artificially absorbed by the
     /// Dirichlet boundary at `x_min` if the source support extends below the
@@ -1598,8 +1598,8 @@ mod tests {
         }
     }
 
-    /// `photon_source_rate` for MonochromaticPhotonInjection must match its
-    /// closed-form definition at the peak, not just be "> 1e-20".
+    /// Checks that `photon_source_rate` for MonochromaticPhotonInjection matches its
+    /// closed-form definition at the peak, not just that it is "> 1e-20".
     ///
     /// Oracle:             From Chluba 2015 or the scenario definition, at
     ///                     (x=x_inj, z=z_h) both Gaussians peak and the rate is
@@ -1864,7 +1864,7 @@ mod tests {
         );
     }
 
-    /// `interp_2d` must be *exact* on bilinear data (R2 mutation audit, fix B2).
+    /// Checks that `interp_2d` is *exact* on bilinear data (R2 mutation audit, fix B2).
     ///
     /// Bilinear interpolation reproduces any f(z,x) = a + b z + c x + d z x
     /// identically on a rectilinear grid, so this is an identity check, not a

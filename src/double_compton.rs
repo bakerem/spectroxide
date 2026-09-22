@@ -20,7 +20,7 @@ use crate::constants::*;
 #[cfg(test)]
 use crate::spectrum::planck;
 
-/// DC Gaunt factor in the soft photon limit with relativistic corrections.
+/// Computes the DC Gaunt factor in the soft photon limit with relativistic corrections.
 ///
 /// g_dc(x, θ_z, θ_e) ≈ (I₄^pl / (1 + 14.16 θ_z)) · H_dc(x)
 ///
@@ -36,7 +36,7 @@ pub fn dc_gaunt_factor(x: f64, theta_z: f64) -> f64 {
     I4_PLANCK * dc_relativistic_correction(theta_z) * dc_high_freq_suppression(x)
 }
 
-/// Leading-order relativistic correction to the DC Gaunt factor,
+/// Computes the leading-order relativistic correction to the DC Gaunt factor,
 /// (1 + 14.16 θ_z)⁻¹ (Chluba, Sazonov & Sunyaev 2007).
 ///
 /// Single source of truth: [`dc_gaunt_factor`] and [`dc_prefactor`] both call
@@ -50,7 +50,7 @@ pub fn dc_relativistic_correction(theta_z: f64) -> f64 {
 /// (4α/3π), the numerical prefactor of the DC emission coefficient.
 const DC_ALPHA_COEFF: f64 = 4.0 * ALPHA_FS / (3.0 * std::f64::consts::PI);
 
-/// High-frequency suppression factor for DC emission.
+/// Computes the high-frequency suppression factor for DC emission.
 ///
 /// H_dc^pl(x) ≈ exp(-2x) [1 + 3x/2 + 29x²/24 + 11x³/16 + 5x⁴/12]
 ///
@@ -65,7 +65,7 @@ pub fn dc_high_freq_suppression(x: f64) -> f64 {
     (-2.0 * x).exp() * (1.0 + x * (1.5 + x * (29.0 / 24.0 + x * (11.0 / 16.0 + x * (5.0 / 12.0)))))
 }
 
-/// DC emission coefficient K_DC(x, θ_z, θ_e).
+/// Computes the DC emission coefficient K_DC(x, θ_z, θ_e).
 ///
 /// K_DC = (4α/3π) θ_z² g_dc(x, θ_z, θ_e)
 ///
@@ -89,7 +89,7 @@ pub fn dc_prefactor(theta_z: f64) -> f64 {
     DC_ALPHA_COEFF * theta_z * theta_z * I4_PLANCK * dc_relativistic_correction(theta_z)
 }
 
-/// Fast DC emission coefficient using precomputed x-independent prefactor.
+/// Computes the fast DC emission coefficient using precomputed x-independent prefactor.
 #[inline]
 pub fn dc_emission_coefficient_fast(x: f64, dc_pre: f64) -> f64 {
     dc_pre * dc_high_freq_suppression(x)
@@ -180,7 +180,7 @@ mod tests {
         );
     }
 
-    /// Detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
+    /// Checks detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
     ///
     /// DC emission and absorption must cancel identically when the photon field
     /// is a Planck spectrum at the electron temperature, for any ρ_e. In the
@@ -288,7 +288,7 @@ mod tests {
         );
     }
 
-    /// DC Gaunt factor at moderate x: verify H_dc against manually computed polynomial.
+    /// Checks the DC Gaunt factor at moderate x against a manually computed polynomial for H_dc.
     ///   H_dc(x) = e^{-2x} (1 + 3x/2 + 29x²/24 + 11x³/16 + 5x⁴/12)
     #[test]
     fn test_dc_gaunt_factor_at_specific_x_values() {
@@ -389,7 +389,7 @@ mod tests {
         );
     }
 
-    /// K_DC must be one implementation, not two (R2 mutation audit, fix A1).
+    /// Checks that K_DC has one implementation, not two (R2 mutation audit, fix A1).
     ///
     /// `dc_emission_coefficient` (used by `greens.rs` and `kompaneets.rs`) and
     /// `dc_prefactor` × `dc_high_freq_suppression` (the solver hot loop, which
@@ -415,7 +415,7 @@ mod tests {
         }
     }
 
-    /// The DC relativistic correction (1 + 14.16 θ_z)⁻¹ must actually be applied.
+    /// Checks that the DC relativistic correction (1 + 14.16 θ_z)⁻¹ is actually applied.
     ///
     /// Every pre-audit Gaunt test passed `theta_z = 0.0`, where the correction is
     /// identically 1, so replacing `/` with `*` and `+` with `-` inside it would go
@@ -463,7 +463,7 @@ mod tests {
         );
     }
 
-    /// Absolute value of K_DC, derived by hand from CS2012 Eq. 13 rather than
+    /// Checks the absolute value of K_DC, derived by hand from CS2012 Eq. 13 rather than
     /// read off code output (CLAUDE.md pitfall #9).
     ///
     /// At z = 10⁶ (θ_z = 4.5971×10⁻⁴), x = 1:

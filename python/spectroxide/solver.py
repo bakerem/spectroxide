@@ -7,6 +7,8 @@ single-injection calculations using the pure-Python Green's function module.
 
 Conventions
 -----------
+This module uses the following conventions:
+
 - ``Δρ/ρ`` is the fractional energy injection in the photon background.
 - ``ΔN/N`` is the fractional photon-number perturbation (photon injection).
 - Injection scenarios are passed as a dict with a ``"type"`` key; see
@@ -1138,6 +1140,8 @@ def run_single(
 
     Two modes of operation
     ----------------------
+    ``run_single`` supports two modes of operation.
+
     **Single burst** (default) — provide ``z_h`` and ``delta_rho`` for a
     delta-function energy injection at one redshift, evaluated with the
     analytic Green's function (Chluba 2013 visibility fits).  The heat
@@ -1369,7 +1373,7 @@ def solve(
             {"type": "dark_photon_resonance", "epsilon": 1e-9, "m_ev": 1e-7}
 
         and for axions (``g_agamma`` in GeV⁻¹, ``b_rms`` in nG; requires the
-        ``axion`` feature, see above)::
+        ``axion`` feature, as described for ``"axion_resonance"``)::
 
             {"type": "axion_resonance", "g_agamma": 1e-10, "b_rms": 1, "m_ev": 1e-7}
 

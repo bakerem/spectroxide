@@ -146,8 +146,8 @@ pub const X_BALANCED: f64 = 4.0 / (3.0 * ALPHA_RHO); // ≈ 3.60
 /// μ-era thermalization redshift (Chluba 2013, MNRAS 434, 352).
 pub const Z_MU: f64 = 1.98e6;
 
-/// Dimensionless temperature at the *default* cosmic microwave background temperature
-/// T_CMB_0 = 2.726 K.
+/// Computes the dimensionless temperature at the *default* cosmic microwave background
+/// temperature T_CMB_0 = 2.726 K.
 ///
 /// Convenience helper for tests and quick calculations. Production code must
 /// use [`crate::cosmology::Cosmology::theta_z`] so that a user-supplied T_CMB

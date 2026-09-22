@@ -201,7 +201,7 @@ pub struct SolverSnapshot {
 }
 
 impl SolverSnapshot {
-    /// Brightness-temperature deviation `T(x)/T_CMB − 1` on the given grid.
+    /// Computes the brightness-temperature deviation `T(x)/T_CMB − 1` on the given grid.
     pub fn brightness_temp(&self, x_grid: &[f64]) -> Vec<f64> {
         x_grid
             .iter()
@@ -2005,7 +2005,7 @@ impl SolverBuilder {
 mod tests {
     use super::*;
 
-    /// The analytic dH/dρ_e in `dcbr_heating_with_derivative` must match a
+    /// Checks that the analytic dH/dρ_e in `dcbr_heating_with_derivative` matches a
     /// central finite difference of the heating integral itself, built here
     /// from two derivative-free calls at θ_z(ρ_e ± δ). This is the guard for
     /// the analytic derivative that replaced the original FD implementation:
@@ -2405,7 +2405,7 @@ mod tests {
         }
     }
 
-    /// `.disable_dcbr()` produces the un-thermalized μ = 1.401 × Δρ/ρ exactly
+    /// Checks that `.disable_dcbr()` produces the un-thermalized μ = 1.401 × Δρ/ρ exactly
     /// — no J_bb* suppression because DC/BR photon creation is off.
     ///
     /// Oracle:             pure Kompaneets (no photon sources): energy conserved,

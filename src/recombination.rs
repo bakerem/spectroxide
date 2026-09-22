@@ -5,6 +5,8 @@
 //!
 //! ## Physical picture
 //!
+//! The ionization history has these stages:
+//!
 //! - z > 8000: Fully ionized (H and He). Helium is doubly ionized (He²⁺).
 //! - z ~ 6000: He²⁺ recombines to He⁺ (54.4 eV Saha).
 //! - z ~ 2000: He⁺ recombines to He (24.6 eV Saha).
@@ -15,7 +17,8 @@
 //!
 //! ## Implementation
 //!
-//! Follows DarkHistory's three-level atom structure (Hongwan Liu et al. 2020):
+//! The module follows DarkHistory's three-level atom structure (Hongwan Liu et al. 2020):
+//!
 //! - `alpha_recomb`: Case-B recombination coefficient (Péquignot fit)
 //! - `beta_ion`: Photoionization rate from n=2
 //! - `peebles_c`: Peebles C factor decomposed into competing rates
@@ -38,7 +41,7 @@ use crate::cosmology::Cosmology;
 
 // --- Helium recombination (Saha equilibrium) ---
 
-/// Thermal de Broglie factor: (m_e k_B T / (2π ℏ²))^{3/2} [m⁻³].
+/// Computes the thermal de Broglie factor (m_e k_B T / (2π ℏ²))^{3/2} [m⁻³].
 ///
 /// This appears in every Saha equation as the density of states
 /// for a free electron.
@@ -75,7 +78,7 @@ fn solve_saha_linear(s: f64) -> f64 {
     }
 }
 
-/// He II → He I Saha ionization fraction (54.4 eV).
+/// Computes the He II → He I Saha ionization fraction (54.4 eV).
 ///
 /// Returns the fraction of helium that is doubly ionized (He²⁺).
 /// Statistical weight ratio: g(He²⁺)g(e)/g(He⁺) = 1×2/2 = 1.
@@ -107,7 +110,7 @@ pub fn saha_he_ii(z: f64, cosmo: &Cosmology) -> f64 {
     solve_saha_linear(s)
 }
 
-/// He I → He Saha ionization fraction (24.6 eV).
+/// Computes the He I → He Saha ionization fraction (24.6 eV).
 ///
 /// Returns the fraction of helium that is at least singly ionized (He⁺ or He²⁺).
 /// Statistical weight ratio: g(He⁺)g(e)/g(He) = 2×2/1 = 4.
@@ -134,7 +137,7 @@ pub fn saha_he_i(z: f64, cosmo: &Cosmology) -> f64 {
     solve_saha_linear(s)
 }
 
-/// Helium electron contribution: free electrons per H atom from He.
+/// Computes the helium electron contribution: free electrons per H atom from He.
 ///
 /// x_He = f_He × (y_HeI + 2 × y_HeII)
 /// where y_HeII is the doubly-ionized fraction and y_HeI is the singly-ionized fraction.
@@ -150,7 +153,7 @@ pub fn helium_electron_fraction(z: f64, cosmo: &Cosmology) -> f64 {
 
 // --- Hydrogen recombination (Saha + Peebles TLA) ---
 
-/// Hydrogen Saha ionization fraction.
+/// Computes the hydrogen Saha ionization fraction.
 ///
 /// Solves X_e²N_H / (1−X_e) = (m_e k_B T / 2πℏ²)^{3/2} exp(−E_Rydberg/kT)
 /// for X_e.
@@ -162,7 +165,7 @@ pub fn saha_hydrogen(z: f64, cosmo: &Cosmology) -> f64 {
     solve_saha_quadratic(s)
 }
 
-/// Case-B recombination coefficient α_B(T) [m³/s].
+/// Computes the case-B recombination coefficient α_B(T) [m³/s].
 ///
 /// Péquignot, Petitjean & Boisson (1991) fitting formula with
 /// fudge factor F = 1.125 (Chluba & Thomas 2011):
@@ -183,7 +186,7 @@ fn alpha_recomb(t: f64) -> f64 {
     f * 1e-19 * 4.309 * tt.powf(-0.6166) / (1.0 + 0.6703 * tt.powf(0.5300))
 }
 
-/// Photoionization rate from n=2 level [s⁻¹].
+/// Computes the photoionization rate from the n=2 level [s⁻¹].
 ///
 /// From detailed balance with the radiation field at temperature T_CMB:
 ///
@@ -200,7 +203,7 @@ fn beta_ion(t_rad: f64) -> f64 {
     alpha * thermal_de_broglie(t_rad) * (-E_ION_N2 / (K_BOLTZMANN * t_rad)).exp()
 }
 
-/// Peebles C factor: fraction of excited atoms that reach the ground state.
+/// Computes the Peebles C factor: the fraction of excited atoms that reach the ground state.
 ///
 /// Decomposition into competing rates:
 ///
@@ -279,7 +282,7 @@ fn peebles_rhs(z: f64, x_h: f64, cosmo: &Cosmology) -> f64 {
     rhs_factor * (x_h * x_h - saha_term)
 }
 
-/// Single trapezoidal (Heun's method) step of the Peebles ODE.
+/// Takes a single trapezoidal (Heun's method) step of the Peebles ODE.
 ///
 /// Steps x_h from z_prev = z_new + dz down to z_new:
 ///
@@ -319,7 +322,7 @@ fn find_saha_switch(cosmo: &Cosmology) -> f64 {
     1500.0
 }
 
-/// Ionization fraction X_e(z) with Peebles TLA correction.
+/// Computes the ionization fraction X_e(z) with the Peebles TLA correction.
 ///
 /// Returns the total free electron fraction (hydrogen and helium) per
 /// hydrogen atom.
@@ -682,7 +685,7 @@ mod tests {
         }
     }
 
-    /// X_e through the helium recombination epoch, against the same HyRec-2
+    /// Checks X_e through the helium recombination epoch against the same HyRec-2
     /// run (R2 mutation audit, fix B4).
     ///
     /// The milestone test above probes only z = 1100/800/200 — all hydrogen-
@@ -693,8 +696,9 @@ mod tests {
     /// He window z ≈ 1800–2500, so X_e there feeds a published figure directly.
     ///
     /// HyRec-2 values read from dev/output/hyrec2_xe_default_cosmo.dat (same run
-    /// and cosmology as above). Bands follow the measured per-band disagreement
-    /// in xe_hyrec_comparison.md with ~1.5× slack: ≤0.14% for 3000–5000 (He²⁺/He⁺
+    /// and cosmology as `test_xe_vs_recfast_milestones`). Bands follow the measured
+    /// per-band disagreement in xe_hyrec_comparison.md with ~1.5× slack: ≤0.14% for
+    /// 3000–5000 (He²⁺/He⁺
     /// Saha, where both codes are in equilibrium) and 5.7% at z≈2300 (this code's Saha
     /// against HyRec's non-equilibrium He⁺→He⁰ — HyRec recombines later, the expected
     /// direction).

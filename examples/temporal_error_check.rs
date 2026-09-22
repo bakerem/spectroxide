@@ -1,5 +1,5 @@
-//! One-off: measure the temporal discretization error of μ at the DEFAULT
-//! dy_max = 0.02 directly (no extrapolation), against a dy_max = 0.001
+//! One-off: measure the temporal discretization error of μ at the default
+//! `dy_max = 0.02` directly (no extrapolation), against a dy_max = 0.001
 //! reference. Scenario matches tests/convergence_order.rs::run_full_physics.
 
 use spectroxide::prelude::*;

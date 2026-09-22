@@ -177,7 +177,7 @@ impl Cosmology {
         }
     }
 
-    /// Planck 2015 cosmological parameters (Planck XIII, Table 4).
+    /// Creates the Planck 2015 cosmological parameters (Planck XIII, Table 4).
     ///
     /// `T_CMB = 2.7255 K` is the paper / Fixsen (2009) monopole value. This is
     /// the general-purpose Planck-2015 preset and matches the Python
@@ -190,7 +190,7 @@ impl Cosmology {
         Self::new_unchecked(2.7255, 0.02225, 0.1198, 0.6727, 3.046, 0.2467)
     }
 
-    /// Planck-2015 parameters with the CosmoTherm `T_CMB = 2.726 K`
+    /// Creates the Planck-2015 parameters with the CosmoTherm `T_CMB = 2.726 K`
     /// convention (Fixsen 1996, baked into CosmoTherm v1.0.3 DI files).
     ///
     /// Identical to [`Cosmology::planck2015`] except for `T_CMB`. Use this for
@@ -200,56 +200,56 @@ impl Cosmology {
         Self::new_unchecked(2.726, 0.02225, 0.1198, 0.6727, 3.046, 0.2467)
     }
 
-    /// Planck 2018 cosmological parameters (Planck Collaboration VI, 2020).
+    /// Creates the Planck 2018 cosmological parameters (Planck Collaboration VI, 2020).
     pub fn planck2018() -> Self {
         // omega_b = Omega_b * h^2 = 0.04930 * 0.6736^2 = 0.02237
         // omega_cdm = (Omega_m - Omega_b) * h^2 = (0.3153 - 0.04930) * 0.6736^2 = 0.1200
         Self::new_unchecked(2.7255, 0.02237, 0.1200, 0.6736, 3.044, 0.2454)
     }
 
-    /// H₀ in 1/s.
+    /// Returns H₀ in 1/s.
     #[inline]
     pub fn h0(&self) -> f64 {
         self.cached_h0
     }
 
-    /// Ω_b = ω_b / h².
+    /// Returns Ω_b = ω_b / h².
     #[inline]
     pub fn omega_b_frac(&self) -> f64 {
         self.cached_omega_b_frac
     }
 
-    /// Ω_cdm = ω_cdm / h².
+    /// Returns Ω_cdm = ω_cdm / h².
     #[inline]
     pub fn omega_cdm_frac(&self) -> f64 {
         self.cached_omega_cdm_frac
     }
 
-    /// Ω_m = Ω_b + Ω_cdm.
+    /// Returns Ω_m = Ω_b + Ω_cdm.
     #[inline]
     pub fn omega_m(&self) -> f64 {
         self.cached_omega_m
     }
 
-    /// Ω_γ (photon density parameter).
+    /// Returns Ω_γ (photon density parameter).
     #[inline]
     pub fn omega_gamma(&self) -> f64 {
         self.cached_omega_gamma
     }
 
-    /// Ω_rel (all relativistic species: photons and neutrinos).
+    /// Returns Ω_rel (all relativistic species: photons and neutrinos).
     #[inline]
     pub fn omega_rel(&self) -> f64 {
         self.cached_omega_rel
     }
 
-    /// Ω_Λ = 1 - Ω_m - Ω_rel (flat universe).
+    /// Returns Ω_Λ = 1 - Ω_m - Ω_rel (flat universe).
     #[inline]
     pub fn omega_lambda(&self) -> f64 {
         self.cached_omega_lambda
     }
 
-    /// E(z) = H(z)/H₀ = sqrt(Ω_m(1+z)³ + Ω_rel(1+z)⁴ + Ω_Λ).
+    /// Computes E(z) = H(z)/H₀ = sqrt(Ω_m(1+z)³ + Ω_rel(1+z)⁴ + Ω_Λ).
     #[inline]
     pub fn e_of_z(&self, z: f64) -> f64 {
         let opz = 1.0 + z;
@@ -259,75 +259,75 @@ impl Cosmology {
             .sqrt()
     }
 
-    /// Dimensionless photon temperature: θ_z(z) = k_B T_z / (m_e c²)
+    /// Computes the dimensionless photon temperature: θ_z(z) = k_B T_z / (m_e c²)
     /// Uses this cosmology's T_CMB rather than the hardcoded default.
     #[inline]
     pub fn theta_z(&self, z: f64) -> f64 {
         crate::constants::K_BOLTZMANN * self.t_cmb * (1.0 + z) / crate::constants::M_E_C2
     }
 
-    /// Hubble rate H(z) in 1/s.
+    /// Computes the Hubble rate H(z) in 1/s.
     #[inline]
     pub fn hubble(&self, z: f64) -> f64 {
         self.cached_h0 * self.e_of_z(z)
     }
 
-    /// dt/dz in seconds.
+    /// Computes dt/dz in seconds.
     pub fn dt_dz(&self, z: f64) -> f64 {
         -1.0 / (self.hubble(z) * (1.0 + z))
     }
 
-    /// Matter-radiation equality redshift.
+    /// Returns the matter-radiation equality redshift.
     pub fn z_eq(&self) -> f64 {
         self.cached_omega_m / self.cached_omega_rel - 1.0
     }
 
-    /// Hydrogen number density at z [1/m³]
+    /// Returns the hydrogen number density at z [1/m³]:
     /// N_H = (1 - Y_p) ρ_b / m_p
     #[inline]
     pub fn n_h(&self, z: f64) -> f64 {
         self.cached_n_h_prefactor * (1.0 + z).powi(3)
     }
 
-    /// Helium number density at z [1/m³]
+    /// Returns the helium number density at z [1/m³]:
     /// N_He = Y_p / (4(1-Y_p)) × N_H
     #[inline]
     pub fn n_he(&self, z: f64) -> f64 {
         self.cached_f_he * self.n_h(z)
     }
 
-    /// Helium-to-hydrogen ratio f_He = Y_p / (4(1-Y_p)).
+    /// Returns the helium-to-hydrogen ratio f_He = Y_p / (4(1-Y_p)).
     #[inline]
     pub fn f_he(&self) -> f64 {
         self.cached_f_he
     }
 
-    /// Free electron density at z (1/m³), given ionization fraction X_e.
+    /// Returns the free electron density at z (1/m³), given the ionization fraction X_e.
     #[inline]
     pub fn n_e(&self, z: f64, x_e: f64) -> f64 {
         x_e * self.n_h(z)
     }
 
-    /// Thomson scattering time t_C = 1/(σ_T N_e c), in s.
+    /// Returns the Thomson scattering time t_C = 1/(σ_T N_e c), in s.
     #[inline]
     pub fn t_compton(&self, z: f64, x_e: f64) -> f64 {
         1.0 / (SIGMA_THOMSON * self.n_e(z, x_e) * C_LIGHT)
     }
 
-    /// Photon energy density ρ_γ at z [J/m³].
+    /// Returns the photon energy density ρ_γ at z [J/m³].
     #[inline]
     pub fn rho_gamma(&self, z: f64) -> f64 {
         self.cached_rho_gamma_0 * (1.0 + z).powi(4)
     }
 
-    /// Photon number density n_γ at z [1/m³].
+    /// Returns the photon number density n_γ at z [1/m³].
     pub fn n_gamma(&self, z: f64) -> f64 {
         // n_γ = (2ζ(3)/π²) (kT/ℏc)³
         let kt_over_hbar_c = K_BOLTZMANN * self.t_cmb * (1.0 + z) / (HBAR * C_LIGHT);
         2.0 * ZETA_3 / std::f64::consts::PI.powi(2) * kt_over_hbar_c.powi(3)
     }
 
-    /// Baryon-to-photon energy density ratio R(z) = 3ρ_b/(4ρ_γ).
+    /// Returns the baryon-to-photon energy density ratio R(z) = 3ρ_b/(4ρ_γ).
     ///
     /// In the tight-coupling limit this sets the sound speed:
     ///   c_s² = 1 / (3(1+R)).
@@ -336,7 +336,7 @@ impl Cosmology {
         self.cached_baryon_photon_prefactor / (1.0 + z)
     }
 
-    /// Compton y-parameter integrated from z' = 0 to z.
+    /// Computes the Compton y-parameter integrated from z' = 0 to z.
     ///
     /// y_C(z) = ∫₀ᶻ (kT_e / m_e c²) × σ_T n_e c / ((1+z') H(z')) dz'
     ///
@@ -353,7 +353,7 @@ impl Cosmology {
         self.compton_y_parameter_with_recomb(z, &recomb)
     }
 
-    /// Compton y-parameter with a pre-built RecombinationHistory.
+    /// Computes the Compton y-parameter with a pre-built RecombinationHistory.
     ///
     /// Use this variant in loops to avoid rebuilding the recombination
     /// table (~3000 ordinary differential equation steps) on every call.
@@ -403,7 +403,7 @@ impl Cosmology {
         result
     }
 
-    /// Cosmic time t(z) by numerical integration, in s.
+    /// Computes the cosmic time t(z) by numerical integration, in s.
     ///
     /// Integrates from z_upper (≈ 10^9) down to z.
     pub fn cosmic_time(&self, z: f64) -> f64 {
@@ -427,7 +427,7 @@ impl Cosmology {
 }
 
 impl Default for Cosmology {
-    /// Default parameters matching Chluba (2013) Green's function paper.
+    /// Returns the default parameters, matching the Chluba (2013) Green's function paper.
     ///
     /// These are intentionally not the latest Planck values. The defaults
     /// match Chluba (2013) / CosmoTherm v1.0.3 (Y_p=0.24, T₀=2.726 K,

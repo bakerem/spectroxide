@@ -320,7 +320,7 @@ const COSMO_KEYS: &[&str] = &[
 /// Flags consumed by [`parse_output_opts`].
 const OUTPUT_KEYS: &[&str] = &["--format", "--output"];
 
-/// Injection-scenario parameter flags accepted by `solve <injection-type>`.
+/// Returns the injection-scenario parameter flags accepted by `solve <injection-type>`.
 /// Must stay in sync with [`build_injection_scenario`].
 fn injection_param_keys(injection_type: &str) -> Option<&'static [&'static str]> {
     match injection_type {
@@ -344,7 +344,7 @@ fn injection_param_keys(injection_type: &str) -> Option<&'static [&'static str]>
     }
 }
 
-/// Levenshtein edit distance, used only for "did you mean" suggestions.
+/// Computes the Levenshtein edit distance, used only for "did you mean" suggestions.
 fn edit_distance(a: &str, b: &str) -> usize {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
@@ -879,7 +879,7 @@ pub fn print_help() {
     println!("  spectroxide info --cosmology planck2018");
 }
 
-/// Shared SOLVER OPTIONS help block (all PDE subcommands).
+/// Prints the shared SOLVER OPTIONS help block (all PDE subcommands).
 fn print_solver_options_help() {
     println!("SOLVER OPTIONS:");
     println!("  --z-start <z>         Starting redshift. Default: 5e6 for solve (or z_res for");
@@ -906,7 +906,7 @@ fn print_solver_options_help() {
     println!("  --dn-planck <val>     Initial Planck-shaped Delta n amplitude at z_start");
 }
 
-/// Shared COSMOLOGY help block.
+/// Prints the shared COSMOLOGY help block.
 fn print_cosmo_options_help() {
     println!("COSMOLOGY:");
     println!("  --cosmology <preset>  default, planck2015, planck2018 (flags below override it)");
@@ -918,7 +918,7 @@ fn print_cosmo_options_help() {
     println!("  --t-cmb <K>           CMB temperature today in kelvin");
 }
 
-/// Shared OUTPUT help block.
+/// Prints the shared OUTPUT help block.
 fn print_output_options_help() {
     println!("OUTPUT:");
     println!("  --format json|csv|table  Output format (default json)");
@@ -1245,8 +1245,8 @@ pub fn execute_greens(opts: &GreensOpts) -> Result<GreensResult, String> {
     })
 }
 
-/// Validity-range warnings for the analytic Green's function, keyed to the
-/// injection redshift. The three z-regime thresholds (5e6, 3e6, 1100) mirror
+/// Returns the validity-range warnings for the analytic Green's function, keyed
+/// to the injection redshift. The three z-regime thresholds (5e6, 3e6, 1100) mirror
 /// `warn_z_h_regime` in the Python package's `_validation.py`; the μ–y
 /// transition band mirrors `warn_analytic_gf_heating` (3e4 < z < 2e5).
 fn greens_regime_warnings(z_h: f64) -> Vec<String> {
@@ -1358,7 +1358,7 @@ fn dedup_keep_order(items: Vec<String>) -> Vec<String> {
     out
 }
 
-/// Diagnostic-flag warnings collected as plain strings for inclusion in the
+/// Collects the diagnostic-flag warnings as plain strings for inclusion in the
 /// CLI result `warnings` array. Each flag is intended for sensitivity probes,
 /// not production runs; bury this in stderr too so notebook users see it.
 fn diagnostic_flag_warnings(solver_opts: &SolverOpts) -> Vec<String> {
@@ -1466,8 +1466,8 @@ fn validate_and_collect_warnings(
 /// `--delta-rho` or the `--dn-planck` amplitude is not a finite number; if the injection type
 /// is unknown or its parameters fail `InjectionScenario::validate`; if a resonant-conversion
 /// scenario has no resonance redshift in [50, 3e6]; if the solver or grid configuration fails
-/// validation; or if `z_start` lies below, or `z_end` above, the upper edge of the injection
-/// window, so that the solve would miss the injection.
+/// validation; or if the upper edge of the injection window lies outside [`z_end`, `z_start`],
+/// so that the solve would miss the injection.
 pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     let cosmo = build_cosmology(&opts.cosmo)?;
     let delta_rho: f64 = opts

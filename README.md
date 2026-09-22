@@ -12,6 +12,8 @@ spectroxide solves the coupled photon-electron Boltzmann equation including Comp
 
 ## Features
 
+spectroxide provides:
+
 - **Full PDE solver** in Rust: implicit Kompaneets and coupled double Compton (DC) and bremsstrahlung (BR) with adaptive stepping
 - **Green's function** mode for fast approximate calculations (pure Python, no compilation needed)
 - **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave or p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating through the Rust API)

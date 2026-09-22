@@ -24,15 +24,15 @@ Primordial Inflation Explorer (:term:`PIXIE`).
    :widths: 5 40
    :header-rows: 0
 
-   * - **01**
-     - **Getting started** --- Green's function basics, first PDE runs, PDE versus GF comparison.
-   * - **02**
-     - **Energy injection** --- Decaying particles, DM annihilation (s-wave, p-wave), amplitude scaling.
-   * - **03**
-     - **New physics** --- Dark photon oscillation, monochromatic photon injection, :math:`\mu` sign flip.
-   * - **04**
-     - **Custom scenarios** --- Tabulated heating histories, custom injection closures.
-   * - **05**
-     - **Observational constraints** --- FIRAS and PIXIE limits, :math:`\mu`--:math:`y` exclusion plane, mock PIXIE observation.
-   * - **06**
-     - **Green's function tables** --- Precomputed PDE-based tables for fast convolution.
+   * - 01
+     - Getting started --- Green's function basics, first PDE runs, PDE versus GF comparison.
+   * - 02
+     - Energy injection --- Decaying particles, DM annihilation (s-wave, p-wave), amplitude scaling.
+   * - 03
+     - New physics --- Dark photon oscillation, monochromatic photon injection, :math:`\mu` sign flip.
+   * - 04
+     - Custom scenarios --- Tabulated heating histories, custom injection closures.
+   * - 05
+     - Observational constraints --- FIRAS and PIXIE limits, :math:`\mu`--:math:`y` exclusion plane, mock PIXIE observation.
+   * - 06
+     - Green's function tables --- Precomputed PDE-based tables for fast convolution.

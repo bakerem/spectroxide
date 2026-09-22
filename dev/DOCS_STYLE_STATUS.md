@@ -14,6 +14,7 @@ A fresh session resumes from the first unchecked box below.
 - [x] Phase 6. House style recorded in `CONTRIBUTING.md`; `CLAUDE.md` script list updated (2026-09-21). CI wiring left for EB: `docs_style_lint.py --check` exits 1 on any hit
 - [x] Phase 7. `firas.py` keyword names (2026-09-21): American names, British names are deprecated aliases
 - [x] Phase 8. Independent re-review (2026-09-21): run; HIGH criterion met after fixes, MEDIUM criterion NOT met (see the log)
+- [x] Phase 9. MEDIUM residue (2026-09-22): lint rules `rs-noun-summary` (145 to 0) and `position-word` (9 to 0); F6, T14, L1, L2 rows of the re-review applied in Sphinx pages, Python, Rust, and the tutorial notebooks
 
 ## Open decisions (EB)
 
@@ -106,7 +107,34 @@ The five project-wide exceptions are listed in `CONTRIBUTING.md`, section "Docum
 - One British spelling inside a notebook code-cell comment (tutorial 04); code cells are not edited.
 - `//` (non-doc) Rust comments are out of scope and not linted.
 
+## CI toolchain drift (2026-09-21)
+
+The two red runs on `main` (2026-09-16 Clippy `needless_late_init`; 2026-09-17 `black --check` on `greens.py`) were both
+fixed by the next commit, and the latest `main` run (2662954) is green on all seven jobs. The cause is that `ci.yml` uses the
+floating `stable` Rust toolchain and an unpinned `black`, while the local machine had Rust 1.93 and black 26.3. Before pushing
+this branch, run the checks with the CI versions: Rust 1.98 (`rustup toolchain install 1.98.0` plus the `rustfmt` and `clippy`
+components; `cargo +1.98.0 clippy --all-targets -- -D warnings`, with and without `--features axion`; `cargo +1.98.0 fmt
+--check`) and the newest black in a scratch venv (`pip install -U black; python -m black --check python/spectroxide/`). All of
+these passed on this branch at 9670179. Pinning `black` in `ci.yml` and `pyproject.toml` would remove the second failure class;
+left for EB.
+
 ## Log
+
+- 2026-09-22: phase 9 done. Two lint rules added to `docs_style_lint.py`: `rs-noun-summary` (a `fn` summary whose first word
+  is not a third-person form of a verb in `IMPERATIVE_VERBS`; 145 hits, now 0) and `position-word` ("above"/"below" after a
+  pointer word, after "the", after "table"/"figure"/..., or closing a clause; 9 hits, now 0; a comparison such as "below
+  z = 1e4" is not matched). Verbs added to the table: suggest. The 145 summaries were rewritten by four subagents and by hand
+  after the subagents stalled on API errors; every rewrite keeps the original wording after the verb ("Returns the ...",
+  "Computes the ...", "Checks that ..." for tests, "Runs the ..." for Miri kernels). From the re-review: F6 (bold or caps
+  for emphasis) in `docs/tutorials/index.rst` table, `kompaneets.rs`, `temporal_error_check.rs`, and the notebooks; T14
+  fragments in `docs/api/axion.rst`, `docs/api/dark_photon.rst`, and the notebooks; L1 numbered-set lists in `axion.rst`,
+  `src/axion.rs`, and `docs/api/solver.rst` (the two callable-property lists are now reST definition lists); L2 lead
+  sentences in `_validation.py`, `greens.py` (3), `solver.py` (2), `greens_table.py`, `src/recombination.rs` (2). One new
+  house rule in `CONTRIBUTING.md` (no "above"/"below" as page positions). Not done, on purpose: agentless passives (T2),
+  which the plan excluded. Checks: lint all zero; Clippy, rustdoc (`-D warnings`), fmt and 3 doctests with Rust 1.98 in both
+  configurations; black 26.3 and 26.5 clean; Sphinx 0 warnings; pytest 345; zero non-doc Rust lines changed; Python AST with
+  docstrings stripped identical for the three package modules; notebook code cells and outputs identical to HEAD (see the
+  per-notebook proof in the commit message). No second fresh re-review has been run after phase 9.
 
 - 2026-09-21: phase 8 done. Nine fresh reviewers (no access to the plan, the first review, the lint, or git history) applied the
   same rubric. Reports: `dev/audit/docs_style_rereview_2026-09-21/`.

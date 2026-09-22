@@ -229,7 +229,7 @@ pub fn thomas_solve_inplace(
     }
 }
 
-/// Factorizes once, solve two right-hand sides against the SAME tridiagonal
+/// Factorizes once and solves two right-hand sides against the *same* tridiagonal
 /// matrix.
 ///
 /// The bordered Newton solve needs `T·u = r` and `T·v = c` with identical `T`.
@@ -357,7 +357,7 @@ pub fn kompaneets_step(
     thomas_solve(&lhs_lower, &lhs_diag, &lhs_upper, &mut rhs)
 }
 
-/// Performs one implicit step of the NONLINEAR Kompaneets equation on Δn.
+/// Performs one implicit step of the nonlinear Kompaneets equation on Δn.
 ///
 /// Allocating convenience wrapper around the inplace solver. Used by tests;
 /// production code calls `kompaneets_step_coupled_inplace` directly.
@@ -567,7 +567,7 @@ pub struct DcbrCoupling<'a> {
     pub cn_dcbr: bool,
 }
 
-/// In-place Kompaneets and DC/BR step using pre-allocated workspace.
+/// Takes one Kompaneets and DC/BR step in place, using pre-allocated workspace.
 ///
 /// Modifies `delta_n` from old values to new values.
 /// Identical physics to `kompaneets_step_nonlinear_coupled` but avoids
@@ -1226,8 +1226,8 @@ mod tests {
         );
     }
 
-    /// Quantitative Kompaneets check in the y-regime: injecting energy through
-    /// T_e > T_z for one Thomson time should produce Δρ/ρ ≈ 4·y·G₃ where
+    /// Checks the Kompaneets step quantitatively in the y-regime: injecting energy
+    /// through T_e > T_z for one Thomson time should produce Δρ/ρ ≈ 4·y·G₃ where
     /// y = (θ_e − θ_z)·dτ is the standard y-parameter. This catches
     /// order-of-magnitude errors in the flux split, grid geometry, or time
     /// centring that the sign-only `test_kompaneets_te_gt_tz_positive_drho_all_solvers`
@@ -1268,7 +1268,7 @@ mod tests {
         );
     }
 
-    /// When T_e > T_z, all Kompaneets solver variants must produce Δρ/ρ > 0
+    /// Checks that, when T_e > T_z, all Kompaneets solver variants produce Δρ/ρ > 0
     /// (energy flows from electrons to photons through upscattering).
     /// Tests CN (kompaneets_step), backward Euler (kompaneets_tridiagonal and Thomas),
     /// and nonlinear (kompaneets_step_nonlinear) in a single test.
@@ -1322,7 +1322,7 @@ mod tests {
     /// pitfall #1). The flux is written as
     ///   F = x⁴[(φ−1) n_pl(1+n_pl) + dΔn/dx + φ(2n_pl+1)Δn + φΔn²]
     /// so that with Δn = 0 and T_e = T_z (⇒ φ = 1), every term is identically
-    /// zero BEFORE any finite differences touch n_pl. A naive flux that kept
+    /// zero before any finite differences touch n_pl. A naive flux that kept
     /// dn_pl/dx and +φ n_pl(1+n_pl) as separate pieces would leak O(dx²) ~ 10⁻⁴
     /// per point after the divergence, amplified by θ_e/x² at small x —
     /// ~1000× the physical y-signal ~10⁻⁵.
@@ -1330,7 +1330,7 @@ mod tests {
     /// Two probes:
     ///   (a) Δn = 0, T_e = T_z  →  rhs = 0 to machine precision.
     ///   (b) Δn = 0, T_e = T_z·(1+ε), ε = 1e-8  →  rhs scales linearly with ε
-    ///       (the (φ−1) source is the ONLY nonzero piece).
+    ///       (the (φ−1) source is the only nonzero piece).
     #[test]
     fn test_kompaneets_rhs_planck_cancellation() {
         let grid = FrequencyGrid::log_uniform(1e-3, 30.0, 500);
@@ -1576,8 +1576,8 @@ mod tests {
     // are tiny, so this does not violate the release-only rule that exists for
     // the *full* suite). See dev/audit/highprec_numerics.md R4.2.
 
-    /// Thomas solver over a ~40-wide SPD tridiagonal system (loop body, not
-    /// just the 2x2/3x3 corner cases) — exercises the forward and back-substitution
+    /// Runs the Thomas solver over a ~40-wide SPD tridiagonal system (loop body, not
+    /// just the 2x2/3x3 corner cases), which exercises the forward and back-substitution
     /// `get_unchecked` accesses across many interior indices under Miri.
     #[test]
     fn miri_kernel_thomas_wide() {
@@ -1594,7 +1594,7 @@ mod tests {
         }
     }
 
-    /// Coupled step with T_e ≠ T_z (driven y-distortion), no DC/BR, several
+    /// Runs the coupled step with T_e ≠ T_z (driven y-distortion), no DC/BR, several
     /// steps. Forces the Newton inner loop to actually iterate (non-equilibrium
     /// residual), exercising the K_old precompute and Newton `get_unchecked`
     /// paths rather than the zero-distortion early-out.
@@ -1627,7 +1627,7 @@ mod tests {
         );
     }
 
-    /// Coupled step with DC/BR active and a nonzero equilibrium offset, tiny N.
+    /// Runs the coupled step with DC/BR active and a nonzero equilibrium offset, tiny N.
     /// Exercises the DC/BR branch of the Newton assembly and inner loop.
     #[test]
     fn miri_kernel_coupled_with_dcbr() {
@@ -1669,7 +1669,7 @@ mod tests {
         assert!(delta_n.iter().all(|v| v.is_finite()));
     }
 
-    /// Coupled step with a photon source term, tiny N. Exercises the
+    /// Runs the coupled step with a photon source term, tiny N. Exercises the
     /// `photon_source: Some(..)` residual path in the Newton inner loop.
     #[test]
     fn miri_kernel_coupled_with_source() {

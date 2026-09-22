@@ -19,7 +19,7 @@ use crate::constants::*;
 use crate::cosmology::Cosmology;
 use crate::recombination::ionization_fraction;
 
-/// Photon plasma frequency ω_pl (in eV) at redshift `z`.
+/// Computes the photon plasma frequency ω_pl (in eV) at redshift `z`.
 ///
 /// ω_pl² = 4π α n_e ℏ c / m_e, with n_e = X_e(z) × n_H(z).
 pub fn plasma_frequency_ev(z: f64, cosmo: &Cosmology) -> f64 {
@@ -30,7 +30,7 @@ pub fn plasma_frequency_ev(z: f64, cosmo: &Cosmology) -> f64 {
     hbar_ev_s * (n_e * factor).sqrt()
 }
 
-/// Resonance redshift `z_res` where ω_pl(z_res) = m.
+/// Finds the resonance redshift `z_res` where ω_pl(z_res) = m.
 ///
 /// Returns `None` when `m` is outside the range spanned by ω_pl on
 /// `[z_min, z_max] = [10, 3e7]`.
@@ -61,7 +61,7 @@ pub fn resonance_redshift(m_ev: f64, cosmo: &Cosmology) -> Option<f64> {
     Some(0.5 * (lo + hi))
 }
 
-/// |d ln ω_pl² / d ln a| at redshift `z`. Centered finite difference in z.
+/// Computes |d ln ω_pl² / d ln a| at redshift `z` using a centered finite difference in z.
 pub fn dln_omega_pl_sq_dlna(z: f64, cosmo: &Cosmology) -> f64 {
     let dz = (z * 1.0e-4).max(0.1);
     let x_e = ionization_fraction(z, cosmo);
@@ -74,7 +74,8 @@ pub fn dln_omega_pl_sq_dlna(z: f64, cosmo: &Cosmology) -> f64 {
     ((1.0 + z) * dlnxe_dz + 3.0).abs()
 }
 
-/// Narrow-width approximation dark-photon conversion parameter γ_con (dimensionless).
+/// Computes the narrow-width approximation dark-photon conversion parameter γ_con
+/// (dimensionless).
 ///
 /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a|_{z_res} × T_γ(z_res) × H(z_res)),
 /// following Chluba, Cyr & Johnson (2024), MNRAS 535, 1874, Eq. 6. Returns

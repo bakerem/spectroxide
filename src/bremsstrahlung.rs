@@ -34,7 +34,7 @@ const LN_2_25: f64 = 0.8109_3021_6216_3288;
 /// Precomputed ln(2.25/2) = ln(1.125) for Z=2 Gaunt factor.
 const LN_1_125: f64 = 0.1177_8303_5656_3834;
 
-/// Non-relativistic thermally-averaged free-free Gaunt factor.
+/// Computes the non-relativistic thermally-averaged free-free Gaunt factor.
 ///
 /// Uses a softplus interpolation that smoothly approaches the classical Born
 /// limit at low frequencies while remaining ≥ 1 at high frequencies:
@@ -56,7 +56,7 @@ pub fn gaunt_ff_nr(x: f64, theta_e: f64, z_charge: f64) -> f64 {
     gaunt_ff_nr_fast(x, z_charge, 0.5 * theta_e.ln())
 }
 
-/// Fast Gaunt factor with precomputed 0.5*ln(θ_e) hoisted out of grid loop.
+/// Computes the fast Gaunt factor with precomputed 0.5*ln(θ_e) hoisted out of the grid loop.
 #[inline]
 fn gaunt_ff_nr_fast(x: f64, z_charge: f64, half_ln_theta_e: f64) -> f64 {
     if x < 1e-30 {
@@ -66,7 +66,7 @@ fn gaunt_ff_nr_fast(x: f64, z_charge: f64, half_ln_theta_e: f64) -> f64 {
     1.0 + softplus(arg)
 }
 
-/// Fast Gaunt factor with precomputed ln(x) and 0.5*ln(θ_e).
+/// Computes the fast Gaunt factor with precomputed ln(x) and 0.5*ln(θ_e).
 ///
 /// Avoids the ln() call inside the grid loop by using precomputed ln_x.
 /// `ln(2.25/(x*Z))` = `ln(2.25/Z) - ln(x)`.
@@ -81,7 +81,7 @@ fn gaunt_ff_nr_fast_preln(ln_x: f64, z_charge: f64, half_ln_theta_e: f64) -> f64
     1.0 + softplus(arg)
 }
 
-/// Softplus function with asymptotic shortcuts.
+/// Computes the softplus function with asymptotic shortcuts.
 ///
 /// softplus(x) = ln(1 + exp(x))
 /// - If x > 20: softplus ≈ x (error < 2e-9)
@@ -98,7 +98,7 @@ fn softplus(arg: f64) -> f64 {
     }
 }
 
-/// BR emission coefficient K_BR at frequency x.
+/// Computes the BR emission coefficient K_BR at frequency x.
 ///
 /// K_BR(x) = (α λ_e³/(2π√(6π))) θ_e^{-7/2} × (e^{-xφ}/φ³) × Σ_i Z_i² N_i g_ff
 ///
@@ -181,7 +181,7 @@ pub fn br_emission_coefficient(
     BR_PREFACTOR * temp_factor * species_sum
 }
 
-/// BR emission coefficient with pre-computed He ionization fractions.
+/// Computes the BR emission coefficient with pre-computed He ionization fractions.
 ///
 /// Same physics as `br_emission_coefficient` but avoids redundant Saha
 /// evaluations when called in a grid loop (z_approx is identical for all x).
@@ -243,7 +243,7 @@ pub struct BrPrecomputed {
     pub ea_z2: f64,
 }
 
-/// Grid-constant half of the Gaunt-factor exponential: `x^(−√3/π)`.
+/// Computes the grid-constant half of the Gaunt-factor exponential: `x^(−√3/π)`.
 ///
 /// The softplus argument of the Born-approximation Gaunt fit is *affine* in
 /// `ln x`:
@@ -275,7 +275,7 @@ pub fn gaunt_expc_factor(ln_x: f64) -> f64 {
 const EXP_20: f64 = 485_165_195.409_790_3;
 const EXP_M20: f64 = 2.061_153_622_438_558e-9;
 
-/// Gaunt factor from the factored exponential `e = expc · ea`.
+/// Computes the Gaunt factor from the factored exponential `e = expc · ea`.
 ///
 /// Mirrors `1.0 + softplus(arg)` branch-for-branch with `e = exp(arg)`;
 /// `e = 0` (the `ln_x < −69` sentinel) lands in the small-`e` branch and
@@ -339,7 +339,7 @@ pub fn br_precompute(
     })
 }
 
-/// Fast BR emission coefficient using precomputed x-independent factors.
+/// Computes the fast BR emission coefficient using precomputed x-independent factors.
 ///
 /// Only computes the x-dependent parts: exp(-xφ) and Gaunt factors.
 #[inline]
@@ -354,7 +354,7 @@ pub fn br_emission_coefficient_fast(x: f64, pre: &BrPrecomputed) -> f64 {
     pre.base_factor * exp_xphi * species_sum
 }
 
-/// Gaunt factor together with its logistic weight σ = dg/d(arg).
+/// Computes the Gaunt factor together with its logistic weight σ = dg/d(arg).
 ///
 /// σ is the derivative of `softplus` with respect to its argument, evaluated
 /// branch-consistently (σ = 1 for arg > 20, σ = e^arg for arg < -20, else the
@@ -373,7 +373,7 @@ fn gaunt_from_expc_with_sigma(expc: f64, ea: f64) -> (f64, f64) {
     }
 }
 
-/// BR emission coefficient K_BR and its analytic derivative dK_BR/dρ_e,
+/// Computes the BR emission coefficient K_BR and its analytic derivative dK_BR/dρ_e,
 /// holding densities, He ionization fractions, and θ_z fixed (the same
 /// quantities the former finite-difference evaluation held fixed).
 ///
@@ -400,7 +400,7 @@ pub fn br_emission_coefficient_and_drho_expc(x: f64, expc: f64, pre: &BrPrecompu
     (k_br, dk_br)
 }
 
-/// BR emission coefficient using the factored Gaunt exponential.
+/// Computes the BR emission coefficient using the factored Gaunt exponential.
 ///
 /// `expc` is the grid-constant [`gaunt_expc_factor`] evaluated at this x.
 /// This is the production entry point: it costs one `exp` (the Wien factor
@@ -418,7 +418,7 @@ pub fn br_emission_coefficient_expc(x: f64, expc: f64, pre: &BrPrecomputed) -> f
     pre.base_factor * exp_xphi * species_sum
 }
 
-/// Fast BR emission coefficient with precomputed ln(x).
+/// Computes the fast BR emission coefficient with precomputed ln(x).
 ///
 /// Same as `br_emission_coefficient_fast` but avoids ln() calls in the
 /// Gaunt factor by using a precomputed ln(x) value. Retained as the
@@ -560,7 +560,7 @@ mod tests {
         );
     }
 
-    /// Detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
+    /// Checks detailed balance (Kirchhoff) at T_e ≠ T_z (R2 mutation audit, fix P4).
     ///
     /// BR emission and absorption must cancel identically for a Planck spectrum
     /// at the electron temperature, n_eq(x) = 1/(exp(x·φ) − 1) with

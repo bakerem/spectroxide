@@ -13,10 +13,10 @@ This page documents pure-Python helpers for resonant axion-photon conversion.
 
 Pure-Python narrow-width-approximation helpers for resonant
 ``γ ↔ a`` axion–photon conversion, following Cyr, Chluba & Manoj
-(2024, arXiv:2411.13701). Mirror the Rust ``src/axion.rs`` routines and
-reuse the plasma-frequency machinery of :mod:`spectroxide.dark_photon`
-(the resonance condition ``m_a = ω_pl`` is identical). Not re-exported at
-the top level — import explicitly:
+(2024, arXiv:2411.13701). These helpers mirror the Rust ``src/axion.rs``
+routines and reuse the plasma-frequency machinery of
+:mod:`spectroxide.dark_photon` (the resonance condition ``m_a = ω_pl`` is
+identical). Not re-exported at the top level — import explicitly:
 
 .. code-block:: python
 
@@ -27,11 +27,11 @@ the top level — import explicitly:
 
 Two differences from the dark-photon case:
 
-1. The conversion probability carries ``x`` in the numerator,
-   ``P(x) = 1 − exp(−γ_con·x)`` (Eq. 2), so high-frequency (Wien-tail)
-   photons convert preferentially — opposite to the dark photon's ``1/x``.
-2. The ``γ_con`` prefactor uses ``κ² (1+z)⁴ T_CMB(z)`` with
-   ``κ = g_aγγ B_rms`` (Eq. 3b), instead of ``ε² m²``.
+- The conversion probability carries ``x`` in the numerator,
+  ``P(x) = 1 − exp(−γ_con·x)`` (Eq. 2), so high-frequency (Wien-tail)
+  photons convert preferentially — opposite to the dark photon's ``1/x``.
+- The ``γ_con`` prefactor uses ``κ² (1+z)⁴ T_CMB(z)`` with
+  ``κ = g_aγγ B_rms`` (Eq. 3b), instead of ``ε² m²``.
 
 .. note::
 

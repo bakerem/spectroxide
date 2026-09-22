@@ -51,8 +51,8 @@ impl Default for GridConfig {
 }
 
 impl GridConfig {
-    /// Production-quality grid: 4000 points, `x ∈ [1e-5, 60]`. Used for all
-    /// paper runs.
+    /// Builds the production-quality grid: 4000 points, `x ∈ [1e-5, 60]`. Used for
+    /// all paper runs.
     pub fn production() -> Self {
         GridConfig {
             x_min: 1e-5,
@@ -64,7 +64,7 @@ impl GridConfig {
         }
     }
 
-    /// Fast/testing grid: 500 points, `x ∈ [1e-4, 40]`. Suitable for quick
+    /// Builds the fast testing grid: 500 points, `x ∈ [1e-4, 40]`. Suitable for quick
     /// exploratory runs; distortion amplitudes are accurate to a few percent.
     pub fn fast() -> Self {
         GridConfig {
@@ -182,7 +182,7 @@ impl FrequencyGrid {
 
     /// Creates a frequency grid from configuration.
     ///
-    /// Uses logarithmic spacing for x < x_transition and linear spacing above,
+    /// Uses logarithmic spacing for x < x_transition and linear spacing for larger x,
     /// with a smooth blending zone around x_transition. The blending uses a
     /// cubic Hermite (smoothstep) interpolation of the local spacing, avoiding
     /// the discontinuous 30× jump in dx that a hard log-to-linear transition

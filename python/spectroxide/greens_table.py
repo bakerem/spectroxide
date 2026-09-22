@@ -4,6 +4,8 @@ Precomputed Green's-function tables for cosmic microwave background
 
 Two table classes
 -----------------
+The module provides two table classes:
+
 - :class:`GreensTable` — 2-D heating Green's function ``G_th(x, z_h)``.
 - :class:`PhotonGreensTable` — 3-D photon-injection Green's function
   ``G_ph(x, x_inj, z_h)``.

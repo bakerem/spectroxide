@@ -26,7 +26,7 @@ cargo clippy --all-targets -- -D warnings # CI rejects warnings
 cargo fmt --check                         # CI rejects unformatted code
 ```
 
-Python package:
+Install the Python package with:
 ```bash
 cd python && pip install -e ".[plot]"
 ```

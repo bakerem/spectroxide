@@ -2,6 +2,8 @@
 
 Two-tier validation
 -------------------
+Validation in this module has two tiers:
+
 - **ERROR** (:class:`ValueError`) — nonsensical inputs that cannot
   produce meaningful results.
 - **WARNING** (:func:`warnings.warn`) — inputs in untested or unreliable

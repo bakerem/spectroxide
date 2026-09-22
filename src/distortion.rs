@@ -66,7 +66,7 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
     (idx, w)
 }
 
-/// CJ2014 Appendix A: Gram-Schmidt decomposition over a frequency band.
+/// Performs the CJ2014 Appendix A Gram-Schmidt decomposition over a frequency band.
 ///
 /// Reference: Chluba & Jeong (2014), arXiv:1306.5751, Appendix A.
 ///
@@ -200,7 +200,7 @@ pub fn decompose_gram_schmidt(
     }
 }
 
-/// Bianchini & Fabbian (2022) nonlinear fit: μ inside the BE exponential.
+/// Fits the Bianchini & Fabbian (2022) nonlinear model, with μ inside the BE exponential.
 ///
 /// Reference: Bianchini & Fabbian (2022), arXiv:2206.02762, Eqs. (1)–(4).
 ///
@@ -403,13 +403,13 @@ pub fn decompose_distortion(x_grid: &[f64], delta_n: &[f64]) -> DistortionParams
     decompose_nonlinear_be(x_grid, delta_n, DEFAULT_DECOMP_X_MIN, DEFAULT_DECOMP_X_MAX)
 }
 
-/// Convenience wrapper: returns (mu, y, delta_t_over_t) tuple.
+/// Returns the (mu, y, delta_t_over_t) tuple as a convenience wrapper.
 pub fn decompose(x_grid: &[f64], delta_n: &[f64]) -> (f64, f64, f64) {
     let params = decompose_distortion(x_grid, delta_n);
     (params.mu, params.y, params.delta_t_over_t)
 }
 
-/// Number of grid points falling inside the default μ/y decomposition
+/// Returns the number of grid points falling inside the default μ/y decomposition
 /// band [`DEFAULT_DECOMP_X_MIN`, `DEFAULT_DECOMP_X_MAX`].
 ///
 /// `decompose_distortion` silently returns mu=y=0 when fewer than three

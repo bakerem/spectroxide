@@ -109,17 +109,24 @@ Pass a ``dq_dz`` callable to run a custom heating history through the PDE solver
    solve(dq_dz=lambda z: dQ_dz(z), method="pde",
          z_min=1e3, z_max=3e6, n_z=5000)
 
-* **Signature**: ``dq_dz(z) -> float`` (or array). The wrapper attempts a
+The callable has these properties:
+
+Signature
+  ``dq_dz(z) -> float`` (or array). The wrapper attempts a
   vectorized call ``dq_dz(z_arr)`` first and falls back to scalar
   evaluation. Vectorize where you can — the tabulation grid has 5000
   points by default.
-* **Quantity**: :math:`d(\Delta\rho/\rho_\gamma)/dz`, the per-redshift
+Quantity
+  :math:`d(\Delta\rho/\rho_\gamma)/dz`, the per-redshift
   derivative of the fractional energy perturbation. Dimensionless.
-* **Sign**: positive for heating (energy added to the photon bath).
-* **Tabulation grid**: log-spaced in :math:`(1+z)` from ``max(z_end,
+Sign
+  Positive for heating (energy added to the photon bath).
+Tabulation grid
+  Log-spaced in :math:`(1+z)` from ``max(z_end,
   z_min)`` to ``z_max`` with ``n_z`` points. Defaults
   :math:`z_{\min}=10^3`, :math:`z_{\max}=3\times10^6`, :math:`n_z=5000`.
-* **Mode**: with ``method="pde"`` the wrapper tabulates the callable and the
+Mode
+  With ``method="pde"`` the wrapper tabulates the callable and the
   Rust PDE solver integrates it. Without ``method="pde"``, ``solve`` falls
   back to the analytic Green's function (no Rust binary).
 
@@ -134,18 +141,26 @@ Pass a ``photon_source`` callable to inject photons at specific frequencies and 
          z_min=1e3, z_max=3e6, n_z=5000,
          x_min=0.01, x_max=30.0, n_x=500)
 
-* **Signature**: ``photon_source(x, z) -> float``. Called scalar-by-scalar
+The callable has these properties:
+
+Signature
+  ``photon_source(x, z) -> float``. Called scalar-by-scalar
   on the tabulation grid (no vectorization), so keep it cheap.
-* **Quantity**: :math:`d(\Delta n)/dz` at frequency :math:`x` and redshift
+Quantity
+  :math:`d(\Delta n)/dz` at frequency :math:`x` and redshift
   :math:`z`, the per-redshift derivative of the photon-occupation
   perturbation.  Dimensionless.
-* **Frequency**: :math:`x = h\nu/(k_{\rm B} T_z)` — the same dimensionless
+Frequency
+  :math:`x = h\nu/(k_{\rm B} T_z)` — the same dimensionless
   variable used everywhere in the solver.
-* **Sign**: positive for photon injection at :math:`(x, z)`.
-* **Tabulation grid**: 2-D, log-spaced in both ``z`` (capped at 500
+Sign
+  Positive for photon injection at :math:`(x, z)`.
+Tabulation grid
+  2-D, log-spaced in both ``z`` (capped at 500
   points) and ``x``. Pass an explicit ``x=`` array to use a custom
   frequency grid.
-* **Mode**: PDE only (the analytic Green's function does not handle
+Mode
+  PDE only (the analytic Green's function does not handle
   arbitrary frequency-resolved sources).
 
 Both callables are spot-checked for non-finite output at five log-spaced

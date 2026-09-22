@@ -24,7 +24,7 @@
 use spectroxide::constants::{ALPHA_RHO, G2_PLANCK, G3_PLANCK, KAPPA_C};
 use spectroxide::prelude::*;
 
-/// Trapezoid of the product x³Δn — the quadrature used by the test suite.
+/// Computes the trapezoid quadrature of the product x³Δn, the method used by the test suite.
 fn drho_trapz(x: &[f64], dn: &[f64]) -> f64 {
     let mut s = 0.0;
     for i in 1..x.len() {
@@ -35,7 +35,8 @@ fn drho_trapz(x: &[f64], dn: &[f64]) -> f64 {
     s / G3_PLANCK
 }
 
-/// Midpoint-x × trapezoid-Δn — the quadrature inside `spectrum::weighted_integral`.
+/// Computes the midpoint-x times trapezoid-Δn quadrature used inside
+/// `spectrum::weighted_integral`.
 fn drho_midx(x: &[f64], dn: &[f64]) -> f64 {
     let mut s = 0.0;
     for i in 1..x.len() {
@@ -103,7 +104,7 @@ fn run_heat(cfg: &HeatCfg, z_h: f64, drho_inj: f64) -> HeatOut {
     }
 }
 
-/// Exact shape moments on the solver grid: ∫x³G_bb dx = 4G₃, ∫x³M dx = (κ_c/3)G₃.
+/// Checks the exact shape moments on the solver grid: ∫x³G_bb dx = 4G₃, ∫x³M dx = (κ_c/3)G₃.
 /// Bounds the quadrature and truncation contribution to every Δρ/ρ in the suite.
 fn mode_quad() {
     println!("== quadrature of the exact shape moments (relative error)");
@@ -132,7 +133,7 @@ fn mode_quad() {
     println!();
 }
 
-/// Heat injection: which knob moves the deficit, and what it costs in μ/y.
+/// Runs heat injection: which knob moves the deficit, and what it costs in μ/y.
 fn mode_heat() {
     let drho_inj = 1e-5;
     let cfgs = [
@@ -212,7 +213,8 @@ fn mode_heat() {
     println!();
 }
 
-/// Photon injection: split the initial condition's own energy content off the conservation error.
+/// Runs photon injection: splits the initial condition's own energy content off the
+/// conservation error.
 fn mode_photon() {
     let z_h = 3.0e5;
     let dn_over_n = 1e-5;
@@ -272,7 +274,7 @@ fn mode_photon() {
     println!();
 }
 
-/// The scenario behind `test_pb2009_energy_conservation`: z_h = 2e5, wide
+/// Runs the scenario behind `test_pb2009_energy_conservation`: z_h = 2e5, wide
 /// burst, snapshot at z = 200. Grid versus dtau_max, to show which axis matters.
 fn mode_pb2009() {
     let drho = 1e-5;
@@ -308,7 +310,7 @@ fn mode_pb2009() {
     println!();
 }
 
-/// The deep-μ end of the paper figure. `notebooks/paper_figures/
+/// Runs the deep-μ end of the paper figure. `notebooks/paper_figures/
 /// energy_conservation.ipynb` sweeps z_h up to 3e6 through the CLI `sweep`
 /// path, that is, σ_z = max(0.04 z_h, 100), z_start = z_h + 7σ_z, number-conserving,
 /// dtau_max = 3, N = 8000. Here at N = 4000 to keep it affordable, with
@@ -354,7 +356,7 @@ fn mode_figure() {
     println!();
 }
 
-/// Joint (dtau_max × N) refinement. The audit's open item claims a positive
+/// Runs the joint (dtau_max × N) refinement. The audit's open item claims a positive
 /// residual "survives Δτ→0 and is not the x-grid", but its tables refine one
 /// knob at a time and the two move the error in opposite directions — the
 /// joint limit was never taken. This mode takes it, for the two cases where
@@ -433,7 +435,7 @@ fn mode_joint() {
     println!();
 }
 
-/// Deep-μ joint refinement at the paper-figure settings (z_h = 3e6,
+/// Runs the deep-μ joint refinement at the paper-figure settings (z_h = 3e6,
 /// σ_z = 0.04 z_h), where the audit reported the largest Δτ→0-surviving
 /// residual (+0.32% at N=4000, dtau=1.5). Slow: ~1M-step runs.
 fn mode_deepmu() {
@@ -474,7 +476,8 @@ fn mode_deepmu() {
     println!();
 }
 
-/// Abramowitz & Stegun 7.1.26 (|ε| < 1.5e-7); no external crates by design.
+/// Computes the error function with Abramowitz & Stegun 7.1.26 (|ε| < 1.5e-7); no external
+/// crates by design.
 fn erf(x: f64) -> f64 {
     let sign = x.signum();
     let x = x.abs();
@@ -486,7 +489,7 @@ fn erf(x: f64) -> f64 {
     sign * (1.0 - poly * (-x * x).exp())
 }
 
-/// Localize the deficit in redshift: running photon energy compared with the analytically
+/// Locates the deficit in redshift: running photon energy compared with the analytically
 /// integrated burst source. Shows the deficit is generated in the injection
 /// window and then partly recovered.
 fn mode_steps() {

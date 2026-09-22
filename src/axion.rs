@@ -9,15 +9,15 @@
 //!
 //! Two differences from the dark-photon case:
 //!
-//! 1. **Frequency dependence flips.** The axion probability carries `x` in the
-//!    numerator (`1 − exp(−γ_con x)`), so *high*-frequency (Wien-tail) photons
-//!    convert preferentially. The dark photon carries `1/x`, depleting the
-//!    Rayleigh–Jeans tail instead. (Cyr, Chluba & Manoj 2024, Eq. 2.)
-//! 2. **The `γ_con` prefactor** replaces `ε² m²` with `κ² (1+z)⁴ T_CMB(z)`,
-//!    where `κ = g_aγγ B_rms` (Eq. 3b). Writing the paper's `d ln m_γ²/dz` in
-//!    terms of `|d ln ω_pl²/d ln a|` cancels two powers of `(1+z)`, giving
+//! - **Frequency dependence flips.** The axion probability carries `x` in the
+//!   numerator (`1 − exp(−γ_con x)`), so *high*-frequency (Wien-tail) photons
+//!   convert preferentially. The dark photon carries `1/x`, depleting the
+//!   Rayleigh–Jeans tail instead. (Cyr, Chluba & Manoj 2024, Eq. 2.)
+//! - **The `γ_con` prefactor** replaces `ε² m²` with `κ² (1+z)⁴ T_CMB(z)`,
+//!   where `κ = g_aγγ B_rms` (Eq. 3b). Writing the paper's `d ln m_γ²/dz` in
+//!   terms of `|d ln ω_pl²/d ln a|` cancels two powers of `(1+z)`, giving
 //!
-//!    γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [ m_a² H(z_res) |d ln ω_pl²/d ln a| ].
+//!   γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [ m_a² H(z_res) |d ln ω_pl²/d ln a| ].
 //!
 //! The resonance condition and its redshift derivative are identical to the
 //! dark-photon problem, so this module reuses
@@ -46,7 +46,7 @@ use crate::dark_photon::{dln_omega_pl_sq_dlna, resonance_redshift};
 /// Cyr, Chluba & Manoj (2024), Eq. 3b: `κ = g_aγγ B_rms ≈ 1.95×10⁻³⁰ eV × ε`.
 pub const KAPPA_PER_EPSILON_EV: f64 = 1.95e-30;
 
-/// Axion mixing coupling `κ = g_aγγ B_rms⁰` (today), in eV.
+/// Computes the axion mixing coupling `κ = g_aγγ B_rms⁰` (today), in eV.
 ///
 /// `g_agamma` is the axion–photon coupling in GeV⁻¹ and `b_rms` the comoving
 /// RMS transverse magnetic field today in nG. Uses the paper's normalization
@@ -55,7 +55,8 @@ pub fn kappa_ev(g_agamma: f64, b_rms: f64) -> f64 {
     KAPPA_PER_EPSILON_EV * (g_agamma / 1.0e-10) * b_rms
 }
 
-/// Narrow-width approximation axion–photon conversion parameter `γ_con` (dimensionless).
+/// Computes the narrow-width approximation axion–photon conversion parameter `γ_con`
+/// (dimensionless).
 ///
 /// γ_con = π κ² (1+z_res)⁴ T_CMB(z_res) / [ m_a² H(z_res) |d ln ω_pl²/d ln a| ],
 /// following Cyr, Chluba & Manoj (2024), Eq. 3a in the monopole limit
