@@ -158,10 +158,11 @@ class GreensTable:
         self._build_interpolator()
 
     def _build_interpolator(self):
-        """Build per-frequency cubic spline interpolators in log(z_h).
+        """Build cubic spline interpolators in log(z_h).
 
-        Uses independent 1D cubic splines on the raw cached ``G_th`` for
-        each frequency point.  Callers wanting a number-conserving result
+        Uses one vectorized 1D cubic spline along the ``z_h`` axis of the
+        raw cached ``G_th``, which is the same as an independent spline
+        for each frequency point.  Callers wanting a number-conserving result
         should apply :func:`~spectroxide.cosmotherm.strip_gbb` themselves.
         """
         from scipy.interpolate import CubicSpline
@@ -170,10 +171,7 @@ class GreensTable:
         self._log_z = log_z
 
         if len(self.z_h) >= 2:
-            self._splines = [
-                CubicSpline(log_z, self.g_th[i, :], extrapolate=True)
-                for i in range(len(self.x))
-            ]
+            self._splines = CubicSpline(log_z, self.g_th, axis=1, extrapolate=True)
         else:
             # Single z_h: no interpolation possible, return stored value directly
             self._splines = None
@@ -212,7 +210,7 @@ class GreensTable:
             g_at_z = self._g_single_raw
         else:
             log_z = np.log(np.clip(z_h, self.z_h[0], self.z_h[-1]))
-            g_at_z = np.array([s(log_z) for s in self._splines])
+            g_at_z = self._splines(log_z)
 
         # Interpolate to requested x grid
         log_x_query = np.log(np.clip(x, self.x[0], self.x[-1]))
