@@ -864,3 +864,64 @@ class TestPhotonTableBetweenNodes:
         trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
         energy = trapz(x**3 * g, x) / g3
         assert abs(energy / target - 1.0) < 0.01, f"energy ratio {energy / target:.4f}"
+
+
+# =========================================================================
+# Section 13: load_or_build error handling (review finding R-7)
+# =========================================================================
+
+
+class TestLoadOrBuildErrors:
+    """Only unreadable caches trigger a rebuild; other errors propagate."""
+
+    @pytest.fixture
+    def stale_hash(self, monkeypatch):
+        import spectroxide.greens_table as gt_mod
+        import spectroxide.solver as solver_mod
+
+        monkeypatch.setattr(gt_mod, "get_physics_hash", lambda: "binary_v1")
+        monkeypatch.setattr(solver_mod, "get_physics_hash", lambda: "binary_v1")
+
+        def no_build(**kwargs):
+            raise AssertionError("rebuild must not start")
+
+        monkeypatch.setattr(gt_mod, "_build_greens_table", no_build)
+        monkeypatch.setattr(gt_mod, "_build_photon_greens_table", no_build)
+
+    @pytest.mark.parametrize("kind", ["heating", "photon"])
+    def test_hash_mismatch_as_error_propagates(self, stale_hash, kind, tmp_path):
+        """Under ``-W error`` the hash warning is raised, not swallowed."""
+        from spectroxide.greens_table import (
+            GreensTableHashMismatch,
+            load_or_build_greens_table,
+            load_or_build_photon_greens_table,
+        )
+
+        table = _make_heating_table() if kind == "heating" else _make_photon_table()
+        loader = (
+            load_or_build_greens_table
+            if kind == "heating"
+            else load_or_build_photon_greens_table
+        )
+        table.metadata["physics_hash"] = "stale_v0"
+        path = tmp_path / "table.npz"
+        table.save(path)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            with pytest.raises(GreensTableHashMismatch):
+                loader(cache_path=path)
+
+    @pytest.mark.parametrize("payload", [b"not a table" * 10, b"PK\x03\x04trunc"])
+    def test_corrupt_cache_logs_and_rebuilds(
+        self, monkeypatch, caplog, tmp_path, payload
+    ):
+        import spectroxide.greens_table as gt_mod
+
+        sentinel = object()
+        monkeypatch.setattr(gt_mod, "_build_greens_table", lambda **kw: sentinel)
+        path = tmp_path / "table.npz"
+        path.write_bytes(payload)
+        with caplog.at_level("WARNING", logger="spectroxide.greens_table"):
+            out = gt_mod.load_or_build_greens_table(cache_path=path)
+        assert out is sentinel
+        assert "rebuilding" in caplog.text

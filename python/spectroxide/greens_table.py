@@ -36,7 +36,9 @@ Usage::
 from __future__ import annotations
 
 import json
+import logging
 import warnings
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Tuple
@@ -51,6 +53,14 @@ from .solver import (
 )
 
 _trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
+
+_log = logging.getLogger(__name__)
+
+#: Errors that mean a cached table cannot be read (missing or corrupt
+#: file, missing array, schema change), so it is rebuilt.  Anything else,
+#: such as a hash-mismatch warning raised as an error under ``-W error``,
+#: propagates instead of starting a build that takes hours (review R-7).
+_CACHE_LOAD_ERRORS = (OSError, KeyError, ValueError, zipfile.BadZipFile)
 
 #: Type alias for a heating-rate callable ``z -> dQ/dz``.
 HeatingRate = Callable[[ArrayLike], ArrayLike]
@@ -1294,8 +1304,13 @@ def load_or_build_greens_table(
     if not rebuild and cache_path.exists():
         try:
             return GreensTable.load(cache_path, verify_hash=verify_hash)
-        except Exception:
-            pass  # rebuild on load failure, such as a corrupt file or schema change
+        except _CACHE_LOAD_ERRORS as exc:
+            _log.warning(
+                "Cannot load cached table %s (%s: %s); rebuilding.",
+                cache_path,
+                type(exc).__name__,
+                exc,
+            )
 
     return _build_greens_table(cache_path=cache_path, **kwargs)
 
@@ -1341,7 +1356,12 @@ def load_or_build_photon_greens_table(
     if not rebuild and cache_path.exists():
         try:
             return PhotonGreensTable.load(cache_path, verify_hash=verify_hash)
-        except Exception:
-            pass
+        except _CACHE_LOAD_ERRORS as exc:
+            _log.warning(
+                "Cannot load cached table %s (%s: %s); rebuilding.",
+                cache_path,
+                type(exc).__name__,
+                exc,
+            )
 
     return _build_photon_greens_table(cache_path=cache_path, **kwargs)
