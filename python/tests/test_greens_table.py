@@ -13,6 +13,7 @@ Requires scipy for interpolation. Tests are skipped if scipy is not installed.
 
 import json
 import tempfile
+import warnings
 from pathlib import Path
 
 import numpy as np
