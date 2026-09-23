@@ -133,8 +133,9 @@ supply:
      - 500
      - Final redshift. Must be greater than 0.
    * - ``--n-points N``
-     - (preset)
-     - Frequency-grid point count. Overrides the active fast/production preset.
+     - 2000
+     - Frequency-grid point count; 4000 by default with ``--production-grid``.
+       Overrides the point count of either grid.
        Below 1000 points the solver warns that the result is untested.
    * - ``--production-grid``
      - off

@@ -1019,8 +1019,9 @@ fn print_solver_options_help(for_solve: bool) {
     println!("                        use 3 for <0.1% precision)");
     println!("  --dtau-max-photon-source <val>  Max dtau per step while a photon source is");
     println!("                        active (default 1.0; 10 for fast exploratory runs)");
-    println!("  --n-points <n>        Frequency-grid points (default 2000; below 1000 the");
-    println!("                        solver warns that the result is untested)");
+    println!("  --n-points <n>        Frequency-grid points (default 2000, or 4000 with");
+    println!("                        --production-grid; below 1000 the solver warns that");
+    println!("                        the result is untested)");
     println!("  --production-grid     Use the 4000-point production grid");
     println!("  --no-auto-refine      Disable automatic grid refinement near injection features");
     if !for_solve {
@@ -1417,25 +1418,18 @@ fn greens_regime_warnings(z_h: f64) -> Vec<String> {
 
 /// Builds a GridConfig from CLI options.
 ///
-/// If `production_grid` is set, uses `GridConfig::production()` as the base.
-/// If `n_grid > 0`, overrides `n_points`. Otherwise uses the base defaults.
-fn build_grid_config(n_grid: usize, production_grid: bool) -> GridConfig {
-    if production_grid {
-        if n_grid > 0 {
-            GridConfig {
-                n_points: n_grid,
-                ..GridConfig::production()
-            }
-        } else {
-            GridConfig::production()
-        }
-    } else if n_grid > 0 {
-        GridConfig {
-            n_points: n_grid,
-            ..GridConfig::default()
-        }
+/// The base is `GridConfig::production()` (4000 points) if `production_grid` is
+/// set, otherwise `GridConfig::default()` (2000 points). `n_points`, from
+/// `--n-points`, overrides the base's point count.
+fn build_grid_config(n_points: Option<usize>, production_grid: bool) -> GridConfig {
+    let base = if production_grid {
+        GridConfig::production()
     } else {
         GridConfig::default()
+    };
+    match n_points {
+        Some(n_points) => GridConfig { n_points, ..base },
+        None => base,
     }
 }
 
@@ -1639,7 +1633,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     injection.validate()?;
     eprintln!("Injection: {}", opts.injection_type);
 
-    let n_grid = opts.solver.n_points.unwrap_or(2000);
+    let n_grid = opts.solver.n_points;
     let effective_dy_max = opts.solver.dy_max.unwrap_or(SolverConfig::default().dy_max);
     let effective_dtau_max = opts.solver.dtau_max.unwrap_or(10.0);
     let z_start = opts
@@ -1818,7 +1812,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
         return Err(format!("--delta-rho must be finite, got {delta_rho}"));
     }
     let z_end = opts.solver.z_end;
-    let n_grid = opts.solver.n_points.unwrap_or(0);
+    let n_grid = opts.solver.n_points;
 
     let injection_redshifts: Vec<f64> = opts.z_injections.clone().unwrap_or_else(|| {
         vec![
@@ -1932,7 +1926,7 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
     }
     let sigma_x = opts.sigma_x.unwrap_or(x_inj * 0.05);
     let z_end = opts.solver.z_end;
-    let n_grid = opts.solver.n_points.unwrap_or(2000);
+    let n_grid = opts.solver.n_points;
 
     let injection_redshifts: Vec<f64> = opts
         .z_injections
@@ -2040,7 +2034,7 @@ pub fn execute_photon_sweep_batch(
     let cosmo = build_cosmology(&opts.cosmo)?;
     let delta_n_over_n = opts.delta_n_over_n;
     let z_end = opts.solver.z_end;
-    let n_grid = opts.solver.n_points.unwrap_or(2000);
+    let n_grid = opts.solver.n_points;
 
     let injection_redshifts: Vec<f64> = opts
         .z_injections
@@ -2885,5 +2879,36 @@ mod tests {
             z_start_of("solve decaying-particle-photon --x-inj-0 1e5 --f-inj 1e-6 --gamma-x 1e-12"),
             5e6
         );
+    }
+
+    /// N-3: `--production-grid` without `--n-points` used 2000 points in `solve` and
+    /// the photon sweeps, because `n_points.unwrap_or(2000)` overrode the preset.
+    /// It must give the 4000-point production grid; the plain default stays 2000.
+    #[test]
+    fn test_production_grid_point_count() {
+        assert_eq!(GridConfig::production().n_points, 4000);
+        assert_eq!(GridConfig::default().n_points, 2000);
+        let n_of = |line: &str| -> usize {
+            let Command::Solve(opts) = parse_command(&argv(line)).unwrap() else {
+                panic!("expected Solve");
+            };
+            build_grid_config(opts.solver.n_points, opts.solver.production_grid).n_points
+        };
+        assert_eq!(n_of("solve single-burst --z-h 2e5 --production-grid"), 4000);
+        assert_eq!(n_of("solve single-burst --z-h 2e5"), 2000);
+        assert_eq!(
+            n_of("solve single-burst --z-h 2e5 --production-grid --n-points 3000"),
+            3000
+        );
+        assert_eq!(n_of("solve single-burst --z-h 2e5 --n-points 1500"), 1500);
+        // End to end: a short solve on the production grid returns 4000 points.
+        let Command::Solve(opts) = parse_command(&argv(
+            "solve single-burst --z-h 5e3 --production-grid --z-end 4000",
+        ))
+        .unwrap() else {
+            panic!("expected Solve");
+        };
+        let result = execute_solve(&opts).unwrap();
+        assert_eq!(result.x_grid.len(), 4000);
     }
 }
