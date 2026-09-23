@@ -208,6 +208,7 @@ probability ``P_s``.
    photon_survival_probability
    greens_function_photon
    mu_from_photon_injection
+   y_from_photon_injection
    distortion_from_photon_injection
 
 .. code-block:: python
@@ -227,6 +228,7 @@ probability ``P_s``.
 .. autofunction:: spectroxide.greens.photon_survival_probability
 .. autofunction:: spectroxide.greens.greens_function_photon
 .. autofunction:: spectroxide.greens.mu_from_photon_injection
+.. autofunction:: spectroxide.greens.y_from_photon_injection
 .. autofunction:: spectroxide.greens.distortion_from_photon_injection
 
 

@@ -760,13 +760,22 @@ def x_c(z: ArrayLike) -> NDArray[np.float64]:
     return np.sqrt(dc**2 + br**2)
 
 
-def photon_survival_probability(x: ArrayLike, z: float) -> NDArray[np.float64]:
-    """Analytic photon survival probability ``P_s(x, z) = exp(−x_c(z)/x)``.
+def photon_survival_probability(
+    x: ArrayLike, z: float, cosmo: CosmoLike | None = None
+) -> NDArray[np.float64]:
+    """Photon survival probability ``P_s(x, z)``.
 
-    Probability that an injected photon at frequency ``x`` survives
-    absorption by DC/BR processes.
+    Probability that a photon injected at frequency ``x`` and redshift
+    ``z`` survives absorption by DC/BR processes.
 
-    Reference: Chluba (2015), arXiv:1506.06582, Eq. 24.
+    - ``cosmo=None`` (default): the analytic form
+      ``P_s = exp(−x_c(z)/x)`` (Chluba 2015, arXiv:1506.06582, Eq. 24).
+    - ``cosmo`` given: the cosmology-aware estimate that
+      :func:`greens_function_photon` uses.  For ``z > 5e4`` it equals the
+      analytic form; for ``z ≤ 5e4`` it is ``exp(−τ_ff)``, with the DC+BR
+      optical depth ``τ_ff`` integrated from ``z = 200`` to ``z`` for that
+      cosmology (Chluba 2015, Eqs. 29 and 32).  In the y-era the two
+      differ by orders of magnitude at ``x ≲ x_c``.
 
     Parameters
     ----------
@@ -774,12 +783,24 @@ def photon_survival_probability(x: ArrayLike, z: float) -> NDArray[np.float64]:
         Dimensionless frequency.
     z : float
         Redshift.
+    cosmo : Mapping or Cosmology, optional
+        Cosmological parameters, for example
+        :data:`~spectroxide.cosmology.DEFAULT_COSMO`.  Default *None*
+        (analytic form).
 
     Returns
     -------
     ndarray of float64
         Survival probability ``P_s ∈ [0, 1]``; zero for non-positive ``x``.
     """
+    if cosmo is not None:
+        cosmo = _cosmo_mapping(cosmo)
+        x_arr = np.asarray(x, dtype=np.float64)
+        flat = [
+            _photon_survival_probability_numerical(float(xi), float(z), cosmo)
+            for xi in x_arr.ravel()
+        ]
+        return np.asarray(flat, dtype=np.float64).reshape(x_arr.shape)
     x = np.asarray(x, dtype=np.float64)
     xc = float(x_c(z))
     # Avoid division by zero
@@ -1140,8 +1161,8 @@ def greens_function_photon(
     x_obs = np.asarray(x_obs, dtype=np.float64)
 
     _j_bb_star = j_bb_star(z_h)
-    _cosmo = cosmo if cosmo is not None else DEFAULT_COSMO
-    p_s = _photon_survival_probability_numerical(x_inj, z_h, _cosmo)
+    cosmo = _cosmo_mapping(cosmo)
+    p_s = _photon_survival_probability_numerical(x_inj, z_h, cosmo)
 
     alpha_x = ALPHA_RHO * x_inj
 
@@ -1212,7 +1233,27 @@ def greens_function_photon(
     return result
 
 
-def mu_from_photon_injection(x_inj: float, z_h: float, delta_n_over_n: float) -> float:
+def _cosmo_mapping(cosmo):
+    """Return ``cosmo`` as a complete mapping.
+
+    Converts a ``Cosmology`` dataclass, fills keys missing from a partial
+    mapping from :data:`DEFAULT_COSMO`, and returns ``DEFAULT_COSMO`` for
+    *None*.
+    """
+    if cosmo is None:
+        return DEFAULT_COSMO
+    if hasattr(cosmo, "to_dict"):
+        cosmo = cosmo.to_dict()
+    _val.validate_cosmology(cosmo)
+    return {**DEFAULT_COSMO, **cosmo}
+
+
+def mu_from_photon_injection(
+    x_inj: float,
+    z_h: float,
+    delta_n_over_n: float,
+    cosmo: CosmoLike | None = None,
+) -> float:
     """μ from monochromatic photon injection.
 
     .. math::
@@ -1244,20 +1285,44 @@ def mu_from_photon_injection(x_inj: float, z_h: float, delta_n_over_n: float) ->
         Injection redshift (must lie outside the μ–y transition band).
     delta_n_over_n : float
         Fractional photon-number perturbation ``ΔN/N``.
+    cosmo : Mapping or Cosmology, optional
+        Cosmology for the survival probability ``P_s``; see
+        :func:`photon_survival_probability`.  Default *None* uses the
+        analytic ``P_s = exp(−x_c/x)``.  Pass a cosmology (for example
+        :data:`~spectroxide.cosmology.DEFAULT_COSMO`) to match the μ
+        coefficient of :func:`greens_function_photon` with the same
+        ``cosmo``.  The two agree for ``z_h > 5e4`` either way; for
+        ``z_h ≤ 5e4`` with ``cosmo=None`` the function warns, because the
+        analytic ``P_s`` is then wrong by large factors.
 
     Returns
     -------
     float
         Dimensionless μ-parameter.
+
+    See Also
+    --------
+    y_from_photon_injection : the y-parameter partner.
     """
     _val.validate_x_inj(x_inj)
     _val.validate_z_h(z_h)
     _val.warn_z_h_regime(z_h)
     _val.warn_x_inj_regime(x_inj)
     _val.validate_photon_gf_regime(z_h)
+    if cosmo is None and z_h <= 5.0e4:
+        import warnings
+
+        warnings.warn(
+            f"mu_from_photon_injection: z_h={z_h:g} <= 5e4 with cosmo=None uses "
+            "the analytic P_s = exp(-x_c/x), which differs by large factors "
+            "from the P_s of greens_function_photon and y_from_photon_injection "
+            "here. Pass cosmo=DEFAULT_COSMO (or your cosmology) to match them.",
+            UserWarning,
+            stacklevel=2,
+        )
     _j_bb_star = float(j_bb_star(z_h))
     _j_mu = j_mu(z_h)
-    p_s = float(photon_survival_probability(np.array([x_inj]), z_h)[0])
+    p_s = float(photon_survival_probability(np.array([x_inj]), z_h, cosmo=cosmo)[0])
 
     mu_factor = 1.0 - p_s * X_BALANCED / x_inj
 
@@ -1269,6 +1334,75 @@ def mu_from_photon_injection(x_inj: float, z_h: float, delta_n_over_n: float) ->
         * _j_mu
         * mu_factor
         * delta_n_over_n
+    )
+
+
+def y_from_photon_injection(
+    x_inj: float,
+    z_h: float,
+    delta_n_over_n: float,
+    cosmo: CosmoLike | None = None,
+) -> float:
+    """Compton y from monochromatic photon injection.
+
+    The y partner of :func:`mu_from_photon_injection`: the coefficient of
+    ``Y_SZ(x)`` in :func:`greens_function_photon`,
+
+    .. math::
+
+        y = \\frac{\\alpha_\\rho \\, x_{inj}}{4}
+            \\left[1 - J_\\mu(z_h)\\right]
+            \\left(1 - P_s f_{int}\\right)
+            \\frac{\\Delta N}{N}.
+
+    Here ``α_ρ x_inj ΔN/N`` is the injected ``Δρ/ρ``.  The factor
+    ``1 − P_s f_int`` is the part of it that heats electrons: absorbed
+    photons give up all their energy, and a surviving photon keeps the
+    fraction ``f_int = ⟨x⟩/x_inj`` after Compton scattering with
+    ``y_γ(z_h)``.  So ``y → Δρ/(4ρ)`` when the photon is absorbed
+    (``P_s → 0``) in the y-era, and ``y → 0`` when it survives unscattered.
+    The surviving line itself is not included.  ``y = 0`` in the deep
+    μ-era (``J_μ ≈ 1``).
+
+    Reference: Chluba (2015), arXiv:1506.06582, Sect. 4.
+
+    Parameters
+    ----------
+    x_inj : float
+        Injection frequency (positive, finite).
+    z_h : float
+        Injection redshift (must lie outside the μ–y transition band).
+    delta_n_over_n : float
+        Fractional photon-number perturbation ``ΔN/N``.
+    cosmo : Mapping or Cosmology, optional
+        Cosmology for ``y_γ`` and the cosmology-aware ``P_s``, as in
+        :func:`greens_function_photon`; missing keys come from
+        :data:`~spectroxide.cosmology.DEFAULT_COSMO`.  Default *None* uses
+        ``DEFAULT_COSMO``, so the result equals the y coefficient of
+        :func:`greens_function_photon` with the same ``cosmo``.  (The
+        analytic ``P_s`` of :func:`mu_from_photon_injection`'s default is
+        wrong by large factors at ``z_h ≤ 5e4``, where y lives.)
+
+    Returns
+    -------
+    float
+        Dimensionless Compton y-parameter.
+    """
+    _val.validate_x_inj(x_inj)
+    _val.validate_z_h(z_h)
+    _val.warn_z_h_regime(z_h)
+    _val.warn_x_inj_regime(x_inj)
+    _val.validate_photon_gf_regime(z_h)
+    _j_mu = float(j_mu(z_h))
+    # Same deep-μ short-circuit as greens_function_photon.
+    if _j_mu > 1.0 - 1e-12:
+        return 0.0
+    cosmo = _cosmo_mapping(cosmo)
+    p_s = float(photon_survival_probability(np.array([x_inj]), z_h, cosmo=cosmo)[0])
+    yg = _y_compton(z_h, cosmo)
+    _, f_int = _broadened_bump(np.array([x_inj]), x_inj, yg)
+    return float(
+        ALPHA_RHO * x_inj * 0.25 * (1.0 - _j_mu) * (1.0 - p_s * f_int) * delta_n_over_n
     )
 
 

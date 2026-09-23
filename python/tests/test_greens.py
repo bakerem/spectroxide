@@ -662,3 +662,189 @@ class TestValidation:
             warnings.simplefilter("always")
             _val.warn_x_grid_narrow(np.array([0.5, 1.0, 2.0]))
             assert len(w) >= 1
+
+
+# =========================================================================
+# Photon-injection μ/y partners and cosmology-aware P_s (A-6)
+# =========================================================================
+
+# Spectral integrals typed as literals, not imported from the package:
+# G2 = 2 ζ(3), G3 = π⁴/15.  Injected energy per photon number:
+# Δρ/ρ = (G2/G3) x_inj ΔN/N.
+_G2_LIT = 2.0 * 1.2020569031595942
+from spectroxide.cosmology import PLANCK2018_COSMO as _PLANCK2018  # noqa: E402
+
+_G3_LIT = np.pi**4 / 15.0
+
+
+class TestPhotonInjectionMuY:
+    """y_from_photon_injection, mu_from_photon_injection(cosmo=), and
+    photon_survival_probability(cosmo=)."""
+
+    def test_y_absorbed_photon_is_all_heat(self):
+        """An absorbed photon in the y-era heats electrons with all its
+        energy, so y = Δρ/(4ρ) (Zel'dovich–Sunyaev; CLAUDE.md target).
+
+        At z_h = 5e3 the μ branching ratio is about 1% and a photon at
+        x_inj = 1e-3 is absorbed (x_inj ≪ x_c ≈ 0.07), so 2% covers both.
+        """
+        x_inj, z_h, dn_n = 1e-3, 5e3, 1e-5
+        drho = _G2_LIT / _G3_LIT * x_inj * dn_n
+        with pytest.warns(UserWarning):  # x_inj < 0.01 regime warning
+            y = greens.y_from_photon_injection(
+                x_inj, z_h, dn_n, cosmo=greens.DEFAULT_COSMO
+            )
+        assert y == pytest.approx(drho / 4.0, rel=0.02)
+
+    def test_y_surviving_photon_follows_compton_recoil(self):
+        """A surviving Wien-tail photon (x ≫ 1) drifts as d ln x/dy_γ = 4 − x
+        (mean energy change per scattering (4kT − hν)/mc²; Rybicki &
+        Lightman 1979, Eq. 7.36).  The energy it loses by recoil heats the
+        gas, so y/(Δρ/4ρ) = (x_inj − 4) y_γ to first order in y_γ.
+        """
+        x_inj, z_h, dn_n = 10.0, 5e3, 1e-5
+        cosmo = greens.DEFAULT_COSMO
+        drho = _G2_LIT / _G3_LIT * x_inj * dn_n
+        y_gamma = greens._y_compton(z_h, cosmo)
+        assert 1e-4 < y_gamma < 1e-2  # first-order regime
+        y = greens.y_from_photon_injection(x_inj, z_h, dn_n, cosmo=cosmo)
+        # 3%: 1 − J_μ(5e3) ≈ 0.99, plus O(y_γ) and stimulated terms ~0.1%.
+        assert y / (drho / 4.0) == pytest.approx((x_inj - 4.0) * y_gamma, rel=0.03)
+
+    def test_y_gamma_bracketed_by_literal_constants(self):
+        """Pins the y_γ normalization the recoil test reuses.
+
+        y_γ = ∫ θ_e σ_T n_e c / [H (1+z)] dz from z = 1100 (X_e ≈ 0 below)
+        to z_h, computed from CODATA 2018 constants typed here, with flat
+        ΛCDM for DEFAULT_COSMO (h = 0.71, Ω_b = 0.044, Ω_m = 0.26,
+        Y_p = 0.24, T0 = 2.726 K, N_eff = 3.046).  Electrons per hydrogen
+        lie between 1 (H only) and 1 + 2 f_He (H and He fully ionized), so
+        the true y_γ lies between the two integrals.  At z_h = 5e3 they
+        are 7.0e-4 and 8.1e-4, so a factor-2 error fails.
+        """
+        k_b, m_e, c = 1.380649e-23, 9.1093837015e-31, 2.99792458e8
+        sigma_t, m_p, g_n = 6.6524587321e-29, 1.67262192369e-27, 6.67430e-11
+        a_rad, mpc = 7.565723e-16, 3.0856775814913673e22
+        h, om_b, om_m, y_p, t0, n_eff = 0.71, 0.044, 0.26, 0.24, 2.726, 3.046
+        h0 = h * 1e5 / mpc
+        rho_c = 3 * h0**2 / (8 * np.pi * g_n)
+        om_r = (a_rad * t0**4 / c**2 / rho_c) * (
+            1 + n_eff * 7 / 8 * (4 / 11) ** (4 / 3)
+        )
+        n_h0 = (1 - y_p) * om_b * rho_c / m_p
+        f_he = y_p / (4 * (1 - y_p))
+        z_h = 5e3
+        z = np.geomspace(1100.0, z_h, 20001)
+        hub = h0 * np.sqrt(om_m * (1 + z) ** 3 + om_r * (1 + z) ** 4 + 1 - om_m - om_r)
+        base = (k_b * t0 * (1 + z) / (m_e * c**2)) * sigma_t * c * n_h0 * (1 + z) ** 3
+        integrand = base / (hub * (1 + z))
+        lo = _trapz(integrand, z)
+        hi = (1 + 2 * f_he) * lo
+        assert lo < greens._y_compton(z_h, greens.DEFAULT_COSMO) < hi
+
+    def test_y_vanishes_in_deep_mu_era(self):
+        assert greens.y_from_photon_injection(1.0, 3e6, 1e-5) == 0.0
+
+    @pytest.mark.parametrize(
+        "x_inj, z_h, x_lo, x_hi",
+        [
+            (1e-3, 5e3, 0.3, 15.0),  # absorbed, y-era
+            (1e-3, 3e4, 0.3, 15.0),  # absorbed, J_μ ≈ 0.25
+            (10.0, 5e3, 0.3, 6.0),  # surviving line kept out of the band
+            (2.0, 3e5, 0.3, 15.0),  # μ-era
+        ],
+    )
+    def test_mu_y_match_greens_function_photon(self, x_inj, z_h, x_lo, x_hi):
+        """With the same cosmo, μ and y are the M(x) and Y_SZ(x)
+        coefficients of the number-conserving photon Green's function."""
+        cosmo = _PLANCK2018
+        x = np.linspace(x_lo, x_hi, 400)
+        with pytest.warns() if x_inj < 0.01 else _nullcontext():
+            g = greens.greens_function_photon(
+                x, x_inj, z_h, number_conserving=True, cosmo=cosmo
+            )
+            mu = greens.mu_from_photon_injection(x_inj, z_h, 1.0, cosmo=cosmo)
+            y = greens.y_from_photon_injection(x_inj, z_h, 1.0, cosmo=cosmo)
+        design = np.column_stack([greens.mu_shape(x), greens.y_shape(x)])
+        (mu_fit, y_fit), *_ = np.linalg.lstsq(design, g, rcond=None)
+        scale = np.max(np.abs(g))
+        np.testing.assert_allclose(design @ [mu, y], g, rtol=0, atol=1e-9 * scale)
+        assert mu_fit == pytest.approx(mu, rel=1e-6, abs=1e-9 * scale)
+        assert y_fit == pytest.approx(y, rel=1e-6, abs=1e-9 * scale)
+
+    def test_survival_probability_default_is_analytic(self):
+        x = np.array([0.01, 0.1, 1.0])
+        z = 1e4
+        expected = np.exp(-float(greens.x_c(z)) / x)
+        np.testing.assert_allclose(greens.photon_survival_probability(x, z), expected)
+
+    def test_survival_probability_cosmo_matches_greens_function_photon(self):
+        """The public cosmology-aware P_s is the one the photon GF uses."""
+        cosmo = _PLANCK2018
+        for x_inj, z in [(0.05, 3e3), (0.5, 2e4), (1.0, 5e5)]:
+            got = greens.photon_survival_probability(x_inj, z, cosmo=cosmo)
+            assert np.ndim(got) == 0
+            assert float(got) == greens._photon_survival_probability_numerical(
+                x_inj, z, cosmo
+            )
+
+    def test_survival_probability_cosmo_shape_and_range(self):
+        x = np.logspace(-3, 1, 12).reshape(3, 4)
+        p = greens.photon_survival_probability(x, 1e4, cosmo=greens.DEFAULT_COSMO)
+        assert p.shape == x.shape
+        assert np.all((p >= 0) & (p <= 1))
+        assert np.all(np.diff(p.ravel()) >= 0)  # more survival at higher x
+
+    def test_survival_probability_cosmo_irrelevant_in_mu_era(self):
+        x = np.array([0.01, 0.1, 1.0])
+        np.testing.assert_array_equal(
+            greens.photon_survival_probability(x, 3e5, cosmo=greens.DEFAULT_COSMO),
+            greens.photon_survival_probability(x, 3e5),
+        )
+
+    def test_mu_warns_for_analytic_ps_in_y_era(self):
+        with pytest.warns(UserWarning, match="analytic P_s"):
+            greens.mu_from_photon_injection(1.0, 1e4, 1e-5)
+
+    def test_y_default_matches_greens_function_photon_default(self):
+        """cosmo=None means DEFAULT_COSMO for y, as for the photon GF; the
+        analytic P_s would flip the sign of y here."""
+        x = np.linspace(0.3, 15.0, 400)
+        g = greens.greens_function_photon(x, 0.05, 1e4, number_conserving=True)
+        design = np.column_stack([greens.mu_shape(x), greens.y_shape(x)])
+        (_, y_fit), *_ = np.linalg.lstsq(design, g, rcond=None)
+        y = greens.y_from_photon_injection(0.05, 1e4, 1.0)
+        assert y == pytest.approx(y_fit, rel=1e-6)
+
+    def test_partial_cosmology_mapping_filled_from_default(self):
+        p_partial = greens.photon_survival_probability(1.0, 1e4, cosmo={"h": 0.71})
+        p_full = greens.photon_survival_probability(
+            1.0, 1e4, cosmo=greens.DEFAULT_COSMO
+        )
+        assert float(p_partial) == float(p_full)
+
+    def test_greens_function_photon_accepts_dataclass(self):
+        from spectroxide import Cosmology
+
+        x = np.linspace(0.5, 10.0, 50)
+        c = Cosmology.planck2018()
+        np.testing.assert_array_equal(
+            greens.greens_function_photon(x, 2.0, 1e4, cosmo=c),
+            greens.greens_function_photon(x, 2.0, 1e4, cosmo=c.to_dict()),
+        )
+
+    def test_accepts_cosmology_dataclass(self):
+        from spectroxide import Cosmology
+
+        c = Cosmology.planck2018()
+        assert greens.y_from_photon_injection(
+            5.0, 1e4, 1e-5, cosmo=c
+        ) == greens.y_from_photon_injection(5.0, 1e4, 1e-5, cosmo=c.to_dict())
+
+
+class _nullcontext:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, *exc):
+        return False

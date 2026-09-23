@@ -86,6 +86,7 @@ from .greens import (
     photon_survival_probability,
     greens_function_photon,
     mu_from_photon_injection,
+    y_from_photon_injection,
     distortion_from_photon_injection,
     # Decomposition
     decompose_distortion,
@@ -155,6 +156,7 @@ __all__ = [
     "photon_survival_probability",
     "greens_function_photon",
     "mu_from_photon_injection",
+    "y_from_photon_injection",
     "distortion_from_photon_injection",
     # Recombination (1)
     "ionization_fraction",
