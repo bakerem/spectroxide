@@ -809,7 +809,20 @@ class FIRASData:
         """
         return self.chi2(self.predict_kJy(mu, y, delta_t, extra_dn))
 
-    def chi2_from_solver(self, result) -> float:
+    def _solver_template_kJy(self, result, amplitude=1.0):
+        """``result.delta_n / amplitude`` at the FIRAS frequencies, in kJy/sr."""
+        x_grid = np.asarray(result.x, dtype=np.float64)
+        dn_grid = np.asarray(result.delta_n, dtype=np.float64) / amplitude
+        dn_firas = np.interp(self.x, x_grid, dn_grid)
+        return _dn_to_dI_kJy(self.x, dn_firas, self.t_cmb)
+
+    @_accept_deprecated_kwargs
+    def chi2_from_solver(
+        self,
+        result,
+        marginalize_gbb: bool = False,
+        marginalize_galactic: bool = False,
+    ) -> float:
         """``χ²`` of a solver distortion against the FIRAS residuals.
 
         Bridges the gap between the partial differential equation solver's
@@ -819,6 +832,11 @@ class FIRASData:
         kJy/sr with the same ``ΔI = (2 h ν³ / c²) Δn`` convention used for
         the internal templates, and evaluates the full-covariance ``χ²``.
 
+        The PDE ``Δn`` contains the accumulated temperature shift, which
+        FIRAS cannot see (the absolute temperature is fitted).  Without
+        ``marginalize_gbb`` that shift counts against the model and
+        inflates ``χ²``.
+
         Parameters
         ----------
         result : SolverResult or object with ``.x`` and ``.delta_n``
@@ -826,17 +844,138 @@ class FIRASData:
             The FIRAS band (``x ≈ 0.3–12``) must lie inside the solver
             grid; points outside are clamped to the grid edges by the
             interpolation.
+        marginalize_gbb : bool, optional
+            If *True*, minimize ``χ²`` over the amplitude of the
+            temperature-shift template ``G_bb`` (analytic, since the model
+            is linear in it).  Default *False*.
+        marginalize_galactic : bool, optional
+            If *True*, also minimize over the galactic dust template
+            ``ν² B_ν(T_dust)`` (Fixsen 1996 §6.1).  Default *False*.
 
         Returns
         -------
         float
-            ``χ² = (r − m)ᵀ C⁻¹ (r − m)`` with the interpolated model.
+            ``χ² = (r − m − N b̂)ᵀ C⁻¹ (r − m − N b̂)`` with the interpolated
+            model ``m``, where ``N`` holds the chosen nuisance templates and
+            ``b̂`` their best-fit amplitudes (no nuisance: ``b̂ = 0``).
         """
+        resid = self.residual_kJy - self._solver_template_kJy(result)
+        nuisance = []
+        if marginalize_gbb:
+            nuisance.append(self._G_kJy)
+        if marginalize_galactic:
+            nuisance.append(self._gal_kJy)
+        if nuisance:
+            n_mat = np.column_stack(nuisance)
+            ntc = n_mat.T @ self.cov_inv
+            b_hat = np.linalg.solve(ntc @ n_mat, ntc @ resid)
+            resid = resid - n_mat @ b_hat
+        return float(resid @ self.cov_inv @ resid)
+
+    @_accept_deprecated_kwargs
+    def limit_from_solver(
+        self,
+        result,
+        amplitude: float = 1.0,
+        cl: float = 0.95,
+        method: str = "marginalized",
+        marginalize_gbb: bool | None = None,
+        marginalize_galactic: bool = True,
+        remove_temperature_shift: bool | None = None,
+    ) -> dict:
+        """FIRAS upper limit on the amplitude of a solver distortion.
+
+        Treats ``result.delta_n / amplitude`` as the spectrum per unit
+        amplitude, assuming the distortion is linear in that amplitude
+        (true for small injections), and fits it to FIRAS.  For example,
+        for a run with ``delta_rho=1e-5`` pass ``amplitude=1e-5`` to get a
+        limit on ``Δρ/ρ``.
+
+        Two methods are available.  They answer the same question with
+        different statistics, so their limits differ:
+
+        - ``"marginalized"`` (default): :meth:`limit_on_model`.  Linear fit
+          at the fixed FIRAS temperature, with ``G_bb`` and dust
+          marginalized analytically; two-sided limit ``|Â| + z σ``.
+        - ``"profile"``: :meth:`profile_limit_floating_T`.  Profile
+          likelihood with the CMB temperature floated nonlinearly and dust
+          marginalized; one-sided limit ``Â + z σ``, clipped at zero.
+
+        Parameters
+        ----------
+        result : SolverResult or object with ``.x`` and ``.delta_n``
+            Solver output on a dimensionless ``x`` grid.
+        amplitude : float, optional
+            Amplitude of the run that produced ``result`` (default 1).
+            The returned limit is in the same units.
+        cl : float, optional
+            Confidence level (default 0.95).
+        method : {"marginalized", "profile"}, optional
+            Limit method, as described above.
+        marginalize_gbb : bool, optional
+            ``"marginalized"`` only: marginalize over ``G_bb`` (*None*, the
+            default, means *True*).  The profile method handles the
+            temperature by floating it, so setting this with
+            ``"profile"`` raises ``TypeError``.
+        marginalize_galactic : bool, optional
+            Marginalize over the galactic dust template (default *True*).
+        remove_temperature_shift : bool, optional
+            ``"profile"`` only: remove the ``G_bb`` part of the template
+            with :func:`~spectroxide.greens.strip_gbb` before the fit
+            (*None*, the default, means *True*), because it is degenerate
+            with the floated temperature.  Setting it with
+            ``"marginalized"`` raises ``TypeError``; there, with
+            ``marginalize_gbb``, the ``G_bb`` part drops out of the fit
+            exactly.
+
+        Returns
+        -------
+        dict
+            The dict of the underlying method (``amplitude``, ``sigma``,
+            ``upper_limit``, plus ``t_best`` and ``chi2_min`` for
+            ``"profile"``), in units of ``amplitude``, with an added
+            ``method`` key.
+        """
+        if not np.isfinite(amplitude) or amplitude == 0:
+            raise ValueError(f"amplitude must be finite and nonzero, got {amplitude}")
         x_grid = np.asarray(result.x, dtype=np.float64)
-        dn_grid = np.asarray(result.delta_n, dtype=np.float64)
-        dn_firas = np.interp(self.x, x_grid, dn_grid)
-        model_kJy = _dn_to_dI_kJy(self.x, dn_firas, self.t_cmb)
-        return self.chi2(model_kJy)
+        dn_unit = np.asarray(result.delta_n, dtype=np.float64) / amplitude
+        if method == "marginalized" and remove_temperature_shift is not None:
+            raise TypeError(
+                "remove_temperature_shift applies to method='profile' only; "
+                "use marginalize_gbb with method='marginalized'"
+            )
+        if method == "profile" and marginalize_gbb is not None:
+            raise TypeError(
+                "marginalize_gbb applies to method='marginalized' only; the "
+                "profile method floats the temperature (see "
+                "remove_temperature_shift)"
+            )
+        if method == "marginalized":
+            if marginalize_gbb is None:
+                marginalize_gbb = True
+            out = self.limit_on_model(
+                lambda x: np.interp(x, x_grid, dn_unit),
+                cl=cl,
+                marginalize_gbb=marginalize_gbb,
+                marginalize_galactic=marginalize_galactic,
+            )
+        elif method == "profile":
+            if remove_temperature_shift is None or remove_temperature_shift:
+                from .greens import strip_gbb
+
+                dn_unit = strip_gbb(x_grid, dn_unit)[0]
+            out = self.profile_limit_floating_T(
+                lambda x: np.interp(x, x_grid, dn_unit),
+                cl=cl,
+                marginalize_galactic=marginalize_galactic,
+            )
+        else:
+            raise ValueError(
+                f"method={method!r} is not valid; use 'marginalized' or 'profile'"
+            )
+        out["method"] = method
+        return out
 
     # ------------------------------------------------------------------
     # Constraint on an arbitrary model spectrum

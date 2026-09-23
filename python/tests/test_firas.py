@@ -10,7 +10,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from spectroxide.greens import mu_shape, y_shape
+from spectroxide.greens import g_bb, mu_shape, y_shape
 from spectroxide.firas import (
     FIRASData,
     MU_FIRAS_95,
@@ -284,6 +284,144 @@ class TestChi2FromSolver:
         x = np.geomspace(0.05, 30.0, 2000)
         chi2 = firas.chi2_from_solver(self._result(x, 1.0e-3 * mu_shape(x)))
         assert chi2 > firas.chi2_null() + 100.0
+
+
+class TestChi2FromSolverMarginalized:
+    """chi2_from_solver(marginalize_gbb=..., marginalize_galactic=...) (A-5)."""
+
+    @staticmethod
+    def _result(x, dn):
+        return SimpleNamespace(x=x, delta_n=dn)
+
+    _X = np.geomspace(0.05, 30.0, 8000)
+
+    def test_temperature_shift_is_invisible(self):
+        """Adding α·G_bb to Δn does not change the G_bb-marginalized χ²."""
+        firas = FIRASData()
+        base = 3e-5 * mu_shape(self._X)
+        shifted = base + 2e-4 * g_bb(self._X)
+        c_base = firas.chi2_from_solver(
+            self._result(self._X, base), marginalize_gbb=True
+        )
+        c_shift = firas.chi2_from_solver(
+            self._result(self._X, shifted), marginalize_gbb=True
+        )
+        np.testing.assert_allclose(c_shift, c_base, rtol=1e-6)
+        # Unmarginalized, the shift is heavily penalized.
+        assert firas.chi2_from_solver(self._result(self._X, shifted)) > c_base + 100
+
+    def test_matches_brute_force_minimum_over_delta_t(self):
+        """Independent path: minimize the exact-template χ² over ΔT/T
+        numerically, instead of the closed-form projection."""
+        from scipy.optimize import minimize_scalar
+
+        firas = FIRASData()
+        mu = 4e-5
+        brute = minimize_scalar(
+            lambda dt: firas.chi2_distortion(mu=mu, delta_t=dt),
+            bracket=(-1e-4, 1e-4),
+            tol=1e-12,
+        ).fun
+        marg = firas.chi2_from_solver(
+            self._result(self._X, mu * mu_shape(self._X)), marginalize_gbb=True
+        )
+        np.testing.assert_allclose(marg, brute, rtol=1e-5)
+
+    def test_more_nuisance_never_raises_chi2(self):
+        firas = FIRASData()
+        r = self._result(self._X, 5e-5 * y_shape(self._X))
+        c0 = firas.chi2_from_solver(r)
+        c1 = firas.chi2_from_solver(r, marginalize_gbb=True)
+        c2 = firas.chi2_from_solver(r, marginalize_gbb=True, marginalize_galactic=True)
+        assert c2 <= c1 <= c0
+
+    def test_british_spelling_deprecated(self):
+        firas = FIRASData()
+        r = self._result(self._X, np.zeros_like(self._X))
+        with pytest.warns(DeprecationWarning, match="marginalise_gbb"):
+            c = firas.chi2_from_solver(r, marginalise_gbb=True)
+        assert c == firas.chi2_from_solver(r, marginalize_gbb=True)
+
+
+class TestLimitFromSolver:
+    """FIRASData.limit_from_solver (A-5)."""
+
+    _X = np.geomspace(0.05, 30.0, 8000)
+
+    @staticmethod
+    def _result(x, dn):
+        return SimpleNamespace(x=x, delta_n=dn)
+
+    def test_mu_limit_reproduces_fixsen(self):
+        """A pure M(x) spectrum gives the Fixsen et al. (1996) 95% CL
+        |μ| < 9e-5 (typed literal) to 10%, the agreement the μ-only fit
+        reaches (see FIRASData.upper_limit_mu)."""
+        firas = FIRASData()
+        res = self._result(self._X, 1e-5 * mu_shape(self._X))
+        lim = firas.limit_from_solver(res, amplitude=1e-5)
+        assert lim["method"] == "marginalized"
+        assert lim["upper_limit"] == pytest.approx(9e-5, rel=0.10)
+        assert lim["upper_limit"] == pytest.approx(
+            firas.upper_limit_mu(marginalize_y=False), rel=1e-4
+        )
+
+    def test_limit_independent_of_run_amplitude(self):
+        firas = FIRASData()
+        a = firas.limit_from_solver(
+            self._result(self._X, 1e-5 * y_shape(self._X)), amplitude=1e-5
+        )
+        b = firas.limit_from_solver(
+            self._result(self._X, 3e-7 * y_shape(self._X)), amplitude=3e-7
+        )
+        assert a["upper_limit"] == pytest.approx(b["upper_limit"], rel=1e-10)
+
+    def test_temperature_shift_in_run_does_not_matter(self):
+        """A PDE Δn carries an accumulated G_bb part; neither method
+        should see it."""
+        firas = FIRASData()
+        clean = 1e-5 * y_shape(self._X)
+        dirty = clean + 5e-6 * g_bb(self._X)
+        for method in ("marginalized", "profile"):
+            a = firas.limit_from_solver(
+                self._result(self._X, clean), amplitude=1e-5, method=method
+            )
+            b = firas.limit_from_solver(
+                self._result(self._X, dirty), amplitude=1e-5, method=method
+            )
+            assert a["upper_limit"] == pytest.approx(b["upper_limit"], rel=1e-4)
+
+    def test_profile_matches_manual_recipe(self):
+        """method='profile' is strip_gbb + profile_limit_floating_T, the
+        recipe tutorial 05 used to write by hand."""
+        from spectroxide import strip_gbb
+
+        firas = FIRASData()
+        dn = 1e-5 * mu_shape(self._X) + 2e-6 * g_bb(self._X)
+        manual = firas.profile_limit_floating_T(
+            lambda x: np.interp(x, self._X, strip_gbb(self._X, dn / 1e-5)[0])
+        )
+        got = firas.limit_from_solver(
+            self._result(self._X, dn), amplitude=1e-5, method="profile"
+        )
+        assert got["upper_limit"] == manual["upper_limit"]
+        assert got["t_best"] == manual["t_best"]
+
+    def test_rejects_argument_of_other_method(self):
+        firas = FIRASData()
+        r = self._result(self._X, mu_shape(self._X))
+        with pytest.raises(TypeError, match="marginalize_gbb"):
+            firas.limit_from_solver(r, method="profile", marginalize_gbb=False)
+        with pytest.raises(TypeError, match="remove_temperature_shift"):
+            firas.limit_from_solver(
+                r, method="marginalized", remove_temperature_shift=False
+            )
+
+    def test_bad_method(self):
+        firas = FIRASData()
+        with pytest.raises(ValueError, match="method="):
+            firas.limit_from_solver(
+                self._result(self._X, mu_shape(self._X)), method="profiled"
+            )
 
 
 # =========================================================================
