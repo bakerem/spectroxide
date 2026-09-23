@@ -830,3 +830,30 @@ fn test_solver_config_rejects_bad_tolerances() {
         "nc_z_min = 0 is documented as valid"
     );
 }
+
+/// N-2: a refinement zone whose center lies outside [x_min, x_max] but which
+/// overlaps the grid is valid (construction clips it). The zone that
+/// `DecayingParticlePhoton` builds for x_inj_0 = 1.8e5, centered at
+/// (1.8e5·1e-7 + 1.8e5)/2 = 90001.5, must pass `build()`.
+#[test]
+fn test_refinement_zone_overlapping_grid_is_valid() {
+    let gc = GridConfig {
+        refinement_zones: vec![RefinementZone {
+            x_center: 90_001.5,
+            x_width: 89_999.9,
+            n_points: 400,
+        }],
+        ..GridConfig::default()
+    };
+    assert!(gc.validate().is_ok(), "{:?}", gc.validate());
+    let solver = ThermalizationSolver::builder(Cosmology::default())
+        .grid(GridConfig::fast())
+        .injection(InjectionScenario::DecayingParticlePhoton {
+            x_inj_0: 1.8e5,
+            f_inj: 1e-6,
+            gamma_x: 1e-13,
+        })
+        .z_range(2e4, 1e4)
+        .build();
+    assert!(solver.is_ok(), "{:?}", solver.err());
+}
