@@ -17,7 +17,7 @@ pub struct RefinementZone {
 
 /// Configuration for the frequency grid.
 ///
-/// Presets [`Self::fast`] (500 points) and [`Self::production`] (4000 points)
+/// Presets [`Self::fast`] (1000 points) and [`Self::production`] (4000 points)
 /// cover the common cases. Hand-rolled configurations must satisfy
 /// [`Self::validate`]: in particular, `x_max ≥ 30` for accurate G₃ integrals.
 #[derive(Debug, Clone)]
@@ -64,13 +64,13 @@ impl GridConfig {
         }
     }
 
-    /// Builds the fast testing grid: 500 points, `x ∈ [1e-4, 40]`. Suitable for quick
+    /// Builds the fast testing grid: 1000 points, `x ∈ [1e-4, 40]`. Suitable for quick
     /// exploratory runs; distortion amplitudes are accurate to a few percent.
     pub fn fast() -> Self {
         GridConfig {
             x_min: 1e-4,
             x_max: 40.0,
-            n_points: 500,
+            n_points: 1000,
             x_transition: 0.1,
             log_fraction: 0.3,
             refinement_zones: Vec::new(),
@@ -130,10 +130,23 @@ impl GridConfig {
             if zone.n_points == 0 {
                 return Err(format!("refinement_zones[{}].n_points must be > 0", i));
             }
-            if zone.x_center < self.x_min || zone.x_center > self.x_max {
+            // Grid construction clips each zone to [x_min, x_max], so only a
+            // zone that misses the grid entirely is an error. A zone whose
+            // center lies outside but that still overlaps the grid is valid:
+            // `DecayingParticlePhoton` spans [x_inj_0·1e-7, x_inj_0], whose
+            // midpoint exceeds x_max for large x_inj_0 (N-2).
+            if !zone.x_center.is_finite() || !zone.x_width.is_finite() {
                 return Err(format!(
-                    "refinement_zones[{}].x_center={} is outside grid range [{}, {}]",
-                    i, zone.x_center, self.x_min, self.x_max
+                    "refinement_zones[{}] must be finite, got x_center={}, x_width={}",
+                    i, zone.x_center, zone.x_width
+                ));
+            }
+            let lo = zone.x_center - zone.x_width;
+            let hi = zone.x_center + zone.x_width;
+            if hi <= self.x_min || lo >= self.x_max {
+                return Err(format!(
+                    "refinement_zones[{}] = [{}, {}] does not overlap the grid range [{}, {}]",
+                    i, lo, hi, self.x_min, self.x_max
                 ));
             }
         }

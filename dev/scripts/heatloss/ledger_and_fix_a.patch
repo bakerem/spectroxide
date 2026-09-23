@@ -1,0 +1,72 @@
+diff --git a/src/kompaneets.rs b/src/kompaneets.rs
+index 4bd2ce2..f62f82a 100644
+--- a/src/kompaneets.rs
++++ b/src/kompaneets.rs
+@@ -646,8 +646,9 @@ pub fn kompaneets_step_coupled_inplace(
+     // callers that evolve T_e via `update_temperatures` but do not enable the
+     // bordered Newton should pass `rho_coupling = Some(...)` to preserve
+     // time-centering (the `dh_drho`/`lambda_exp`/etc. fields can be zeroed).
++    let fix_a = std::env::var_os("SPX_FIX_A").is_some();
+     let theta_e_old = if let Some(rc) = rho_coupling {
+-        theta_z * rc.rho_e_old
++        if fix_a { theta_e } else { theta_z * rc.rho_e_old }
+     } else {
+         theta_e
+     };
+@@ -692,7 +693,7 @@ pub fn kompaneets_step_coupled_inplace(
+     // For the "old" part of CN, use the step-start ρ_e.
+     // When coupled, rho_e_old is the pre-update value; otherwise use theta_e/theta_z.
+     let phi_old = if let Some(rc) = rho_coupling {
+-        1.0 / rc.rho_e_old
++        if fix_a { theta_z / theta_e } else { 1.0 / rc.rho_e_old }
+     } else {
+         theta_z / theta_e
+     };
+diff --git a/src/solver.rs b/src/solver.rs
+index c46a788..e334f5a 100644
+--- a/src/solver.rs
++++ b/src/solver.rs
+@@ -1297,6 +1297,13 @@ impl ThermalizationSolver {
+             .map_or(false, |inj| inj.has_photon_source());
+ 
+         let rho_e = self.electron_temp.rho_e;
++        let ledger_on = std::env::var_os("SPX_LEDGER").is_some();
++        let e_ph0 = if ledger_on {
++            crate::spectrum::delta_rho_over_rho(&self.grid.x, &self.delta_n)
++        } else {
++            0.0
++        };
++        let rho_e_step_old = self.rho_e_ode_cache.map(|c| c.rho_e_old).unwrap_or(rho_e);
+ 
+         let theta_e_full = theta_z_val * rho_e;
+         let n = self.grid.n;
+@@ -1637,6 +1644,29 @@ impl ThermalizationSolver {
+             }
+         }
+ 
++        if ledger_on {
++            let e_ph1 = crate::spectrum::delta_rho_over_rho(&self.grid.x, &self.delta_n);
++            let dt = actual_dz / (h * (1.0 + z_mid));
++            let q_dt = self
++                .injection
++                .as_ref()
++                .map_or(0.0, |inj| inj.heating_rate(z_mid, &self.cosmo) * dt);
++            if let Some(c) = self.rho_e_ode_cache {
++                let rho_new = self.electron_temp.rho_e;
++                let c_gas = 4.0 * theta_z_val / c.r_compton;
++                let inj = 4.0 * theta_z_val * dtau * (c.rho_source - self.rho_eq);
++                let store = c_gas * (rho_new - rho_e_step_old);
++                let adia = c_gas * c.lambda_htc * dtau * rho_new;
++                eprintln!(
++                    "LEDGER {:.6e} {:.6e} {:.6e} {:.6e} {:.9e} {:.9e} {:.9e} {:.6e} {:.6e} {:.6e} {:.6e} {:.6e} {:.6e} {:.6e} {:.6e}",
++                    z_mid, actual_dz, dtau, x_e, rho_e_step_old, rho_new, self.rho_eq,
++                    c.r_compton, c.lambda_htc, q_dt, inj, store, adia, e_ph1 - e_ph0, e_ph1
++                );
++            } else {
++                eprintln!("LEDGER_NOCACHE {:.6e} {:.6e} {:.6e} {:.6e}", z_mid, q_dt, e_ph1 - e_ph0, e_ph1);
++            }
++        }
++
+         // Number-conserving mode: subtract temperature shift G_bb from Δn.
+         // This prevents DC/BR-created low-x photons from accumulating as a
+         // secular T-shift that masks the physical distortion shape.

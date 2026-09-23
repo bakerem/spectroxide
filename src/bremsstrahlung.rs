@@ -36,48 +36,62 @@ const LN_1_125: f64 = 0.1177_8303_5656_3834;
 
 /// Computes the non-relativistic thermally-averaged free-free Gaunt factor.
 ///
-/// Uses a softplus interpolation that smoothly approaches the classical Born
-/// limit at low frequencies while remaining ≥ 1 at high frequencies:
-///   g_ff = 1 + softplus((√3/π)(ln(2.25/(x Z)) + 0.5 ln(θ_e)) + 1.425)
+/// The first argument is `x_e = hν/(kT_e) = x/ρ_e`, the frequency in units of
+/// the *electron* temperature, not the grid variable `x = hν/(kT_z)`. The
+/// physical Gaunt factor depends on ν and T_e only. Callers that hold the grid
+/// `x` must pass `x·φ = x/ρ_e` (P-1 in dev/REVIEW_2026-09-22.md).
 ///
-/// The argument uses Z (nuclear charge, linear) not Z², following the
-/// Coulomb parameter convention where η_Z = Z e²/(ℏv) enters linearly
-/// inside the logarithm. The 0.5×ln(θ_e) is an empirical interpolation
-/// between the Born and classical regimes.
+/// Uses a softplus interpolation that tends to the classical Gaunt factor at
+/// low frequencies while staying ≥ 1 at high frequencies:
+///   g_ff = 1 + softplus((√3/π)(ln(2.25/(x_e Z)) + ½ ln θ_e) + 1.425)
 ///
-/// This approximation is from CosmoTherm (private communication, J. Chluba),
-/// calibrated against the exact Karzas & Latter (1961) Gaunt factor tabulations
-/// and the BRpack library (Chluba, Ravenni & Bolliet 2020, MNRAS 492, 177).
-/// The offset constant 1.425 improves agreement in the transition region.
-pub fn gaunt_ff_nr(x: f64, theta_e: f64, z_charge: f64) -> f64 {
+/// For a large softplus argument this becomes
+/// g_ff → (√3/π) ln(2.25 θ_e^{1/2}/(Z x_e)) + 2.425 = (√3/π) ln(C θ_e^{1/2}/(Z x_e)) − 3.7e-4,
+/// with C = 2^{5/2} e^{−5γ_E/2}/α = 183.107, because
+/// 1.425 = (√3/π) ln(C/2.25) − 1 = 1.42537. That is the classical (kT_e ≪ Z² Ry,
+/// hν ≪ kT_e) Gaunt factor of Draine (2011), *Physics of the Interstellar and
+/// Intergalactic Medium*, Eq. 10.9, g = (√3/π)[ln((2kT_e)^{3/2}/(π Z e² m_e^{1/2} ν)) − 5γ_E/2],
+/// written in (x_e, θ_e). So the ½ ln θ_e term is the classical θ_e^{1/2} dependence,
+/// and Z enters linearly through the Coulomb parameter. The softplus and the
+/// "+1" offset make g ≥ 1 at high frequency. This fit form is used in CosmoTherm
+/// (J. Chluba, private communication); it does not appear in Chluba, Ravenni &
+/// Bolliet (2020, arXiv:1911.08861), whose BRpack tabulations are the accurate
+/// reference. `tests/greens_function_checks.rs` pins the low-frequency limit
+/// against Draine's formula.
+pub fn gaunt_ff_nr(x_e: f64, theta_e: f64, z_charge: f64) -> f64 {
     if theta_e < 1e-30 {
         return 1.0;
     }
-    gaunt_ff_nr_fast(x, z_charge, 0.5 * theta_e.ln())
+    gaunt_ff_nr_fast(x_e, z_charge, 0.5 * theta_e.ln())
 }
 
-/// Computes the fast Gaunt factor with precomputed 0.5*ln(θ_e) hoisted out of the grid loop.
+/// Computes the fast Gaunt factor with a precomputed log shift hoisted out of the grid loop.
+///
+/// The fit argument is `S3_PI·(ln(2.25/(xZ)) + ln_shift) + 1.425`. With
+/// `ln_shift = ½ ln θ_e` and `x = x_e` this is [`gaunt_ff_nr`]. With the grid
+/// `x` and `ln_shift = ½ ln θ_e − ln φ` (see [`BrPrecomputed::gaunt_ln_shift`])
+/// it is the same Gaunt factor, because ln x_e = ln x + ln φ.
 #[inline]
-fn gaunt_ff_nr_fast(x: f64, z_charge: f64, half_ln_theta_e: f64) -> f64 {
+fn gaunt_ff_nr_fast(x: f64, z_charge: f64, ln_shift: f64) -> f64 {
     if x < 1e-30 {
         return 1.0;
     }
-    let arg = S3_PI * ((2.25 / (x * z_charge)).ln() + half_ln_theta_e) + 1.425;
+    let arg = S3_PI * ((2.25 / (x * z_charge)).ln() + ln_shift) + 1.425;
     1.0 + softplus(arg)
 }
 
-/// Computes the fast Gaunt factor with precomputed ln(x) and 0.5*ln(θ_e).
+/// Computes the fast Gaunt factor with precomputed ln(x) and log shift.
 ///
 /// Avoids the ln() call inside the grid loop by using precomputed ln_x.
-/// `ln(2.25/(x*Z))` = `ln(2.25/Z) - ln(x)`.
+/// `ln(2.25/(x*Z))` = `ln(2.25/Z) - ln(x)`. See [`gaunt_ff_nr_fast`] for `ln_shift`.
 #[inline]
-fn gaunt_ff_nr_fast_preln(ln_x: f64, z_charge: f64, half_ln_theta_e: f64) -> f64 {
+fn gaunt_ff_nr_fast_preln(ln_x: f64, z_charge: f64, ln_shift: f64) -> f64 {
     // Guard against x < 1e-30 (ln_x < -69.0) to match gaunt_ff_nr_fast and prevent Inf
     if ln_x < -69.0 {
         return 1.0;
     }
     let ln_2_25_over_z = if z_charge < 1.5 { LN_2_25 } else { LN_1_125 };
-    let arg = S3_PI * (ln_2_25_over_z - ln_x + half_ln_theta_e) + 1.425;
+    let arg = S3_PI * (ln_2_25_over_z - ln_x + ln_shift) + 1.425;
     1.0 + softplus(arg)
 }
 
@@ -148,9 +162,11 @@ pub fn br_emission_coefficient(
     // Species sum: Σ_i Z_i² (N_i) g_ff(Z_i, x, θ_e)
     // H⁺: Z=1, He²⁺: Z=2, He⁺: Z=1
 
-    // H⁺ and He⁺ both have Z=1, so their Gaunt factors are identical
-    let g_z1 = gaunt_ff_nr(x, theta_e, 1.0);
-    let g_z2 = gaunt_ff_nr(x, theta_e, 2.0);
+    // H⁺ and He⁺ both have Z=1, so their Gaunt factors are identical.
+    // The Gaunt factor takes x_e = x·φ = hν/kT_e, not the grid x.
+    let x_e = x * phi;
+    let g_z1 = gaunt_ff_nr(x_e, theta_e, 1.0);
+    let g_z2 = gaunt_ff_nr(x_e, theta_e, 2.0);
 
     // He ionization from Saha equations (via the temperature → redshift mapping).
     //
@@ -203,9 +219,11 @@ pub fn br_emission_coefficient_with_he(
     let phi = theta_z / theta_e;
     let temp_factor = theta_e.powf(-3.5) * (-x * phi).exp() / phi.powi(3);
 
-    // H⁺ and He⁺ both have Z=1, so their Gaunt factors are identical
-    let g_z1 = gaunt_ff_nr(x, theta_e, 1.0);
-    let g_he2 = gaunt_ff_nr(x, theta_e, 2.0);
+    // H⁺ and He⁺ both have Z=1, so their Gaunt factors are identical.
+    // The Gaunt factor takes x_e = x·φ = hν/kT_e, not the grid x.
+    let x_e = x * phi;
+    let g_z1 = gaunt_ff_nr(x_e, theta_e, 1.0);
+    let g_he2 = gaunt_ff_nr(x_e, theta_e, 2.0);
 
     let n_hii = x_e_frac.min(1.0) * n_h;
     let n_heiii = y_he_ii * n_he;
@@ -234,10 +252,13 @@ pub struct BrPrecomputed {
     /// Number density of He⁺ (Z = 1) [1/m³]: max(y_he_i − y_he_ii, 0) × N_He, where `y_he_i` is
     /// the fraction of helium that is at least singly ionized.
     pub n_heii: f64,
-    /// 0.5 * ln(θ_e), precomputed for fast Gaunt factor evaluation.
-    pub half_ln_theta_e: f64,
-    /// `exp(S3_PI·(ln 2.25 + ½lnθ_e) + 1.425)` — the x-independent half of
-    /// `exp(arg)` for Z = 1. See [`gaunt_expc_factor`].
+    /// ½ ln θ_e − ln φ = (3/2) ln θ_e − ln θ_z, precomputed for fast Gaunt factor
+    /// evaluation on the grid variable x. The Gaunt fit depends on
+    /// ln(1/x_e) + ½ ln θ_e with x_e = xφ, which equals ln(1/x) + `gaunt_ln_shift`.
+    pub gaunt_ln_shift: f64,
+    /// `exp(S3_PI·(ln 2.25 + gaunt_ln_shift) + 1.425)`: the x-independent half of
+    /// `exp(arg)` for Z = 1. It carries the factor φ^(−S3_PI) = ρ_e^(S3_PI) that
+    /// converts the grid-constant x^(−S3_PI) to x_e^(−S3_PI). See [`gaunt_expc_factor`].
     pub ea_z1: f64,
     /// Same for Z = 2 (`ln 1.125` in place of `ln 2.25`).
     pub ea_z2: f64,
@@ -249,8 +270,9 @@ pub struct BrPrecomputed {
 /// `ln x`:
 ///
 /// ```text
-/// arg = S3_PI·(ln(2.25/Z) + ½lnθ_e − ln x) + 1.425
-///     ⇒ exp(arg) = x^(−S3_PI) · exp(S3_PI·(ln(2.25/Z) + ½lnθ_e) + 1.425)
+/// arg = S3_PI·(ln(2.25/Z) + ½lnθ_e − ln x_e) + 1.425,   x_e = xφ
+///     = S3_PI·(ln(2.25/Z) + s − ln x) + 1.425,          s = ½lnθ_e − ln φ
+///     ⇒ exp(arg) = x^(−S3_PI) · exp(S3_PI·(ln(2.25/Z) + s) + 1.425)
 ///                = gaunt_expc_factor(ln x) · ea_Z
 /// ```
 ///
@@ -326,16 +348,17 @@ pub fn br_precompute(
     }
     let phi = theta_z / theta_e;
     let base_factor = BR_PREFACTOR * theta_e.powf(-3.5) / (phi * phi * phi);
-    let half_ln_theta_e = 0.5 * theta_e.ln();
+    // The Gaunt fit takes x_e = xφ: ln(1/x_e) + ½ ln θ_e = ln(1/x) + (½ ln θ_e − ln φ).
+    let gaunt_ln_shift = 0.5 * theta_e.ln() - phi.ln();
     Some(BrPrecomputed {
         base_factor,
         phi,
         n_hii: x_e_frac.min(1.0) * n_h,
         n_heiii: y_he_ii * n_he,
         n_heii: (y_he_i - y_he_ii).max(0.0) * n_he,
-        half_ln_theta_e,
-        ea_z1: (S3_PI * (LN_2_25 + half_ln_theta_e) + 1.425).exp(),
-        ea_z2: (S3_PI * (LN_1_125 + half_ln_theta_e) + 1.425).exp(),
+        gaunt_ln_shift,
+        ea_z1: (S3_PI * (LN_2_25 + gaunt_ln_shift) + 1.425).exp(),
+        ea_z2: (S3_PI * (LN_1_125 + gaunt_ln_shift) + 1.425).exp(),
     })
 }
 
@@ -346,8 +369,8 @@ pub fn br_precompute(
 pub fn br_emission_coefficient_fast(x: f64, pre: &BrPrecomputed) -> f64 {
     let exp_xphi = (-x * pre.phi).exp();
     // H⁺ and He⁺ both have Z=1, so their Gaunt factors are identical
-    let g_z1 = gaunt_ff_nr_fast(x, 1.0, pre.half_ln_theta_e);
-    let g_he2 = gaunt_ff_nr_fast(x, 2.0, pre.half_ln_theta_e);
+    let g_z1 = gaunt_ff_nr_fast(x, 1.0, pre.gaunt_ln_shift);
+    let g_he2 = gaunt_ff_nr_fast(x, 2.0, pre.gaunt_ln_shift);
 
     let species_sum = pre.n_hii * g_z1 + 4.0 * pre.n_heiii * g_he2 + pre.n_heii * g_z1;
 
@@ -380,7 +403,10 @@ fn gaunt_from_expc_with_sigma(expc: f64, ea: f64) -> (f64, f64) {
 /// With θ_e = θ_z ρ_e and φ = 1/ρ_e, K_BR = base(θ_e) · e^{-xφ} · S(θ_e):
 ///   d ln base/dρ_e = (-7/2 + 3)/ρ_e = -φ/2      (θ_e^{-7/2}/φ³ factor)
 ///   d(-xφ)/dρ_e    = x φ²                        (Wien factor)
-///   dg/dρ_e        = σ · (√3/π) · φ/2            (softplus Gaunt fit)
+///   dg/dρ_e        = σ · (√3/π) · 3φ/2           (softplus Gaunt fit)
+/// The Gaunt argument is S3_PI·(ln(2.25/Z) − ln x + ½ ln θ_e − ln φ) + 1.425, and
+/// d(½ ln θ_e − ln φ)/dρ_e = ½/ρ_e + 1/ρ_e = (3/2)φ: ½ from the θ_e^{1/2} of the
+/// classical Gaunt factor, 1 from x_e = x/ρ_e.
 ///
 /// `expc` is the grid-constant [`gaunt_expc_factor`]; the returned K_BR agrees
 /// with `br_emission_coefficient_fast_preln` to last-ulp rounding.
@@ -393,7 +419,7 @@ pub fn br_emission_coefficient_and_drho_expc(x: f64, expc: f64, pre: &BrPrecompu
     let species_sum = pre.n_hii * g_z1 + 4.0 * pre.n_heiii * g_he2 + pre.n_heii * g_z1;
     let k_br = pre.base_factor * exp_xphi * species_sum;
 
-    let d_species = (0.5 * S3_PI * pre.phi)
+    let d_species = (1.5 * S3_PI * pre.phi)
         * (pre.n_hii * s_z1 + 4.0 * pre.n_heiii * s_he2 + pre.n_heii * s_z1);
     let dk_br = k_br * (x * pre.phi - 0.5) * pre.phi + pre.base_factor * exp_xphi * d_species;
 
@@ -427,8 +453,8 @@ pub fn br_emission_coefficient_expc(x: f64, expc: f64, pre: &BrPrecomputed) -> f
 #[inline]
 pub fn br_emission_coefficient_fast_preln(x: f64, ln_x: f64, pre: &BrPrecomputed) -> f64 {
     let exp_xphi = (-x * pre.phi).exp();
-    let g_z1 = gaunt_ff_nr_fast_preln(ln_x, 1.0, pre.half_ln_theta_e);
-    let g_he2 = gaunt_ff_nr_fast_preln(ln_x, 2.0, pre.half_ln_theta_e);
+    let g_z1 = gaunt_ff_nr_fast_preln(ln_x, 1.0, pre.gaunt_ln_shift);
+    let g_he2 = gaunt_ff_nr_fast_preln(ln_x, 2.0, pre.gaunt_ln_shift);
 
     let species_sum = pre.n_hii * g_z1 + 4.0 * pre.n_heiii * g_he2 + pre.n_heii * g_z1;
 
@@ -689,6 +715,62 @@ mod tests {
             (sp_low - expected).abs() < 1e-20,
             "softplus(-25) ≈ exp(-25)"
         );
+    }
+
+    /// The analytic dK_BR/dρ_e of `br_emission_coefficient_and_drho_expc` must match
+    /// a central finite difference of the production K_BR (`br_emission_coefficient_expc`
+    /// through `br_precompute`) in ρ_e, at fixed θ_z, grid x, densities and He
+    /// fractions. This pins the (3/2)φ Gaunt term: ½ from θ_e^{1/2}, 1 from
+    /// x_e = x/ρ_e. The old ½ is off by S3_PI·φ·σ·ΣZ²N, a few percent of dK/dρ_e
+    /// at low x, far above the FD error.
+    #[test]
+    fn test_br_drho_matches_finite_difference() {
+        let (n_h, n_he, n_e) = (1.0e6, 8.0e4, 1.1e6);
+        let (y_he_ii, y_he_i) = (0.3, 0.9);
+        for &theta_z in &[3e-8_f64, 1e-6, 1e-4] {
+            for &rho_e in &[0.4_f64, 0.62, 1.0, 1.3] {
+                for &x in &[1e-5_f64, 1e-3, 0.1, 2.0, 15.0] {
+                    let expc = gaunt_expc_factor(x.ln());
+                    let k_at = |r: f64| {
+                        let pre = br_precompute(
+                            theta_z * r,
+                            theta_z,
+                            n_h,
+                            n_he,
+                            n_e,
+                            1.0,
+                            y_he_ii,
+                            y_he_i,
+                        )
+                        .unwrap();
+                        br_emission_coefficient_expc(x, expc, &pre)
+                    };
+                    let pre = br_precompute(
+                        theta_z * rho_e,
+                        theta_z,
+                        n_h,
+                        n_he,
+                        n_e,
+                        1.0,
+                        y_he_ii,
+                        y_he_i,
+                    )
+                    .unwrap();
+                    let (k, dk) = br_emission_coefficient_and_drho_expc(x, expc, &pre);
+                    let h = 1e-5 * rho_e;
+                    let fd = (k_at(rho_e + h) - k_at(rho_e - h)) / (2.0 * h);
+                    // Relative to K/ρ_e + |FD| so a near-zero dK (x·φ ≈ ½) is not judged
+                    // on a vanishing denominator, while the steep Wien tail (x·φ ≫ 1,
+                    // FD truncation ∝ (xφ²h)²) is judged relative to its own size.
+                    let err = (dk - fd).abs() / (k / rho_e + fd.abs());
+                    assert!(
+                        err < 1e-7,
+                        "dK_BR/dρ_e mismatch at θ_z={theta_z:e}, ρ_e={rho_e}, x={x}: \
+                         analytic {dk:e}, FD {fd:e}, err {err:.2e}"
+                    );
+                }
+            }
+        }
     }
 
     /// Verifies all BR fast variants (fast, fast_preln, with_he) match the reference

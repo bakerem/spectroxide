@@ -694,3 +694,159 @@ fn test_adiabatic_cooling_mu_vs_cosmotherm() {
         ct_mu
     );
 }
+
+/// Loads the CosmoTherm Green's-function database `Greens_data.dat`
+/// (Chluba 2013), which is not tracked in git (`data/cosmotherm/download_greens.sh`).
+/// Returns (z_h, x, G[i_x][i_z]), with G in Jy/sr per unit Δρ/ρ, without the
+/// G_bb term. Looks at `$SPECTROXIDE_GREENS_DB`, then the two paths the
+/// Python loader uses. `None` if the file is absent.
+fn load_greens_database() -> Option<(Vec<f64>, Vec<f64>, Vec<Vec<f64>>)> {
+    let candidates = [
+        std::env::var("SPECTROXIDE_GREENS_DB").unwrap_or_default(),
+        "data/cosmotherm/Greens_data.dat".to_string(),
+        "data/cosmotherm/Greens.v1.0.3/Gdatabase/Greens_data.dat".to_string(),
+    ];
+    let path = candidates
+        .iter()
+        .find(|p| std::path::Path::new(p).is_file())?;
+    let text = std::fs::read_to_string(path).ok()?;
+    let nums = |s: &str| -> Vec<f64> {
+        s.split_whitespace()
+            .filter_map(|p| p.parse().ok())
+            .collect()
+    };
+    // Header: "# nG", then "# z_h..." (followed by Tgin, Tglast, ρ rows we skip).
+    let mut n_g = 0;
+    let mut z_h = Vec::new();
+    let (mut x, mut g) = (Vec::new(), Vec::new());
+    for line in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
+        if let Some(h) = line.strip_prefix('#') {
+            let v = nums(h);
+            if v.len() == 1 {
+                n_g = v[0] as usize;
+            } else if v.len() > 10 && z_h.is_empty() {
+                z_h = v;
+            }
+        } else {
+            let v = nums(line);
+            x.push(v[0]);
+            g.push(v[1..=n_g].to_vec());
+        }
+    }
+    assert_eq!(z_h.len(), n_g, "Greens_data.dat header: z_h count != nG");
+    Some((z_h, x, g))
+}
+
+/// Convolves the CosmoTherm Green's-function database with a heating history
+/// dQ/dz = d(Δρ/ρ)/dz over z ∈ [1001, 3e6], as CosmoTherm's Greens.cpp does
+/// (including its analytic exp(−(z/2e6)^{5/2}) factor), and returns Δn at `x_out`.
+/// Interpolation is bilinear in (ln x, ln z_h), as in
+/// `spectroxide.cosmotherm.convolve_cosmotherm_gf`.
+fn cosmotherm_gf_delta_n(dq_dz: &dyn Fn(f64) -> f64, x_out: &[f64]) -> Option<Vec<f64>> {
+    let (z_h, x_db, g) = load_greens_database()?;
+    let (lx, lz): (Vec<f64>, Vec<f64>) = (
+        x_db.iter().map(|v| v.ln()).collect(),
+        z_h.iter().map(|v| v.ln()).collect(),
+    );
+    let bracket = |a: &[f64], v: f64| -> (usize, f64) {
+        let i = a.partition_point(|&p| p <= v).clamp(1, a.len() - 1) - 1;
+        (i, ((v - a[i]) / (a[i + 1] - a[i])).clamp(0.0, 1.0))
+    };
+    let n_z = 4000;
+    let (l0, l1) = (1002.0_f64.ln(), 3.0e6_f64.ln() + 1e-12);
+    let dl = (l1 - l0) / (n_z - 1) as f64;
+    let mut di = vec![0.0; x_out.len()];
+    for j in 0..n_z {
+        let z = (l0 + j as f64 * dl).exp() - 1.0;
+        let w = if j == 0 || j == n_z - 1 { 0.5 } else { 1.0 };
+        let hw = dq_dz(z) * (1.0 + z) * dl * w * (-(z / 2.0e6).powf(2.5)).exp();
+        let (iz, tz) = bracket(&lz, z.ln());
+        for (k, &xo) in x_out.iter().enumerate() {
+            let (ix, tx) = bracket(&lx, xo.ln());
+            let gi = |a: usize| g[a][iz] * (1.0 - tz) + g[a][iz + 1] * tz;
+            di[k] += hw * (gi(ix) * (1.0 - tx) + gi(ix + 1) * tx);
+        }
+    }
+    // Jy/sr → Δn: ΔI = (2hν³/c²) Δn with ν = x k T/h, T = 2.726 K (CosmoTherm).
+    let (h, k, c, t) = (6.626_070_15e-34, 1.380_649e-23, 2.997_924_58e8, 2.726);
+    Some(
+        x_out
+            .iter()
+            .zip(di)
+            .map(|(&xo, d)| d * 1e-26 / (2.0 * h * (xo * k * t / h).powi(3) / (c * c)))
+            .collect(),
+    )
+}
+
+/// μ-era decaying particle: PDE μ and y against the CosmoTherm Green's-function
+/// database convolved with the same heating history, both decomposed with the
+/// same (μ, y, ΔT) fitter on the same x grid.
+///
+/// Γ_X puts the lifetime at z = 2e5 and 5e5. The measured gaps are at most
+/// 0.6% in μ and 3.1% in y. The tolerances (μ 2%, y 5%) add margin for the
+/// database's z sampling (118 nodes, Δln z ≈ 0.077, linear interpolation) and
+/// for y being a small component in the μ-era; they are not a published
+/// CosmoTherm accuracy figure. We do not test against the Chluba (2013)
+/// visibility fits here: for the z = 2e5 decay they are off by 6% in μ and by a
+/// factor of 7 in y against this same database, so they would test the fit,
+/// not the PDE (decisions/0002-relax-dc-br-toward-actual-electron-temperature.md,
+/// Addendum). The database is not in git, so the test is ignored by default;
+/// run it with `--ignored` after `data/cosmotherm/download_greens.sh`, or point
+/// `SPECTROXIDE_GREENS_DB` at the file. It fails if the file is missing.
+#[test]
+#[ignore = "needs the CosmoTherm Greens_data.dat (data/cosmotherm/download_greens.sh)"]
+fn test_decaying_particle_vs_cosmotherm_gf_database() {
+    use spectroxide::energy_injection::InjectionScenario;
+    assert!(
+        load_greens_database().is_some(),
+        "Greens_data.dat not found: run data/cosmotherm/download_greens.sh or set \
+         SPECTROXIDE_GREENS_DB"
+    );
+    let cosmo = Cosmology::default();
+    // f_X gives an injected Δρ/ρ ≈ 1e-5 in both cases.
+    for (z_life, f_x) in [(2.0e5, 3.0e6), (5.0e5, 7.5e6)] {
+        let gamma_x = 1.0 / cosmo.cosmic_time(z_life);
+        let mut solver = ThermalizationSolver::new(cosmo.clone(), GridConfig::production());
+        solver
+            .set_injection(InjectionScenario::DecayingParticle { f_x, gamma_x })
+            .unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 3.0e6,
+            z_end: 1.0e3,
+            ..SolverConfig::default()
+        });
+        solver.run_with_snapshots(&[1.0e3]);
+        let snap = solver.snapshots.last().unwrap();
+
+        // Compare on the PDE grid inside the database range x ∈ [1e-3, 40].
+        let (xs, dn_pde): (Vec<f64>, Vec<f64>) = solver
+            .grid
+            .x
+            .iter()
+            .zip(&snap.delta_n)
+            .filter(|(x, _)| (1.0e-3..=40.0).contains(*x))
+            .map(|(&x, &d)| (x, d))
+            .unzip();
+        let scenario = solver.injection.as_ref().unwrap();
+        let dq_dz = |z: f64| -scenario.heating_rate_per_redshift(z, &cosmo);
+        let dn_ct = cosmotherm_gf_delta_n(&dq_dz, &xs).unwrap();
+        let p = distortion::decompose_distortion(&xs, &dn_pde);
+        let c = distortion::decompose_distortion(&xs, &dn_ct);
+        let (dmu, dy) = ((p.mu - c.mu) / c.mu, (p.y - c.y) / c.y);
+        eprintln!(
+            "lifetime at z = {z_life:.0e}: PDE μ = {:.4e}, y = {:.4e}; CosmoTherm μ = {:.4e}, \
+             y = {:.4e}; Δμ/μ = {dmu:+.3e}, Δy/y = {dy:+.3e}",
+            p.mu, p.y, c.mu, c.y
+        );
+        assert!(
+            dmu.abs() < 0.02,
+            "μ vs CosmoTherm GF database: {:.2}%",
+            100.0 * dmu
+        );
+        assert!(
+            dy.abs() < 0.05,
+            "y vs CosmoTherm GF database: {:.2}%",
+            100.0 * dy
+        );
+    }
+}

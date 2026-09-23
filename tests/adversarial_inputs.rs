@@ -751,3 +751,109 @@ fn test_injection_near_z_start() {
         "Tight z_start lost > 10% energy: ratio = {energy_ratio:.4}"
     );
 }
+
+// ============================================================================
+// R-2: tolerances that used to pass validation and switch a limit off
+// ============================================================================
+
+/// `dtau_max_photon_source` ≤ 0 or NaN silently disabled the photon-source
+/// step cap; `nc_z_min` < 0 and `z_end` = 0 were accepted. `nc_z_min` = 0
+/// stays valid: it is the documented "subtract at all redshifts" setting.
+#[test]
+fn test_solver_config_rejects_bad_tolerances() {
+    let base = SolverConfig {
+        z_start: 3e5,
+        z_end: 1e3,
+        ..SolverConfig::default()
+    };
+    assert!(base.validate().is_ok());
+    let bad = [
+        (
+            "dtau_max_photon_source = 0",
+            SolverConfig {
+                dtau_max_photon_source: 0.0,
+                ..base.clone()
+            },
+        ),
+        (
+            "dtau_max_photon_source < 0",
+            SolverConfig {
+                dtau_max_photon_source: -1.0,
+                ..base.clone()
+            },
+        ),
+        (
+            "dtau_max_photon_source NaN",
+            SolverConfig {
+                dtau_max_photon_source: f64::NAN,
+                ..base.clone()
+            },
+        ),
+        (
+            "dtau_max_photon_source inf",
+            SolverConfig {
+                dtau_max_photon_source: f64::INFINITY,
+                ..base.clone()
+            },
+        ),
+        (
+            "nc_z_min < 0",
+            SolverConfig {
+                nc_z_min: -1.0,
+                ..base.clone()
+            },
+        ),
+        (
+            "nc_z_min NaN",
+            SolverConfig {
+                nc_z_min: f64::NAN,
+                ..base.clone()
+            },
+        ),
+        (
+            "z_end = 0",
+            SolverConfig {
+                z_end: 0.0,
+                ..base.clone()
+            },
+        ),
+    ];
+    for (label, cfg) in bad {
+        assert!(cfg.validate().is_err(), "should reject {label}");
+    }
+    let nc_zero = SolverConfig {
+        nc_z_min: 0.0,
+        ..base
+    };
+    assert!(
+        nc_zero.validate().is_ok(),
+        "nc_z_min = 0 is documented as valid"
+    );
+}
+
+/// N-2: a refinement zone whose center lies outside [x_min, x_max] but which
+/// overlaps the grid is valid (construction clips it). The zone that
+/// `DecayingParticlePhoton` builds for x_inj_0 = 1.8e5, centered at
+/// (1.8e5·1e-7 + 1.8e5)/2 = 90001.5, must pass `build()`.
+#[test]
+fn test_refinement_zone_overlapping_grid_is_valid() {
+    let gc = GridConfig {
+        refinement_zones: vec![RefinementZone {
+            x_center: 90_001.5,
+            x_width: 89_999.9,
+            n_points: 400,
+        }],
+        ..GridConfig::default()
+    };
+    assert!(gc.validate().is_ok(), "{:?}", gc.validate());
+    let solver = ThermalizationSolver::builder(Cosmology::default())
+        .grid(GridConfig::fast())
+        .injection(InjectionScenario::DecayingParticlePhoton {
+            x_inj_0: 1.8e5,
+            f_inj: 1e-6,
+            gamma_x: 1e-13,
+        })
+        .z_range(2e4, 1e4)
+        .build();
+    assert!(solver.is_ok(), "{:?}", solver.err());
+}

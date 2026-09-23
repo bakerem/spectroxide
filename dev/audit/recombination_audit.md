@@ -41,7 +41,7 @@ Chluba & Thomas 2011 (§III.2.2): RECFAST's F=1.14; *"the best fitting fudge fac
 |---|---|---|---|
 | α_B fit form/coeffs | a=4.309,b=−0.6166,c=0.6703,d=0.5300 | `alpha_recomb`: identical (l.178-182) | ✅ correct |
 | Fudge factor F | RECFAST 1.14; Chluba&Thomas best-fit **1.126** | `f = 1.125` (l.180), cites C&T 2011 | ⚠️ LOW: off by 0.001 (0.09%), sub-% w.r.t. α_B; effectively a rounding slip in the cited digit, not a physics error |
-| β_B exponent energy | E_2s = 13.6/4 = 3.4 eV (in the *standalone* β formula) | `E_ION_N2 = E_RYDBERG_EV/4.0` used in `beta_ion` (l.194-199) | ✅ correct — uses 3.4 eV, not the 10.2 eV Lyα energy; the classic bug is **absent** |
+| β_B exponent energy | E_2s = 13.6/4 = 3.4 eV (in the *standalone* β formula) | `E_ION_N2 = E_RYDBERG_EV/4.0` used in `beta_ion` (l.194-199). **Superseded 2026-09-22 (P-4):** now `E_H_ION_EV/4`, with the reduced-mass E_H = R_∞hc/(1 + m_e/m_p); the Saha relation in §1 likewise uses E_H, not the full Rydberg | ✅ correct — uses 3.4 eV, not the 10.2 eV Lyα energy; the classic bug is **absent** |
 | "Extra" 10.2 eV Boltzmann bridge factor | separate e^{−hν_Lyα/kT} multiplying β(1−x) in the raw ODE | Never appears explicitly — instead the code jumps straight to the Saha-subtracted form `X_h²−X_S²(1−X_h)/(1−X_S)` (l.264-278) | ✅ correct by the identity derived in §1; the missing explicit factor is not an omission, it's folded into the (correct) full-Rydberg H Saha term |
 | Λ_2s1s | 8.22458 s⁻¹ (Labzowsky et al./RECFAST value) | `LAMBDA_2S1S = 8.2245809` (constants.rs) | ✅ correct to 7 sig figs |
 | K Sobolev factor | λ_Lyα³/(8πH) | `k_h = LAMBDA_LYA.powi(3)/(8π·h)` (l.230) | ✅ correct; λ_Lyα=1215.670 Å matches `LAMBDA_LYA=1.21567e-7` m |

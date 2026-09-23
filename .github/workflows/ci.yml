@@ -18,16 +18,32 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.98.0
       - name: Build
         run: cargo build --release
+      # Every test step runs in release mode: the physics tests are too slow in
+      # debug, and the project rule is release-only (CONTRIBUTING.md).
       - name: Unit tests
-        run: cargo test --lib
+        run: cargo test --release --lib
       - name: Science tests
-        run: cargo test --test science_suite
+        run: cargo test --release --test science_suite
       - name: Convergence tests
-        run: cargo test --test convergence_order
+        run: cargo test --release --test convergence_order
+      - name: Coverage-gap tests
+        run: cargo test --release --test coverage_gaps
+      - name: CLI integration tests
+        run: cargo test --release --test cli_integration
+      - name: Adversarial-input tests
+        run: cargo test --release --test adversarial_inputs
       - name: Doc tests
-        run: cargo test --doc
+        run: cargo test --release --doc
+      # The axion feature's own tests are the unit tests in src/axion.rs and
+      # four heat_injection tests. The integration suites above contain no
+      # axion tests, so rerunning them with the feature would double their
+      # build and run time for no coverage; only the library suite reruns.
+      - name: Unit tests (axion feature)
+        run: cargo test --release --features axion --lib
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
+      - name: Clippy (axion feature)
+        run: cargo clippy --all-targets --features axion -- -D warnings
       - name: Format check
         run: cargo fmt --check
 
@@ -53,10 +69,12 @@ jobs:
         env:
           MIRIFLAGS: -Zmiri-disable-isolation
       - name: Debug-assert kernel tests (exercises debug_assert! guards in CI)
-        # The full release-only rule exists because the *whole* suite is slow in
-        # debug; these tiny-N kernel tests are fast and are the only place the
-        # get_unchecked debug_assert! input validation runs in CI.
-        run: cargo test --lib -- miri_kernel thomas_solve
+        # Nothing runs in debug mode. These tiny-N kernel tests are the only
+        # place the get_unchecked debug_assert! input validation runs in CI,
+        # so they run in release with debug assertions switched back on.
+        run: cargo test --release --lib -- miri_kernel thomas_solve
+        env:
+          CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: "true"
 
   rust-coverage:
     name: Rust coverage

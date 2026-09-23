@@ -1,0 +1,66 @@
+1. gamma_con limit per PDE template (Delta chi2 = 4), and PDE / analytic Eq. 25 template
+   m = 1.500e-12  z_res =     280  gamma_lim = 9.3339e-05  PDE/analytic = 1.0000  k = -0.348
+   m = 2.770e-12  z_res =     389  gamma_lim = 9.3333e-05  PDE/analytic = 0.9999  k = -0.348
+   m = 5.117e-12  z_res =     520  gamma_lim = 9.3344e-05  PDE/analytic = 1.0000  k = -0.348
+   m = 9.450e-12  z_res =     656  gamma_lim = 9.3347e-05  PDE/analytic = 1.0000  k = -0.348
+   m = 1.745e-11  z_res =     769  gamma_lim = 9.3271e-05  PDE/analytic = 0.9992  k = -0.348
+   m = 3.224e-11  z_res =     852  gamma_lim = 9.3170e-05  PDE/analytic = 0.9981  k = -0.348
+   m = 5.954e-11  z_res =     924  gamma_lim = 9.3209e-05  PDE/analytic = 0.9986  k = -0.348
+   m = 1.100e-10  z_res =     998  gamma_lim = 9.3342e-05  PDE/analytic = 1.0000  k = -0.348
+   m = 2.031e-10  z_res =    1085  gamma_lim = 9.3300e-05  PDE/analytic = 0.9995  k = -0.348
+   m = 3.751e-10  z_res =    1196  gamma_lim = 9.3322e-05  PDE/analytic = 0.9998  k = -0.348
+   m = 6.927e-10  z_res =    1363  gamma_lim = 9.3336e-05  PDE/analytic = 0.9999  k = -0.348
+   m = 1.279e-09  z_res =    1843  gamma_lim = 9.3339e-05  PDE/analytic = 1.0000  k = -0.348
+   m = 2.363e-09  z_res =    2708  gamma_lim = 9.3342e-05  PDE/analytic = 1.0000  k = -0.348
+   m = 4.364e-09  z_res =    4073  gamma_lim = 9.3349e-05  PDE/analytic = 1.0001  k = -0.348
+   m = 8.061e-09  z_res =    6032  gamma_lim = 9.3365e-05  PDE/analytic = 1.0002  k = -0.348
+   m = 1.489e-08  z_res =    9017  gamma_lim = 9.3403e-05  PDE/analytic = 1.0006  k = -0.347
+   m = 2.750e-08  z_res =   13574  gamma_lim = 9.3484e-05  PDE/analytic = 1.0015  k = -0.346
+   m = 5.078e-08  z_res =   20433  gamma_lim = 9.3633e-05  PDE/analytic = 1.0031  k = -0.343
+
+   check: this mapping / spectroxide.dark_photon.gc_per_epsilon_sq = 1.0000 0.9989 0.9999 1.0000
+
+2. eps_ours/eps_CCJ vs AxionLimits file (67 masses), normalized to z_res 3e3-5e4; last column = that median
+   mapping                               250-800   800-1100  1100-1450  1450-3000     norm
+   Peebles, default cosmo (ours)          0.9857     0.9777     0.9751     0.9858   0.9953
+   HyRec-2020, default                    0.9875     0.9743     0.9772     0.9863   0.9950
+   RecfastCLASS, default                  0.9881     0.9742     0.9775     0.9909   0.9950
+   Peebles, T0 = 2.7255                   0.9860     0.9780     0.9754     0.9858   0.9950
+   Peebles, Planck 2018                   0.9888     0.9867     0.9846     0.9942   0.9983
+   HyRec-2020, Planck 2015                0.9867     0.9810     0.9818     0.9940   1.0010
+   HyRec-2020, Planck 2018                0.9901     0.9848     0.9862     0.9948   0.9978
+   HyRec, Planck 2018, n_e x 1.02         0.9923     0.9914     0.9951     0.9974   0.9893
+   HyRec, Planck 2018, n_e x 1.0789       0.9997     1.0120     1.0208     1.0019   0.9646
+   masses per band [9, 8, 8, 7, 15]
+
+2. eps_ours/eps_CCJ vs Fig. 8 vector curve (111 masses), normalized to z_res 3e3-5e4; last column = that median
+   mapping                               250-800   800-1100  1100-1450  1450-3000     norm
+   Peebles, default cosmo (ours)          0.9944     0.9821     0.9816     0.9823   1.0003
+   HyRec-2020, default                    0.9970     0.9794     0.9795     0.9847   0.9999
+   RecfastCLASS, default                  0.9968     0.9793     0.9799     0.9838   0.9999
+   Peebles, T0 = 2.7255                   0.9946     0.9824     0.9820     0.9824   1.0001
+   Peebles, Planck 2018                   0.9982     0.9937     0.9916     0.9935   1.0019
+   HyRec-2020, Planck 2015                0.9975     0.9875     0.9861     0.9932   1.0047
+   HyRec-2020, Planck 2018                1.0010     0.9913     0.9903     0.9941   1.0014
+   HyRec, Planck 2018, n_e x 1.02         1.0030     0.9992     0.9998     0.9962   0.9922
+   HyRec, Planck 2018, n_e x 1.0789       1.0096     1.0207     1.0274     1.0012   0.9657
+   masses per band [18, 16, 9, 7, 28]
+
+3. AxionLimits file / Fig. 8 vector curve, median [min, max] by band
+   z_res 250-800: 1.0140 [1.0043, 1.0156]  (9 nodes)
+   z_res 800-1100: 1.0105 [1.0024, 1.0152]  (8 nodes)
+   z_res 1100-1450: 1.0087 [1.0050, 1.0186]  (8 nodes)
+   z_res 1450-3000: 1.0006 [0.9881, 1.0124]  (7 nodes)
+   z_res 3000-50000: 1.0011 [0.9953, 1.0082]  (15 nodes)
+   z_res 50000-1000000: 1.0000 [0.9947, 1.0065]  (15 nodes)
+
+4. Coarse grids in CCJ24 (20,000 models): bias of the gridded curve
+   mass grid N = 100: exact/gridded median by band 1.0001 1.0005 1.0004 0.9988
+   mass grid N = 141: exact/gridded median by band 1.0000 1.0002 1.0002 0.9994
+   mass grid N = 200: exact/gridded median by band 1.0000 1.0001 1.0001 0.9997
+   eps grid N = 100: log-interpolated crossing / exact, post-rec average 0.9951, y-era 0.9969
+   eps grid N = 141: log-interpolated crossing / exact, post-rec average 0.9975, y-era 0.9970
+   eps grid N = 200: log-interpolated crossing / exact, post-rec average 0.9988, y-era 0.9988
+
+5. CCJ24 Fig. 8 / their own gamma* = 1e-4 contour (flat if both use one mapping)
+   2e-12:1.061 1e-11:1.078 5e-11:1.038 1e-10:1.022 3e-10:1.014 6e-10:1.007 1e-09:0.948 3e-09:1.059 1e-08:1.067 1e-07:1.087 1e-06:1.028 1e-05:1.056

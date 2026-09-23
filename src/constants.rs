@@ -7,7 +7,7 @@
 //!   `M_PROTON`, `SIGMA_THOMSON`, `ALPHA_FS` — feed Compton scattering rates,
 //!   Planck normalizations, and double Compton and bremsstrahlung emission prefactors.
 //! - **Unit conversions**: `EV_IN_JOULES`.
-//! - **Atomic physics**: `E_RYDBERG_*`, `E_HE_*`, `LAMBDA_LYA`, `LAMBDA_2S1S` —
+//! - **Atomic physics**: `E_RYDBERG_*`, `E_H_ION_*`, `E_HE_*`, `LAMBDA_LYA`, `LAMBDA_2S1S` —
 //!   used by [`crate::recombination`] for the Peebles 3-level atom.
 //! - **Derived**: `LAMBDA_ELECTRON`, `M_E_C2`.
 //! - **Cosmology**: `T_CMB_0`, `Y_P`, `N_EFF`, and Planck spectral integrals
@@ -43,12 +43,24 @@ pub const ALPHA_FS: f64 = 7.297_352_5693e-3;
 pub const EV_IN_JOULES: f64 = 1.602_176_634e-19;
 
 // Hydrogen atomic physics
-/// Hydrogen ionization energy (1s ground state), in eV.
+/// Rydberg energy R_∞hc (infinite nuclear mass), in eV (CODATA 2018).
+///
+/// This is not hydrogen's ionization energy; use [`E_H_ION_EV`] for that.
 pub const E_RYDBERG_EV: f64 = 13.605_693_122_994;
-/// Hydrogen ionization energy, in J.
+/// Rydberg energy R_∞hc, in J.
 pub const E_RYDBERG: f64 = E_RYDBERG_EV * EV_IN_JOULES;
-/// Ionization energy from n=2 level (E_Rydberg / 4), in J.
-pub const E_ION_N2: f64 = E_RYDBERG_EV / 4.0 * EV_IN_JOULES;
+/// Hydrogen ionization energy (1s ground state) with the reduced-mass
+/// correction, E_H = R_∞hc / (1 + m_e/m_p) ≈ 13.5983 eV.
+///
+/// Used by the hydrogen Saha equation and, through [`E_ION_N2`], by the
+/// photoionization rate from n = 2. `LAMBDA_LYA` and `E_HE_II_ION_EV` already
+/// carry the reduced-mass correction, so this keeps the atomic constants
+/// consistent (review finding P-4).
+pub const E_H_ION_EV: f64 = E_RYDBERG_EV / (1.0 + M_ELECTRON / M_PROTON);
+/// Hydrogen ionization energy E_H, in J.
+pub const E_H_ION: f64 = E_H_ION_EV * EV_IN_JOULES;
+/// Ionization energy from the n = 2 level (E_H / 4), in J.
+pub const E_ION_N2: f64 = E_H_ION_EV / 4.0 * EV_IN_JOULES;
 /// Lyman-alpha wavelength, in m.
 pub const LAMBDA_LYA: f64 = 1.215_670e-7;
 /// 2s→1s two-photon decay rate [s⁻¹].

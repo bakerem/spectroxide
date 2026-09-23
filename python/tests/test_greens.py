@@ -927,3 +927,46 @@ class TestStripGbbLocation:
         dn_nc, alpha = greens.strip_gbb(x, list(1e-5 * greens.g_bb(np.array(x))))
         assert alpha == pytest.approx(1e-5, rel=1e-12)
         assert np.max(np.abs(dn_nc)) < 1e-18
+
+
+# =========================================================================
+# Free-free Gaunt factor (P-1 in dev/REVIEW_2026-09-22.md)
+# =========================================================================
+
+
+class TestBremsstrahlungGaunt:
+    """The Python BR coefficient must evaluate the Gaunt fit at x_e = x / rho_e.
+
+    Mirrors ``tests/greens_function_checks.rs``.
+    """
+
+    # C = 2^{5/2} exp(-5 gamma_E / 2) / alpha, from mpmath at dps = 40.
+    DRAINE_C = 183.10732337940075
+    S3_PI = 0.55132889542179205
+
+    def test_invariant_under_theta_z(self):
+        """K_BR phi^3 e^{x_e} theta_e^{7/2} depends on (x_e, theta_e) only."""
+        args = (1.0e6, 8.0e4, 1.1e6, 1.0, 0.3, 0.9)  # n_h, n_he, n_e, X_e, y_ii, y_i
+        for theta_e in (3e-8, 1e-6, 1e-5):
+            for x_e in (1e-4, 1e-2, 0.3, 3.0):
+                vals = []
+                for rho_e in (1.0, 0.3, 0.62, 1.4):
+                    theta_z = theta_e / rho_e
+                    phi = theta_z / theta_e
+                    x = x_e * rho_e
+                    k = greens._br_emission_coefficient_with_he(
+                        x, theta_e, theta_z, *args
+                    )
+                    vals.append(k * phi**3 * np.exp(x * phi) * theta_e**3.5)
+                np.testing.assert_allclose(vals, vals[0], rtol=1e-12)
+
+    def test_classical_limit_matches_draine(self):
+        """Low-x_e limit is (sqrt(3)/pi) ln(C theta_e^{1/2} / (Z x_e)), Draine Eq. 10.9."""
+        for theta_e in (1e-8, 1e-6, 3e-6):
+            for x_e in (1e-13, 1e-12, 1e-11):
+                for z in (1.0, 2.0):
+                    g_d = self.S3_PI * np.log(
+                        self.DRAINE_C * np.sqrt(theta_e) / (z * x_e)
+                    )
+                    g = greens._gaunt_ff_nr(x_e, theta_e, z)
+                    assert abs(g - g_d) < 1e-3

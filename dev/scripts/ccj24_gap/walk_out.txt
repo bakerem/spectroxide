@@ -1,0 +1,80 @@
+
+=== m=1.5e-12 eV z_con=280 template=PDE  eps_pub=3.491e-06
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.413e-06 a/sig=-0.365 sig_eps2=7.084e-12 T=2.725000 step=       cum=1.000 /pub=0.978
+  S1 drop a>=0 floor                           eps=3.011e-06 a/sig=-0.365 sig_eps2=7.084e-12 T=2.725000 step= 0.882 cum=0.882 /pub=0.862
+  S2 + full cov                                eps=2.991e-06 a/sig=-0.422 sig_eps2=7.312e-12 T=2.725000 step= 0.993 cum=0.876 /pub=0.857
+  S3 + col2 spectrum data                      eps=2.930e-06 a/sig=-0.471 sig_eps2=7.312e-12 T=2.725000 step= 0.980 cum=0.858 /pub=0.839
+  S4 + floating T (=paper)                     eps=2.930e-06 a/sig=-0.471 sig_eps2=7.312e-12 T=2.725028 step= 1.000 cum=0.858 /pub=0.839
+  A1 CCJ24 + floating T only (floor kept)      eps=3.413e-06 a/sig=-0.422 sig_eps2=7.084e-12 T=2.725026 step=       cum=1.000 /pub=0.978
+  A2 CCJ24 + full cov only (floor kept)        eps=3.468e-06 a/sig=-0.422 sig_eps2=7.312e-12 T=2.725000 step=       cum=1.016 /pub=0.993
+  A3 paper with floor a>=0                     eps=3.468e-06 a/sig=-0.471 sig_eps2=7.312e-12 T=2.725028 step=       cum=1.016 /pub=0.993
+
+=== m=1.5e-12 eV z_con=280 template=Eq25  eps_pub=3.491e-06
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.414e-06 a/sig=-0.365 sig_eps2=7.084e-12 T=2.725000 step=       cum=1.000 /pub=0.978
+  S1 drop a>=0 floor                           eps=3.011e-06 a/sig=-0.365 sig_eps2=7.084e-12 T=2.725000 step= 0.882 cum=0.882 /pub=0.862
+  S2 + full cov                                eps=2.991e-06 a/sig=-0.422 sig_eps2=7.312e-12 T=2.725000 step= 0.993 cum=0.876 /pub=0.857
+  S3 + col2 spectrum data                      eps=2.930e-06 a/sig=-0.471 sig_eps2=7.312e-12 T=2.725000 step= 0.980 cum=0.858 /pub=0.839
+  S4 + floating T (=paper)                     eps=2.930e-06 a/sig=-0.471 sig_eps2=7.312e-12 T=2.725028 step= 1.000 cum=0.858 /pub=0.839
+  A1 CCJ24 + floating T only (floor kept)      eps=3.413e-06 a/sig=-0.422 sig_eps2=7.084e-12 T=2.725026 step=       cum=1.000 /pub=0.978
+  A2 CCJ24 + full cov only (floor kept)        eps=3.468e-06 a/sig=-0.422 sig_eps2=7.312e-12 T=2.725000 step=       cum=1.016 /pub=0.993
+  A3 paper with floor a>=0                     eps=3.468e-06 a/sig=-0.471 sig_eps2=7.312e-12 T=2.725028 step=       cum=1.016 /pub=0.993
+
+=== m=3.4e-09 eV z_con=3.45e+03 template=PDE  eps_pub=3.807e-08
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.741e-08 a/sig=-0.365 sig_eps2=8.508e-16 T=2.725000 step=       cum=1.000 /pub=0.983
+  S1 drop a>=0 floor                           eps=3.300e-08 a/sig=-0.365 sig_eps2=8.508e-16 T=2.725000 step= 0.882 cum=0.882 /pub=0.867
+  S2 + full cov                                eps=3.278e-08 a/sig=-0.422 sig_eps2=8.782e-16 T=2.725000 step= 0.993 cum=0.876 /pub=0.861
+  S3 + col2 spectrum data                      eps=3.211e-08 a/sig=-0.471 sig_eps2=8.782e-16 T=2.725000 step= 0.980 cum=0.858 /pub=0.843
+  S4 + floating T (=paper)                     eps=3.211e-08 a/sig=-0.471 sig_eps2=8.782e-16 T=2.725028 step= 1.000 cum=0.858 /pub=0.843
+  A1 CCJ24 + floating T only (floor kept)      eps=3.741e-08 a/sig=-0.422 sig_eps2=8.508e-16 T=2.725026 step=       cum=1.000 /pub=0.983
+  A2 CCJ24 + full cov only (floor kept)        eps=3.801e-08 a/sig=-0.422 sig_eps2=8.782e-16 T=2.725000 step=       cum=1.016 /pub=0.998
+  A3 paper with floor a>=0                     eps=3.801e-08 a/sig=-0.471 sig_eps2=8.782e-16 T=2.725028 step=       cum=1.016 /pub=0.998
+
+=== m=3.4e-09 eV z_con=3.45e+03 template=Eq25  eps_pub=3.807e-08
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.741e-08 a/sig=-0.365 sig_eps2=8.508e-16 T=2.725000 step=       cum=1.000 /pub=0.983
+  S1 drop a>=0 floor                           eps=3.300e-08 a/sig=-0.365 sig_eps2=8.508e-16 T=2.725000 step= 0.882 cum=0.882 /pub=0.867
+  S2 + full cov                                eps=3.278e-08 a/sig=-0.422 sig_eps2=8.782e-16 T=2.725000 step= 0.993 cum=0.876 /pub=0.861
+  S3 + col2 spectrum data                      eps=3.211e-08 a/sig=-0.471 sig_eps2=8.782e-16 T=2.725000 step= 0.980 cum=0.858 /pub=0.843
+  S4 + floating T (=paper)                     eps=3.211e-08 a/sig=-0.471 sig_eps2=8.782e-16 T=2.725028 step= 1.000 cum=0.858 /pub=0.843
+  A1 CCJ24 + floating T only (floor kept)      eps=3.741e-08 a/sig=-0.422 sig_eps2=8.508e-16 T=2.725026 step=       cum=1.000 /pub=0.983
+  A2 CCJ24 + full cov only (floor kept)        eps=3.801e-08 a/sig=-0.422 sig_eps2=8.782e-16 T=2.725000 step=       cum=1.016 /pub=0.998
+  A3 paper with floor a>=0                     eps=3.801e-08 a/sig=-0.471 sig_eps2=8.782e-16 T=2.725028 step=       cum=1.016 /pub=0.998
+
+=== m=1.6e-07 eV z_con=4.39e+04 template=PDE  eps_pub=3.150e-08
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.115e-08 a/sig=-0.344 sig_eps2=5.898e-16 T=2.725000 step=       cum=1.000 /pub=0.989
+  S1 drop a>=0 floor                           eps=2.770e-08 a/sig=-0.344 sig_eps2=5.898e-16 T=2.725000 step= 0.889 cum=0.889 /pub=0.879
+  S2 + full cov                                eps=2.752e-08 a/sig=-0.401 sig_eps2=6.089e-16 T=2.725000 step= 0.993 cum=0.883 /pub=0.873
+  S3 + col2 spectrum data                      eps=2.696e-08 a/sig=-0.452 sig_eps2=6.089e-16 T=2.725000 step= 0.980 cum=0.865 /pub=0.856
+  S4 + floating T (=paper)                     eps=2.695e-08 a/sig=-0.452 sig_eps2=6.088e-16 T=2.725027 step= 1.000 cum=0.865 /pub=0.856
+  A1 CCJ24 + floating T only (floor kept)      eps=3.115e-08 a/sig=-0.402 sig_eps2=5.898e-16 T=2.725025 step=       cum=1.000 /pub=0.989
+  A2 CCJ24 + full cov only (floor kept)        eps=3.165e-08 a/sig=-0.401 sig_eps2=6.089e-16 T=2.725000 step=       cum=1.016 /pub=1.005
+  A3 paper with floor a>=0                     eps=3.165e-08 a/sig=-0.452 sig_eps2=6.088e-16 T=2.725027 step=       cum=1.016 /pub=1.005
+
+=== m=1.6e-07 eV z_con=4.39e+04 template=Eq25  eps_pub=3.150e-08
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.126e-08 a/sig=-0.365 sig_eps2=5.942e-16 T=2.725000 step=       cum=1.000 /pub=0.992
+  S1 drop a>=0 floor                           eps=2.757e-08 a/sig=-0.365 sig_eps2=5.942e-16 T=2.725000 step= 0.882 cum=0.882 /pub=0.875
+  S2 + full cov                                eps=2.739e-08 a/sig=-0.422 sig_eps2=6.133e-16 T=2.725000 step= 0.993 cum=0.876 /pub=0.870
+  S3 + col2 spectrum data                      eps=2.684e-08 a/sig=-0.471 sig_eps2=6.133e-16 T=2.725000 step= 0.980 cum=0.858 /pub=0.852
+  S4 + floating T (=paper)                     eps=2.684e-08 a/sig=-0.471 sig_eps2=6.133e-16 T=2.725028 step= 1.000 cum=0.858 /pub=0.852
+  A1 CCJ24 + floating T only (floor kept)      eps=3.126e-08 a/sig=-0.422 sig_eps2=5.941e-16 T=2.725026 step=       cum=1.000 /pub=0.992
+  A2 CCJ24 + full cov only (floor kept)        eps=3.176e-08 a/sig=-0.422 sig_eps2=6.133e-16 T=2.725000 step=       cum=1.016 /pub=1.008
+  A3 paper with floor a>=0                     eps=3.176e-08 a/sig=-0.471 sig_eps2=6.133e-16 T=2.725028 step=       cum=1.016 /pub=1.008
+
+=== m=3.6e-06 eV z_con=3.5e+05 template=PDE  eps_pub=2.855e-08
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=2.816e-08 a/sig=-0.287 sig_eps2=4.821e-16 T=2.725000 step=       cum=1.000 /pub=0.986
+  S1 drop a>=0 floor                           eps=2.559e-08 a/sig=-0.287 sig_eps2=4.821e-16 T=2.725000 step= 0.909 cum=0.909 /pub=0.896
+  S2 + full cov                                eps=2.547e-08 a/sig=-0.343 sig_eps2=4.981e-16 T=2.725000 step= 0.995 cum=0.904 /pub=0.892
+  S3 + col2 spectrum data                      eps=2.495e-08 a/sig=-0.395 sig_eps2=4.981e-16 T=2.725000 step= 0.980 cum=0.886 /pub=0.874
+  S4 + floating T (=paper)                     eps=2.495e-08 a/sig=-0.395 sig_eps2=4.981e-16 T=2.725024 step= 1.000 cum=0.886 /pub=0.874
+  A1 CCJ24 + floating T only (floor kept)      eps=2.816e-08 a/sig=-0.346 sig_eps2=4.821e-16 T=2.725022 step=       cum=1.000 /pub=0.986
+  A2 CCJ24 + full cov only (floor kept)        eps=2.862e-08 a/sig=-0.343 sig_eps2=4.981e-16 T=2.725000 step=       cum=1.016 /pub=1.002
+  A3 paper with floor a>=0                     eps=2.862e-08 a/sig=-0.395 sig_eps2=4.981e-16 T=2.725024 step=       cum=1.016 /pub=1.002
+
+=== m=3.6e-06 eV z_con=3.5e+05 template=Eq25  eps_pub=2.855e-08
+  S0 CCJ24: diag, resid, T0 fixed, floor a>=0  eps=3.100e-08 a/sig=-0.365 sig_eps2=5.842e-16 T=2.725000 step=       cum=1.000 /pub=1.086
+  S1 drop a>=0 floor                           eps=2.734e-08 a/sig=-0.365 sig_eps2=5.842e-16 T=2.725000 step= 0.882 cum=0.882 /pub=0.958
+  S2 + full cov                                eps=2.716e-08 a/sig=-0.422 sig_eps2=6.030e-16 T=2.725000 step= 0.993 cum=0.876 /pub=0.951
+  S3 + col2 spectrum data                      eps=2.661e-08 a/sig=-0.471 sig_eps2=6.030e-16 T=2.725000 step= 0.980 cum=0.858 /pub=0.932
+  S4 + floating T (=paper)                     eps=2.661e-08 a/sig=-0.471 sig_eps2=6.030e-16 T=2.725028 step= 1.000 cum=0.858 /pub=0.932
+  A1 CCJ24 + floating T only (floor kept)      eps=3.100e-08 a/sig=-0.422 sig_eps2=5.842e-16 T=2.725026 step=       cum=1.000 /pub=1.086
+  A2 CCJ24 + full cov only (floor kept)        eps=3.149e-08 a/sig=-0.422 sig_eps2=6.030e-16 T=2.725000 step=       cum=1.016 /pub=1.103
+  A3 paper with floor a>=0                     eps=3.149e-08 a/sig=-0.471 sig_eps2=6.030e-16 T=2.725028 step=       cum=1.016 /pub=1.103

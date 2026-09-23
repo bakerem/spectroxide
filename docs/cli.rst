@@ -12,6 +12,10 @@ default and writes it to stdout.
 Replace ``SUBCOMMAND`` with one of the subcommands in the next section, and ``OPTIONS`` with
 any of the flags that the subcommand accepts.
 
+The CLI rejects, with an error, any flag that the subcommand or injection type
+does not read, a flag given twice, a value after a flag that takes none (such as
+``--production-grid``), and any extra word that is not a flag's value.
+
 
 Subcommands
 -----------
@@ -38,7 +42,7 @@ output options.
    * - Type
      - Required flags
    * - ``single-burst``
-     - ``--z-h``, ``--delta-rho`` [``--sigma-z``]
+     - ``--z-h`` [``--delta-rho``, default 1e-5] [``--sigma-z``]
    * - ``decaying-particle``
      - ``--f-x``, ``--gamma-x``
    * - ``annihilating-dm``
@@ -123,10 +127,11 @@ supply:
      - Starting redshift
    * - ``--z-end Z``
      - 500
-     - Final redshift
+     - Final redshift. Must be greater than 0.
    * - ``--n-points N``
      - (preset)
      - Frequency-grid point count. Overrides the active fast/production preset.
+       Below 1000 points the solver warns that the result is untested.
    * - ``--production-grid``
      - off
      - Use the high-resolution production grid preset (4000 points).
@@ -139,6 +144,7 @@ supply:
    * - ``--dtau-max-photon-source VALUE``
      - 1.0
      - Cap on ``dτ`` while a photon source is active (tighter near a δ-line source).
+       Must be greater than 0.
    * - ``--no-dcbr``
      - off
      - Disable double Compton and bremsstrahlung (diagnostic).
@@ -151,12 +157,14 @@ supply:
    * - ``--nc-z-min Z``
      - 5e4
      - Below this redshift the number-conserving correction is suppressed.
+       Must be 0 or greater; 0 applies it at all redshifts.
    * - ``--no-auto-refine``
      - off
      - Disable automatic grid refinement near photon-injection features.
    * - ``--threads N``
      - all cores
-     - Threads for parallel sweep execution.
+     - Threads for parallel sweep execution. Sweep subcommands only; ``solve``
+       rejects it.
 
 Cosmology options
 -----------------

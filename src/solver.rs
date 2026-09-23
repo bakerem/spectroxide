@@ -27,6 +27,35 @@ use crate::kompaneets::{KompaneetsWorkspace, kompaneets_step_coupled_inplace};
 use crate::recombination::RecombinationHistory;
 use crate::spectrum::planck;
 
+/// Smallest `GridConfig::n_points` the solver treats as tested. Smaller grids
+/// run, but the solver warns (R-1). `GridConfig::fast()` sits exactly here.
+pub const MIN_TESTED_GRID_POINTS: usize = 1000;
+
+/// Relative tolerance of the post-run energy-closure check (R-1): the solver
+/// warns when the final Δρ/ρ misses the injected heat by more than this
+/// fraction of it. Bursts at z_h ≥ 1600 close to within 0.7% at the default
+/// grid (N = 2000) and Δτ_max = 10.
+pub const ENERGY_CLOSURE_REL_TOL: f64 = 0.05;
+
+/// Absolute slack added to the energy-closure tolerance. It covers the
+/// adiabatic-cooling baseline that every run carries whatever the injection:
+/// Δρ/ρ = −4.9e-9 from z = 5e6 to 500 and −5.2e-9 to z = 1 (measured with a
+/// null burst, N = 2000), so injections below ~1e-7 are not flagged for it.
+pub const ENERGY_CLOSURE_ABS_FLOOR: f64 = 1e-8;
+
+/// Redshift below which injected heat does not fully reach the photons. See
+/// [`ENERGY_CHECK_MAX_LATE_FRACTION`].
+pub const ENERGY_CHECK_Z_LATE: f64 = 2000.0;
+
+/// The energy-closure check is skipped when more than this fraction of the
+/// injected heat falls below [`ENERGY_CHECK_Z_LATE`]. Measured delivery
+/// (N = 2000, Δτ_max = 10, cooling baseline removed) is 99.3–99.7% for bursts
+/// at z_h ≥ 1600 but 94–97% at z_h = 700–1300. At z_h = 1300 the deficit is
+/// step error (99.8% at Δτ_max = 0.1); at z_h ≤ 1000 about 5% stays lost at
+/// Δτ_max = 0.1. With at most this fraction below z = 2000, the late part
+/// moves the total by at most 0.7%.
+pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.1;
+
 /// Tunable solver parameters.
 ///
 /// Defaults are production-quality and match the values used for all paper
@@ -83,8 +112,10 @@ impl SolverConfig {
         if !self.z_start.is_finite() || self.z_start <= 0.0 {
             return Err(format!("z_start must be positive, got {}", self.z_start));
         }
-        if !self.z_end.is_finite() || self.z_end < 0.0 {
-            return Err(format!("z_end must be non-negative, got {}", self.z_end));
+        // z_end = 0 is rejected: the adaptive step shrinks with z, so the run
+        // never reaches z = 0 and stops at the step limit instead (R-2).
+        if !self.z_end.is_finite() || self.z_end <= 0.0 {
+            return Err(format!("z_end must be positive, got {}", self.z_end));
         }
         if self.z_start <= self.z_end {
             return Err(format!(
@@ -111,6 +142,21 @@ impl SolverConfig {
         }
         if !self.dtau_max.is_finite() || self.dtau_max <= 0.0 {
             return Err(format!("dtau_max must be positive, got {}", self.dtau_max));
+        }
+        // A zero, negative, or NaN cap used to switch the photon-source step
+        // limit off silently (R-2).
+        if !self.dtau_max_photon_source.is_finite() || self.dtau_max_photon_source <= 0.0 {
+            return Err(format!(
+                "dtau_max_photon_source must be positive, got {}",
+                self.dtau_max_photon_source
+            ));
+        }
+        // 0 is valid and documented: subtract the T-shift at all redshifts.
+        if !self.nc_z_min.is_finite() || self.nc_z_min < 0.0 {
+            return Err(format!(
+                "nc_z_min must be non-negative, got {}",
+                self.nc_z_min
+            ));
         }
         if self.max_newton_iter < 2 {
             return Err(format!(
@@ -224,9 +270,8 @@ impl SolverSnapshot {
 /// Cached backward-Euler ordinary differential equation (ODE) coefficients
 /// for the ρ_e equation.
 ///
-/// Computed once per step in `update_temperatures()` and consumed by:
-/// 1. The DC/BR emission rate computation (needs ρ_dcbr corrected for injection).
-/// 2. The bordered Newton solver (couples ρ_e into the Kompaneets iteration).
+/// Computed once per step in `update_temperatures()` and consumed by
+/// the bordered Newton solver, which couples ρ_e into the Kompaneets iteration.
 #[derive(Debug, Clone, Copy)]
 struct RhoECache {
     /// ρ_e at the start of the step (before Newton iteration).
@@ -239,8 +284,6 @@ struct RhoECache {
     lambda_htc: f64,
     /// dH/dρ_e: derivative of DC+BR heating integral w.r.t. ρ_e.
     dh_drho: f64,
-    /// Compton optical depth for this step (used for the DC/BR injection correction).
-    dtau: f64,
 }
 
 /// Diagnostic counters and extrema tracked during solver evolution.
@@ -249,8 +292,11 @@ struct RhoECache {
 /// physics state. Reset by `ThermalizationSolver::reset()`.
 #[derive(Debug, Clone, Default)]
 pub struct SolverDiagnostics {
-    /// Number of times rho_e was clamped.
-    /// Non-zero values indicate injection energy may be silently discarded.
+    /// Number of steps on which ρ_e hit a guard cap ([0, 1.5] in the
+    /// backward-Euler predictor, [0, 3] after the coupled Newton solve) or
+    /// came out non-finite. The first such step in a run pushes a warning
+    /// (see `ThermalizationSolver::guard_rho_e`); later ones only increment
+    /// this counter.
     pub rho_e_clamped: usize,
     /// Number of times Newton iteration exhausted max_newton_iter
     /// without converging. Non-zero values indicate the solver may need more
@@ -258,9 +304,29 @@ pub struct SolverDiagnostics {
     pub newton_exhausted: usize,
     /// Whether any NaN emission rate was encountered.
     pub nan_emission_detected: bool,
+    /// Number of steps on which the DC/BR target temperature ρ_e fell outside
+    /// the guard range [0.05, 2] and was clamped. The first such step pushes a
+    /// warning; later ones only increment this counter.
+    pub dcbr_target_clamped: usize,
+    /// Whether the once-per-run warning for ρ_e reaching its upper cap
+    /// (heating strong enough to change the ionization history) has been pushed.
+    pub(crate) heating_cap_warned: bool,
+    /// Whether the once-per-run warning for a negative or non-finite ρ_e has
+    /// been pushed.
+    pub(crate) rho_e_invalid_warned: bool,
+    /// Whether the once-per-run DC/BR target-guard warning has been pushed.
+    pub(crate) dcbr_target_warned: bool,
+    /// Step on which `guard_rho_e` last saw a negative or non-finite ρ_e, so
+    /// the DC/BR target guard does not warn a second time for the same event.
+    pub(crate) rho_e_invalid_step: Option<usize>,
     /// Warning messages collected during solver evolution.
     /// Replaces eprintln! in library code for structured diagnostics.
     pub warnings: Vec<String>,
+    /// Set when the run stopped early because Δn became NaN or infinite.
+    /// [`ThermalizationSolver::try_run_with_snapshots`] and
+    /// [`ThermalizationSolver::try_run_to_result`] return it as `Err`; the
+    /// other run methods and [`ThermalizationSolver::step`] panic with it.
+    pub failure: Option<String>,
 }
 
 /// Full PDE solver for cosmic microwave background (CMB) spectral distortions.
@@ -311,6 +377,9 @@ pub struct ThermalizationSolver {
     pub cosmo: Cosmology,
     /// Frequency grid (non-uniform in x).
     pub grid: FrequencyGrid,
+    /// Base point count `GridConfig::n_points` the grid was built from,
+    /// before refinement zones add points. Drives the small-grid warning.
+    grid_n_points: usize,
     /// Current photon occupation-number perturbation `Δn(x)` on the grid.
     pub delta_n: Vec<f64>,
     /// Electron temperature state `ρ_e = T_e/T_z` (perturbative
@@ -395,7 +464,9 @@ pub struct ThermalizationSolver {
     /// Precomputed 1/x³ for each grid point (DC/BR rate normalization).
     inv_x3_grid: Vec<f64>,
     /// Precomputed grid-constant half of the BR Gaunt exponential, x^(-√3/π),
-    /// for each grid point. See [`crate::bremsstrahlung::gaunt_expc_factor`].
+    /// for each grid point. The Gaunt factor needs x_e = x/ρ_e; the remaining
+    /// factor ρ_e^(√3/π) lives in the per-step `BrPrecomputed::ea_z*`.
+    /// See [`crate::bremsstrahlung::gaunt_expc_factor`].
     expc_grid: Vec<f64>,
     /// Same at cell midpoints (for the BR Gaunt factor in the heating integral).
     expc_half: Vec<f64>,
@@ -419,7 +490,7 @@ pub struct ThermalizationSolver {
 /// finite difference held fixed):
 ///   dB/dρ_e     = n_mid · x φ² · e^{xφ}   with B = 1 − n_mid(e^{xφ} − 1)
 ///   dK_DC/dρ_e  = 0                        (K_DC depends only on θ_z)
-///   dK_BR/dρ_e  — see `br_emission_coefficient_and_drho_preln`.
+///   dK_BR/dρ_e  — see `br_emission_coefficient_and_drho_expc`.
 /// e^{xφ} reuses the exp_m1 already computed for B, and the Gaunt logistic
 /// shares its exp with the softplus, so the derivative costs no transcendental
 /// calls beyond the plain heating integral — it replaces the former three
@@ -539,6 +610,7 @@ impl ThermalizationSolver {
     /// validation at build time, use [`Self::builder`] instead.
     pub fn new(cosmo: Cosmology, grid_config: GridConfig) -> Self {
         let grid = FrequencyGrid::new(&grid_config);
+        let grid_n_points = grid_config.n_points;
         let n = grid.n;
         let recomb = RecombinationHistory::new(&cosmo);
         let komp_ws = KompaneetsWorkspace::new(&grid);
@@ -572,7 +644,9 @@ impl ThermalizationSolver {
         // removes both exp() calls from every Gaunt evaluation; the -69.0
         // clamp is preserved so the sentinel reaching `gaunt_expc_factor` is
         // unchanged (note `< -69.0` is strict, so the clamped value does not
-        // itself trip the guard — same as before).
+        // itself trip the guard — same as before). The Gaunt fit needs
+        // x_e = x/ρ_e; `br_precompute` folds the step's ρ_e^(√3/π) into ea_Z,
+        // so this grid factor stays in the grid x (P-1).
         let expc_grid: Vec<f64> = grid
             .x
             .iter()
@@ -608,6 +682,7 @@ impl ThermalizationSolver {
             config: SolverConfig::default(),
             cosmo,
             grid,
+            grid_n_points,
             delta_n: vec![0.0; n],
             electron_temp: ElectronTemperature::default(),
             z: SolverConfig::default().z_start,
@@ -848,6 +923,56 @@ impl ThermalizationSolver {
         dz.max(self.config.dz_min).min(self.z * 0.05)
     }
 
+    /// Applies the guard caps to a new electron temperature ρ_e and records
+    /// the event.
+    ///
+    /// Returns the value to store, clamped to [0, `hi`], or `None` when
+    /// `raw` is non-finite (the caller keeps the prior ρ_e). Every clamp or
+    /// non-finite value increments `diag.rho_e_clamped`.
+    ///
+    /// The upper cap is reached only when heating drives T_e far above the
+    /// photon temperature. Such heating would change the ionization history
+    /// (hotter electrons recombine more slowly), while the solver holds X_e on
+    /// its standard recombination history, so the first hit in a run pushes a
+    /// warning that results may be inaccurate. A
+    /// negative or non-finite ρ_e pushes its own once-per-run warning.
+    fn guard_rho_e(&mut self, raw: f64, hi: f64, z: f64) -> Option<f64> {
+        let out = if raw.is_finite() {
+            Some(raw.clamp(0.0, hi))
+        } else {
+            None
+        };
+        if out == Some(raw) {
+            return out;
+        }
+        self.diag.rho_e_clamped += 1;
+        if raw.is_finite() && raw > hi {
+            if !self.diag.heating_cap_warned {
+                self.diag.heating_cap_warned = true;
+                self.diag.warnings.push(format!(
+                    "Substantial heating: at z = {z:.4e} the electron temperature reached \
+                     the cap T_e/T_z = {hi}. Heating this strong would change the ionization \
+                     history (hotter electrons recombine more slowly), so results may be \
+                     inaccurate. T_e is clamped at the cap on this and any later such step."
+                ));
+            }
+        } else {
+            // Negative or non-finite (+∞ included): this step's event, for the
+            // DC/BR target guard below.
+            self.diag.rho_e_invalid_step = Some(self.step_count);
+            if self.diag.rho_e_invalid_warned {
+                return out;
+            }
+            self.diag.rho_e_invalid_warned = true;
+            self.diag.warnings.push(format!(
+                "The electron temperature solve gave T_e/T_z = {raw:.4e} at z = {z:.4e}; a \
+                 negative value is clamped to 0 and a non-finite one is replaced by the \
+                 previous step's value. Results may be inaccurate."
+            ));
+        }
+        out
+    }
+
     /// Updates ρ_e from distortion feedback and injection.
     ///
     /// Two modes selected automatically by distortion amplitude:
@@ -894,11 +1019,12 @@ impl ThermalizationSolver {
             delta_g3 += x3 * dn_mid * dx;
             delta_i4 += x3 * x_half * (2.0 * n_pl + 1.0) * dn_mid * dx;
         }
-        assert!(
-            max_dn.is_finite(),
-            "NaN/Inf detected in delta_n at z={}",
-            z_eval
-        );
+        if !max_dn.is_finite() {
+            // Leave the state untouched; step_with_dz sees the non-finite
+            // max|Δn| and returns None without advancing z.
+            self.record_nonfinite_delta_n();
+            return (0.0, 0.0, 0.0, max_dn, 0.0, 0.0);
+        }
 
         let delta_rho_eq = if max_dn > 1e-15 {
             // Use exact computation when the distortion is large enough that
@@ -1035,7 +1161,6 @@ impl ThermalizationSolver {
                 rho_source,
                 lambda_htc,
                 dh_drho,
-                dtau,
             });
 
             let numerator =
@@ -1053,16 +1178,13 @@ impl ThermalizationSolver {
             // NaN/∞ are rejected explicitly (audit H1): f64::NaN.clamp(a, b) ==
             // NaN and NaN comparisons return false, so a naïve clamp would
             // silently propagate a degenerate result into later solves.
-            if !rho_e_raw.is_finite() {
-                self.diag.rho_e_clamped += 1;
-                // Keep the prior ρ_e rather than poisoning the solver state.
-            } else {
-                let rho_e_new = rho_e_raw.clamp(0.0, 1.5);
-                if rho_e_new != rho_e_raw {
-                    self.diag.rho_e_clamped += 1;
-                }
+            //
+            // A clamp or a non-finite value is counted and warned about once
+            // per run (`guard_rho_e`).
+            if let Some(rho_e_new) = self.guard_rho_e(rho_e_raw, 1.5, z_eval) {
                 self.electron_temp.rho_e = rho_e_new;
             }
+            // `None`: keep the prior ρ_e rather than poisoning the solver state.
         } else {
             // θ_z too small for meaningful Compton physics.
             self.rho_e_ode_cache = None;
@@ -1114,14 +1236,46 @@ impl ThermalizationSolver {
     ///
     /// Returns the `dz` taken. Most callers should call [`Self::run`] or
     /// [`Self::run_with_snapshots`] instead of stepping manually.
+    ///
+    /// # Panics
+    ///
+    /// Panics if Δn becomes NaN or infinite (see [`SolverDiagnostics::failure`]).
     pub fn step(&mut self) -> f64 {
         let dz = self.adaptive_dz();
-        self.step_with_dz(dz)
+        match self.step_with_dz(dz) {
+            Some(dz) => dz,
+            None => panic!("{}", self.diag.failure.as_deref().unwrap_or_default()),
+        }
+    }
+
+    /// Records the NaN/Inf failure in [`SolverDiagnostics::failure`] for a
+    /// Δn that is no longer finite at the current z.
+    fn record_nonfinite_delta_n(&mut self) {
+        let hint = if self.grid_n_points < MIN_TESTED_GRID_POINTS {
+            format!(
+                "the frequency grid is too coarse (n_points={}; use at least \
+                 {MIN_TESTED_GRID_POINTS})",
+                self.grid_n_points
+            )
+        } else {
+            format!(
+                "time steps too large (reduce dtau_max) or a strong injection \
+                 (n_points={})",
+                self.grid_n_points
+            )
+        };
+        self.diag.failure = Some(format!(
+            "NaN/Inf detected in delta_n at z={:.4e} (after step {}); the run stopped. \
+             Likely cause: {hint}.",
+            self.z, self.step_count
+        ));
     }
 
     /// Takes a single timestep with a specified dz (instead of the adaptive choice).
     /// Used by `run_with_snapshots` to land exactly on requested snapshot redshifts.
-    fn step_with_dz(&mut self, dz: f64) -> f64 {
+    /// Returns the dz taken, or `None` without advancing if Δn is not finite
+    /// (the message is then in [`SolverDiagnostics::failure`]).
+    fn step_with_dz(&mut self, dz: f64) -> Option<f64> {
         let z_new = (self.z - dz).max(self.config.z_end);
         let actual_dz = self.z - z_new;
         let z_mid = self.z - 0.5 * actual_dz;
@@ -1129,6 +1283,9 @@ impl ThermalizationSolver {
         // update_temperatures computes ρ_e via backward Euler and returns dtau + hubble
         let (x_e, _t_c, theta_z_val, max_dn_abs, dtau, h) =
             self.update_temperatures(z_mid, actual_dz);
+        if !max_dn_abs.is_finite() {
+            return None;
+        }
 
         let n_h = self.cosmo.n_h(z_mid);
         let n_he = self.cosmo.f_he() * n_h;
@@ -1176,27 +1333,44 @@ impl ThermalizationSolver {
                 y_he_ii,
                 y_he_i,
             );
-            // DC/BR equilibrium: Planck at T_e (Chluba & Sunyaev 2012, Eq. 8).
+            // DC/BR equilibrium: Planck at the actual electron temperature,
+            // n → n_pl(x/ρ_e) (Chluba & Sunyaev 2012, Eq. 8). See
+            // decisions/0002-relax-dc-br-toward-actual-electron-temperature.md.
             //
-            // The backward Euler for ρ_e gives ρ_e ≈ ρ_eq + δρ_inj (quasi-stationary).
-            // Using the full ρ_e for DC/BR would double-count injection energy
-            // (Kompaneets already injects via φ = 1/ρ_e). We subtract the
-            // injection contribution:
-            //   ρ_dcbr = ρ_e − R·δρ_inj × dτ/(1 + dτ(R(1+h') + H·t_C))
+            // Energy bookkeeping: the photon rows gain Δτ·em·(neq − Δn) from
+            // DC/BR, and the electron row loses H_dcbr, which is built from the
+            // same `em` and `neq` arrays (`kompaneets.rs`, the ρ_e residual).
+            // Whatever the target, the energy DC/BR give the photons is the
+            // energy the electrons lose, so using the full ρ_e, including the
+            // heating excess δρ_inj, does not count injected energy twice.
             //
-            // For zero injection: ρ_dcbr = ρ_e (correct T_e target).
-            // For injection: removes the δρ_inj bump, avoiding double-counting.
-            let rho_eq_dcbr = if let Some(c) = self.rho_e_ode_cache {
-                let delta_rho_inj = c.rho_source - self.rho_eq;
-                let denom = 1.0 + c.dtau * (c.r_compton * (1.0 + c.dh_drho) + c.lambda_htc);
-                let inj_contribution = if denom.abs() > 1e-30 {
-                    c.r_compton * delta_rho_inj * c.dtau / denom
-                } else {
-                    0.0
-                };
-                (rho_e - inj_contribution).clamp(0.5, 2.0)
-            } else {
+            // The clamp to [0.05, 2] guards the Bose factor exp(x/ρ) − 1. The
+            // upper bound normally does not engage: the predictor ρ_e is capped
+            // at 1.5 (`guard_rho_e`). It can when the predictor comes out
+            // non-finite and the previous step's ρ_e, which the Newton cap
+            // allows up to 3, is kept. Adiabatic cooling takes ρ_e below 0.5
+            // near z ≈ 72 but not below 0.05 before DC/BR switch off at
+            // θ_z = 1e-8 (z ≈ 21), so the lower bound only catches a broken
+            // ρ_e. When the guard engages, the first occurrence in a run
+            // pushes a warning, except on a step where `guard_rho_e` already
+            // reported a negative or non-finite ρ_e; later ones only
+            // increment the counter.
+            let rho_eq_dcbr = if (0.05..=2.0).contains(&rho_e) {
                 rho_e
+            } else {
+                self.diag.dcbr_target_clamped += 1;
+                let same_event = self.diag.rho_e_invalid_step == Some(self.step_count);
+                if !self.diag.dcbr_target_warned && !same_event {
+                    self.diag.dcbr_target_warned = true;
+                    self.diag.warnings.push(format!(
+                        "DC/BR target temperature ρ_e = {rho_e:.4} at z = {:.4e} is outside \
+                         the guard range [0.05, 2] and was clamped; DC/BR emission and \
+                         absorption use the clamped value on this and any later such step \
+                         (count in SolverDiagnostics::dcbr_target_clamped).",
+                        z_mid
+                    ));
+                }
+                rho_e.clamp(0.05, 2.0)
             };
             let delta_rho = rho_eq_dcbr - 1.0;
             let inv_rho_eq = 1.0 / rho_eq_dcbr;
@@ -1425,14 +1599,8 @@ impl ThermalizationSolver {
             // denominator can go through zero and emit NaN, which the naïve
             // clamp would silently propagate into subsequent steps.
             if rho_coupling.is_some() {
-                if !rho_e_out.is_finite() {
-                    self.diag.rho_e_clamped += 1;
-                    // Keep the prior ρ_e.
-                } else {
-                    let rho_clamped = rho_e_out.clamp(0.0, 3.0);
-                    if rho_clamped != rho_e_out {
-                        self.diag.rho_e_clamped += 1;
-                    }
+                // `None` (non-finite): keep the prior ρ_e.
+                if let Some(rho_clamped) = self.guard_rho_e(rho_e_out, 3.0, z_mid) {
                     self.electron_temp.rho_e = rho_clamped;
                 }
             }
@@ -1481,7 +1649,7 @@ impl ThermalizationSolver {
 
         self.z = z_new;
         self.step_count += 1;
-        actual_dz
+        Some(actual_dz)
     }
 
     /// Integrates from `z_start` to `z_end`, recording a snapshot at each
@@ -1492,7 +1660,27 @@ impl ThermalizationSolver {
     /// to the initial and final state respectively. The returned slice
     /// borrows from `self.snapshots`; for an owned result, use
     /// [`Self::run_to_result`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if Δn becomes NaN or infinite. Use
+    /// [`Self::try_run_with_snapshots`] to get that failure as an `Err`.
     pub fn run_with_snapshots(&mut self, snapshot_redshifts: &[f64]) -> &[SolverSnapshot] {
+        if let Err(msg) = self.try_run_with_snapshots(snapshot_redshifts) {
+            panic!("{msg}");
+        }
+        &self.snapshots
+    }
+
+    /// Like [`Self::run_with_snapshots`], but returns `Err` instead of
+    /// panicking when Δn becomes NaN or infinite. The run stops at the
+    /// failing step; the message is also kept in [`SolverDiagnostics::failure`].
+    /// On `Err`, [`Self::snapshots`] keeps any snapshots saved before the
+    /// failure was detected, and the last of them may already hold NaN.
+    pub fn try_run_with_snapshots(
+        &mut self,
+        snapshot_redshifts: &[f64],
+    ) -> Result<&[SolverSnapshot], String> {
         let initial_dn = self.initial_delta_n.take();
         let injection = self.injection.take();
         // Preserve user-set configuration across the internal reset: reset()
@@ -1526,6 +1714,19 @@ impl ThermalizationSolver {
                 "Frequency grid has only {band_count} point(s) in the μ/y decomposition band \
                  [0.5, 18]. The decomposition will silently return μ=y=0; widen x_min/x_max \
                  or increase n_points to avoid this."
+            ));
+        }
+
+        // Below the tested grid range, results can be wrong by orders of
+        // magnitude with no other symptom (R-1: 100 points gave Δρ/ρ = −1.5e-2
+        // for an injected +1e-5).
+        if self.grid_n_points < MIN_TESTED_GRID_POINTS {
+            self.diag.warnings.push(format!(
+                "Frequency grid has n_points={} (fewer than {MIN_TESTED_GRID_POINTS}, the \
+                 smallest tested size). Coarse grids can return wrong μ, y, and Δρ/ρ \
+                 without any other warning; use n_points >= {MIN_TESTED_GRID_POINTS} \
+                 (2000 or more for production).",
+                self.grid_n_points
             ));
         }
 
@@ -1567,6 +1768,11 @@ impl ThermalizationSolver {
             }
         }
 
+        // Energy already in the spectrum at z_start (a user-set initial Δn);
+        // the post-run closure check adds it to the injected energy.
+        let z_run_start = self.z;
+        let drho_initial = self.total_delta_rho_over_rho();
+
         // Sort snapshot redshifts descending (we integrate from high z to low z)
         let mut sorted_z: Vec<f64> = snapshot_redshifts.to_vec();
         sorted_z.sort_by(|a, b| b.total_cmp(a));
@@ -1589,7 +1795,9 @@ impl ThermalizationSolver {
                     let dz_natural = self.adaptive_dz();
                     if dz_natural >= dz_to_snap {
                         // Would overshoot the snapshot — take exact step to land on it
-                        self.step_with_dz(dz_to_snap);
+                        if self.step_with_dz(dz_to_snap).is_none() {
+                            return Err(self.diag.failure.clone().unwrap_or_default());
+                        }
                         // Save snapshots for all requested redshifts at this z
                         while next_snap < sorted_z.len() && self.z <= sorted_z[next_snap] {
                             self.save_snapshot_at(sorted_z[next_snap]);
@@ -1600,7 +1808,10 @@ impl ThermalizationSolver {
                 }
             }
 
-            self.step();
+            let dz = self.adaptive_dz();
+            if self.step_with_dz(dz).is_none() {
+                return Err(self.diag.failure.clone().unwrap_or_default());
+            }
 
             // Save snapshots for any requested redshifts we've reached or passed
             while next_snap < sorted_z.len() && self.z <= sorted_z[next_snap] {
@@ -1608,11 +1819,13 @@ impl ThermalizationSolver {
                 next_snap += 1;
             }
 
+            // Progress goes to stderr only: it is not a warning, and the
+            // Python wrapper re-raises every `warnings` entry (R-5).
             if self.step_count % 100000 == 0 {
-                self.diag.warnings.push(format!(
+                eprintln!(
                     "Progress: z={:.1e} step={} ρ_e={:.6} ρ_eq={:.6}",
                     self.z, self.step_count, self.electron_temp.rho_e, self.rho_eq
-                ));
+                );
             }
         }
 
@@ -1624,26 +1837,21 @@ impl ThermalizationSolver {
             ));
         }
 
+        // The in-loop check sees a NaN only at the start of the next step, so
+        // one produced by the final step is caught here.
+        if self.delta_n.iter().any(|v| !v.is_finite()) {
+            self.record_nonfinite_delta_n();
+        }
+        if let Some(msg) = &self.diag.failure {
+            return Err(msg.clone());
+        }
+
         // Fill remaining snapshots below z_end with final state
         while next_snap < sorted_z.len() {
             self.save_snapshot();
             next_snap += 1;
         }
 
-        // End-of-run diagnostics: ρ_e clamp counter. Individual clamps are
-        // silent (only logged in diag), but a large count indicates that the
-        // implicit T_e solve is regularly hitting the [0, 1.5] / [0, 3] bounds
-        // — the clamped steps silently discard part of the injection energy
-        // and shouldn't be ignored.
-        if self.diag.rho_e_clamped > 10 {
-            self.diag.warnings.push(format!(
-                "ρ_e was clamped {} times during the run. Clamping discards injection \
-                 energy from the T_e ODE silently; repeated hits suggest the injection \
-                 amplitude is outside the linearized regime or dtau_max is too large \
-                 for the source sharpness.",
-                self.diag.rho_e_clamped
-            ));
-        }
         if self.diag.nan_emission_detected {
             self.diag.warnings.push(
                 "NaN emission rate detected during the run. DC/BR rates were capped \
@@ -1653,7 +1861,97 @@ impl ThermalizationSolver {
             );
         }
 
-        &self.snapshots
+        if let Some(w) = self.energy_closure_warning(z_run_start, drho_initial) {
+            self.diag.warnings.push(w);
+        }
+
+        Ok(&self.snapshots)
+    }
+
+    /// Returns the total Δρ/ρ in the current state: the spectral Δn plus the
+    /// temperature shift that number-conserving mode subtracted.
+    fn total_delta_rho_over_rho(&self) -> f64 {
+        crate::spectrum::delta_rho_over_rho(&self.grid.x, &self.delta_n)
+            + 4.0 * self.accumulated_delta_t
+    }
+
+    /// Compares the energy in the final spectrum with the heat the injection
+    /// delivered between `z_start` and the final redshift (R-1). Returns a
+    /// warning if they differ by more than [`ENERGY_CLOSURE_REL_TOL`] of the
+    /// gross injected heat ∫|dq/dz| dz plus [`ENERGY_CLOSURE_ABS_FLOOR`].
+    ///
+    /// Applies only to scenarios with a known injected energy (single burst,
+    /// heating table); photon injection is excluded because its closure is
+    /// known to be off by 7–45% for x_inj ≲ 0.03 (investigation I-1). The
+    /// check is skipped when more than [`ENERGY_CHECK_MAX_LATE_FRACTION`] of
+    /// the injected energy falls below z = [`ENERGY_CHECK_Z_LATE`], where heat
+    /// near recombination does not fully reach the photons.
+    ///
+    /// When ρ_e hit its cap (that run already warns "Substantial heating"),
+    /// the check is one-sided. The cap discards heat the electrons could not
+    /// hold, so a shortfall is expected and stays silent. The cap cannot add
+    /// energy, so an excess beyond the same tolerance still warns, with text
+    /// that points to a numerical error instead.
+    fn energy_closure_warning(&self, z_run_start: f64, drho_initial: f64) -> Option<String> {
+        if self.step_count == 0 {
+            return None;
+        }
+        let inj = self.injection.as_ref()?;
+        let z_final = self.z;
+        let injected = inj.injected_delta_rho_between(z_final, z_run_start)?;
+        // Tolerances scale with the gross heat moved, so a table that
+        // alternates heating and cooling (net near zero) is not flagged for
+        // the ordinary step error on each half-cycle.
+        let gross = inj.injected_abs_delta_rho_between(z_final, z_run_start)?;
+        if gross == 0.0 || !gross.is_finite() || !injected.is_finite() {
+            return None;
+        }
+        let late = if z_final < ENERGY_CHECK_Z_LATE {
+            inj.injected_abs_delta_rho_between(z_final, ENERGY_CHECK_Z_LATE.min(z_run_start))
+                .unwrap_or(0.0)
+        } else {
+            0.0
+        };
+        if late / gross > ENERGY_CHECK_MAX_LATE_FRACTION {
+            return None;
+        }
+        let expected = drho_initial + injected;
+        let measured = self.total_delta_rho_over_rho();
+        let diff = measured - expected;
+        if diff.abs() <= ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR {
+            return None;
+        }
+        if self.diag.heating_cap_warned {
+            if diff < 0.0 {
+                return None;
+            }
+            return Some(format!(
+                "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
+                 injection delivered only {expected:.4e} between z = {z_run_start:.3e} and \
+                 z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). The \
+                 electron temperature hit its cap in this run, but the cap only removes \
+                 heat, so it cannot cause an excess. An excess points to a numerical \
+                 error, for example an under-resolved frequency grid (this one has \
+                 n_points={}; try more) or time steps that are too large (reduce \
+                 dtau_max). A large injection (|Δρ/ρ| near 1e-2 or more) or a \
+                 diagnostic flag can also cause it. Do not trust μ and y from this run.",
+                100.0 * diff / gross,
+                100.0 * ENERGY_CLOSURE_REL_TOL,
+                self.grid_n_points,
+            ));
+        }
+        Some(format!(
+            "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
+             injection delivered {expected:.4e} between z = {z_run_start:.3e} and \
+             z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). \
+             Possible causes: a coarse frequency grid (this one has n_points={}; \
+             try more), large time steps (reduce dtau_max), a large injection \
+             (|Δρ/ρ| near 1e-2 or more), or a diagnostic flag. Check that μ and y \
+             are stable before trusting them.",
+            100.0 * diff / gross,
+            100.0 * ENERGY_CLOSURE_REL_TOL,
+            self.grid_n_points,
+        ))
     }
 
     /// Runs the solver with `n_snapshots` log-spaced snapshot redshifts between
@@ -1728,20 +2026,32 @@ impl ThermalizationSolver {
     /// need multiple intermediate snapshots, call
     /// [`Self::run_with_snapshots`] directly and inspect
     /// [`Self::snapshots`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if Δn becomes NaN or infinite. Use [`Self::try_run_to_result`]
+    /// to get that failure as an `Err`.
     pub fn run_to_result(&mut self, z_obs: f64) -> crate::output::SolverResult {
-        self.run_with_snapshots(&[z_obs]);
+        self.try_run_to_result(z_obs)
+            .unwrap_or_else(|msg| panic!("{msg}"))
+    }
+
+    /// Like [`Self::run_to_result`], but returns `Err` instead of panicking
+    /// when Δn becomes NaN or infinite.
+    pub fn try_run_to_result(&mut self, z_obs: f64) -> Result<crate::output::SolverResult, String> {
+        self.try_run_with_snapshots(&[z_obs])?;
         let snapshot = self
             .snapshots
             .last()
             .expect("run_with_snapshots produced no snapshot")
             .clone();
-        crate::output::SolverResult {
+        Ok(crate::output::SolverResult {
             snapshot,
             x_grid: self.grid.x.clone(),
             step_count: self.step_count,
             diag_newton_exhausted: self.diag.newton_exhausted,
             warnings: self.diag.warnings.clone(),
-        }
+        })
     }
 
     /// Creates a builder for configuring a solver with a fluent API.
@@ -1814,7 +2124,7 @@ impl SolverBuilder {
         self
     }
 
-    /// Uses the fast (500-point) grid for quick tests.
+    /// Uses the fast (1000-point) grid for quick tests.
     pub fn grid_fast(mut self) -> Self {
         self.grid_config = GridConfig::fast();
         self
@@ -2008,6 +2318,88 @@ impl SolverBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// R-1 skip rules, tested on the check itself so that each rule is
+    /// exercised alone. The base run fails closure with a shortfall (a
+    /// 100-point grid from z = 5e6 ends near Δρ/ρ = −1.5e-2 for an injected
+    /// 1e-5, with all heat above z = 2000), so the check fires; the ρ_e-cap
+    /// flag must silence a shortfall. A second run adds a known initial Δn:
+    /// the check must count that energy as expected, or it would warn on a
+    /// well-resolved run. The same run, checked against a wrong expectation,
+    /// gives a clean excess and a clean shortfall of equal size: with the cap
+    /// flag set, the excess must still warn and the shortfall must not.
+    #[test]
+    fn test_energy_closure_skip_rules() {
+        let burst = InjectionScenario::SingleBurst {
+            z_h: 3000.0,
+            delta_rho_over_rho: 1e-5,
+            sigma_z: 120.0,
+        };
+        let mut solver = ThermalizationSolver::new(
+            Cosmology::default(),
+            GridConfig {
+                n_points: 100,
+                ..GridConfig::default()
+            },
+        );
+        solver.set_injection(burst).unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 5e6,
+            z_end: 500.0,
+            ..SolverConfig::default()
+        });
+        solver.run_with_snapshots(&[500.0]);
+        assert!(!solver.diag.heating_cap_warned);
+        assert!(solver.energy_closure_warning(5e6, 0.0).is_some());
+        solver.diag.heating_cap_warned = true;
+        assert!(solver.energy_closure_warning(5e6, 0.0).is_none());
+
+        // Initial Δn = a·n_pl holds Δρ/ρ = a exactly (∫x³ n_pl dx = G₃), here
+        // twice the injected heat. Resolved burst, 1000 points.
+        let a = 2e-5;
+        let mut solver = ThermalizationSolver::new(Cosmology::default(), GridConfig::fast());
+        solver
+            .set_injection(InjectionScenario::SingleBurst {
+                z_h: 2e5,
+                delta_rho_over_rho: 1e-5,
+                sigma_z: 8e3,
+            })
+            .unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 2.6e5,
+            z_end: 1e5,
+            ..SolverConfig::default()
+        });
+        let dn0: Vec<f64> = solver.grid.x.iter().map(|&x| a * planck(x)).collect();
+        solver.set_initial_delta_n(dn0);
+        solver.run_with_snapshots(&[1e5]);
+        let closure: Vec<&String> = solver
+            .diag
+            .warnings
+            .iter()
+            .filter(|w| w.starts_with("Energy closure"))
+            .collect();
+        assert!(closure.is_empty(), "{closure:?}");
+        // Dropping the initial energy from the expectation must fire.
+        assert!(solver.energy_closure_warning(2.6e5, 0.0).is_some());
+
+        // Cap rule, one-sided. Dropping the initial energy a = 2e-5 from the
+        // expectation leaves an excess of a (200% of the injected heat);
+        // counting it twice leaves a shortfall of a.
+        assert!(!solver.diag.heating_cap_warned);
+        assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_some());
+        let uncapped = solver.energy_closure_warning(2.6e5, 0.0).unwrap();
+        assert!(!uncapped.contains("cannot cause an excess"), "{uncapped}");
+        solver.diag.heating_cap_warned = true;
+        let excess = solver.energy_closure_warning(2.6e5, 0.0);
+        assert!(
+            excess
+                .as_deref()
+                .is_some_and(|w| w.contains("cannot cause an excess")),
+            "{excess:?}"
+        );
+        assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_none());
+    }
 
     /// Checks that the analytic dH/dρ_e in `dcbr_heating_with_derivative` matches a
     /// central finite difference of the heating integral itself, built here

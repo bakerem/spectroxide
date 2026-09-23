@@ -46,7 +46,7 @@ for dy in "${DY_LIST[@]}"; do
       echo "skip $tag (exists)"
       continue
     fi
-    printf '%s\t%s\t%s\n' "$tag" "$dest" "${inj[*]} --delta-rho 1e-5 --z-start $Z_START --z-end $Z_END --dy-max $dy --n-points $N_POINTS --dtau-max $DTAU_MAX" >> "$JOBS"
+    printf '%s\t%s\t%s\n' "$tag" "$dest" "${inj[*]} --z-start $Z_START --z-end $Z_END --dy-max $dy --n-points $N_POINTS --dtau-max $DTAU_MAX" >> "$JOBS"
   done
 done
 
