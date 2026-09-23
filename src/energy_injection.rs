@@ -1398,6 +1398,99 @@ impl InjectionScenario {
         let rate = self.heating_rate(z, cosmo);
         -rate / (cosmo.hubble(z) * (1.0 + z))
     }
+
+    /// Returns the heat Δρ/ρ this scenario injects between `z_lo` and `z_hi`,
+    /// for the scenarios whose injected energy is known in closed form: a
+    /// single burst (its Gaussian integrated over the interval) and a heating
+    /// table (its d(Δρ/ρ)/dz integrated over the interval).
+    ///
+    /// Returns `None` for every other scenario, including all photon
+    /// injection, and when the interval is empty or not finite. The solver
+    /// uses this for its post-run energy-closure check (R-1).
+    pub fn injected_delta_rho_between(&self, z_lo: f64, z_hi: f64) -> Option<f64> {
+        self.integrate_heat_between(z_lo, z_hi, false)
+    }
+
+    /// Returns ∫|d(Δρ/ρ)/dz| dz between `z_lo` and `z_hi`: the gross heat
+    /// moved, counting cooling (negative rate) as positive. It equals
+    /// [`Self::injected_delta_rho_between`] for heating that never changes
+    /// sign, and sets the scale of the energy-closure tolerance for a table
+    /// that alternates heating and cooling, whose net can be near zero.
+    pub fn injected_abs_delta_rho_between(&self, z_lo: f64, z_hi: f64) -> Option<f64> {
+        self.integrate_heat_between(z_lo, z_hi, true)
+    }
+
+    fn integrate_heat_between(&self, z_lo: f64, z_hi: f64, abs: bool) -> Option<f64> {
+        if !(z_lo.is_finite() && z_hi.is_finite()) || z_hi <= z_lo {
+            return None;
+        }
+        match self {
+            InjectionScenario::SingleBurst {
+                z_h,
+                delta_rho_over_rho,
+                sigma_z,
+            } => {
+                // The Gaussian is negligible beyond ±10σ (e^{-50} ≈ 2e-22).
+                let a = z_lo.max(z_h - 10.0 * sigma_z);
+                let b = z_hi.min(z_h + 10.0 * sigma_z);
+                if b <= a {
+                    return Some(0.0);
+                }
+                let gauss = |z: f64| {
+                    (-(z - z_h).powi(2) / (2.0 * sigma_z * sigma_z)).exp()
+                        / (2.0 * std::f64::consts::PI * sigma_z * sigma_z).sqrt()
+                };
+                // 2000 Simpson intervals over at most 20σ: step ≤ 0.01σ.
+                let amp = if abs {
+                    delta_rho_over_rho.abs()
+                } else {
+                    *delta_rho_over_rho
+                };
+                Some(amp * simpson(gauss, a, b, 2000))
+            }
+            InjectionScenario::TabulatedHeating {
+                z_table,
+                rate_table,
+            } => {
+                if z_table.len() < 2 {
+                    return Some(0.0);
+                }
+                // The rate is linear in ln z between nodes (`interp_log_z`),
+                // so integrate each node interval in ln z: dz = z d(ln z).
+                // Evaluate the segment's own linear form rather than
+                // `interp_log_z`, whose bounds test can reject an endpoint
+                // after the exp(ln z) round trip.
+                let mut total = 0.0;
+                for (w, r) in z_table.windows(2).zip(rate_table.windows(2)) {
+                    let a = w[0].max(z_lo);
+                    let b = w[1].min(z_hi);
+                    if b <= a {
+                        continue;
+                    }
+                    let (u0, u1) = (w[0].ln(), w[1].ln());
+                    let f = |u: f64| {
+                        let rate = r[0] + (u - u0) / (u1 - u0) * (r[1] - r[0]);
+                        (if abs { rate.abs() } else { rate }) * u.exp()
+                    };
+                    total += simpson(f, a.ln(), b.ln(), 64);
+                }
+                Some(total)
+            }
+            _ => None,
+        }
+    }
+}
+
+/// Composite Simpson rule for ∫_a^b f with `n` intervals (`n` rounded up to even).
+fn simpson(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f64 {
+    let n = (n.max(2) + 1) & !1;
+    let h = (b - a) / n as f64;
+    let mut s = f(a) + f(b);
+    for i in 1..n {
+        let w = if i % 2 == 1 { 4.0 } else { 2.0 };
+        s += w * f(a + i as f64 * h);
+    }
+    s * h / 3.0
 }
 
 #[cfg(test)]

@@ -349,3 +349,58 @@ class TestRunSingle:
         """Must provide either z_h or dq_dz."""
         with pytest.raises(ValueError):
             run_single()
+
+
+def _capture_solve_cmd(monkeypatch, **solve_kwargs):
+    """Run ``solve`` with the Rust call replaced by a stub; return its argv."""
+    import spectroxide.solver as _solver
+
+    captured = {}
+
+    def fake_run(cmd, *, cwd, timeout=600):
+        captured["cmd"] = list(cmd)
+        return {
+            "results": [
+                {
+                    "x": [1.0, 2.0],
+                    "delta_n": [0.0, 0.0],
+                    "pde_mu": 0.0,
+                    "pde_y": 0.0,
+                    "drho": 0.0,
+                }
+            ]
+        }
+
+    monkeypatch.setattr(_solver, "_run_rust_binary", fake_run)
+    _solver.solve(**solve_kwargs)
+    return captured["cmd"]
+
+
+def test_solve_passes_only_flags_the_cli_reads(monkeypatch):
+    """R-3: the CLI rejects --delta-rho for every injection type except
+    single-burst, and --threads for `solve`. The wrapper must not send them."""
+    cmd = _capture_solve_cmd(
+        monkeypatch,
+        injection={"type": "decaying_particle", "f_x": 1e5, "gamma_x": 1e-12},
+        n_threads=2,
+    )
+    assert "--delta-rho" not in cmd and "--threads" not in cmd
+
+    cmd = _capture_solve_cmd(
+        monkeypatch,
+        dq_dz=lambda z: 1e-12,
+        z_min=1e4,
+        z_max=1e5,
+        n_z=50,
+        n_threads=2,
+    )
+    assert "tabulated-heating" in cmd
+    assert "--delta-rho" not in cmd and "--threads" not in cmd
+
+    cmd = _capture_solve_cmd(
+        monkeypatch,
+        injection={"type": "single_burst", "z_h": 2e5},
+        delta_rho=3e-6,
+    )
+    i = cmd.index("--delta-rho")
+    assert float(cmd[i + 1]) == 3e-6

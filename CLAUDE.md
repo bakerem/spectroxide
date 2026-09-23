@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test                     # Run all tests (179 unit + 300 integration + 3 doc pass; +3 ignored)
+cargo test                     # Run all tests (185 unit + 314 integration + 3 doc pass; +4 ignored)
 cargo test --release           # Run tests with optimizations (some solver tests are slow in debug)
 cargo test test_name           # Run a single test by name
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -83,8 +83,8 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 ### Integration tests (tests/)
 
 - `heat_injection.rs` — 203 integration tests (199 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
-- `adversarial_inputs.rs` — 17 tests: edge cases, invalid inputs, boundary conditions.
-- `coverage_gaps.rs` — 14 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement).
+- `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
+- `coverage_gaps.rs` — 20 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1).
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 7 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift) and Gaunt-factor spot checks.
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.

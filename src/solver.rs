@@ -27,6 +27,35 @@ use crate::kompaneets::{KompaneetsWorkspace, kompaneets_step_coupled_inplace};
 use crate::recombination::RecombinationHistory;
 use crate::spectrum::planck;
 
+/// Smallest `GridConfig::n_points` covered by the test suite. Smaller grids
+/// run, but the solver warns (R-1). `GridConfig::fast()` sits exactly here.
+pub const MIN_TESTED_GRID_POINTS: usize = 500;
+
+/// Relative tolerance of the post-run energy-closure check (R-1): the solver
+/// warns when the final Δρ/ρ misses the injected heat by more than this
+/// fraction of it. Bursts at z_h ≥ 1600 close to within 0.7% at the default
+/// grid (N = 2000) and Δτ_max = 10.
+pub const ENERGY_CLOSURE_REL_TOL: f64 = 0.05;
+
+/// Absolute slack added to the energy-closure tolerance. It covers the
+/// adiabatic-cooling baseline that every run carries whatever the injection:
+/// Δρ/ρ = −4.9e-9 from z = 5e6 to 500 and −5.2e-9 to z = 1 (measured with a
+/// null burst, N = 2000), so injections below ~1e-7 are not flagged for it.
+pub const ENERGY_CLOSURE_ABS_FLOOR: f64 = 1e-8;
+
+/// Redshift below which injected heat does not fully reach the photons. See
+/// [`ENERGY_CHECK_MAX_LATE_FRACTION`].
+pub const ENERGY_CHECK_Z_LATE: f64 = 2000.0;
+
+/// The energy-closure check is skipped when more than this fraction of the
+/// injected heat falls below [`ENERGY_CHECK_Z_LATE`]. Measured delivery
+/// (N = 2000, Δτ_max = 10, cooling baseline removed) is 99.3–99.7% for bursts
+/// at z_h ≥ 1600 but 94–97% at z_h = 700–1300. At z_h = 1300 the deficit is
+/// step error (99.8% at Δτ_max = 0.1); at z_h ≤ 1000 about 5% stays lost at
+/// Δτ_max = 0.1. With at most this fraction below z = 2000, the late part
+/// moves the total by at most 0.7%.
+pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.1;
+
 /// Tunable solver parameters.
 ///
 /// Defaults are production-quality and match the values used for all paper
@@ -83,8 +112,10 @@ impl SolverConfig {
         if !self.z_start.is_finite() || self.z_start <= 0.0 {
             return Err(format!("z_start must be positive, got {}", self.z_start));
         }
-        if !self.z_end.is_finite() || self.z_end < 0.0 {
-            return Err(format!("z_end must be non-negative, got {}", self.z_end));
+        // z_end = 0 is rejected: the adaptive step shrinks with z, so the run
+        // never reaches z = 0 and stops at the step limit instead (R-2).
+        if !self.z_end.is_finite() || self.z_end <= 0.0 {
+            return Err(format!("z_end must be positive, got {}", self.z_end));
         }
         if self.z_start <= self.z_end {
             return Err(format!(
@@ -111,6 +142,21 @@ impl SolverConfig {
         }
         if !self.dtau_max.is_finite() || self.dtau_max <= 0.0 {
             return Err(format!("dtau_max must be positive, got {}", self.dtau_max));
+        }
+        // A zero, negative, or NaN cap used to switch the photon-source step
+        // limit off silently (R-2).
+        if !self.dtau_max_photon_source.is_finite() || self.dtau_max_photon_source <= 0.0 {
+            return Err(format!(
+                "dtau_max_photon_source must be positive, got {}",
+                self.dtau_max_photon_source
+            ));
+        }
+        // 0 is valid and documented: subtract the T-shift at all redshifts.
+        if !self.nc_z_min.is_finite() || self.nc_z_min < 0.0 {
+            return Err(format!(
+                "nc_z_min must be non-negative, got {}",
+                self.nc_z_min
+            ));
         }
         if self.max_newton_iter < 2 {
             return Err(format!(
@@ -326,6 +372,9 @@ pub struct ThermalizationSolver {
     pub cosmo: Cosmology,
     /// Frequency grid (non-uniform in x).
     pub grid: FrequencyGrid,
+    /// Base point count `GridConfig::n_points` the grid was built from,
+    /// before refinement zones add points. Drives the small-grid warning.
+    grid_n_points: usize,
     /// Current photon occupation-number perturbation `Δn(x)` on the grid.
     pub delta_n: Vec<f64>,
     /// Electron temperature state `ρ_e = T_e/T_z` (perturbative
@@ -556,6 +605,7 @@ impl ThermalizationSolver {
     /// validation at build time, use [`Self::builder`] instead.
     pub fn new(cosmo: Cosmology, grid_config: GridConfig) -> Self {
         let grid = FrequencyGrid::new(&grid_config);
+        let grid_n_points = grid_config.n_points;
         let n = grid.n;
         let recomb = RecombinationHistory::new(&cosmo);
         let komp_ws = KompaneetsWorkspace::new(&grid);
@@ -627,6 +677,7 @@ impl ThermalizationSolver {
             config: SolverConfig::default(),
             cosmo,
             grid,
+            grid_n_points,
             delta_n: vec![0.0; n],
             electron_temp: ElectronTemperature::default(),
             z: SolverConfig::default().z_start,
@@ -1605,6 +1656,19 @@ impl ThermalizationSolver {
             ));
         }
 
+        // Below the tested grid range, results can be wrong by orders of
+        // magnitude with no other symptom (R-1: 100 points gave Δρ/ρ = −1.5e-2
+        // for an injected +1e-5).
+        if self.grid_n_points < MIN_TESTED_GRID_POINTS {
+            self.diag.warnings.push(format!(
+                "Frequency grid has n_points={} (fewer than {MIN_TESTED_GRID_POINTS}, the \
+                 smallest tested size). Coarse grids can return wrong μ, y, and Δρ/ρ \
+                 without any other warning; use n_points >= {MIN_TESTED_GRID_POINTS} \
+                 (2000 or more for production).",
+                self.grid_n_points
+            ));
+        }
+
         // Resonant conversion scenarios (dark photon, axion) install their IC
         // at z_start; warn users whose z_start doesn't match the NWA resonance
         // redshift (the builder auto-corrects, but `set_config` on a bare
@@ -1642,6 +1706,11 @@ impl ThermalizationSolver {
                 self.delta_n = dn;
             }
         }
+
+        // Energy already in the spectrum at z_start (a user-set initial Δn);
+        // the post-run closure check adds it to the injected energy.
+        let z_run_start = self.z;
+        let drho_initial = self.total_delta_rho_over_rho();
 
         // Sort snapshot redshifts descending (we integrate from high z to low z)
         let mut sorted_z: Vec<f64> = snapshot_redshifts.to_vec();
@@ -1684,11 +1753,13 @@ impl ThermalizationSolver {
                 next_snap += 1;
             }
 
+            // Progress goes to stderr only: it is not a warning, and the
+            // Python wrapper re-raises every `warnings` entry (R-5).
             if self.step_count % 100000 == 0 {
-                self.diag.warnings.push(format!(
+                eprintln!(
                     "Progress: z={:.1e} step={} ρ_e={:.6} ρ_eq={:.6}",
                     self.z, self.step_count, self.electron_temp.rho_e, self.rho_eq
-                ));
+                );
             }
         }
 
@@ -1715,7 +1786,74 @@ impl ThermalizationSolver {
             );
         }
 
+        if let Some(w) = self.energy_closure_warning(z_run_start, drho_initial) {
+            self.diag.warnings.push(w);
+        }
+
         &self.snapshots
+    }
+
+    /// Returns the total Δρ/ρ in the current state: the spectral Δn plus the
+    /// temperature shift that number-conserving mode subtracted.
+    fn total_delta_rho_over_rho(&self) -> f64 {
+        crate::spectrum::delta_rho_over_rho(&self.grid.x, &self.delta_n)
+            + 4.0 * self.accumulated_delta_t
+    }
+
+    /// Compares the energy in the final spectrum with the heat the injection
+    /// delivered between `z_start` and the final redshift (R-1). Returns a
+    /// warning if they differ by more than [`ENERGY_CLOSURE_REL_TOL`] of the
+    /// gross injected heat ∫|dq/dz| dz plus [`ENERGY_CLOSURE_ABS_FLOOR`].
+    ///
+    /// Applies only to scenarios with a known injected energy (single burst,
+    /// heating table); photon injection is excluded because its closure is
+    /// known to be off by 7–45% for x_inj ≲ 0.03 (investigation I-1). The
+    /// check is also skipped when ρ_e hit its cap (that run already warns
+    /// "Substantial heating") and when more than
+    /// [`ENERGY_CHECK_MAX_LATE_FRACTION`] of the injected energy falls below
+    /// z = [`ENERGY_CHECK_Z_LATE`], where heat near recombination does not
+    /// fully reach the photons.
+    fn energy_closure_warning(&self, z_run_start: f64, drho_initial: f64) -> Option<String> {
+        if self.diag.heating_cap_warned || self.step_count == 0 {
+            return None;
+        }
+        let inj = self.injection.as_ref()?;
+        let z_final = self.z;
+        let injected = inj.injected_delta_rho_between(z_final, z_run_start)?;
+        // Tolerances scale with the gross heat moved, so a table that
+        // alternates heating and cooling (net near zero) is not flagged for
+        // the ordinary step error on each half-cycle.
+        let gross = inj.injected_abs_delta_rho_between(z_final, z_run_start)?;
+        if gross == 0.0 || !gross.is_finite() || !injected.is_finite() {
+            return None;
+        }
+        let late = if z_final < ENERGY_CHECK_Z_LATE {
+            inj.injected_abs_delta_rho_between(z_final, ENERGY_CHECK_Z_LATE.min(z_run_start))
+                .unwrap_or(0.0)
+        } else {
+            0.0
+        };
+        if late / gross > ENERGY_CHECK_MAX_LATE_FRACTION {
+            return None;
+        }
+        let expected = drho_initial + injected;
+        let measured = self.total_delta_rho_over_rho();
+        let diff = measured - expected;
+        if diff.abs() <= ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR {
+            return None;
+        }
+        Some(format!(
+            "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
+             injection delivered {expected:.4e} between z = {z_run_start:.3e} and \
+             z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). \
+             Possible causes: a coarse frequency grid (this one has n_points={}; \
+             try more), large time steps (reduce dtau_max), a large injection \
+             (|Δρ/ρ| near 1e-2 or more), or a diagnostic flag. Check that μ and y \
+             are stable before trusting them.",
+            100.0 * diff / gross,
+            100.0 * ENERGY_CLOSURE_REL_TOL,
+            self.grid_n_points,
+        ))
     }
 
     /// Runs the solver with `n_snapshots` log-spaced snapshot redshifts between
@@ -2070,6 +2208,68 @@ impl SolverBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// R-1 skip rules, tested on the check itself so that each rule is
+    /// exercised alone. The base run fails closure (a 100-point grid from
+    /// z = 5e6 ends near Δρ/ρ = −1.5e-2 for an injected 1e-5, with all heat
+    /// above z = 2000), so the check fires; the ρ_e-cap flag must silence it.
+    /// A second run adds a known initial Δn: the check must count that energy
+    /// as expected, or it would warn on a well-resolved run.
+    #[test]
+    fn test_energy_closure_skip_rules() {
+        let burst = InjectionScenario::SingleBurst {
+            z_h: 3000.0,
+            delta_rho_over_rho: 1e-5,
+            sigma_z: 120.0,
+        };
+        let mut solver = ThermalizationSolver::new(
+            Cosmology::default(),
+            GridConfig {
+                n_points: 100,
+                ..GridConfig::default()
+            },
+        );
+        solver.set_injection(burst).unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 5e6,
+            z_end: 500.0,
+            ..SolverConfig::default()
+        });
+        solver.run_with_snapshots(&[500.0]);
+        assert!(!solver.diag.heating_cap_warned);
+        assert!(solver.energy_closure_warning(5e6, 0.0).is_some());
+        solver.diag.heating_cap_warned = true;
+        assert!(solver.energy_closure_warning(5e6, 0.0).is_none());
+
+        // Initial Δn = a·n_pl holds Δρ/ρ = a exactly (∫x³ n_pl dx = G₃), here
+        // twice the injected heat. Resolved burst, 500 points.
+        let a = 2e-5;
+        let mut solver = ThermalizationSolver::new(Cosmology::default(), GridConfig::fast());
+        solver
+            .set_injection(InjectionScenario::SingleBurst {
+                z_h: 2e5,
+                delta_rho_over_rho: 1e-5,
+                sigma_z: 8e3,
+            })
+            .unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 2.6e5,
+            z_end: 1e5,
+            ..SolverConfig::default()
+        });
+        let dn0: Vec<f64> = solver.grid.x.iter().map(|&x| a * planck(x)).collect();
+        solver.set_initial_delta_n(dn0);
+        solver.run_with_snapshots(&[1e5]);
+        let closure: Vec<&String> = solver
+            .diag
+            .warnings
+            .iter()
+            .filter(|w| w.starts_with("Energy closure"))
+            .collect();
+        assert!(closure.is_empty(), "{closure:?}");
+        // Dropping the initial energy from the expectation must fire.
+        assert!(solver.energy_closure_warning(2.6e5, 0.0).is_some());
+    }
 
     /// Checks that the analytic dH/dρ_e in `dcbr_heating_with_derivative` matches a
     /// central finite difference of the heating integral itself, built here

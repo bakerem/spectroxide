@@ -254,7 +254,6 @@ def run_spx_tabulated(csv_path, z_start, z_end, n_points=4000):
         "cargo", "run", "--release", "--bin", "spectroxide", "--",
         "solve", "tabulated-heating",
         "--heating-table", csv_path,
-        "--delta-rho", "1e-5",  # ignored for tabulated (table carries amplitude)
         "--z-start", str(z_start),
         "--z-end", str(z_end),
         "--n-points", str(n_points),

@@ -130,10 +130,23 @@ impl GridConfig {
             if zone.n_points == 0 {
                 return Err(format!("refinement_zones[{}].n_points must be > 0", i));
             }
-            if zone.x_center < self.x_min || zone.x_center > self.x_max {
+            // Grid construction clips each zone to [x_min, x_max], so only a
+            // zone that misses the grid entirely is an error. A zone whose
+            // center lies outside but that still overlaps the grid is valid:
+            // `DecayingParticlePhoton` spans [x_inj_0·1e-7, x_inj_0], whose
+            // midpoint exceeds x_max for large x_inj_0 (N-2).
+            if !zone.x_center.is_finite() || !zone.x_width.is_finite() {
                 return Err(format!(
-                    "refinement_zones[{}].x_center={} is outside grid range [{}, {}]",
-                    i, zone.x_center, self.x_min, self.x_max
+                    "refinement_zones[{}] must be finite, got x_center={}, x_width={}",
+                    i, zone.x_center, zone.x_width
+                ));
+            }
+            let lo = zone.x_center - zone.x_width;
+            let hi = zone.x_center + zone.x_width;
+            if hi <= self.x_min || lo >= self.x_max {
+                return Err(format!(
+                    "refinement_zones[{}] = [{}, {}] does not overlap the grid range [{}, {}]",
+                    i, lo, hi, self.x_min, self.x_max
                 ));
             }
         }
