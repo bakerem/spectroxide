@@ -599,3 +599,214 @@ fn coupled_vs_split_dcbr_consistency() {
         "Coupled vs split drho should agree to <5%: rel = {drho_rel:.4e}"
     );
 }
+
+// ============================================================================
+// Section 10: post-run energy-closure and small-grid warnings (R-1), and
+// progress messages kept out of `warnings` (R-5)
+//
+// Every target below is the injected energy, which the test fixes by
+// construction (a burst's Δρ/ρ, a constant table's rate × Δz), not a value
+// read from the solver.
+// ============================================================================
+
+fn has_warning(warnings: &[String], prefix: &str) -> bool {
+    warnings.iter().any(|w| w.starts_with(prefix))
+}
+
+fn burst_run(
+    z_h: f64,
+    drho: f64,
+    z_start: f64,
+    z_end: f64,
+    n_points: usize,
+) -> (f64, Vec<String>, usize) {
+    let sigma_z = (0.04 * z_h).max(100.0);
+    let mut solver = ThermalizationSolver::builder(Cosmology::default())
+        .grid(GridConfig {
+            n_points,
+            ..GridConfig::default()
+        })
+        .injection(InjectionScenario::SingleBurst {
+            z_h,
+            delta_rho_over_rho: drho,
+            sigma_z,
+        })
+        .z_range(z_start, z_end)
+        .build()
+        .unwrap();
+    let r = solver.run_to_result(z_end);
+    (r.snapshot.delta_rho_over_rho, r.warnings, r.step_count)
+}
+
+/// `injected_delta_rho_between` against closed forms: a full Gaussian burst
+/// integrates to its Δρ/ρ, the half above its peak to Δρ/2, and a constant
+/// table rate r to r·(z_hi − z_lo). Photon injection has no known heat.
+#[test]
+fn injected_delta_rho_between_closed_forms() {
+    let burst = InjectionScenario::SingleBurst {
+        z_h: 2e5,
+        delta_rho_over_rho: 1e-5,
+        sigma_z: 8e3,
+    };
+    let full = burst.injected_delta_rho_between(1e3, 5e6).unwrap();
+    assert!((full / 1e-5 - 1.0).abs() < 1e-9, "full burst {full:e}");
+    let half = burst.injected_delta_rho_between(2e5, 5e6).unwrap();
+    assert!((half / 5e-6 - 1.0).abs() < 1e-9, "half burst {half:e}");
+    // ±1σ holds erf(1/√2) = 0.682689492137 of the Gaussian.
+    let one_sigma = burst.injected_delta_rho_between(1.92e5, 2.08e5).unwrap();
+    assert!((one_sigma / 1e-5 - 0.682_689_492_137).abs() < 1e-9);
+
+    let z_table: Vec<f64> = (0..50)
+        .map(|i| 1e3 * 10f64.powf(3.0 * i as f64 / 49.0))
+        .collect();
+    let table = InjectionScenario::TabulatedHeating {
+        rate_table: vec![2e-12; z_table.len()],
+        z_table,
+    };
+    let inside = table.injected_delta_rho_between(2e3, 5e5).unwrap();
+    assert!((inside / (2e-12 * (5e5 - 2e3)) - 1.0).abs() < 1e-9);
+    // Clipped to the table's own range [1e3, 1e6].
+    let clipped = table.injected_delta_rho_between(10.0, 1e7).unwrap();
+    assert!((clipped / (2e-12 * (1e6 - 1e3)) - 1.0).abs() < 1e-9);
+
+    // Alternating heating and cooling, r·sin(2π z / P) over 10 whole periods:
+    // net ≈ 0, gross = (2/π)·r·Δz.
+    let (r, period) = (5e-10, 5e4);
+    let z_sin: Vec<f64> = (0..20_001)
+        .map(|i| 1e5 + 5e5 * i as f64 / 20_000.0)
+        .collect();
+    let sin_table = InjectionScenario::TabulatedHeating {
+        rate_table: z_sin
+            .iter()
+            .map(|&z| r * (2.0 * std::f64::consts::PI * z / period).sin())
+            .collect(),
+        z_table: z_sin,
+    };
+    let gross = sin_table.injected_abs_delta_rho_between(1e5, 6e5).unwrap();
+    let gross_exact = 2.0 / std::f64::consts::PI * r * 5e5;
+    assert!((gross / gross_exact - 1.0).abs() < 1e-3, "gross {gross:e}");
+    let net = sin_table.injected_delta_rho_between(1e5, 6e5).unwrap();
+    assert!(net.abs() < 1e-3 * gross_exact, "net {net:e}");
+
+    let photon = InjectionScenario::MonochromaticPhotonInjection {
+        x_inj: 1.0,
+        delta_n_over_n: 1e-5,
+        z_h: 1e5,
+        sigma_z: 4e3,
+        sigma_x: 0.05,
+    };
+    assert!(photon.injected_delta_rho_between(1e3, 5e6).is_none());
+}
+
+/// R-1 reproduction: a 100-point grid started at z = 5e6 ends with
+/// Δρ/ρ ≈ −1.5e-2 for an injected +1e-5 and used to exit cleanly. The
+/// energy-closure and small-grid warnings must both fire. The same failed
+/// run with the burst at z_h = 1600, where nearly all of the heat lands
+/// below z = 2000, must skip the energy check (late-injection rule). The
+/// run takes > 100,000 steps, so it also checks that the progress line
+/// stays out of `warnings` (R-5).
+#[test]
+fn energy_closure_warns_on_coarse_grid() {
+    let (drho, warnings, steps) = burst_run(3000.0, 1e-5, 5e6, 500.0, 100);
+    assert!(steps > 100_000, "needs a progress line; steps = {steps}");
+    assert!(
+        (drho / 1e-5 - 1.0).abs() > 0.05,
+        "precondition: this grid must fail closure, drho = {drho:e}"
+    );
+    assert!(has_warning(&warnings, "Energy closure"), "{warnings:?}");
+    assert!(
+        has_warning(&warnings, "Frequency grid has n_points=100"),
+        "{warnings:?}"
+    );
+    assert!(!has_warning(&warnings, "Progress"), "{warnings:?}");
+
+    let (drho_late, warnings_late, _) = burst_run(1600.0, 1e-5, 5e6, 500.0, 100);
+    assert!(
+        (drho_late / 1e-5 - 1.0).abs() > 0.05,
+        "drho = {drho_late:e}"
+    );
+    assert!(
+        !has_warning(&warnings_late, "Energy closure"),
+        "{warnings_late:?}"
+    );
+}
+
+/// A resolved burst closes within 5%: no energy warning, and the 500-point
+/// `GridConfig::fast()` size does not trigger the small-grid warning.
+#[test]
+fn energy_closure_silent_when_resolved() {
+    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 500);
+    assert!((drho / 1e-5 - 1.0).abs() < 0.05, "drho = {drho:e}");
+    assert!(!has_warning(&warnings, "Energy closure"), "{warnings:?}");
+    assert!(
+        !has_warning(&warnings, "Frequency grid has n_points"),
+        "{warnings:?}"
+    );
+}
+
+/// A burst at z_h = 1000 heats the electrons past the ρ_e cap (the
+/// "Substantial heating" warning) and delivers about half its energy. That
+/// run already warns, so the energy check stays silent. Both skip rules apply
+/// here (all the heat also lies below z = 2000); the unit test
+/// `test_energy_closure_skip_rules` in `solver.rs` isolates the cap rule.
+#[test]
+fn energy_closure_skipped_when_rho_e_capped() {
+    let (drho, warnings, _) = burst_run(1000.0, 1e-5, 1700.0, 200.0, 500);
+    assert!(
+        has_warning(&warnings, "Substantial heating"),
+        "{warnings:?}"
+    );
+    assert!((drho / 1e-5 - 1.0).abs() > 0.05, "drho = {drho:e}");
+    assert!(!has_warning(&warnings, "Energy closure"), "{warnings:?}");
+}
+
+/// Constant tabulated heating, d(Δρ/ρ)/dz = 1e-11 on z ∈ [5e3, 2e6], injects
+/// 1e-11 × (2e6 − 5e3) = 1.995e-5. At 300 points the spectrum holds ~38%
+/// more than that and the check fires; at 1000 points it closes within 2%.
+#[test]
+fn energy_closure_tabulated_heating() {
+    let z_table: Vec<f64> = (0..100)
+        .map(|i| 5e3 * (2e6_f64 / 5e3).powf(i as f64 / 99.0))
+        .collect();
+    let injected = 1e-11 * (2e6 - 5e3);
+    let run = |n_points: usize| {
+        let mut solver = ThermalizationSolver::builder(Cosmology::default())
+            .grid(GridConfig {
+                n_points,
+                ..GridConfig::default()
+            })
+            .injection(InjectionScenario::TabulatedHeating {
+                rate_table: vec![1e-11; z_table.len()],
+                z_table: z_table.clone(),
+            })
+            .z_range(2e6, 1e3)
+            .build()
+            .unwrap();
+        let r = solver.run_to_result(1e3);
+        (r.snapshot.delta_rho_over_rho, r.warnings)
+    };
+    let (drho_coarse, w_coarse) = run(300);
+    assert!(
+        (drho_coarse / injected - 1.0).abs() > 0.05,
+        "drho = {drho_coarse:e}"
+    );
+    assert!(has_warning(&w_coarse, "Energy closure"), "{w_coarse:?}");
+    let (drho_fine, w_fine) = run(1000);
+    assert!(
+        (drho_fine / injected - 1.0).abs() < 0.05,
+        "drho = {drho_fine:e}"
+    );
+    assert!(!has_warning(&w_fine, "Energy closure"), "{w_fine:?}");
+}
+
+/// The smallest grid validation accepts (10 points) runs to completion
+/// without panicking and carries the small-grid warning.
+#[test]
+fn smallest_accepted_grid_runs_and_warns() {
+    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 10);
+    assert!(drho.is_finite());
+    assert!(
+        has_warning(&warnings, "Frequency grid has n_points=10"),
+        "{warnings:?}"
+    );
+}
