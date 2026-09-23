@@ -313,15 +313,23 @@ _build_lock = _threading.Lock()
 def _stale_binary_sources(root, binary):
     """Return the Rust sources under ``root`` that are newer than ``binary``.
 
-    Checks ``src/**/*.rs``, ``Cargo.toml``, and ``Cargo.lock``.  Returns
-    an empty list if ``binary`` does not exist.
+    Checks ``src/**/*.rs`` (excluding ``src/bin/``), ``Cargo.toml``, and
+    ``Cargo.lock``.  Returns an empty list if ``binary`` does not exist.
+
+    ``src/bin/*.rs`` files are excluded (R-4 follow-up): each is a
+    separate Cargo binary target (for example ``check_adiabatic``), so
+    ``cargo build --release`` does not relink ``target/release/spectroxide``
+    when only one of them changes, and the warning would never clear.
     """
     root = Path(root)
     try:
         built = Path(binary).stat().st_mtime
     except OSError:
         return []
-    candidates = list((root / "src").rglob("*.rs"))
+    bin_dir = root / "src" / "bin"
+    candidates = [
+        p for p in (root / "src").rglob("*.rs") if not p.is_relative_to(bin_dir)
+    ]
     candidates += [root / "Cargo.toml", root / "Cargo.lock"]
     newer = []
     for path in candidates:

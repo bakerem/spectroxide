@@ -508,9 +508,7 @@ class TestStaleBinaryWarning:
             os.utime(path, (t, t))
         return binary
 
-    @pytest.mark.parametrize(
-        "newer", ["src/kompaneets.rs", "src/bin/check.rs", "Cargo.toml", "Cargo.lock"]
-    )
+    @pytest.mark.parametrize("newer", ["src/kompaneets.rs", "Cargo.toml", "Cargo.lock"])
     def test_warns_when_source_newer(self, tmp_path, newer):
         from spectroxide.solver import _warn_if_stale_binary
 
@@ -526,6 +524,30 @@ class TestStaleBinaryWarning:
             _warn_if_stale_binary(tmp_path, binary)
         # No rebuild: the binary is untouched.
         assert binary.stat().st_mtime == 2000.0
+
+    def test_ignores_src_bin(self, tmp_path):
+        """R-4 follow-up: a newer src/bin/*.rs must not warn.
+
+        Each file under src/bin/ is a separate Cargo binary target (for
+        example check_adiabatic); `cargo build --release` does not relink
+        target/release/spectroxide when only one of them changes, so the
+        warning would never clear.
+        """
+        import warnings
+
+        from spectroxide.solver import _warn_if_stale_binary
+
+        binary = self._make_tree(
+            tmp_path,
+            binary_time=2000.0,
+            source_times={
+                "src/lib.rs": 1000.0,
+                "src/bin/check_adiabatic.rs": 3000.0,
+            },
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            _warn_if_stale_binary(tmp_path, binary)
 
     def test_silent_when_binary_newest(self, tmp_path):
         import warnings
