@@ -224,9 +224,8 @@ impl SolverSnapshot {
 /// Cached backward-Euler ordinary differential equation (ODE) coefficients
 /// for the ρ_e equation.
 ///
-/// Computed once per step in `update_temperatures()` and consumed by:
-/// 1. The DC/BR emission rate computation (needs ρ_dcbr corrected for injection).
-/// 2. The bordered Newton solver (couples ρ_e into the Kompaneets iteration).
+/// Computed once per step in `update_temperatures()` and consumed by
+/// the bordered Newton solver, which couples ρ_e into the Kompaneets iteration.
 #[derive(Debug, Clone, Copy)]
 struct RhoECache {
     /// ρ_e at the start of the step (before Newton iteration).
@@ -239,8 +238,6 @@ struct RhoECache {
     lambda_htc: f64,
     /// dH/dρ_e: derivative of DC+BR heating integral w.r.t. ρ_e.
     dh_drho: f64,
-    /// Compton optical depth for this step (used for the DC/BR injection correction).
-    dtau: f64,
 }
 
 /// Diagnostic counters and extrema tracked during solver evolution.
@@ -249,8 +246,11 @@ struct RhoECache {
 /// physics state. Reset by `ThermalizationSolver::reset()`.
 #[derive(Debug, Clone, Default)]
 pub struct SolverDiagnostics {
-    /// Number of times rho_e was clamped.
-    /// Non-zero values indicate injection energy may be silently discarded.
+    /// Number of steps on which ρ_e hit a guard cap ([0, 1.5] in the
+    /// backward-Euler predictor, [0, 3] after the coupled Newton solve) or
+    /// came out non-finite. The first such step in a run pushes a warning
+    /// (see `ThermalizationSolver::guard_rho_e`); later ones only increment
+    /// this counter.
     pub rho_e_clamped: usize,
     /// Number of times Newton iteration exhausted max_newton_iter
     /// without converging. Non-zero values indicate the solver may need more
@@ -258,6 +258,18 @@ pub struct SolverDiagnostics {
     pub newton_exhausted: usize,
     /// Whether any NaN emission rate was encountered.
     pub nan_emission_detected: bool,
+    /// Number of steps on which the DC/BR target temperature ρ_e fell outside
+    /// the guard range [0.05, 2] and was clamped. The first such step pushes a
+    /// warning; later ones only increment this counter.
+    pub dcbr_target_clamped: usize,
+    /// Whether the once-per-run warning for ρ_e reaching its upper cap
+    /// (heating strong enough to ionize the gas) has been pushed.
+    pub(crate) heating_cap_warned: bool,
+    /// Whether the once-per-run warning for a negative or non-finite ρ_e has
+    /// been pushed.
+    pub(crate) rho_e_invalid_warned: bool,
+    /// Whether the once-per-run DC/BR target-guard warning has been pushed.
+    pub(crate) dcbr_target_warned: bool,
     /// Warning messages collected during solver evolution.
     /// Replaces eprintln! in library code for structured diagnostics.
     pub warnings: Vec<String>,
@@ -852,6 +864,50 @@ impl ThermalizationSolver {
         dz.max(self.config.dz_min).min(self.z * 0.05)
     }
 
+    /// Applies the guard caps to a new electron temperature ρ_e and records
+    /// the event.
+    ///
+    /// Returns the value to store, clamped to [0, `hi`], or `None` when
+    /// `raw` is non-finite (the caller keeps the prior ρ_e). Every clamp or
+    /// non-finite value increments `diag.rho_e_clamped`.
+    ///
+    /// The upper cap is reached only when heating drives T_e far above the
+    /// photon temperature. Such heating would collisionally ionize the gas,
+    /// while the solver holds X_e on its recombination history, so the first
+    /// hit in a run pushes a warning that results may be inaccurate. A
+    /// negative or non-finite ρ_e pushes its own once-per-run warning.
+    fn guard_rho_e(&mut self, raw: f64, hi: f64, z: f64) -> Option<f64> {
+        let out = if raw.is_finite() {
+            Some(raw.clamp(0.0, hi))
+        } else {
+            None
+        };
+        if out == Some(raw) {
+            return out;
+        }
+        self.diag.rho_e_clamped += 1;
+        if raw > hi {
+            if !self.diag.heating_cap_warned {
+                self.diag.heating_cap_warned = true;
+                self.diag.warnings.push(format!(
+                    "Substantial heating: at z = {z:.4e} the electron temperature reached \
+                     the cap T_e/T_z = {hi}. Heating this strong would raise T_e enough to \
+                     ionize the gas, but the solver holds the ionization fraction X_e fixed \
+                     at its recombination history, so the results may be inaccurate. T_e is \
+                     clamped at the cap on this and any later such step."
+                ));
+            }
+        } else if !self.diag.rho_e_invalid_warned {
+            self.diag.rho_e_invalid_warned = true;
+            self.diag.warnings.push(format!(
+                "The electron temperature solve gave T_e/T_z = {raw:.4e} at z = {z:.4e}; a \
+                 negative value is clamped to 0 and a non-finite one is replaced by the \
+                 previous step's value. Results may be inaccurate."
+            ));
+        }
+        out
+    }
+
     /// Updates ρ_e from distortion feedback and injection.
     ///
     /// Two modes selected automatically by distortion amplitude:
@@ -1039,7 +1095,6 @@ impl ThermalizationSolver {
                 rho_source,
                 lambda_htc,
                 dh_drho,
-                dtau,
             });
 
             let numerator =
@@ -1057,16 +1112,13 @@ impl ThermalizationSolver {
             // NaN/∞ are rejected explicitly (audit H1): f64::NaN.clamp(a, b) ==
             // NaN and NaN comparisons return false, so a naïve clamp would
             // silently propagate a degenerate result into later solves.
-            if !rho_e_raw.is_finite() {
-                self.diag.rho_e_clamped += 1;
-                // Keep the prior ρ_e rather than poisoning the solver state.
-            } else {
-                let rho_e_new = rho_e_raw.clamp(0.0, 1.5);
-                if rho_e_new != rho_e_raw {
-                    self.diag.rho_e_clamped += 1;
-                }
+            //
+            // A clamp or a non-finite value is counted and warned about once
+            // per run (`guard_rho_e`).
+            if let Some(rho_e_new) = self.guard_rho_e(rho_e_raw, 1.5, z_eval) {
                 self.electron_temp.rho_e = rho_e_new;
             }
+            // `None`: keep the prior ρ_e rather than poisoning the solver state.
         } else {
             // θ_z too small for meaningful Compton physics.
             self.rho_e_ode_cache = None;
@@ -1180,27 +1232,40 @@ impl ThermalizationSolver {
                 y_he_ii,
                 y_he_i,
             );
-            // DC/BR equilibrium: Planck at T_e (Chluba & Sunyaev 2012, Eq. 8).
+            // DC/BR equilibrium: Planck at the actual electron temperature,
+            // n → n_pl(x/ρ_e) (Chluba & Sunyaev 2012, Eq. 8). See
+            // decisions/0002-relax-dc-br-toward-actual-electron-temperature.md.
             //
-            // The backward Euler for ρ_e gives ρ_e ≈ ρ_eq + δρ_inj (quasi-stationary).
-            // Using the full ρ_e for DC/BR would double-count injection energy
-            // (Kompaneets already injects via φ = 1/ρ_e). We subtract the
-            // injection contribution:
-            //   ρ_dcbr = ρ_e − R·δρ_inj × dτ/(1 + dτ(R(1+h') + H·t_C))
+            // Energy bookkeeping: the photon rows gain Δτ·em·(neq − Δn) from
+            // DC/BR, and the electron row loses H_dcbr, which is built from the
+            // same `em` and `neq` arrays (`kompaneets.rs`, the ρ_e residual).
+            // Whatever the target, the energy DC/BR give the photons is the
+            // energy the electrons lose, so using the full ρ_e, including the
+            // heating excess δρ_inj, does not count injected energy twice.
             //
-            // For zero injection: ρ_dcbr = ρ_e (correct T_e target).
-            // For injection: removes the δρ_inj bump, avoiding double-counting.
-            let rho_eq_dcbr = if let Some(c) = self.rho_e_ode_cache {
-                let delta_rho_inj = c.rho_source - self.rho_eq;
-                let denom = 1.0 + c.dtau * (c.r_compton * (1.0 + c.dh_drho) + c.lambda_htc);
-                let inj_contribution = if denom.abs() > 1e-30 {
-                    c.r_compton * delta_rho_inj * c.dtau / denom
-                } else {
-                    0.0
-                };
-                (rho_e - inj_contribution).clamp(0.5, 2.0)
-            } else {
+            // The clamp to [0.05, 2] guards the Bose factor exp(x/ρ) − 1. The
+            // upper bound cannot engage, because the predictor ρ_e is capped
+            // at 1.5 (`guard_rho_e`). Adiabatic cooling takes ρ_e below 0.5
+            // near z ≈ 72 but not below 0.05 before DC/BR switch off at
+            // θ_z = 1e-8 (z ≈ 21), so the lower bound only catches a broken
+            // ρ_e. When it engages, the first occurrence in a run pushes a
+            // warning, unless `guard_rho_e` already warned about the same
+            // negative ρ_e; later ones only increment the counter.
+            let rho_eq_dcbr = if (0.05..=2.0).contains(&rho_e) {
                 rho_e
+            } else {
+                self.diag.dcbr_target_clamped += 1;
+                if !self.diag.dcbr_target_warned && !self.diag.rho_e_invalid_warned {
+                    self.diag.dcbr_target_warned = true;
+                    self.diag.warnings.push(format!(
+                        "DC/BR target temperature ρ_e = {rho_e:.4} at z = {:.4e} is outside \
+                         the guard range [0.05, 2] and was clamped; DC/BR emission and \
+                         absorption use the clamped value on this and any later such step \
+                         (count in SolverDiagnostics::dcbr_target_clamped).",
+                        z_mid
+                    ));
+                }
+                rho_e.clamp(0.05, 2.0)
             };
             let delta_rho = rho_eq_dcbr - 1.0;
             let inv_rho_eq = 1.0 / rho_eq_dcbr;
@@ -1429,14 +1494,8 @@ impl ThermalizationSolver {
             // denominator can go through zero and emit NaN, which the naïve
             // clamp would silently propagate into subsequent steps.
             if rho_coupling.is_some() {
-                if !rho_e_out.is_finite() {
-                    self.diag.rho_e_clamped += 1;
-                    // Keep the prior ρ_e.
-                } else {
-                    let rho_clamped = rho_e_out.clamp(0.0, 3.0);
-                    if rho_clamped != rho_e_out {
-                        self.diag.rho_e_clamped += 1;
-                    }
+                // `None` (non-finite): keep the prior ρ_e.
+                if let Some(rho_clamped) = self.guard_rho_e(rho_e_out, 3.0, z_mid) {
                     self.electron_temp.rho_e = rho_clamped;
                 }
             }
@@ -1634,20 +1693,6 @@ impl ThermalizationSolver {
             next_snap += 1;
         }
 
-        // End-of-run diagnostics: ρ_e clamp counter. Individual clamps are
-        // silent (only logged in diag), but a large count indicates that the
-        // implicit T_e solve is regularly hitting the [0, 1.5] / [0, 3] bounds
-        // — the clamped steps silently discard part of the injection energy
-        // and shouldn't be ignored.
-        if self.diag.rho_e_clamped > 10 {
-            self.diag.warnings.push(format!(
-                "ρ_e was clamped {} times during the run. Clamping discards injection \
-                 energy from the T_e ODE silently; repeated hits suggest the injection \
-                 amplitude is outside the linearized regime or dtau_max is too large \
-                 for the source sharpness.",
-                self.diag.rho_e_clamped
-            ));
-        }
         if self.diag.nan_emission_detected {
             self.diag.warnings.push(
                 "NaN emission rate detected during the run. DC/BR rates were capped \
