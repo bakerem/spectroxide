@@ -1391,67 +1391,170 @@ fn test_thermalization_suppression_monotonic() {
 // comparison at 1% tolerance through the full PDE pipeline rather than just
 // at the heating-rate function level.)
 
-/// Decaying particle with long lifetime: the PDE solver should produce a
-/// distortion that is qualitatively correct (positive μ for late decays,
-/// positive y for early decays, energy conservation).
-///
-/// For a very long lifetime (Γ_X ~ 10^{-13} s^{-1}, t_life ~ 3×10^5 yr),
-/// the particle decays mostly during the μ-era and should produce μ > 0.
-#[test]
-fn test_decaying_particle_pde_vs_gf() {
-    let cosmo = Cosmology::default();
-    // Must be large enough that injection μ dominates adiabatic cooling floor (μ ~ -3e-9).
-    // GF gives μ ~ 1e-9 at f_x=1e3, which is marginal. Use 1e5 for clear signal.
-    let f_x = 1e5; // 100 keV per baryon
-    let gamma_x = 1e-13; // lifetime ~ 10^13 s
+/// Injected Δρ/ρ between `z_lo` and `z_hi`, integrated directly from the
+/// scenario's heating rate (the input, not solver output) on a log-z grid.
+fn injected_drho(scenario: &InjectionScenario, cosmo: &Cosmology, z_lo: f64, z_hi: f64) -> f64 {
+    let n = 20_000;
+    let (l0, l1) = ((1.0 + z_lo).ln(), (1.0 + z_hi).ln());
+    let h = (l1 - l0) / n as f64;
+    let f = |l: f64| {
+        let z = l.exp() - 1.0;
+        -scenario.heating_rate_per_redshift(z, cosmo) * (1.0 + z)
+    };
+    (0..n)
+        .map(|k| 0.5 * h * (f(l0 + k as f64 * h) + f(l0 + (k + 1) as f64 * h)))
+        .sum()
+}
 
-    // PDE solver with decaying particle
+// The μ-era decaying-particle comparison (formerly test_decaying_particle_pde_vs_gf,
+// against the Chluba 2013 fits) is now
+// cosmotherm_comparison.rs::test_decaying_particle_vs_cosmotherm_gf_database,
+// which uses the CosmoTherm Green's-function database as the reference.
+
+/// y-era decaying particle: photon energy against the injected total.
+///
+/// Γ_X puts the lifetime at z = 5000, and the run stops at z = 1000, the lower
+/// end of the Green's-function formalism and of the CosmoTherm database
+/// (z = 1000 to 5e6). There is no μ check: in the y-era μ is a residual at the
+/// 1e-3 level of y, and free-free emission from electrons heated above T_z
+/// dominates that residual; the Chluba (2013) Green's function omits it
+/// (decisions/0002-relax-dc-br-toward-actual-electron-temperature.md,
+/// Addendum). The 2% tolerance is the measured 1% closure plus the time-step
+/// error for continuous heating that `adaptive_dz` does not refine (finding
+/// N-4 in dev/REVIEW_2026-09-22.md); decays peaking closer to z = 1000 lose
+/// more (0.83 closure at Δτ_max = 10 for a lifetime at z = 1000).
+#[test]
+fn test_decaying_particle_y_era_energy() {
+    let cosmo = Cosmology::default();
+    let f_x = 1e5;
+    let gamma_x = 1.0 / cosmo.cosmic_time(5.0e3);
+    let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
     let mut solver = ThermalizationSolver::new(cosmo.clone(), fast_grid());
     solver
         .set_injection(InjectionScenario::DecayingParticle { f_x, gamma_x })
         .unwrap();
     solver.set_config(SolverConfig {
         z_start: 3.0e6,
+        z_end: 1.0e3,
+        ..SolverConfig::default()
+    });
+    solver.run_with_snapshots(&[1.0e3]);
+    let last = solver.snapshots.last().unwrap();
+
+    let inj = injected_drho(&scenario, &cosmo, 1e3, 3e6);
+    eprintln!(
+        "y-era decay: PDE μ = {:.4e}, y = {:.4e}, Δρ/ρ = {:.4e}; injected Δρ/ρ = {inj:.4e}; \
+         warnings = {:?}",
+        last.mu, last.y, last.delta_rho_over_rho, solver.diag.warnings
+    );
+    let e_rel = (last.delta_rho_over_rho - inj).abs() / inj;
+    assert!(
+        e_rel < 0.02,
+        "energy: PDE Δρ/ρ = {:.4e} vs injected {inj:.4e} ({:.2}%)",
+        last.delta_rho_over_rho,
+        100.0 * e_rel
+    );
+    assert!(last.y > 0.0);
+    assert_eq!(solver.diag.newton_exhausted, 0);
+}
+
+/// DC and BR drive the low-frequency spectrum to a Planck spectrum at the
+/// actual electron temperature, n → n_pl(x/ρ_e) (Chluba & Sunyaev 2012, Eq. 8;
+/// decisions/0002-relax-dc-br-toward-actual-electron-temperature.md).
+///
+/// During steady heating ρ_e exceeds the Compton-equilibrium value by δρ_inj.
+/// At x ≪ x_c emission and absorption are much faster than Comptonization, so
+/// Δn = n_pl(x/ρ_e) − n_pl(x). With n_pl(x) = 1/x − 1/2 + x/12 + O(x³), this is
+/// (ρ_e − 1)/x × [1 + O(x²/12)], so x·Δn/(ρ_e − 1) = 1. We test at
+/// x = 3e-6 to 3e-5 (grid extended to x_min = 1e-6). Corrections:
+/// - series: x²/12 < 1e-10;
+/// - Compton leakage: (x/x_c)² < 1e-6, with x_c ≈ 0.07 at z = 5000 from the BR
+///   photosphere fit x_c,BR = 1.23e-3 [(1+z)/2e6]^(−0.672) (Chluba 2015);
+/// - finite absorption rate: BR absorption per Thomson time scales as x⁻², so
+///   the lag behind a moving ρ_e scales as x²; it reaches 1% only near
+///   x ≈ 1.5e-4, two orders above the test points in x²;
+/// - number-conserving mode subtracts this step's temperature shift δT·G_bb,
+///   and x·G_bb → 1, so the ratio carries an x-independent offset
+///   −δT_step/(ρ_e − 1), with δT_step a small fraction of ρ_e − 1 per step.
+///
+/// We allow 1%. The former target, ρ_e minus the heating increment, relaxes the
+/// spectrum toward the Compton-equilibrium temperature and gives a ratio of
+/// 0.005 here, because at z = 5000 δρ_inj is almost all of ρ_e − 1.
+#[test]
+fn test_dcbr_relaxes_to_actual_electron_temperature() {
+    let cosmo = Cosmology::default();
+    let f_x = 1e5;
+    let gamma_x = 1.0 / cosmo.cosmic_time(5.0e3);
+    let grid = GridConfig {
+        x_min: 1e-6,
+        ..fast_grid()
+    };
+    let mut solver = ThermalizationSolver::new(cosmo.clone(), grid);
+    solver
+        .set_injection(InjectionScenario::DecayingParticle { f_x, gamma_x })
+        .unwrap();
+    solver.set_config(SolverConfig {
+        z_start: 3.0e6,
+        z_end: 5.0e3,
+        ..SolverConfig::default()
+    });
+    solver.run_with_snapshots(&[5.0e3]);
+    let snap = solver.snapshots.last().unwrap();
+    let excess = snap.rho_e - 1.0;
+    eprintln!("z = {:.1}, ρ_e − 1 = {excess:.4e}", snap.z);
+    assert!(
+        excess > 1e-4,
+        "heating should keep ρ_e above 1, got {excess:.3e}"
+    );
+    for &x_t in &[3e-6, 1e-5, 3e-5] {
+        let i = solver.grid.x.partition_point(|&x| x < x_t);
+        let ratio = solver.grid.x[i] * snap.delta_n[i] / excess;
+        eprintln!(
+            "  x = {:.3e}: x·Δn/(ρ_e − 1) = {ratio:.5}",
+            solver.grid.x[i]
+        );
+        assert!(
+            (ratio - 1.0).abs() < 0.01,
+            "x = {:.3e}: x·Δn/(ρ_e − 1) = {ratio:.4}, expected 1 (DC/BR target must be ρ_e)",
+            solver.grid.x[i]
+        );
+    }
+}
+
+/// A decaying particle with Γ_X = 1e-13 s⁻¹ (lifetime near z ≈ 1000), run on to
+/// z = 500, heats the electrons below recombination until T_e hits
+/// the solver's cap. That regime would change the ionization history (hotter
+/// electrons recombine more slowly) while X_e is held on
+/// its recombination history, so the solver must say so with exactly one
+/// warning per run (decisions/0002-..., Addendum).
+#[test]
+fn test_decaying_particle_late_heating_warns() {
+    let mut solver = ThermalizationSolver::new(Cosmology::default(), fast_grid());
+    solver
+        .set_injection(InjectionScenario::DecayingParticle {
+            f_x: 1e5,
+            gamma_x: 1e-13,
+        })
+        .unwrap();
+    solver.set_config(SolverConfig {
+        z_start: 3.0e6,
         z_end: 500.0,
         ..SolverConfig::default()
     });
-
     solver.run_with_snapshots(&[500.0]);
-    let last = solver.snapshots.last().unwrap();
 
-    eprintln!("Decaying particle (f_X={f_x} eV, Gamma={gamma_x:.0e}):");
-    eprintln!(
-        "  μ = {:.4e}, y = {:.4e}, Δρ/ρ = {:.4e}",
-        last.mu, last.y, last.delta_rho_over_rho
-    );
-
-    // Energy should be positive (heating, not cooling)
-    assert!(
-        last.delta_rho_over_rho > 0.0,
-        "Decaying particle should inject positive energy, got Δρ/ρ = {:.4e}",
-        last.delta_rho_over_rho
-    );
-
-    // Green's function comparison
-    let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
-    let dq_dz = |z: f64| -> f64 { -scenario.heating_rate_per_redshift(z, &cosmo) };
-    let (mu_gf, y_gf) = greens::mu_y_from_heating(&dq_dz, 1e2, 3e6, 20000);
-
-    eprintln!("  GF: μ = {mu_gf:.4e}, y = {y_gf:.4e}");
-
-    // Both methods should agree on the sign
-    if mu_gf.abs() > 1e-15 {
-        assert!(
-            last.mu.signum() == mu_gf.signum(),
-            "μ sign mismatch: PDE = {:.4e}, GF = {:.4e}",
-            last.mu,
-            mu_gf
-        );
-    }
+    let n_warn = solver
+        .diag
+        .warnings
+        .iter()
+        .filter(|w| w.contains("change the ionization history"))
+        .count();
     assert_eq!(
-        solver.diag.newton_exhausted, 0,
-        "Newton should converge for decaying particle"
+        n_warn, 1,
+        "expected one heating/ionization warning, got {n_warn}: {:?}",
+        solver.diag.warnings
     );
+    assert!(solver.diag.rho_e_clamped > 0);
 }
 
 /// Photon number conservation under pure Compton scattering.
