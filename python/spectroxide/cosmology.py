@@ -179,8 +179,12 @@ _SIGMA_THOMSON = 6.652_458_7321e-29  # m²
 _KM_PER_MPC = 3.240_779_29e-20  # (km/s/Mpc) → 1/s
 _MPC_M = 3.085_677_581e22  # meters per Mpc
 _EV_IN_JOULES = 1.602_176_634e-19  # J
-_E_RYDBERG = 13.605_693_122_994 * _EV_IN_JOULES  # Hydrogen ionization [J]
-_E_ION_N2 = _E_RYDBERG / 4.0  # Ionization from n=2 [J]
+_E_RYDBERG = 13.605_693_122_994 * _EV_IN_JOULES  # Rydberg energy R_inf h c [J]
+# Hydrogen ionization energy with the reduced-mass correction,
+# E_H = R_inf h c / (1 + m_e/m_p) = 13.5983 eV (review finding P-4).
+# Mirrors E_H_ION in src/constants.rs.
+_E_H_ION = _E_RYDBERG / (1.0 + _M_ELECTRON / _M_PROTON)  # [J]
+_E_ION_N2 = _E_H_ION / 4.0  # Ionization from n=2 [J]
 _E_HE_II_ION = 54.4178 * _EV_IN_JOULES  # He II ionization [J]
 _E_HE_I_ION = 24.5874 * _EV_IN_JOULES  # He I ionization [J]
 _LAMBDA_LYA = 1.215_670e-7  # Lyman-alpha wavelength [m]
@@ -311,7 +315,7 @@ def _saha_hydrogen(z, cosmo):
     """Hydrogen Saha ionization fraction."""
     t = cosmo["t_cmb"] * (1.0 + z)
     n_h = _cosmo_n_h(z, cosmo)
-    s = _thermal_de_broglie(t) * np.exp(-_E_RYDBERG / (_K_BOLTZMANN * t)) / n_h
+    s = _thermal_de_broglie(t) * np.exp(-_E_H_ION / (_K_BOLTZMANN * t)) / n_h
     return _solve_saha_quadratic(s)
 
 
