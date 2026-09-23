@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test                     # Run all tests (185 unit + 314 integration + 3 doc pass; +4 ignored)
+cargo test                     # Run all tests (185 unit + 316 integration + 3 doc pass; +4 ignored)
 cargo test --release           # Run tests with optimizations (some solver tests are slow in debug)
 cargo test test_name           # Run a single test by name
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -84,11 +84,11 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 - `heat_injection.rs` — 203 integration tests (199 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
-- `coverage_gaps.rs` — 20 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1).
+- `coverage_gaps.rs` — 21 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1).
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 7 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift) and Gaunt-factor spot checks.
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
-- `cli_integration.rs` — 4 tests: CLI end-to-end.
+- `cli_integration.rs` — 5 tests: CLI end-to-end.
 - `science_suite.rs` — 6 tests: end-to-end physics validation.
 - `physics_identities.rs` — 12 tests + 1 ignored: closed-form and published identities added by the physics-check audit (`dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`): Thomson depth vs Planck z_*, exact moments of the G_bb/M/Y shapes, Kompaneets first/second moment identities and H-theorem, quasi-stationary T_e energy return, DC/BR crossover redshift, grid-boundary independence, T_e Compton/adiabatic balance, α_th = 5/2 (ignored, ~7 min), plus the sensitivity-directed photon anchors T-PS-1/2/3 (P_s(x_c) = 1/e, x_c vs Chluba 2015 Eq. 25, μ at x_inj = x_c), and the reduced-mass hydrogen ionization energy from typed CODATA values.
 - `mms_convergence.rs` — 8 tests: method of manufactured solutions on the Kompaneets kernel and the coupled path, plus the photon-number ledger identity. **Verifies the discretization, not the equation** — see Pitfall #11.

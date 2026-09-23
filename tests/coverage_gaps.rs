@@ -731,11 +731,11 @@ fn energy_closure_warns_on_coarse_grid() {
     );
 }
 
-/// A resolved burst closes within 5%: no energy warning, and the 500-point
+/// A resolved burst closes within 5%: no energy warning, and the 1000-point
 /// `GridConfig::fast()` size does not trigger the small-grid warning.
 #[test]
 fn energy_closure_silent_when_resolved() {
-    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 500);
+    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 1000);
     assert!((drho / 1e-5 - 1.0).abs() < 0.05, "drho = {drho:e}");
     assert!(!has_warning(&warnings, "Energy closure"), "{warnings:?}");
     assert!(
@@ -797,6 +797,62 @@ fn energy_closure_tabulated_heating() {
         "drho = {drho_fine:e}"
     );
     assert!(!has_warning(&w_fine, "Energy closure"), "{w_fine:?}");
+}
+
+/// A 50-point grid started at z = 5e6 drives Δn to NaN within the first
+/// steps. The run must stop and return that as an `Err` (so the CLI exits
+/// with an error and Python raises), not panic. The panicking wrapper
+/// `run_to_result` must carry the same message, and the same solver must run
+/// cleanly afterwards on a resolvable range (the failure does not stick).
+///
+/// No input produces NaN deterministically (`set_initial_delta_n` rejects
+/// it), so this test relies on the 50-point instability. If a robustness fix
+/// removes it, find another trigger rather than deleting the test.
+#[test]
+fn nan_run_returns_error_not_panic() {
+    let build = || {
+        ThermalizationSolver::builder(Cosmology::default())
+            .grid(GridConfig {
+                n_points: 50,
+                ..GridConfig::default()
+            })
+            .injection(InjectionScenario::SingleBurst {
+                z_h: 3000.0,
+                delta_rho_over_rho: 1e-5,
+                sigma_z: 120.0,
+            })
+            .z_range(5e6, 500.0)
+            .build()
+            .unwrap()
+    };
+    let mut solver = build();
+    let err = match solver.try_run_to_result(500.0) {
+        Ok(r) => panic!(
+            "expected an error, got Δρ/ρ = {:e}",
+            r.snapshot.delta_rho_over_rho
+        ),
+        Err(e) => e,
+    };
+    assert!(err.contains("NaN/Inf detected in delta_n"), "{err}");
+    assert_eq!(solver.diag.failure.as_deref(), Some(err.as_str()));
+
+    // Reuse after a failure: a short μ-era run on the same solver succeeds.
+    solver.set_config(SolverConfig {
+        z_start: 2.6e5,
+        z_end: 2.5e5,
+        ..SolverConfig::default()
+    });
+    let ok = solver.try_run_to_result(2.5e5);
+    assert!(ok.is_ok(), "{:?}", ok.err());
+    assert!(solver.diag.failure.is_none());
+
+    let mut solver = build();
+    let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _ = solver.run_to_result(500.0);
+    }))
+    .expect_err("run_to_result must still panic on NaN");
+    let msg = panic.downcast_ref::<String>().cloned().unwrap_or_default();
+    assert!(msg.contains("NaN/Inf detected in delta_n"), "{msg}");
 }
 
 /// The smallest grid validation accepts (10 points) runs to completion
