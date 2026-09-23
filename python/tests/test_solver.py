@@ -773,22 +773,26 @@ def _capture_solve_cmd(monkeypatch, **solve_kwargs):
 
 def test_solve_passes_only_flags_the_cli_reads(monkeypatch):
     """R-3: the CLI rejects --delta-rho for every injection type except
-    single-burst, and --threads for `solve`. The wrapper must not send them."""
-    cmd = _capture_solve_cmd(
-        monkeypatch,
-        injection={"type": "decaying_particle", "f_x": 1e5, "gamma_x": 1e-12},
-        n_threads=2,
-    )
+    single-burst, and --threads for `solve`. The wrapper must not send them.
+    n_threads=2 also triggers the A-1 deprecation warning (it has no effect
+    on solve())."""
+    with pytest.warns(DeprecationWarning, match="n_threads"):
+        cmd = _capture_solve_cmd(
+            monkeypatch,
+            injection={"type": "decaying_particle", "f_x": 1e5, "gamma_x": 1e-12},
+            n_threads=2,
+        )
     assert "--delta-rho" not in cmd and "--threads" not in cmd
 
-    cmd = _capture_solve_cmd(
-        monkeypatch,
-        dq_dz=lambda z: 1e-12,
-        z_min=1e4,
-        z_max=1e5,
-        n_z=50,
-        n_threads=2,
-    )
+    with pytest.warns(DeprecationWarning, match="n_threads"):
+        cmd = _capture_solve_cmd(
+            monkeypatch,
+            dq_dz=lambda z: 1e-12,
+            z_min=1e4,
+            z_max=1e5,
+            n_z=50,
+            n_threads=2,
+        )
     assert "tabulated-heating" in cmd
     assert "--delta-rho" not in cmd and "--threads" not in cmd
 
@@ -799,3 +803,118 @@ def test_solve_passes_only_flags_the_cli_reads(monkeypatch):
     )
     i = cmd.index("--delta-rho")
     assert float(cmd[i + 1]) == 3e-6
+
+
+# =========================================================================
+# solve() PDE-branch kwargs scoped to the source that uses them (A-1)
+# =========================================================================
+
+
+class TestPdeKwargsScopedToSource:
+    """The PDE branch of solve() must reject a keyword the Rust CLI ignores
+    for the given source, not whitelist every PDE keyword for every source
+    (the A-1 gap: ``allowed = {...} | set(kwargs)`` used to make this a
+    no-op)."""
+
+    def test_dtau_max_photon_source_rejected_for_single_burst(self):
+        with pytest.raises(TypeError, match="dtau_max_photon_source"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                dtau_max_photon_source=1.0,
+                project_root=_NO_BINARY,
+            )
+
+    def test_dtau_max_photon_source_rejected_for_dq_dz(self):
+        with pytest.raises(TypeError, match="dtau_max_photon_source"):
+            solve(
+                dq_dz=lambda z: 1e-12,
+                dtau_max_photon_source=1.0,
+                project_root=_NO_BINARY,
+            )
+
+    def test_dtau_max_photon_source_rejected_for_photon_source(self):
+        with pytest.raises(TypeError, match="dtau_max_photon_source"):
+            solve(
+                photon_source=lambda x, z: 0.0,
+                dtau_max_photon_source=1.0,
+                project_root=_NO_BINARY,
+            )
+
+    def test_dtau_max_photon_source_accepted_for_monochromatic_photon(
+        self, monkeypatch
+    ):
+        cmd = _capture_solve_cmd(
+            monkeypatch,
+            injection={"type": "monochromatic_photon", "z_h": 1e5, "x_inj": 5.0},
+            dtau_max_photon_source=2.0,
+        )
+        i = cmd.index("--dtau-max-photon-source")
+        assert float(cmd[i + 1]) == 2.0
+
+    def test_delta_rho_rejected_for_dq_dz(self):
+        with pytest.raises(TypeError, match="delta_rho"):
+            solve(
+                dq_dz=lambda z: 1e-12,
+                delta_rho=3e-6,
+                project_root=_NO_BINARY,
+            )
+
+    def test_delta_rho_rejected_for_photon_source(self):
+        with pytest.raises(TypeError, match="delta_rho"):
+            solve(
+                photon_source=lambda x, z: 0.0,
+                delta_rho=3e-6,
+                project_root=_NO_BINARY,
+            )
+
+    def test_delta_rho_rejected_for_non_single_burst_injection(self):
+        with pytest.raises(TypeError, match="delta_rho"):
+            solve(
+                injection={
+                    "type": "decaying_particle",
+                    "f_x": 1e5,
+                    "gamma_x": 1e-12,
+                },
+                delta_rho=3e-6,
+                project_root=_NO_BINARY,
+            )
+
+    def test_delta_rho_accepted_for_single_burst(self, monkeypatch):
+        cmd = _capture_solve_cmd(
+            monkeypatch,
+            injection={"type": "single_burst", "z_h": 2e5},
+            delta_rho=3e-6,
+        )
+        i = cmd.index("--delta-rho")
+        assert float(cmd[i + 1]) == 3e-6
+
+    def test_delta_rho_accepted_for_dn_planck_only(self, monkeypatch):
+        # No injection/dq_dz/photon_source: the dn_planck-only diagnostic
+        # path. delta_rho is unused there too (the dummy carrier burst is
+        # hardcoded to zero amplitude), so it must be rejected like the
+        # other non-single-burst sources.
+        with pytest.raises(TypeError, match="delta_rho"):
+            solve(dn_planck=1e-6, delta_rho=3e-6, project_root=_NO_BINARY)
+
+    def test_n_threads_warns_but_does_not_raise(self, monkeypatch):
+        with pytest.warns(DeprecationWarning, match="n_threads"):
+            cmd = _capture_solve_cmd(
+                monkeypatch,
+                injection={"type": "single_burst", "z_h": 2e5},
+                n_threads=4,
+            )
+        assert "--threads" not in cmd
+
+    def test_generic_pde_kwargs_still_accepted_for_every_source(self, monkeypatch):
+        for extra in (
+            {"injection": {"type": "single_burst", "z_h": 2e5}},
+            {"dq_dz": lambda z: 1e-12},
+            {"photon_source": lambda x, z: 0.0},
+        ):
+            _capture_solve_cmd(
+                monkeypatch,
+                n_points=200,
+                dtau_max=1.0,
+                no_dcbr=True,
+                **extra,
+            )

@@ -1554,7 +1554,12 @@ def solve(
         Injection redshift for Green's-function or table single-burst
         modes.  Default *None*.
     delta_rho : float, optional
-        Fractional energy injection ``Δρ/ρ``.  Default ``1e-5``.
+        Fractional energy injection ``Δρ/ρ``.  Default ``1e-5``.  For
+        ``method="pde"``, used only when ``injection={"type":
+        "single_burst", ...}`` (or no ``injection``/``dq_dz``/
+        ``photon_source`` at all, i.e. the ``dn_planck``-only path); every
+        other PDE injection type sets its own energy scale and rejects
+        ``delta_rho`` (R-3).
     x : array_like, optional
         Custom dimensionless frequency grid.  *None* (default) uses
         ``np.logspace(log10(x_min), log10(x_max), n_x)``.
@@ -1590,11 +1595,18 @@ def solve(
         Use the :data:`DEBUG` quality preset instead of
         :data:`PRODUCTION`.  Default *False*.
     **kwargs
-        PDE-mode tuning knobs forwarded to the Rust binary: ``dy_max``,
-        ``n_points``, ``production_grid``, ``dtau_max``,
-        ``dtau_max_photon_source``, ``number_conserving``, ``nc_z_min``,
-        ``no_dcbr``, ``timeout``, ``n_threads``, ``project_root``, and
-        ``dn_planck``; see :func:`run_sweep` for their defaults.
+        PDE-mode tuning knobs: ``dy_max``, ``n_points``,
+        ``production_grid``, ``dtau_max``, ``number_conserving``,
+        ``nc_z_min``, ``no_dcbr``, ``timeout``, ``project_root``, and
+        ``dn_planck`` are forwarded to the Rust binary for every source;
+        see :func:`run_sweep` for their defaults. ``dtau_max_photon_source``
+        is accepted only when ``injection={"type": "monochromatic_photon",
+        ...}``, since that is the only scenario whose injection-window
+        timestep it controls. ``n_threads`` is accepted for backward
+        compatibility but has no effect and raises a
+        ``DeprecationWarning``: the ``solve <type>`` Rust subcommand always
+        runs a single solve on one thread; use :func:`run_sweep` or
+        :func:`run_photon_sweep` for threaded multi-redshift sweeps.
         ``cosmo_params`` is a deprecated alias of ``cosmo``.
 
     Returns
@@ -1756,15 +1768,51 @@ def solve(
             _val.validate_pde_injection_grid_args(
                 x, x_min, x_max, n_x, defaults=(0.01, 30.0, 500)
             )
-        allowed = {"cosmo", "z_start", "z_end", "debug"} | set(kwargs)
+        # Solver-tuning kwargs the Rust `solve <type>` subcommand reads for
+        # every source. `delta_rho` and `dtau_max_photon_source` are NOT
+        # here: the CLI reads `--delta-rho` only for single-burst (R-3) and
+        # `--dtau-max-photon-source` only affects the injection-window
+        # timestep for MonochromaticPhotonInjection (src/solver.rs), so both
+        # are added below only when the source actually uses them (A-1).
+        # `n_threads` is accepted but has no effect (`solve` is
+        # single-threaded); it warns instead of being rejected.
+        _generic_pde_kwargs = {
+            "dn_planck",
+            "n_points",
+            "production_grid",
+            "project_root",
+            "timeout",
+            "dy_max",
+            "dtau_max",
+            "number_conserving",
+            "nc_z_min",
+            "no_dcbr",
+            "n_threads",
+        }
+        allowed = {"cosmo", "z_start", "z_end", "debug"} | (
+            _generic_pde_kwargs & set(kwargs)
+        )
         if has_injection:
             allowed |= {"injection"}
             if injection is not None:
-                allowed |= {"delta_rho"}
+                inj_type = injection.get("type")
+                if inj_type == "single_burst":
+                    allowed |= {"delta_rho"}
+                if inj_type == "monochromatic_photon":
+                    allowed |= {"dtau_max_photon_source"}
         elif dq_dz is not None:
-            allowed |= {"dq_dz", "delta_rho"} | z_int_args
+            allowed |= {"dq_dz"} | z_int_args
         elif photon_source is not None:
-            allowed |= {"photon_source", "delta_rho"} | z_int_args | x_grid_args
+            allowed |= {"photon_source"} | z_int_args | x_grid_args
+        if "n_threads" in kwargs:
+            _warnings.warn(
+                "'n_threads' has no effect on solve(): the `solve <type>` "
+                "Rust subcommand always runs a single solve on one thread. "
+                "Use run_sweep() or run_photon_sweep() for threaded "
+                "multi-redshift sweeps.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         _reject_unused(
             "method='pde'",
             given | set(kwargs),
