@@ -81,6 +81,7 @@ def get_physics_hash(
     root = Path(project_root) if project_root is not None else _PROJECT_ROOT
     binary = Path(root) / "target" / "release" / "spectroxide"
     if binary.exists():
+        _warn_if_stale_binary(root, binary)
         cmd = [str(binary), "physics-hash"]
     else:
         cmd = [
@@ -309,6 +310,50 @@ import threading as _threading
 _build_lock = _threading.Lock()
 
 
+def _stale_binary_sources(root, binary):
+    """Return the Rust sources under ``root`` that are newer than ``binary``.
+
+    Checks ``src/**/*.rs``, ``Cargo.toml``, and ``Cargo.lock``.  Returns
+    an empty list if ``binary`` does not exist.
+    """
+    root = Path(root)
+    try:
+        built = Path(binary).stat().st_mtime
+    except OSError:
+        return []
+    candidates = list((root / "src").rglob("*.rs"))
+    candidates += [root / "Cargo.toml", root / "Cargo.lock"]
+    newer = []
+    for path in candidates:
+        try:
+            if path.stat().st_mtime > built:
+                newer.append(path)
+        except OSError:
+            continue
+    return sorted(newer)
+
+
+def _warn_if_stale_binary(root, binary):
+    """Warn if a Rust source file is newer than the prebuilt binary (R-4).
+
+    The wrapper builds the binary only when it is missing, so after an
+    edit to the Rust sources it would otherwise run the old binary without
+    notice.  This does not rebuild: run ``cargo build --release``.
+    """
+    root = Path(root)
+    newer = _stale_binary_sources(root, binary)
+    if newer:
+        shown = ", ".join(str(p.relative_to(root)) for p in newer[:3])
+        more = f" and {len(newer) - 3} more" if len(newer) > 3 else ""
+        _warnings.warn(
+            f"spectroxide: the Rust binary {binary} is older than {shown}{more}. "
+            "Results come from the old build. Run 'cargo build --release' in "
+            f"{root} to rebuild.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+
+
 def _run_rust_binary(cmd, *, cwd, timeout=600):
     """Run a Rust solver command and return the parsed JSON output.
 
@@ -340,6 +385,7 @@ def _run_rust_binary(cmd, *, cwd, timeout=600):
                             f"{build_result.stderr}"
                         )
         if binary.exists():
+            _warn_if_stale_binary(cwd, binary)
             # Replace "cargo run --release --bin spectroxide --" with the binary
             try:
                 sep = cmd.index("--")

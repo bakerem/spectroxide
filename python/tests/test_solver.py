@@ -482,3 +482,92 @@ class TestSolveArgumentChecks:
                 cosmo_params={"h": 0.7},
                 project_root=_NO_BINARY,
             )
+
+
+# =========================================================================
+# Stale-binary warning (R-4)
+# =========================================================================
+
+
+class TestStaleBinaryWarning:
+    """The wrapper warns, but does not rebuild, when Rust sources are newer
+    than the prebuilt binary."""
+
+    @staticmethod
+    def _make_tree(root, *, binary_time, source_times):
+        import os
+
+        binary = root / "target" / "release" / "spectroxide"
+        binary.parent.mkdir(parents=True)
+        binary.write_text("")
+        os.utime(binary, (binary_time, binary_time))
+        for rel, t in source_times.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("")
+            os.utime(path, (t, t))
+        return binary
+
+    @pytest.mark.parametrize(
+        "newer", ["src/kompaneets.rs", "src/bin/check.rs", "Cargo.toml", "Cargo.lock"]
+    )
+    def test_warns_when_source_newer(self, tmp_path, newer):
+        from spectroxide.solver import _warn_if_stale_binary
+
+        times = {
+            "src/kompaneets.rs": 1000.0,
+            "src/bin/check.rs": 1000.0,
+            "Cargo.toml": 1000.0,
+            "Cargo.lock": 1000.0,
+        }
+        times[newer] = 3000.0
+        binary = self._make_tree(tmp_path, binary_time=2000.0, source_times=times)
+        with pytest.warns(RuntimeWarning, match="older than " + newer):
+            _warn_if_stale_binary(tmp_path, binary)
+        # No rebuild: the binary is untouched.
+        assert binary.stat().st_mtime == 2000.0
+
+    def test_silent_when_binary_newest(self, tmp_path):
+        import warnings
+
+        from spectroxide.solver import _warn_if_stale_binary
+
+        binary = self._make_tree(
+            tmp_path,
+            binary_time=2000.0,
+            source_times={"src/lib.rs": 1000.0, "Cargo.toml": 1000.0},
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            _warn_if_stale_binary(tmp_path, binary)
+
+    def test_ignores_non_rust_files(self, tmp_path):
+        import warnings
+
+        from spectroxide.solver import _warn_if_stale_binary
+
+        binary = self._make_tree(
+            tmp_path,
+            binary_time=2000.0,
+            source_times={"src/lib.rs": 1000.0, "src/notes.md": 3000.0},
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            _warn_if_stale_binary(tmp_path, binary)
+
+    def test_run_rust_binary_warns(self, tmp_path):
+        """End to end through _run_rust_binary with a stand-in binary."""
+        import os
+
+        from spectroxide.solver import _run_rust_binary
+
+        binary = self._make_tree(
+            tmp_path, binary_time=2000.0, source_times={"src/lib.rs": 3000.0}
+        )
+        binary.write_text("#!/bin/sh\necho '{\"results\": []}'\n")
+        binary.chmod(0o755)
+        os.utime(binary, (2000.0, 2000.0))
+        cmd = ["cargo", "run", "--release", "--bin", "spectroxide", "--", "info"]
+        with pytest.warns(RuntimeWarning, match="older than src/lib.rs"):
+            out = _run_rust_binary(cmd, cwd=tmp_path)
+        assert out == {"results": []}
