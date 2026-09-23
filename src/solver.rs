@@ -395,7 +395,9 @@ pub struct ThermalizationSolver {
     /// Precomputed 1/x³ for each grid point (DC/BR rate normalization).
     inv_x3_grid: Vec<f64>,
     /// Precomputed grid-constant half of the BR Gaunt exponential, x^(-√3/π),
-    /// for each grid point. See [`crate::bremsstrahlung::gaunt_expc_factor`].
+    /// for each grid point. The Gaunt factor needs x_e = x/ρ_e; the remaining
+    /// factor ρ_e^(√3/π) lives in the per-step `BrPrecomputed::ea_z*`.
+    /// See [`crate::bremsstrahlung::gaunt_expc_factor`].
     expc_grid: Vec<f64>,
     /// Same at cell midpoints (for the BR Gaunt factor in the heating integral).
     expc_half: Vec<f64>,
@@ -419,7 +421,7 @@ pub struct ThermalizationSolver {
 /// finite difference held fixed):
 ///   dB/dρ_e     = n_mid · x φ² · e^{xφ}   with B = 1 − n_mid(e^{xφ} − 1)
 ///   dK_DC/dρ_e  = 0                        (K_DC depends only on θ_z)
-///   dK_BR/dρ_e  — see `br_emission_coefficient_and_drho_preln`.
+///   dK_BR/dρ_e  — see `br_emission_coefficient_and_drho_expc`.
 /// e^{xφ} reuses the exp_m1 already computed for B, and the Gaunt logistic
 /// shares its exp with the softplus, so the derivative costs no transcendental
 /// calls beyond the plain heating integral — it replaces the former three
@@ -572,7 +574,9 @@ impl ThermalizationSolver {
         // removes both exp() calls from every Gaunt evaluation; the -69.0
         // clamp is preserved so the sentinel reaching `gaunt_expc_factor` is
         // unchanged (note `< -69.0` is strict, so the clamped value does not
-        // itself trip the guard — same as before).
+        // itself trip the guard — same as before). The Gaunt fit needs
+        // x_e = x/ρ_e; `br_precompute` folds the step's ρ_e^(√3/π) into ea_Z,
+        // so this grid factor stays in the grid x (P-1).
         let expc_grid: Vec<f64> = grid
             .x
             .iter()

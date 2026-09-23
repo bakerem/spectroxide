@@ -9,7 +9,9 @@
 //! 2. Analytic limits: pure temperature shift, pure mu, pure y
 //! 3. Energy conservation: ∫x³ G_th dx / G₃ ≈ 1
 //! 4. PDE cross-validation of GF decomposition accuracy
-//! 5. BRpack Gaunt factor spot-checks
+//! 5. (removed: GF decomposition duplicate)
+//! 6. Free-free Gaunt factor: Draine (2011) classical-limit anchor and
+//!    invariance of K_BR under θ_z at fixed ν and T_e
 
 use spectroxide::constants::*;
 use spectroxide::greens;
@@ -310,80 +312,203 @@ fn chluba2013_visibility_pde_cross_validation() {
 // chluba2013_energy_conservation above (same integral, same 20% tolerance).
 
 // =========================================================================
-// 7. BRpack Gaunt factor spot-checks
-//    Verify the softplus Gaunt factor at specific (x, θ_e) values.
+// 6. Free-free Gaunt factor: classical-limit anchor and T_e dependence
+//
+// The physical thermal Gaunt factor depends on hν/kT_e and T_e only, never
+// on the photon temperature T_z. These tests pin the Gaunt fit against a
+// textbook formula (not against the code's own expression) and check that
+// every K_BR code path evaluates it at x_e = x/ρ_e = hν/kT_e.
 // =========================================================================
 
-/// Non-relativistic free-free Gaunt factor: closed-form regression test
-/// against the CRB 2020 softplus interpolation formula.
+/// √3/π and C = 2^{5/2} e^{−5γ_E/2}/α, typed as literals. The mpmath
+/// check (dps = 40, α = 7.2973525693e-3, CODATA 2018) gives
+/// C = 183.107323379400751..., √3/π = 0.551328895421792049...
+const SQRT3_OVER_PI: f64 = 0.551_328_895_421_792_1;
+const DRAINE_C: f64 = 183.107_323_379_400_75;
+
+/// Classical (low-frequency, kT_e ≪ Z² Ry) thermal Gaunt factor, Draine (2011),
+/// *Physics of the Interstellar and Intergalactic Medium*, Eq. 10.9:
 ///
-/// Oracle:             Chluba, Ravenni & Bolliet (2020) MNRAS 492, 177
-///                     non-relativistic softplus fit (implemented at
-///                     src/bremsstrahlung.rs:64):
-///                     g_ff(x, θ_e, Z) = 1 + softplus[√3/π · ln(2.25·√θ_e/(x·Z)) + 1.425]
-///                     where softplus(a) = ln(1+exp(a)).
-/// Expected:           hand-computed from the formula above at each point.
-/// Oracle uncertainty: machine ε (exact formula).
-/// Tolerance:          1e-10 relative.
+///   g_ff = (√3/π) [ ln( (2kT_e)^{3/2} / (π Z e² m_e^{1/2} ν) ) − (5/2) γ_E ]   (Gaussian e²)
 ///
-/// This is a regression test against the CRB 2020 paper formula. The oracle
-/// is the paper's published expression, not the code — if the code changes
-/// to a different fit form, this test must fail and be re-derived.
-/// (Simple Born approximation g_Born = (√3/π)·ln(2.25/(γ_E·x)) does NOT
-/// apply here because x >> √θ_e at the test points; CRB use the softplus
-/// interpolation to smoothly handle the hard-photon regime.)
+/// In code variables, with e² = α ħ c, hν = x_e kT_e and kT_e = θ_e m_e c²,
+/// the log argument is (2θ_e m_e c²)^{3/2} / (π Z α ħ c m_e^{1/2} · x_e θ_e m_e c²/(2πħ))
+/// = 2^{5/2} θ_e^{1/2} / (α Z x_e). Folding e^{−5γ_E/2} into the constant:
+///
+///   g_D(x_e, θ_e, Z) = (√3/π) ln( C θ_e^{1/2} / (Z x_e) ),   C = 2^{5/2} e^{−5γ_E/2}/α.
+fn gaunt_draine(x_e: f64, theta_e: f64, z: f64) -> f64 {
+    SQRT3_OVER_PI * (DRAINE_C * theta_e.sqrt() / (z * x_e)).ln()
+}
+
+/// The code's fit, g = 1 + softplus[(√3/π) ln(2.25 θ_e^{1/2}/(Z x_e)) + 1.425],
+/// tends to 1 + (√3/π) ln(2.25 θ_e^{1/2}/(Z x_e)) + 1.425 when the argument is
+/// large. That equals g_D when 1.425 = (√3/π) ln(C/2.25) − 1 = 1.425374, so the
+/// fit's low-frequency limit is Draine's formula up to 3.7e-4 plus the softplus
+/// remainder ln(1 + e^{−arg}). The test points keep arg ≥ 9 (remainder ≤ 1.3e-4),
+/// so the absolute tolerance is 1e-3. The point is the *variables*: with x = x_e
+/// and θ_e the fit reproduces the classical √θ_e/ν dependence exactly.
 #[test]
-fn brpack_gaunt_factor_spot_checks() {
+fn gaunt_ff_classical_limit_matches_draine() {
     use spectroxide::bremsstrahlung::gaunt_ff_nr;
 
-    let s3_pi = (3.0_f64).sqrt() / std::f64::consts::PI;
-    let softplus = |a: f64| (1.0 + a.exp()).ln();
-    let expected = |x: f64, theta_e: f64, z: f64| -> f64 {
-        1.0 + softplus(s3_pi * ((2.25 / (x * z)).ln() + 0.5 * theta_e.ln()) + 1.425)
-    };
-
-    let test_points = [
-        (0.01_f64, 1e-4_f64, 1.0_f64),
-        (0.1, 1e-4, 1.0),
-        (1.0, 1e-4, 1.0),
-        (5.0, 1e-4, 1.0),
-        (0.01, 1e-3, 1.0),
-        (1.0, 1e-3, 1.0),
-        (0.1, 1e-4, 2.0),
-    ];
-    for &(x, theta_e, z) in &test_points {
-        let g_code = gaunt_ff_nr(x, theta_e, z);
-        let g_expected = expected(x, theta_e, z);
-        let rel_err = (g_code - g_expected).abs() / g_expected;
-        eprintln!(
-            "g_ff(x={x}, θ_e={theta_e:.0e}, Z={z}): code={g_code:.6}, \
-             formula={g_expected:.6}, rel_err={:.2e}",
-            rel_err,
-        );
-        assert!(
-            rel_err < 1e-10,
-            "CRB 2020 formula at (x={x}, θ_e={theta_e}, Z={z}): \
-             code {g_code} vs formula {g_expected} (rel_err {rel_err:.2e}, tol 1e-10)"
-        );
-        assert!(g_code >= 1.0, "g_ff must be ≥ 1 (softplus + 1 floor)");
+    // θ_e ≤ 3e-6 keeps kT_e ≤ 0.1 Z² Ry (Ry/m_ec² = 2.7e-5), where the classical
+    // formula applies.
+    for &theta_e in &[1e-8_f64, 1e-6, 3e-6] {
+        for &x_e in &[1e-13_f64, 1e-12, 1e-11] {
+            for &z in &[1.0_f64, 2.0] {
+                let g_code = gaunt_ff_nr(x_e, theta_e, z);
+                let g_d = gaunt_draine(x_e, theta_e, z);
+                // arg = g_D − 1.000374, so g_D > 10 keeps arg ≥ 9.
+                assert!(g_d > 10.0, "test point outside the asymptotic regime");
+                let diff = (g_code - g_d).abs();
+                assert!(
+                    diff < 1e-3,
+                    "g_ff(x_e={x_e:e}, θ_e={theta_e:e}, Z={z}) = {g_code:.6} vs \
+                     Draine Eq. 10.9 {g_d:.6} (|Δ| = {diff:.2e}, tol 1e-3)"
+                );
+            }
+        }
     }
 
-    // Z-dependence sign: larger Z → smaller g (ln argument decreases).
-    let g_z1 = gaunt_ff_nr(0.1, 1e-4, 1.0);
-    let g_z2 = gaunt_ff_nr(0.1, 1e-4, 2.0);
-    assert!(
-        g_z1 > g_z2,
-        "g_ff should decrease with Z: Z=1 gave {g_z1}, Z=2 gave {g_z2}"
-    );
-
-    // Monotonicity in x at fixed θ_e.
-    let mut prev_gff = f64::MAX;
+    // Monotone decreasing in x_e, floor g ≥ 1, and larger Z gives smaller g.
+    let mut prev = f64::MAX;
     for &x in &[0.001, 0.01, 0.1, 0.5, 1.0, 2.0, 5.0] {
         let g = gaunt_ff_nr(x, 1e-4, 1.0);
         assert!(
-            g <= prev_gff + 0.01,
-            "Gaunt factor not monotonically decreasing at x={x}: {g} > prev {prev_gff}"
+            g >= 1.0 && g <= prev,
+            "g_ff not monotone/≥1 at x_e={x}: {g}"
         );
-        prev_gff = g;
+        assert!(
+            gaunt_ff_nr(x, 1e-4, 2.0) < g,
+            "g_ff(Z=2) ≥ g_ff(Z=1) at x_e={x}"
+        );
+        prev = g;
+    }
+}
+
+/// K_BR prefactor α λ_e³/(2π√(6π)), λ_e = h/(m_e c), from CODATA 2018 values typed
+/// here (Chluba & Sunyaev 2012, Eq. 14). Nothing is imported from constants.rs.
+fn br_prefactor_literal() -> f64 {
+    let alpha = 7.297_352_569_3e-3_f64;
+    let h = 6.626_070_15e-34_f64;
+    let m_e = 9.109_383_701_5e-31_f64;
+    let c = 299_792_458.0_f64;
+    let lam = h / (m_e * c);
+    alpha * lam.powi(3) / (2.0 * std::f64::consts::PI * (6.0 * std::f64::consts::PI).sqrt())
+}
+
+/// Every K_BR code path evaluated at (x, θ_e, θ_z); returns (name, K_BR).
+fn all_kbr_paths(
+    x: f64,
+    theta_e: f64,
+    theta_z: f64,
+    n_h: f64,
+    n_he: f64,
+    n_e: f64,
+    y_he_ii: f64,
+    y_he_i: f64,
+) -> Vec<(&'static str, f64)> {
+    use spectroxide::bremsstrahlung::*;
+    let pre = br_precompute(theta_e, theta_z, n_h, n_he, n_e, 1.0, y_he_ii, y_he_i).unwrap();
+    let expc = gaunt_expc_factor(x.ln());
+    vec![
+        (
+            "with_he",
+            br_emission_coefficient_with_he(
+                x, theta_e, theta_z, n_h, n_he, n_e, 1.0, y_he_ii, y_he_i,
+            ),
+        ),
+        ("fast", br_emission_coefficient_fast(x, &pre)),
+        (
+            "fast_preln",
+            br_emission_coefficient_fast_preln(x, x.ln(), &pre),
+        ),
+        (
+            "expc (production)",
+            br_emission_coefficient_expc(x, expc, &pre),
+        ),
+        (
+            "and_drho_expc (production)",
+            br_emission_coefficient_and_drho_expc(x, expc, &pre).0,
+        ),
+    ]
+}
+
+/// Draine anchor through K_BR at ρ_e ≠ 1. For a pure-hydrogen plasma,
+/// K_BR = P θ_e^{−7/2} e^{−x_e} φ^{−3} N_HII g_ff(x_e, θ_e, 1), with φ = 1/ρ_e and P the
+/// literal prefactor, so g_eff = K_BR φ³ e^{x_e} θ_e^{7/2} / (P N_HII) must equal the
+/// Draine g_D(x_e, θ_e, 1) to the 1e-3 of `gaunt_ff_classical_limit_matches_draine`.
+/// A Gaunt fit evaluated at x = x_e ρ_e instead of x_e is off by (√3/π) ln(1/ρ_e),
+/// which is 0.38 at ρ_e = 0.5 (the P-1 bug in dev/REVIEW_2026-09-22.md).
+#[test]
+fn br_coefficient_gaunt_uses_electron_frequency_draine_anchor() {
+    let cosmo = Cosmology::default();
+    let p = br_prefactor_literal();
+    let theta_e = 1e-6_f64;
+    let n_h = 1e6_f64;
+    for &rho_e in &[0.5_f64, 0.62, 1.0, 1.6] {
+        let theta_z = theta_e / rho_e;
+        let phi = theta_z / theta_e;
+        for &x_e in &[1e-11_f64, 1e-10, 1e-9] {
+            let x = x_e * rho_e;
+            let g_d = gaunt_draine(x_e, theta_e, 1.0);
+            let mut paths = all_kbr_paths(x, theta_e, theta_z, n_h, 0.0, n_h, 0.0, 0.0);
+            // The Saha entry point too: with N_He = 0 its helium fractions drop out.
+            paths.push((
+                "br_emission_coefficient",
+                spectroxide::bremsstrahlung::br_emission_coefficient(
+                    x, theta_e, theta_z, n_h, 0.0, n_h, 1.0, &cosmo,
+                ),
+            ));
+            for (name, k) in paths {
+                let g_eff = k * phi.powi(3) * x_e.exp() * theta_e.powf(3.5) / (p * n_h);
+                let diff = (g_eff - g_d).abs();
+                assert!(
+                    diff < 1e-3,
+                    "{name}: ρ_e={rho_e}, x_e={x_e:e}: g_eff={g_eff:.6} vs Draine {g_d:.6} \
+                     (|Δ| = {diff:.2e}, tol 1e-3)"
+                );
+            }
+        }
+    }
+}
+
+/// Invariance under θ_z at fixed ν and T_e. The BR absorption rate per unit time
+/// depends on ν, T_e and the ion densities only. In the code's variables
+/// K_BR = P θ_e^{−7/2} e^{−x_e} φ^{−3} Σ_i Z_i² N_i g_ff(x_e, θ_e, Z_i), so
+///
+///   I ≡ K_BR φ³ e^{x_e} θ_e^{7/2} = P Σ_i Z_i² N_i g_ff(x_e, θ_e, Z_i)
+///
+/// is a function of (x_e, θ_e, N_i) alone. Changing θ_z at fixed θ_e and
+/// x_e = x θ_z/θ_e (so x = x_e ρ_e moves with it) must leave I unchanged to
+/// rounding, for H⁺, He⁺ and He²⁺ alike. The helium fractions are held fixed; the
+/// Saha entry point is excluded because it legitimately maps θ_z to a redshift.
+#[test]
+fn br_coefficient_invariant_under_theta_z_at_fixed_nu_and_te() {
+    let (n_h, n_he, n_e) = (1.0e6_f64, 8.0e4, 1.1e6);
+    let (y_he_ii, y_he_i) = (0.3_f64, 0.9);
+    for &theta_e in &[3e-8_f64, 1e-6, 1e-5] {
+        for &x_e in &[1e-4_f64, 1e-2, 0.3, 3.0] {
+            let invariant = |rho_e: f64| -> Vec<(&'static str, f64)> {
+                let theta_z = theta_e / rho_e;
+                let phi = theta_z / theta_e;
+                let x = x_e * rho_e;
+                all_kbr_paths(x, theta_e, theta_z, n_h, n_he, n_e, y_he_ii, y_he_i)
+                    .into_iter()
+                    .map(|(n, k)| (n, k * phi.powi(3) * (x * phi).exp() * theta_e.powf(3.5)))
+                    .collect()
+            };
+            let reference = invariant(1.0);
+            for &rho_e in &[0.3_f64, 0.62, 1.4] {
+                for ((name, i_ref), (_, i_rho)) in reference.iter().zip(invariant(rho_e)) {
+                    let rel = (i_rho - i_ref).abs() / i_ref.abs();
+                    assert!(
+                        rel < 1e-12,
+                        "{name}: K_BR φ³ e^(x_e) θ_e^(7/2) changed with θ_z at θ_e={theta_e:e}, \
+                         x_e={x_e}, ρ_e={rho_e}: {i_rho:e} vs {i_ref:e} at ρ_e=1 (rel {rel:.2e})"
+                    );
+                }
+            }
+        }
     }
 }
