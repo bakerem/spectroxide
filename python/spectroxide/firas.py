@@ -809,10 +809,10 @@ class FIRASData:
         """
         return self.chi2(self.predict_kJy(mu, y, delta_t, extra_dn))
 
-    def _solver_template_kJy(self, result, amplitude=1.0):
-        """``result.delta_n / amplitude`` at the FIRAS frequencies, in kJy/sr."""
+    def _solver_template_kJy(self, result):
+        """``result.delta_n`` at the FIRAS frequencies, in kJy/sr."""
         x_grid = np.asarray(result.x, dtype=np.float64)
-        dn_grid = np.asarray(result.delta_n, dtype=np.float64) / amplitude
+        dn_grid = np.asarray(result.delta_n, dtype=np.float64)
         dn_firas = np.interp(self.x, x_grid, dn_grid)
         return _dn_to_dI_kJy(self.x, dn_firas, self.t_cmb)
 
