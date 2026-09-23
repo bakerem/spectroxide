@@ -1082,8 +1082,9 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!(
                 "                        [--sigma-z <z>], [--sigma-x <x>, default 0.05 x_inj]"
             );
-            println!("  decaying-particle-photon  --x-inj-0 <x at decay>, --f-inj <val>,");
-            println!("                        --gamma-x <1/s>");
+            println!("  decaying-particle-photon  --x-inj-0 <E_gamma / k T_0>, --f-inj <val>,");
+            println!("                        --gamma-x <1/s>; photons appear at");
+            println!("                        x_inj = x_inj_0 / (1+z), with T_0 = T_CMB today");
             println!("  dark-photon-resonance --epsilon <kinetic mixing>, --m-ev <mass in eV>");
             #[cfg(feature = "axion")]
             println!(
