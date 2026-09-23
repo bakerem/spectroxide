@@ -29,6 +29,12 @@ from spectroxide.greens_table import (
     _DEFAULT_PHOTON_CACHE,
 )
 
+# PhotonGreensTable warns on every construction (review decision, phase 5).
+# Section 13 checks that warning; elsewhere it is noise.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:Photon-injection table interpolation is in development:UserWarning"
+)
+
 # =========================================================================
 # Helpers: build synthetic tables for fast unit tests
 # =========================================================================
@@ -883,3 +889,50 @@ class TestLoadOrBuildErrors:
             out = loader(cache_path=path)
         assert out is sentinel
         assert "EOFError" in caplog.text
+
+
+# =========================================================================
+# Section 13: PhotonGreensTable in-development warning (review, phase 5)
+# =========================================================================
+
+
+class TestPhotonTableWarning:
+    """Building or loading a photon table warns once; evaluating does not."""
+
+    MATCH = "Photon-injection table interpolation is in development"
+
+    def _record(self, fn):
+        with warnings.catch_warnings(record=True) as rec:
+            warnings.simplefilter("always")
+            out = fn()
+        hits = [
+            w
+            for w in rec
+            if issubclass(w.category, UserWarning) and self.MATCH in str(w.message)
+        ]
+        return out, hits
+
+    def test_construction_warns_once(self):
+        table, hits = self._record(_make_photon_table)
+        assert len(hits) == 1
+        assert 'solve(method="pde")' in str(hits[0].message)
+        assert hits[0].category is UserWarning
+
+    def test_load_warns_once(self, tmp_path):
+        table, _ = self._record(_make_photon_table)
+        path = tmp_path / "photon.npz"
+        table.save(path)
+        _, hits = self._record(lambda: PhotonGreensTable.load(path, verify_hash=False))
+        assert len(hits) == 1
+
+    def test_evaluation_does_not_warn(self):
+        table, _ = self._record(_make_photon_table)
+        x = np.logspace(-1, 1, 20)
+        _, hits = self._record(
+            lambda: [table.greens_function_photon(x, 3.6, zh) for zh in (1e4, 1e6)]
+        )
+        assert hits == []
+
+    def test_heating_table_does_not_warn(self):
+        _, hits = self._record(_make_heating_table)
+        assert hits == []

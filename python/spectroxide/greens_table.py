@@ -68,6 +68,13 @@ _CACHE_LOAD_ERRORS = (
     zipfile.BadZipFile,
 )
 
+#: Warning emitted whenever a :class:`PhotonGreensTable` is built or loaded.
+_PHOTON_TABLE_WARNING = (
+    "Photon-injection table interpolation is in development and can be "
+    "inaccurate between x_inj nodes. Use the PDE solver "
+    '(solve(method="pde")) for photon injection.'
+)
+
 #: Type alias for a heating-rate callable ``z -> dQ/dz``.
 HeatingRate = Callable[[ArrayLike], ArrayLike]
 
@@ -488,6 +495,13 @@ class PhotonGreensTable:
     Stores G_ph(x_obs, x_inj, z_h) = Delta-n per unit Delta-N/N at each
     (observation frequency, injection frequency, injection redshift) grid point.
 
+    .. warning::
+       Photon-injection table interpolation is in development.  Linear
+       interpolation between ``x_inj`` nodes can split a narrow
+       surviving-photon bump into two.  Use the PDE solver
+       (``solve(method="pde")``) for photon injection.  Building or
+       loading a table emits a :class:`UserWarning` saying so.
+
     Attributes
     ----------
     z_h : np.ndarray
@@ -510,6 +524,13 @@ class PhotonGreensTable:
     _interp: Optional[object] = field(default=None, repr=False, compare=False)
 
     def __post_init__(self):
+        # One warning per construction; build and load both construct
+        # through here.  Review decision (phase 5, REVIEW_2026-09-22).
+        warnings.warn(
+            _PHOTON_TABLE_WARNING,
+            UserWarning,
+            stacklevel=3,
+        )
         self._build_interpolator()
 
     def _build_interpolator(self):
