@@ -1076,8 +1076,9 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!("  single-burst          --z-h <z> (heating redshift), [--sigma-z <z>]");
             println!("                        Gaussian burst; sigma-z default max(0.04 z_h, 100)");
             println!("  decaying-particle     --f-x <eV> (energy release), --gamma-x <1/s at z=0>");
-            println!("  annihilating-dm       --f-ann <eV/s> (s-wave annihilation efficiency)");
-            println!("  annihilating-dm-pwave --f-ann <eV/s> (p-wave, rate scales with (1+z))");
+            println!("  annihilating-dm       --f-ann <eV/s> (s-wave energy-release rate;");
+            println!("                        heating per volume f_ann n_H(z) (1+z)^3)");
+            println!("  annihilating-dm-pwave --f-ann <eV/s> (p-wave; one more factor of (1+z))");
             println!("  monochromatic-photon  --x-inj <x>, --delta-n-over-n <val>, --z-h <z>,");
             println!(
                 "                        [--sigma-z <z>], [--sigma-x <x>, default 0.05 x_inj]"
@@ -1901,6 +1902,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
         delta_rho,
         rows,
         warnings: dedup_keep_order(warnings_all),
+        t_cmb: cosmo.t_cmb,
     })
 }
 
@@ -2022,6 +2024,7 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
         delta_n_over_n,
         rows,
         warnings: dedup_keep_order(warnings_all),
+        t_cmb: cosmo.t_cmb,
     })
 }
 
@@ -2165,6 +2168,7 @@ pub fn execute_photon_sweep_batch(
             delta_n_over_n,
             rows,
             warnings: dedup_keep_order(ws),
+            t_cmb: cosmo.t_cmb,
         })
         .collect();
 
@@ -2176,6 +2180,7 @@ pub fn execute_photon_sweep_batch(
     Ok(PhotonSweepBatchResult {
         results,
         warnings: dedup_keep_order(aggregated_warnings),
+        t_cmb: cosmo.t_cmb,
     })
 }
 

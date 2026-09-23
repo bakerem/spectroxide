@@ -2051,6 +2051,7 @@ impl ThermalizationSolver {
             step_count: self.step_count,
             diag_newton_exhausted: self.diag.newton_exhausted,
             warnings: self.diag.warnings.clone(),
+            t_cmb: self.cosmo.t_cmb,
         })
     }
 
@@ -2191,6 +2192,28 @@ impl SolverBuilder {
     /// Sets the maximum number of Newton iterations per Kompaneets step.
     pub fn max_newton_iter(mut self, val: usize) -> Self {
         self.max_newton_iter = Some(val);
+        self
+    }
+
+    /// Sets the maximum Compton optical depth per step while a photon source is
+    /// active ([`SolverConfig::dtau_max_photon_source`], default 1.0).
+    pub fn dtau_max_photon_source(mut self, val: f64) -> Self {
+        self.dtau_max_photon_source = Some(val);
+        self
+    }
+
+    /// Sets the redshift below which the number-conserving T-shift subtraction
+    /// is off ([`SolverConfig::nc_z_min`], default 5e4; 0 applies it at all z).
+    pub fn nc_z_min(mut self, val: f64) -> Self {
+        self.nc_z_min = Some(val);
+        self
+    }
+
+    /// Uses Crank-Nicolson instead of backward Euler for DC/BR
+    /// ([`SolverConfig::cn_dcbr`]). Diagnostic: it can fail at low x, where the
+    /// DC/BR rates diverge.
+    pub fn cn_dcbr(mut self) -> Self {
+        self.cn_dcbr = Some(true);
         self
     }
 
@@ -3002,5 +3025,32 @@ mod tests {
         let json = result.to_json();
         assert!(json.contains("\"pde_mu\":"));
         assert!(json.contains("\"diag_newton_exhausted\":"));
+    }
+
+    /// A-7: the builder sets `dtau_max_photon_source`, `nc_z_min`, and `cn_dcbr`,
+    /// and leaves each at its `SolverConfig` default when not called.
+    #[test]
+    fn test_builder_photon_nc_cn_setters() {
+        let defaults = SolverConfig::default();
+        let plain = ThermalizationSolver::builder(Cosmology::default())
+            .build()
+            .unwrap();
+        assert_eq!(
+            plain.config.dtau_max_photon_source,
+            defaults.dtau_max_photon_source
+        );
+        assert_eq!(plain.config.nc_z_min, defaults.nc_z_min);
+        assert_eq!(plain.config.cn_dcbr, defaults.cn_dcbr);
+        assert!(!defaults.cn_dcbr);
+
+        let set = ThermalizationSolver::builder(Cosmology::default())
+            .dtau_max_photon_source(0.25)
+            .nc_z_min(0.0)
+            .cn_dcbr()
+            .build()
+            .unwrap();
+        assert_eq!(set.config.dtau_max_photon_source, 0.25);
+        assert_eq!(set.config.nc_z_min, 0.0);
+        assert!(set.config.cn_dcbr);
     }
 }

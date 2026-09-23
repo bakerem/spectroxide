@@ -213,6 +213,15 @@ file to write:
    * - ``--output PATH``
      - Write to file instead of stdout
 
+Every JSON object starts with ``schema_version``, the version of the output
+layout. A new field does not change it; a renamed or removed field does, so
+readers should ignore fields they do not know. The PDE subcommands (``solve``
+and the sweeps) then write ``physics_hash``, the hash of the source files that
+set the PDE numbers (also printed by ``spectroxide physics-hash``), and
+``t_cmb``, the run's CMB temperature today in kelvin. Use ``t_cmb`` to convert
+:math:`x = h\nu/kT_z` to frequency. The ``greens`` output carries only
+``schema_version``.
+
 
 Examples
 --------
