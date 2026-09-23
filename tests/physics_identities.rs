@@ -1211,7 +1211,7 @@ fn test_photon_mu_at_critical_frequency_closed_form() {
 /// E_H = R_∞hc / (1 + m_e/m_p) = 13.598 287 eV (nonrelativistic, reduced
 /// mass). Nothing here is imported from
 /// `constants.rs` except the quantities under test. The previous code used
-/// R_∞hc = 13.605 693 eV, which is 5.4e-4 (m_e/m_p) too high and made the Saha factor
+/// R_∞hc = 13.605 693 eV, too high by m_e/m_p ≈ 5.4e-4, and made the Saha factor
 /// S ∝ exp(−E_H/kT) about 2.9% too small at z = 1100.
 ///
 /// Three anchors:
