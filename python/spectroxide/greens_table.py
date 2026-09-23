@@ -468,7 +468,11 @@ class GreensTable:
         """
         if path is None:
             path = _DEFAULT_HEATING_CACHE
-        with np.load(path, allow_pickle=False) as data:
+        # Open the file ourselves rather than passing `path` straight to
+        # np.load: if the archive is corrupt, NpzFile's own constructor can
+        # raise (BadZipFile) before np.load returns anything to close, which
+        # would otherwise leak the underlying file descriptor.
+        with open(path, "rb") as fh, np.load(fh, allow_pickle=False) as data:
             metadata = json.loads(str(data["metadata_json"]))
             z_h = data["z_h"]
             x = data["x"]
@@ -699,7 +703,10 @@ class PhotonGreensTable:
         """
         if path is None:
             path = _DEFAULT_PHOTON_CACHE
-        with np.load(path, allow_pickle=False) as data:
+        # See GreensTable.load: open the file ourselves so a corrupt
+        # archive's BadZipFile (raised inside NpzFile's constructor) cannot
+        # leak the file descriptor before np.load returns anything to close.
+        with open(path, "rb") as fh, np.load(fh, allow_pickle=False) as data:
             metadata = json.loads(str(data["metadata_json"]))
             z_h = data["z_h"]
             x = data["x"]
