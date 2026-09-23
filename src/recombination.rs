@@ -155,13 +155,13 @@ pub fn helium_electron_fraction(z: f64, cosmo: &Cosmology) -> f64 {
 
 /// Computes the hydrogen Saha ionization fraction.
 ///
-/// Solves X_e²N_H / (1−X_e) = (m_e k_B T / 2πℏ²)^{3/2} exp(−E_Rydberg/kT)
-/// for X_e.
+/// Solves X_e²N_H / (1−X_e) = (m_e k_B T / 2πℏ²)^{3/2} exp(−E_H/kT)
+/// for X_e, where E_H = R_∞hc/(1 + m_e/m_p) is the reduced-mass ionization energy.
 pub fn saha_hydrogen(z: f64, cosmo: &Cosmology) -> f64 {
     let t = cosmo.t_cmb * (1.0 + z);
     let n_h = cosmo.n_h(z);
 
-    let s = thermal_de_broglie(t) * (-E_RYDBERG / (K_BOLTZMANN * t)).exp() / n_h;
+    let s = thermal_de_broglie(t) * (-E_H_ION / (K_BOLTZMANN * t)).exp() / n_h;
     solve_saha_quadratic(s)
 }
 
@@ -192,14 +192,14 @@ fn alpha_recomb(t: f64) -> f64 {
 ///
 ///   β_B = α_B(T_rad) × (m_e k_B T_rad / 2πℏ²)^{3/2} × exp(−E_{n=2}/kT_rad)
 ///
-/// where E_{n=2} = E_Rydberg/4 = 3.4 eV is the ionization energy from n=2.
+/// where E_{n=2} = E_H/4 = 3.4 eV is the ionization energy from n=2.
 ///
 /// **Important**: This uses the radiation temperature T_CMB, not the matter
 /// temperature, because the photoionizing radiation field is thermal at T_CMB.
 fn beta_ion(t_rad: f64) -> f64 {
     let alpha = alpha_recomb(t_rad);
-    // The factor of 1/4 from the n=2 statistical weight is already
-    // built into E_ION_N2 = E_Rydberg/4
+    // The 1/n² = 1/4 Bohr scaling of the n=2 binding energy is already
+    // built into E_ION_N2 = E_H/4
     alpha * thermal_de_broglie(t_rad) * (-E_ION_N2 / (K_BOLTZMANN * t_rad)).exp()
 }
 

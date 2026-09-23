@@ -1200,3 +1200,90 @@ fn test_photon_mu_at_critical_frequency_closed_form() {
         );
     }
 }
+
+// ---------------------------------------------------------------------------
+// Hydrogen ionization energy with the reduced-mass correction (review P-4)
+// ---------------------------------------------------------------------------
+
+/// Checks the hydrogen ionization energy against CODATA 2018 constants typed
+/// into this file, and checks that the Saha solver actually uses it.
+///
+/// E_H = R_∞hc / (1 + m_e/m_p) = 13.598 287 eV (nonrelativistic, reduced
+/// mass). Nothing here is imported from
+/// `constants.rs` except the quantities under test. The previous code used
+/// R_∞hc = 13.605 693 eV, which is 5.4e-4 (m_e/m_p) too high and made the Saha factor
+/// S ∝ exp(−E_H/kT) about 2.9% too small at z = 1100.
+///
+/// Three anchors:
+/// 1. `E_H_ION_EV` equals the typed CODATA value to 1e-9.
+/// 2. The Lyman-α energy hc/λ_Lyα from the typed λ equals (3/4)E_H to 3e-5.
+///    The measured line carries fine-structure and QED shifts of order
+///    α²/4 ≈ 1.3e-5 that the Bohr formula omits; the measured residual is
+///    1.2e-5.
+///    This ties `E_H_ION_EV` to `LAMBDA_LYA`, which already had the reduced
+///    mass, so the two constants can no longer disagree (the P-4 bug fails
+///    this at 5.3e-4).
+/// 3. `saha_hydrogen` at z = 1300 equals the Saha solution built from the
+///    typed constants to 1e-6. At z = 1300, E_H/kT ≈ 44.5 and X ≈ 0.21, so a
+///    5.3e-4 error in E_H shifts S by 2.4% and X by ≈ 1%. This catches the
+///    solver using the wrong energy even if the constant is right.
+#[test]
+fn test_hydrogen_ionization_energy_reduced_mass() {
+    use spectroxide::constants::{E_H_ION_EV, E_ION_N2, LAMBDA_LYA};
+    use spectroxide::recombination::saha_hydrogen;
+
+    // CODATA 2018, typed literally.
+    let r_inf = 10_973_731.568_160; // Rydberg constant [1/m]
+    let h = 6.626_070_15e-34; // Planck constant [J s], exact
+    let hbar = h / (2.0 * std::f64::consts::PI);
+    let c = 299_792_458.0; // speed of light [m/s], exact
+    let e = 1.602_176_634e-19; // elementary charge [C], exact
+    let k_b = 1.380_649e-23; // Boltzmann constant [J/K], exact
+    let m_e = 9.109_383_701_5e-31; // electron mass [kg]
+    let me_over_mp = 5.446_170_214_87e-4; // electron-to-proton mass ratio
+
+    let e_h_ev = r_inf * h * c / e / (1.0 + me_over_mp);
+    // Independent check on the arithmetic: NIST quotes 13.598 434 6 eV for the
+    // measured H ionization energy. It exceeds the Bohr value by the Dirac
+    // fine-structure and QED terms, ≈ α²/4 ≈ 1.3e-5 relative (measured 1.08e-5).
+    assert!(
+        (e_h_ev / 13.598_434_6 - 1.0).abs() < 2e-5,
+        "typed-constant E_H = {e_h_ev} eV"
+    );
+
+    // 1. The constant itself.
+    let rel = E_H_ION_EV / e_h_ev - 1.0;
+    assert!(
+        rel.abs() < 1e-9,
+        "E_H_ION_EV = {E_H_ION_EV} vs CODATA {e_h_ev} (rel {rel:+.2e})"
+    );
+    let rel_n2 = E_ION_N2 / (e_h_ev * e / 4.0) - 1.0;
+    assert!(rel_n2.abs() < 1e-9, "E_ION_N2 rel error {rel_n2:+.2e}");
+
+    // 2. Consistency with the Lyman-α wavelength (1215.670 Å, vacuum).
+    let e_lya_ev = h * c / 1.215_670e-7 / e;
+    assert!((LAMBDA_LYA / 1.215_670e-7 - 1.0).abs() < 1e-12);
+    let rel_lya = e_lya_ev / (0.75 * E_H_ION_EV) - 1.0;
+    assert!(
+        rel_lya.abs() < 3e-5,
+        "hc/λ_Lyα = {e_lya_ev} eV vs (3/4)E_H = {} eV (rel {rel_lya:+.2e})",
+        0.75 * E_H_ION_EV
+    );
+
+    // 3. The Saha solver uses E_H. X²/(1−X) = S with
+    //    S = (m_e k T / 2πħ²)^{3/2} exp(−E_H/kT) / n_H.
+    let cosmo = Cosmology::default();
+    let z = 1300.0;
+    let t = cosmo.t_cmb * (1.0 + z);
+    let n_h = cosmo.n_h(z);
+    let s = (m_e * k_b * t / (2.0 * std::f64::consts::PI * hbar * hbar)).powf(1.5)
+        * (-e_h_ev * e / (k_b * t)).exp()
+        / n_h;
+    let x_ref = 2.0 / (1.0 + (1.0 + 4.0 / s).sqrt()); // positive root, stable form
+    let x = saha_hydrogen(z, &cosmo);
+    let rel_x = x / x_ref - 1.0;
+    assert!(
+        rel_x.abs() < 1e-6,
+        "saha_hydrogen({z}) = {x} vs typed-constant Saha {x_ref} (rel {rel_x:+.2e})"
+    );
+}
