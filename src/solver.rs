@@ -1486,9 +1486,14 @@ impl ThermalizationSolver {
         let source_active = if has_phot_src {
             let dt = actual_dz / (h * (1.0 + z_mid));
             if let Some(ref inj) = self.injection {
+                let step_factor = inj.photon_source_step_factor(z_mid, &self.cosmo);
                 for i in 0..n {
-                    self.photon_source_buf[i] =
-                        inj.photon_source_rate(self.grid.x[i], z_mid, &self.cosmo) * dt;
+                    self.photon_source_buf[i] = inj.photon_source_rate_with_step_factor(
+                        self.grid.x[i],
+                        z_mid,
+                        &self.cosmo,
+                        step_factor,
+                    ) * dt;
                 }
             }
             // Use a threshold that excludes Gaussian tails > ~8σ from peak.
@@ -1628,8 +1633,14 @@ impl ThermalizationSolver {
         if let Some(ref inj) = self.injection {
             if inj.has_photon_source() && !source_via_newton {
                 let dt = actual_dz / (h * (1.0 + z_mid));
+                let step_factor = inj.photon_source_step_factor(z_mid, &self.cosmo);
                 for i in 0..n {
-                    let source = inj.photon_source_rate(self.grid.x[i], z_mid, &self.cosmo);
+                    let source = inj.photon_source_rate_with_step_factor(
+                        self.grid.x[i],
+                        z_mid,
+                        &self.cosmo,
+                        step_factor,
+                    );
                     if source.abs() > 1e-50 {
                         self.delta_n[i] += source * dt;
                     }
