@@ -1883,13 +1883,17 @@ impl ThermalizationSolver {
     /// Applies only to scenarios with a known injected energy (single burst,
     /// heating table); photon injection is excluded because its closure is
     /// known to be off by 7–45% for x_inj ≲ 0.03 (investigation I-1). The
-    /// check is also skipped when ρ_e hit its cap (that run already warns
-    /// "Substantial heating") and when more than
-    /// [`ENERGY_CHECK_MAX_LATE_FRACTION`] of the injected energy falls below
-    /// z = [`ENERGY_CHECK_Z_LATE`], where heat near recombination does not
-    /// fully reach the photons.
+    /// check is skipped when more than [`ENERGY_CHECK_MAX_LATE_FRACTION`] of
+    /// the injected energy falls below z = [`ENERGY_CHECK_Z_LATE`], where heat
+    /// near recombination does not fully reach the photons.
+    ///
+    /// When ρ_e hit its cap (that run already warns "Substantial heating"),
+    /// the check is one-sided. The cap discards heat the electrons could not
+    /// hold, so a shortfall is expected and stays silent. The cap cannot add
+    /// energy, so an excess beyond the same tolerance still warns, with text
+    /// that points to a numerical error instead.
     fn energy_closure_warning(&self, z_run_start: f64, drho_initial: f64) -> Option<String> {
-        if self.diag.heating_cap_warned || self.step_count == 0 {
+        if self.step_count == 0 {
             return None;
         }
         let inj = self.injection.as_ref()?;
@@ -1916,6 +1920,25 @@ impl ThermalizationSolver {
         let diff = measured - expected;
         if diff.abs() <= ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR {
             return None;
+        }
+        if self.diag.heating_cap_warned {
+            if diff < 0.0 {
+                return None;
+            }
+            return Some(format!(
+                "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
+                 injection delivered only {expected:.4e} between z = {z_run_start:.3e} and \
+                 z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). The \
+                 electron temperature hit its cap in this run, but the cap only removes \
+                 heat, so it cannot cause an excess. An excess points to a numerical \
+                 error, for example an under-resolved frequency grid (this one has \
+                 n_points={}; try more) or time steps that are too large (reduce \
+                 dtau_max). A large injection (|Δρ/ρ| near 1e-2 or more) or a \
+                 diagnostic flag can also cause it. Do not trust μ and y from this run.",
+                100.0 * diff / gross,
+                100.0 * ENERGY_CLOSURE_REL_TOL,
+                self.grid_n_points,
+            ));
         }
         Some(format!(
             "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
@@ -2297,11 +2320,14 @@ mod tests {
     use super::*;
 
     /// R-1 skip rules, tested on the check itself so that each rule is
-    /// exercised alone. The base run fails closure (a 100-point grid from
-    /// z = 5e6 ends near Δρ/ρ = −1.5e-2 for an injected 1e-5, with all heat
-    /// above z = 2000), so the check fires; the ρ_e-cap flag must silence it.
-    /// A second run adds a known initial Δn: the check must count that energy
-    /// as expected, or it would warn on a well-resolved run.
+    /// exercised alone. The base run fails closure with a shortfall (a
+    /// 100-point grid from z = 5e6 ends near Δρ/ρ = −1.5e-2 for an injected
+    /// 1e-5, with all heat above z = 2000), so the check fires; the ρ_e-cap
+    /// flag must silence a shortfall. A second run adds a known initial Δn:
+    /// the check must count that energy as expected, or it would warn on a
+    /// well-resolved run. The same run, checked against a wrong expectation,
+    /// gives a clean excess and a clean shortfall of equal size: with the cap
+    /// flag set, the excess must still warn and the shortfall must not.
     #[test]
     fn test_energy_closure_skip_rules() {
         let burst = InjectionScenario::SingleBurst {
@@ -2356,6 +2382,23 @@ mod tests {
         assert!(closure.is_empty(), "{closure:?}");
         // Dropping the initial energy from the expectation must fire.
         assert!(solver.energy_closure_warning(2.6e5, 0.0).is_some());
+
+        // Cap rule, one-sided. Dropping the initial energy a = 2e-5 from the
+        // expectation leaves an excess of a (200% of the injected heat);
+        // counting it twice leaves a shortfall of a.
+        assert!(!solver.diag.heating_cap_warned);
+        assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_some());
+        let uncapped = solver.energy_closure_warning(2.6e5, 0.0).unwrap();
+        assert!(!uncapped.contains("cannot cause an excess"), "{uncapped}");
+        solver.diag.heating_cap_warned = true;
+        let excess = solver.energy_closure_warning(2.6e5, 0.0);
+        assert!(
+            excess
+                .as_deref()
+                .is_some_and(|w| w.contains("cannot cause an excess")),
+            "{excess:?}"
+        );
+        assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_none());
     }
 
     /// Checks that the analytic dH/dρ_e in `dcbr_heating_with_derivative` matches a

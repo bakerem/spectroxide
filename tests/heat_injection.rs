@@ -77,7 +77,7 @@ fn assert_rel(actual: f64, expected: f64, tol: f64, msg: &str) {
 
 fn fast_grid() -> GridConfig {
     GridConfig {
-        n_points: 500,
+        n_points: 1000,
         ..GridConfig::default()
     }
 }
