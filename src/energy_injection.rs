@@ -896,7 +896,41 @@ impl InjectionScenario {
     /// both x and z centered at (x_inj, z_h).
     ///
     /// Returns 0.0 for scenarios without frequency-dependent photon injection.
+    ///
+    /// To evaluate many frequencies at one z, call
+    /// [`Self::photon_source_step_factor`] once and then
+    /// [`Self::photon_source_rate_with_step_factor`] per frequency.
     pub fn photon_source_rate(&self, x: f64, z: f64, cosmo: &Cosmology) -> f64 {
+        let step_factor = self.photon_source_step_factor(z, cosmo);
+        self.photon_source_rate_with_step_factor(x, z, cosmo, step_factor)
+    }
+
+    /// Returns the part of the photon source that depends on z but not on x.
+    ///
+    /// For `DecayingParticlePhoton` this is the vacuum survival fraction
+    /// exp(−Γ_X t(z)). Its `cosmic_time` quadrature costs 2048 evaluations of
+    /// H(z), so the solver computes it once per step instead of once per grid
+    /// point (review finding O-2). Every other scenario returns 1.0.
+    pub fn photon_source_step_factor(&self, z: f64, cosmo: &Cosmology) -> f64 {
+        match self {
+            InjectionScenario::DecayingParticlePhoton { gamma_x, .. } => {
+                vacuum_survival(z, *gamma_x, cosmo)
+            }
+            _ => 1.0,
+        }
+    }
+
+    /// Same as [`Self::photon_source_rate`], with the z-only factor passed in.
+    ///
+    /// `step_factor` must be [`Self::photon_source_step_factor`] at the same
+    /// `z`; the result is then bit-identical to `photon_source_rate(x, z, cosmo)`.
+    pub fn photon_source_rate_with_step_factor(
+        &self,
+        x: f64,
+        z: f64,
+        cosmo: &Cosmology,
+        step_factor: f64,
+    ) -> f64 {
         match self {
             InjectionScenario::MonochromaticPhotonInjection {
                 x_inj,
@@ -941,7 +975,13 @@ impl InjectionScenario {
                 let gauss_x = (-(x - x_inj).powi(2) / (2.0 * sigma_x * sigma_x)).exp()
                     / (sigma_x * (2.0 * std::f64::consts::PI).sqrt());
 
-                let survival = vacuum_survival(z, *gamma_x, cosmo);
+                // exp(−Γ_X t(z)), computed once per z by the caller.
+                debug_assert_eq!(
+                    step_factor.to_bits(),
+                    vacuum_survival(z, *gamma_x, cosmo).to_bits(),
+                    "step_factor must be photon_source_step_factor at the same z"
+                );
+                let survival = step_factor;
 
                 // dn/dt = G₂ × f_inj × Γ_X × S(z) × G(x, x_inj, σ_x) / x²
                 //
@@ -1028,7 +1068,7 @@ impl InjectionScenario {
     ///
     /// For burst-like scenarios, returns `Some((z_center, z_upper))` where
     /// `z_upper` is the highest redshift at which injection is active
-    /// (typically z_h + 5σ_z for Gaussians). `z_center` is the peak.
+    /// (z_h + 7σ_z for the Gaussian burst and photon line). `z_center` is the peak.
     ///
     /// For continuous scenarios (decaying particles, annihilation), returns
     /// `None` — injection happens at all z.

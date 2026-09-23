@@ -22,8 +22,25 @@
 //! - `delta_rho_inj` at the top level of sweep JSON is the input: the
 //!   `--delta-rho` amplitude of each single burst, copied from the command
 //!   line and never computed.
+//!
+//! # Provenance fields
+//!
+//! Every JSON object starts with `schema_version` ([`JSON_SCHEMA_VERSION`]).
+//! The PDE outputs ([`SolverResult`], [`SweepResult`], [`PhotonSweepResult`],
+//! [`PhotonSweepBatchResult`]) follow it with `physics_hash`
+//! ([`crate::PHYSICS_HASH`], the hash of the source files that set the PDE
+//! numbers) and `t_cmb`, the run's CMB temperature today in kelvin, which
+//! converts x to frequency. [`GreensResult`] carries only `schema_version`:
+//! its analytic Green's function is outside the hashed files and takes no
+//! cosmology.
 
 use crate::solver::SolverSnapshot;
+
+/// Version of the JSON layout written by the `to_json` methods.
+///
+/// Bump it when a field is renamed or removed, or changes meaning. Adding a
+/// field does not bump it: readers must ignore fields they do not know.
+pub const JSON_SCHEMA_VERSION: u32 = 1;
 
 /// Common serialization interface for all result types.
 ///
@@ -56,17 +73,22 @@ pub struct SolverResult {
     /// ρ_e clamping, NaN emission rates, untested regimes, validation soft
     /// warnings). Empty for a clean run.
     pub warnings: Vec<String>,
+    /// CMB temperature today of the run's cosmology, in K. Serialized as `t_cmb`.
+    pub t_cmb: f64,
 }
 
 impl SolverResult {
     /// Serializes to a JSON string (zero dependencies).
     ///
     /// Output format matches the command-line interface convention used by the Python client:
-    /// `{"results":[{"pde_mu":..., "pde_y":..., "drho":..., ...}], "diag_newton_exhausted":N}`
+    /// `{"schema_version":1,"physics_hash":"...","t_cmb":...,"results":[{"pde_mu":...,
+    /// "pde_y":..., "drho":..., ...}], "diag_newton_exhausted":N}`
     pub fn to_json(&self) -> String {
         let s = &self.snapshot;
         let mut out = String::with_capacity(self.x_grid.len() * 30 + 256);
-        out.push_str("{\"results\":[{");
+        out.push('{');
+        write_json_provenance(&mut out, Some(self.t_cmb));
+        out.push_str("\"results\":[{");
         write_json_kv(&mut out, "pde_mu", s.mu);
         out.push(',');
         write_json_kv(&mut out, "pde_y", s.y);
@@ -165,6 +187,8 @@ pub struct SweepResult {
     pub rows: Vec<SweepRow>,
     /// Aggregated diagnostic warnings across all sweep workers.
     pub warnings: Vec<String>,
+    /// CMB temperature today of the run's cosmology, in K. Serialized as `t_cmb`.
+    pub t_cmb: f64,
 }
 
 impl SweepResult {
@@ -175,6 +199,7 @@ impl SweepResult {
         });
         let mut out = String::with_capacity(self.rows.len() * per_row + 128);
         out.push('{');
+        write_json_provenance(&mut out, Some(self.t_cmb));
         write_json_kv(&mut out, "delta_rho_inj", self.delta_rho);
         out.push_str(",\"results\":[");
         for (i, row) in self.rows.iter().enumerate() {
@@ -288,6 +313,8 @@ pub struct PhotonSweepResult {
     pub rows: Vec<PhotonSweepRow>,
     /// Aggregated diagnostic warnings across all sweep workers.
     pub warnings: Vec<String>,
+    /// CMB temperature today of the run's cosmology, in K. Serialized as `t_cmb`.
+    pub t_cmb: f64,
 }
 
 impl PhotonSweepResult {
@@ -298,6 +325,7 @@ impl PhotonSweepResult {
         });
         let mut out = String::with_capacity(self.rows.len() * per_row + 128);
         out.push('{');
+        write_json_provenance(&mut out, Some(self.t_cmb));
         write_json_kv(&mut out, "x_inj", self.x_inj);
         out.push(',');
         write_json_kv(&mut out, "delta_n_over_n", self.delta_n_over_n);
@@ -398,6 +426,8 @@ pub struct PhotonSweepBatchResult {
     pub results: Vec<PhotonSweepResult>,
     /// Aggregated diagnostic warnings across all batch workers.
     pub warnings: Vec<String>,
+    /// CMB temperature today of the run's cosmology, in K. Serialized as `t_cmb`.
+    pub t_cmb: f64,
 }
 
 impl PhotonSweepBatchResult {
@@ -407,7 +437,9 @@ impl PhotonSweepBatchResult {
     /// `{"results":[...], "warnings":[...]}`. Python wrappers tolerate both.
     pub fn to_json(&self) -> String {
         let mut out = String::with_capacity(self.results.len() * 4096);
-        out.push_str("{\"results\":[");
+        out.push('{');
+        write_json_provenance(&mut out, Some(self.t_cmb));
+        out.push_str("\"results\":[");
         for (i, r) in self.results.iter().enumerate() {
             if i > 0 {
                 out.push(',');
@@ -481,7 +513,9 @@ impl GreensResult {
     pub fn to_json(&self) -> String {
         let mut out = String::with_capacity(self.x_grid.len() * 30 + 256);
         use std::fmt::Write;
-        write!(out, "{{\"results\":[{{").unwrap();
+        out.push('{');
+        write_json_provenance(&mut out, None);
+        write!(out, "\"results\":[{{").unwrap();
         write_json_kv(&mut out, "z_h", self.z_h);
         out.push(',');
         write_json_kv(&mut out, "gf_mu", self.mu);
@@ -606,6 +640,19 @@ fn write_json_float(out: &mut String, val: f64, precision: usize) {
     }
 }
 
+/// Writes the provenance fields that open every JSON object, each followed by a
+/// comma: `schema_version`, then, for PDE outputs (`t_cmb` is `Some`),
+/// `physics_hash` and `t_cmb`.
+fn write_json_provenance(out: &mut String, t_cmb: Option<f64>) {
+    use std::fmt::Write;
+    write!(out, "\"schema_version\":{JSON_SCHEMA_VERSION},").unwrap();
+    if let Some(t_cmb) = t_cmb {
+        write!(out, "\"physics_hash\":\"{}\",", crate::PHYSICS_HASH).unwrap();
+        write_json_kv(out, "t_cmb", t_cmb);
+        out.push(',');
+    }
+}
+
 fn write_json_kv(out: &mut String, key: &str, val: f64) {
     use std::fmt::Write;
     write!(out, "\"{key}\":").unwrap();
@@ -696,6 +743,7 @@ mod tests {
             step_count: 42,
             diag_newton_exhausted: 0,
             warnings: Vec::new(),
+            t_cmb: 2.7255,
         }
     }
 
@@ -715,6 +763,7 @@ mod tests {
         SweepResult {
             delta_rho: 1e-5,
             warnings: Vec::new(),
+            t_cmb: 2.726,
             rows: vec![
                 SweepRow {
                     z_h: 1e4,
@@ -816,5 +865,52 @@ mod tests {
             json_is_balanced(&g.to_json()),
             "GreensResult JSON has unbalanced brackets"
         );
+    }
+
+    /// A-7: every JSON output opens with `schema_version`; the PDE outputs add
+    /// `physics_hash` and the run's `t_cmb`.
+    #[test]
+    fn test_json_provenance_fields() {
+        let hash = format!("\"physics_hash\":\"{}\"", crate::PHYSICS_HASH);
+        let solve = sample_result().to_json();
+        assert!(solve.starts_with("{\"schema_version\":1,"), "{solve}");
+        assert!(solve.contains(&hash));
+        assert!(solve.contains("\"t_cmb\":2.725500000000000e0,"), "{solve}");
+        let sweep = sample_sweep_result().to_json();
+        assert!(sweep.starts_with("{\"schema_version\":1,"));
+        assert!(sweep.contains(&hash));
+        assert!(sweep.contains("\"t_cmb\":2.726000000000000e0,"), "{sweep}");
+        let photon = PhotonSweepResult {
+            x_inj: 3.0,
+            delta_n_over_n: 1e-5,
+            rows: Vec::new(),
+            warnings: Vec::new(),
+            t_cmb: 2.7255,
+        };
+        let batch = PhotonSweepBatchResult {
+            results: vec![photon.clone()],
+            warnings: Vec::new(),
+            t_cmb: 2.7255,
+        };
+        for json in [photon.to_json(), batch.to_json()] {
+            assert!(json.starts_with("{\"schema_version\":1,"), "{json}");
+            assert!(json.contains(&hash));
+            assert!(json.contains("\"t_cmb\":2.725500000000000e0,"));
+            assert!(json_is_balanced(&json));
+        }
+        let greens = GreensResult {
+            z_h: 2e5,
+            mu: 1.4e-5,
+            y: 1e-8,
+            x_grid: vec![1.0],
+            delta_n: vec![1e-6],
+            warnings: Vec::new(),
+        }
+        .to_json();
+        assert!(
+            greens.starts_with("{\"schema_version\":1,\"results\":[{"),
+            "{greens}"
+        );
+        assert!(!greens.contains("physics_hash"));
     }
 }

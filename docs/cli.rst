@@ -124,13 +124,18 @@ supply:
      - Description
    * - ``--z-start Z``
      - (varies)
-     - Starting redshift
+     - Starting redshift. For ``solve``: :math:`z_h + 7\sigma_z` for ``single-burst``
+       and ``monochromatic-photon``, where :math:`\sigma_z` is ``--sigma-z`` or
+       :math:`\max(0.04\,z_h, 100)`; the resonance redshift for
+       ``dark-photon-resonance``; 5e6 for every other type. The sweeps start
+       each point at :math:`z_h + 7\sigma_z`.
    * - ``--z-end Z``
      - 500
      - Final redshift. Must be greater than 0.
    * - ``--n-points N``
-     - (preset)
-     - Frequency-grid point count. Overrides the active fast/production preset.
+     - 2000
+     - Frequency-grid point count; 4000 by default with ``--production-grid``.
+       Overrides the point count of either grid.
        Below 1000 points the solver warns that the result is untested.
    * - ``--production-grid``
      - off
@@ -207,6 +212,15 @@ file to write:
      - Output format (default: ``json``)
    * - ``--output PATH``
      - Write to file instead of stdout
+
+Every JSON object starts with ``schema_version``, the version of the output
+layout. A new field does not change it; a renamed or removed field does, so
+readers should ignore fields they do not know. The PDE subcommands (``solve``
+and the sweeps) then write ``physics_hash``, the hash of the source files that
+set the PDE numbers (also printed by ``spectroxide physics-hash``), and
+``t_cmb``, the run's CMB temperature today in kelvin. Use ``t_cmb`` to convert
+:math:`x = h\nu/kT_z` to frequency. The ``greens`` output carries only
+``schema_version``.
 
 
 Examples
