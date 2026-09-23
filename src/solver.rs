@@ -27,9 +27,9 @@ use crate::kompaneets::{KompaneetsWorkspace, kompaneets_step_coupled_inplace};
 use crate::recombination::RecombinationHistory;
 use crate::spectrum::planck;
 
-/// Smallest `GridConfig::n_points` covered by the test suite. Smaller grids
+/// Smallest `GridConfig::n_points` the solver treats as tested. Smaller grids
 /// run, but the solver warns (R-1). `GridConfig::fast()` sits exactly here.
-pub const MIN_TESTED_GRID_POINTS: usize = 500;
+pub const MIN_TESTED_GRID_POINTS: usize = 1000;
 
 /// Relative tolerance of the post-run energy-closure check (R-1): the solver
 /// warns when the final Δρ/ρ misses the injected heat by more than this
@@ -2014,7 +2014,7 @@ impl SolverBuilder {
         self
     }
 
-    /// Uses the fast (500-point) grid for quick tests.
+    /// Uses the fast (1000-point) grid for quick tests.
     pub fn grid_fast(mut self) -> Self {
         self.grid_config = GridConfig::fast();
         self
@@ -2242,7 +2242,7 @@ mod tests {
         assert!(solver.energy_closure_warning(5e6, 0.0).is_none());
 
         // Initial Δn = a·n_pl holds Δρ/ρ = a exactly (∫x³ n_pl dx = G₃), here
-        // twice the injected heat. Resolved burst, 500 points.
+        // twice the injected heat. Resolved burst, 1000 points.
         let a = 2e-5;
         let mut solver = ThermalizationSolver::new(Cosmology::default(), GridConfig::fast());
         solver

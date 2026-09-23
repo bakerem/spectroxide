@@ -1017,7 +1017,7 @@ fn print_solver_options_help(for_solve: bool) {
     println!("                        use 3 for <0.1% precision)");
     println!("  --dtau-max-photon-source <val>  Max dtau per step while a photon source is");
     println!("                        active (default 1.0; 10 for fast exploratory runs)");
-    println!("  --n-points <n>        Frequency-grid points (default 2000; below 500 the");
+    println!("  --n-points <n>        Frequency-grid points (default 2000; below 1000 the");
     println!("                        solver warns that the result is untested)");
     println!("  --production-grid     Use the 4000-point production grid");
     println!("  --no-auto-refine      Disable automatic grid refinement near injection features");

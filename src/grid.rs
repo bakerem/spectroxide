@@ -17,7 +17,7 @@ pub struct RefinementZone {
 
 /// Configuration for the frequency grid.
 ///
-/// Presets [`Self::fast`] (500 points) and [`Self::production`] (4000 points)
+/// Presets [`Self::fast`] (1000 points) and [`Self::production`] (4000 points)
 /// cover the common cases. Hand-rolled configurations must satisfy
 /// [`Self::validate`]: in particular, `x_max ≥ 30` for accurate G₃ integrals.
 #[derive(Debug, Clone)]
@@ -64,13 +64,13 @@ impl GridConfig {
         }
     }
 
-    /// Builds the fast testing grid: 500 points, `x ∈ [1e-4, 40]`. Suitable for quick
+    /// Builds the fast testing grid: 1000 points, `x ∈ [1e-4, 40]`. Suitable for quick
     /// exploratory runs; distortion amplitudes are accurate to a few percent.
     pub fn fast() -> Self {
         GridConfig {
             x_min: 1e-4,
             x_max: 40.0,
-            n_points: 500,
+            n_points: 1000,
             x_transition: 0.1,
             log_fraction: 0.3,
             refinement_zones: Vec::new(),

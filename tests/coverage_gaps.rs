@@ -731,11 +731,11 @@ fn energy_closure_warns_on_coarse_grid() {
     );
 }
 
-/// A resolved burst closes within 5%: no energy warning, and the 500-point
+/// A resolved burst closes within 5%: no energy warning, and the 1000-point
 /// `GridConfig::fast()` size does not trigger the small-grid warning.
 #[test]
 fn energy_closure_silent_when_resolved() {
-    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 500);
+    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 1000);
     assert!((drho / 1e-5 - 1.0).abs() < 0.05, "drho = {drho:e}");
     assert!(!has_warning(&warnings, "Energy closure"), "{warnings:?}");
     assert!(

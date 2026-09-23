@@ -131,7 +131,7 @@ supply:
    * - ``--n-points N``
      - (preset)
      - Frequency-grid point count. Overrides the active fast/production preset.
-       Below 500 points the solver warns that the result is untested.
+       Below 1000 points the solver warns that the result is untested.
    * - ``--production-grid``
      - off
      - Use the high-resolution production grid preset (4000 points).
