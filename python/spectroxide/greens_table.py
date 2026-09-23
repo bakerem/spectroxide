@@ -468,17 +468,23 @@ class GreensTable:
         """
         if path is None:
             path = _DEFAULT_HEATING_CACHE
-        data = np.load(path, allow_pickle=False)
-        metadata = json.loads(str(data["metadata_json"]))
+        with np.load(path, allow_pickle=False) as data:
+            metadata = json.loads(str(data["metadata_json"]))
+            z_h = data["z_h"]
+            x = data["x"]
+            g_th = data["g_th"]
+            mu = data["mu"]
+            y_param = data["y_param"]
+            delta_rho_over_rho = data["delta_rho_over_rho"]
         if verify_hash:
             _check_table_hash(metadata.get("physics_hash"), path)
         return cls(
-            z_h=data["z_h"],
-            x=data["x"],
-            g_th=data["g_th"],
-            mu=data["mu"],
-            y_param=data["y_param"],
-            delta_rho_over_rho=data["delta_rho_over_rho"],
+            z_h=z_h,
+            x=x,
+            g_th=g_th,
+            mu=mu,
+            y_param=y_param,
+            delta_rho_over_rho=delta_rho_over_rho,
             metadata=metadata,
         )
 
@@ -693,15 +699,19 @@ class PhotonGreensTable:
         """
         if path is None:
             path = _DEFAULT_PHOTON_CACHE
-        data = np.load(path, allow_pickle=False)
-        metadata = json.loads(str(data["metadata_json"]))
+        with np.load(path, allow_pickle=False) as data:
+            metadata = json.loads(str(data["metadata_json"]))
+            z_h = data["z_h"]
+            x = data["x"]
+            x_inj = data["x_inj"]
+            g_ph = data["g_ph"]
         if verify_hash:
             _check_table_hash(metadata.get("physics_hash"), path)
         return cls(
-            z_h=data["z_h"],
-            x=data["x"],
-            x_inj=data["x_inj"],
-            g_ph=data["g_ph"],
+            z_h=z_h,
+            x=x,
+            x_inj=x_inj,
+            g_ph=g_ph,
             metadata=metadata,
         )
 
