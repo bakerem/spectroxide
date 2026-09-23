@@ -35,7 +35,7 @@ Their Sect. 5 (source lines 626–645) says only "simple Gaussian likelihood". T
 - **A floored best fit,** with diagonal covariance and column 3: 0.978–0.989 of the author-supplied curve.
 - **A Bayesian flat prior on γ_con ≥ 0,** with a 95% upper limit U = â + σΦ⁻¹(1 − 0.05Φ(k)): 0.998–1.005 of the hand-digitized curve, and 1.004–1.026 of the author-supplied curve. For a Gaussian likelihood this equals the asymptotic CLs limit. It gives Δρ/ρ < 5.27e-5, close to the 5.3e-5 in their text.
 
-Our two copies of the CCJ24 curve disagree by up to 2.8% (the author-supplied `dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt` against the hand-digitized `dev/data/cosmotherm_dp_lims.csv`). That is more than the gap between the two readings, so the evidence we have cannot pick one.
+Our two copies of the CCJ24 curve disagree by up to 3.3% below 1.6e-7 eV and 4.0% up to 3e-5 eV, on a dense grid (the author-supplied `dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt` against the hand-digitized `dev/data/cosmotherm_dp_lims.csv`). That is more than the gap between the two readings, so the evidence we have cannot pick one.
 
 ## Which limit is correct
 
@@ -45,3 +45,7 @@ Both limits are valid, but they answer different questions. The unfloored one-si
 
 - Paper Sect. 6 and the method-comparison notebook must stop attributing the gap to floating-T profiling or to the "statistical power" of the likelihood ratio. Either state that the limit has no floor and that FIRAS fluctuates about 0.45σ low along the dark-photon shape, or switch Fig. 8 to CLs or a floor. That choice is yours.
 - The CCJ24 overlay notebook (`notebooks/observational/dp_firas_ccj24_overlay.ipynb`) links to arXiv:2409.13818, which is a different paper. CCJ24 is arXiv:2409.12115.
+
+## Notebook
+
+`notebooks/observational/dp_firas_limit_conventions.ipynb` (`d110653`) plots every statistic above against both CCJ24 curves, with the step table and a goodness-of-fit (GoF) limit. The earlier GoF code had the right form (absolute χ² at fixed amplitude against χ²₄₁) but projected the nuisance templates out of the model and not the data, and used diagonal errors. The corrected GoF limit is 1.21 of CCJ24, not 1.35, so CCJ24 did not use a GoF test. FIRAS χ²_min/dof = 48.6/40 (p = 0.17) with full covariance.
