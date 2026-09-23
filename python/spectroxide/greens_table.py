@@ -60,7 +60,13 @@ _log = logging.getLogger(__name__)
 #: file, missing array, schema change), so it is rebuilt.  Anything else,
 #: such as a hash-mismatch warning raised as an error under ``-W error``,
 #: propagates instead of starting a build that takes hours (review R-7).
-_CACHE_LOAD_ERRORS = (OSError, KeyError, ValueError, zipfile.BadZipFile)
+_CACHE_LOAD_ERRORS = (
+    OSError,
+    KeyError,
+    ValueError,
+    EOFError,  # zero-byte file: np.load raises EOFError
+    zipfile.BadZipFile,
+)
 
 #: Type alias for a heating-rate callable ``z -> dQ/dz``.
 HeatingRate = Callable[[ArrayLike], ArrayLike]

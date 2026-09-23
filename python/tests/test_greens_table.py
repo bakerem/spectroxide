@@ -856,3 +856,30 @@ class TestLoadOrBuildErrors:
             out = gt_mod.load_or_build_greens_table(cache_path=path)
         assert out is sentinel
         assert "rebuilding" in caplog.text
+
+    @pytest.mark.parametrize("kind", ["heating", "photon"])
+    def test_zero_byte_cache_logs_and_rebuilds(
+        self, monkeypatch, caplog, tmp_path, kind
+    ):
+        """An empty cache file (np.load raises EOFError) is rebuilt."""
+        import spectroxide.greens_table as gt_mod
+
+        sentinel = object()
+        builder = (
+            "_build_greens_table"
+            if kind == "heating"
+            else ("_build_photon_greens_table")
+        )
+        loader = (
+            gt_mod.load_or_build_greens_table
+            if kind == "heating"
+            else gt_mod.load_or_build_photon_greens_table
+        )
+        monkeypatch.setattr(gt_mod, builder, lambda **kw: sentinel)
+        path = tmp_path / "table.npz"
+        path.write_bytes(b"")
+        assert path.stat().st_size == 0
+        with caplog.at_level("WARNING", logger="spectroxide.greens_table"):
+            out = loader(cache_path=path)
+        assert out is sentinel
+        assert "EOFError" in caplog.text
