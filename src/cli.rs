@@ -284,7 +284,7 @@ const SUBCOMMANDS: &[&str] = &[
     "help",
 ];
 
-/// Flags consumed by [`parse_solver_opts`].
+/// Flags consumed by [`parse_solver_opts`] that every PDE subcommand reads.
 const SOLVER_KEYS: &[&str] = &[
     "--z-start",
     "--z-end",
@@ -299,9 +299,26 @@ const SOLVER_KEYS: &[&str] = &[
     "--no-number-conserving",
     "--nc-stride",
     "--nc-z-min",
-    "--dn-planck",
     "--no-auto-refine",
-    "--threads",
+];
+
+/// Solver flags that only `solve` reads: the sweeps ignore an initial Δn (R-3).
+const SOLVE_ONLY_KEYS: &[&str] = &["--dn-planck"];
+
+/// Solver flags that only the parallel sweeps read: `solve` runs one
+/// solve on one thread (R-3).
+const SWEEP_ONLY_KEYS: &[&str] = &["--threads"];
+
+/// Flags that take no value. Every other flag requires one. The parser
+/// needs this list so that `--production-grid 4000` is an error instead of
+/// a silently swallowed `4000`.
+const BOOL_FLAGS: &[&str] = &[
+    "--production-grid",
+    "--no-dcbr",
+    "--split-dcbr",
+    "--cn-dcbr",
+    "--no-number-conserving",
+    "--no-auto-refine",
 ];
 
 /// Flags consumed by [`parse_cosmo_opts`]. `--omega-cdm` is listed so its
@@ -321,7 +338,10 @@ const COSMO_KEYS: &[&str] = &[
 const OUTPUT_KEYS: &[&str] = &["--format", "--output"];
 
 /// Returns the injection-scenario parameter flags accepted by `solve <injection-type>`.
-/// Must stay in sync with [`build_injection_scenario`].
+/// Must stay in sync with [`build_injection_scenario`]: a flag listed here must be
+/// read there. Only `single-burst` reads `--delta-rho`; every other scenario
+/// sets its energy through its own parameters, so `--delta-rho` is rejected
+/// for them instead of being ignored (R-3).
 fn injection_param_keys(injection_type: &str) -> Option<&'static [&'static str]> {
     match injection_type {
         "single-burst" => Some(&["--z-h", "--sigma-z", "--delta-rho"]),
@@ -338,10 +358,47 @@ fn injection_param_keys(injection_type: &str) -> Option<&'static [&'static str]>
         "dark-photon-resonance" => Some(&["--epsilon", "--m-ev"]),
         #[cfg(feature = "axion")]
         "axion-resonance" => Some(&["--g-agamma", "--b-rms", "--m-ev"]),
-        "tabulated-heating" => Some(&["--heating-table", "--delta-rho"]),
+        "tabulated-heating" => Some(&["--heating-table"]),
         "tabulated-photon" => Some(&["--photon-table"]),
         _ => None,
     }
+}
+
+/// Returns a specific error for a flag that exists but belongs to another
+/// subcommand or injection type, so the generic unknown-flag message does
+/// not suggest a typo (R-3). `injection_type` is `Some` only for `solve`.
+fn reject_misplaced_flags(
+    map: &HashMap<String, String>,
+    subcommand: &str,
+    injection_type: Option<&str>,
+) -> Result<(), String> {
+    if let Some(t) = injection_type {
+        // Unknown types fall through to the unknown-type error at execute time.
+        let known = injection_param_keys(t).is_some();
+        if known && t != "single-burst" && map.contains_key("--delta-rho") {
+            return Err(format!(
+                "--delta-rho applies only to `solve single-burst`; `{t}` sets its injected \
+                 energy through its own parameters and would ignore it. Run \
+                 `spectroxide solve --help` for the parameters of each type."
+            ));
+        }
+    }
+    for key in SWEEP_ONLY_KEYS {
+        if subcommand == "solve" && map.contains_key(*key) {
+            return Err(format!(
+                "{key} applies only to the sweep subcommands; `solve` runs one solve on \
+                 one thread."
+            ));
+        }
+    }
+    for key in SOLVE_ONLY_KEYS {
+        if subcommand != "solve" && map.contains_key(*key) {
+            return Err(format!(
+                "{key} applies only to `solve`; `{subcommand}` would ignore it."
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// Computes the Levenshtein edit distance, used only for "did you mean" suggestions.
@@ -361,7 +418,8 @@ fn edit_distance(a: &str, b: &str) -> usize {
     prev[b.len()]
 }
 
-/// Rejects any parsed `--flag` that no group of `allowed` contains.
+/// Rejects any parsed `--flag` that no group of `allowed` contains, then any
+/// value flag (not in [`BOOL_FLAGS`]) given without a value.
 ///
 /// This is what turns a typo (`--z-injctions`) into an error instead of a
 /// silently ignored flag and a plausible-looking wrong result.
@@ -376,7 +434,16 @@ fn validate_known_flags(
         .collect();
     unknown.sort();
     let Some(first) = unknown.first() else {
-        return Ok(());
+        let mut missing: Vec<&String> = map
+            .iter()
+            .filter(|(k, v)| v.is_empty() && !BOOL_FLAGS.contains(&k.as_str()))
+            .map(|(k, _)| k)
+            .collect();
+        missing.sort();
+        return match missing.first() {
+            Some(k) => Err(format!("Flag {k} requires a value")),
+            None => Ok(()),
+        };
     };
     if first.contains('=') {
         let flag = first.split('=').next().unwrap_or(first);
@@ -445,10 +512,26 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
     }
 
     match first {
-        "help" => Ok(Command::Help),
-        "physics-hash" => Ok(Command::PhysicsHash),
+        // `help <subcommand>` is the same as `<subcommand> --help`; any other
+        // extra argument is rejected rather than ignored (R-3).
+        "help" => match args.get(1..).unwrap_or(&[]) {
+            [] => Ok(Command::Help),
+            [sub] if SUBCOMMANDS.contains(&sub.as_str()) => Ok(Command::HelpFor(sub.clone())),
+            [sub, other, ..] if SUBCOMMANDS.contains(&sub.as_str()) => Err(format!(
+                "Unexpected argument '{other}' for help. Use `spectroxide help <subcommand>`."
+            )),
+            [other, ..] => Err(format!(
+                "Unexpected argument '{other}' for help. Use `spectroxide help <subcommand>`."
+            )),
+        },
+        "physics-hash" => match args.get(1) {
+            None => Ok(Command::PhysicsHash),
+            Some(other) => Err(format!(
+                "Unexpected argument '{other}': physics-hash takes no arguments"
+            )),
+        },
         "info" => {
-            let map = parse_flat_args(&args[1..]);
+            let map = parse_flat_args(&args[1..])?;
             validate_known_flags(&map, &[&["--cosmology"]], "info")?;
             Ok(Command::Info(InfoOpts {
                 cosmology: map
@@ -458,7 +541,7 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
             }))
         }
         "greens" => {
-            let map = parse_flat_args(&args[1..]);
+            let map = parse_flat_args(&args[1..])?;
             // Deliberately narrow: the heat-injection Green's function is not
             // cosmology-aware and takes no solver knobs, so cosmology/solver
             // flags are rejected here rather than silently ignored.
@@ -477,12 +560,14 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
             }))
         }
         "sweep" => {
-            let map = parse_flat_args(&args[1..]);
+            let map = parse_flat_args(&args[1..])?;
+            reject_misplaced_flags(&map, "sweep", None)?;
             validate_known_flags(
                 &map,
                 &[
                     &["--z-injections", "--delta-rho"],
                     SOLVER_KEYS,
+                    SWEEP_ONLY_KEYS,
                     COSMO_KEYS,
                     OUTPUT_KEYS,
                 ],
@@ -505,12 +590,14 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
             }))
         }
         "photon-sweep" => {
-            let map = parse_flat_args(&args[1..]);
+            let map = parse_flat_args(&args[1..])?;
+            reject_misplaced_flags(&map, "photon-sweep", None)?;
             validate_known_flags(
                 &map,
                 &[
                     &["--x-inj", "--delta-n-over-n", "--sigma-x", "--z-injections"],
                     SOLVER_KEYS,
+                    SWEEP_ONLY_KEYS,
                     COSMO_KEYS,
                     OUTPUT_KEYS,
                 ],
@@ -544,7 +631,8 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
             }))
         }
         "photon-sweep-batch" => {
-            let map = parse_flat_args(&args[1..]);
+            let map = parse_flat_args(&args[1..])?;
+            reject_misplaced_flags(&map, "photon-sweep-batch", None)?;
             validate_known_flags(
                 &map,
                 &[
@@ -555,6 +643,7 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
                         "--z-injections",
                     ],
                     SOLVER_KEYS,
+                    SWEEP_ONLY_KEYS,
                     COSMO_KEYS,
                     OUTPUT_KEYS,
                 ],
@@ -600,7 +689,8 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
                     "solve requires an injection type as second argument, got '{injection_type}'"
                 ));
             }
-            let map = parse_flat_args(&args[2..]);
+            let map = parse_flat_args(&args[2..])?;
+            reject_misplaced_flags(&map, "solve", Some(&injection_type))?;
             // Unknown injection types skip flag validation here; the
             // authoritative unknown-type error fires in
             // `build_injection_scenario` at execute time.
@@ -609,8 +699,8 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
                     &map,
                     &[
                         scenario_keys,
-                        &["--delta-rho"],
                         SOLVER_KEYS,
+                        SOLVE_ONLY_KEYS,
                         COSMO_KEYS,
                         OUTPUT_KEYS,
                     ],
@@ -632,25 +722,55 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
     }
 }
 
-/// Parses flat --key value args into a HashMap (shared by all subcommands and legacy mode).
-pub fn parse_flat_args(args: &[String]) -> HashMap<String, String> {
+/// Parses flat `--key value` args into a map (shared by all subcommands).
+///
+/// Flags in the boolean-flag list take no value and map to an empty string; every
+/// other flag takes exactly one value, the next argument. Negative numbers
+/// (`-5`) are values, since only `--` starts a flag.
+///
+/// # Errors
+/// Returns `Err` if a flag appears twice, or if an argument is neither a flag
+/// nor a flag's value (a stray positional word, or a value given to a flag in
+/// the boolean-flag list). These used to be accepted: the last duplicate won and
+/// stray words were dropped (R-3). A value flag with no value maps to an
+/// empty string, so that an unknown flag still gets the "did you mean" error;
+/// flag validation then rejects the missing value.
+pub fn parse_flat_args(args: &[String]) -> Result<HashMap<String, String>, String> {
     let mut map = HashMap::new();
     let mut i = 0;
     while i < args.len() {
-        if args[i].starts_with("--") {
-            let key = args[i].clone();
-            if i + 1 < args.len() && !args[i + 1].starts_with("--") {
-                map.insert(key, args[i + 1].clone());
-                i += 2;
+        let arg = &args[i];
+        if !arg.starts_with("--") {
+            let hint = if i > 0 && BOOL_FLAGS.contains(&args[i - 1].as_str()) {
+                format!(" ({} takes no value)", args[i - 1])
             } else {
-                map.insert(key, String::new());
-                i += 1;
-            }
-        } else {
+                String::new()
+            };
+            return Err(format!(
+                "Unexpected argument '{arg}'{hint}. Every option is a `--flag`, and only \
+                 `solve` takes a positional argument (the injection type)."
+            ));
+        }
+        if map.contains_key(arg) {
+            return Err(format!("Flag {arg} given more than once"));
+        }
+        if BOOL_FLAGS.contains(&arg.as_str()) {
+            map.insert(arg.clone(), String::new());
             i += 1;
+        } else {
+            match args.get(i + 1) {
+                Some(v) if !v.starts_with("--") => {
+                    map.insert(arg.clone(), v.clone());
+                    i += 2;
+                }
+                _ => {
+                    map.insert(arg.clone(), String::new());
+                    i += 1;
+                }
+            }
         }
     }
-    map
+    Ok(map)
 }
 
 fn parse_f64_or(map: &HashMap<String, String>, key: &str, default: f64) -> Result<f64, String> {
@@ -686,10 +806,15 @@ fn parse_solver_opts(map: &HashMap<String, String>) -> Result<SolverOpts, String
             .get("--dtau-max")
             .map(|s| s.parse().map_err(|_| "Invalid --dtau-max"))
             .transpose()?,
-        n_points: map
-            .get("--n-points")
-            .map(|s| s.parse().map_err(|_| "Invalid --n-points"))
-            .transpose()?,
+        // 0 used to mean "use the default" (R-3); a count of zero is an error.
+        n_points: match map.get("--n-points") {
+            Some(s) => match s.parse::<usize>() {
+                Ok(0) => return Err("--n-points must be a positive integer, got 0".into()),
+                Ok(n) => Some(n),
+                Err(_) => return Err("Invalid --n-points".into()),
+            },
+            None => None,
+        },
         disable_dcbr: map.contains_key("--no-dcbr"),
         split_dcbr: map.contains_key("--split-dcbr"),
         cn_dcbr: map.contains_key("--cn-dcbr"),
@@ -880,20 +1005,25 @@ pub fn print_help() {
 }
 
 /// Prints the shared SOLVER OPTIONS help block (all PDE subcommands).
-fn print_solver_options_help() {
+/// `for_solve` selects the one-solve flags (`--dn-planck`) instead of the
+/// sweep-only ones (`--threads`).
+fn print_solver_options_help(for_solve: bool) {
     println!("SOLVER OPTIONS:");
     println!("  --z-start <z>         Starting redshift. Default: 5e6 for solve (or z_res for");
     println!("                        resonance scenarios); z_h + 7 sigma_z per point for sweeps");
-    println!("  --z-end <z>           Final redshift (default 500)");
+    println!("  --z-end <z>           Final redshift, > 0 (default 500)");
     println!("  --dy-max <val>        Max Compton-y step theta_e*dtau (default 0.02)");
     println!("  --dtau-max <val>      Max Compton optical depth per step (default 10;");
     println!("                        use 3 for <0.1% precision)");
     println!("  --dtau-max-photon-source <val>  Max dtau per step while a photon source is");
     println!("                        active (default 1.0; 10 for fast exploratory runs)");
-    println!("  --n-points <n>        Frequency-grid points (default 2000)");
+    println!("  --n-points <n>        Frequency-grid points (default 2000; below 500 the");
+    println!("                        solver warns that the result is untested)");
     println!("  --production-grid     Use the 4000-point production grid");
     println!("  --no-auto-refine      Disable automatic grid refinement near injection features");
-    println!("  --threads <n>         Threads for parallel sweeps (default: all cores)");
+    if !for_solve {
+        println!("  --threads <n>         Threads for the parallel sweep (default: all cores)");
+    }
     println!();
     println!("DIAGNOSTIC FLAGS (sensitivity probes, not production runs):");
     println!("  --no-dcbr             Disable double-Compton + bremsstrahlung");
@@ -902,8 +1032,10 @@ fn print_solver_options_help() {
     println!("                        backward Euler, the validated path)");
     println!("  --no-number-conserving  Disable the number-conserving T-shift subtraction");
     println!("  --nc-stride <n>       Apply NC subtraction every n steps (default 1)");
-    println!("  --nc-z-min <z>        Minimum z for NC subtraction (default 5e4)");
-    println!("  --dn-planck <val>     Initial Planck-shaped Delta n amplitude at z_start");
+    println!("  --nc-z-min <z>        Minimum z for NC subtraction (default 5e4; 0 = all z)");
+    if for_solve {
+        println!("  --dn-planck <val>     Initial Planck-shaped Delta n amplitude at z_start");
+    }
 }
 
 /// Prints the shared COSMOLOGY help block.
@@ -959,10 +1091,10 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!("  tabulated-heating     --heating-table <PATH> (CSV: z, dQ/dz)");
             println!("  tabulated-photon      --photon-table <PATH> (CSV: z, x1..xN)");
             println!();
-            println!("ENERGY:");
+            println!("ENERGY (single-burst only; other types reject it):");
             println!("  --delta-rho <val>     Fractional energy injection (default 1e-5)");
             println!();
-            print_solver_options_help();
+            print_solver_options_help(true);
             println!();
             print_cosmo_options_help();
             println!();
@@ -987,7 +1119,7 @@ pub fn print_subcommand_help(subcommand: &str) {
                 "  --delta-rho <val>     Fractional energy injection per burst (default 1e-5)"
             );
             println!();
-            print_solver_options_help();
+            print_solver_options_help(false);
             println!();
             print_cosmo_options_help();
             println!();
@@ -1024,7 +1156,7 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!("  --z-injections <z1,...>  Injection redshifts.");
             println!("                        Default: 150 log-spaced points, 1e3..5e6");
             println!();
-            print_solver_options_help();
+            print_solver_options_help(false);
             println!();
             print_cosmo_options_help();
             println!();
@@ -2285,8 +2417,8 @@ mod tests {
             s("--nc-z-min"),
             s("5e4"),
             s("--production-grid"),
-            s("--dn-planck"),
-            s("1e-4"),
+            s("--threads"),
+            s("3"),
             s("--no-auto-refine"),
         ];
         match parse_command(&args).unwrap() {
@@ -2298,7 +2430,7 @@ mod tests {
                 assert!(opts.solver.no_auto_refine);
                 assert!((opts.solver.dy_max.unwrap() - 0.01).abs() < 1e-10);
                 assert!((opts.solver.nc_z_min.unwrap() - 5e4).abs() < 1.0);
-                assert!((opts.solver.dn_planck.unwrap() - 1e-4).abs() < 1e-15);
+                assert_eq!(opts.solver.n_threads, Some(3));
             }
             _ => panic!("Expected Sweep"),
         }
@@ -2560,9 +2692,134 @@ mod tests {
     #[test]
     fn test_parse_flat_args_boolean_flag() {
         let args: Vec<String> = vec![s("--no-dcbr"), s("--z-h"), s("1e5")];
-        let map = parse_flat_args(&args);
+        let map = parse_flat_args(&args).unwrap();
         assert!(map.contains_key("--no-dcbr"));
         assert_eq!(map["--no-dcbr"], "");
         assert_eq!(map["--z-h"], "1e5");
+    }
+
+    fn argv(line: &str) -> Vec<String> {
+        line.split_whitespace().map(String::from).collect()
+    }
+
+    /// R-3: duplicates, stray positional words, values after boolean flags,
+    /// and value flags with no value are errors, not silently resolved.
+    #[test]
+    fn test_parser_rejects_duplicates_and_positionals() {
+        let cases = [
+            (
+                "solve single-burst --z-h 2e5 --z-h 3e5",
+                "given more than once",
+            ),
+            ("sweep --z-end 500 --z-end 1000", "given more than once"),
+            (
+                "solve single-burst --z-h 2e5 extra",
+                "Unexpected argument 'extra'",
+            ),
+            ("sweep stray --z-end 500", "Unexpected argument 'stray'"),
+            (
+                "solve single-burst --z-h 2e5 --production-grid 4000",
+                "--production-grid takes no value",
+            ),
+            ("solve single-burst --z-h", "--z-h requires a value"),
+            ("sweep --z-end --n-points 500", "--z-end requires a value"),
+            ("greens --z-h 2e5 foo", "Unexpected argument 'foo'"),
+            ("info planck2018", "Unexpected argument 'planck2018'"),
+            ("physics-hash now", "physics-hash takes no arguments"),
+            ("help solve extra", "Unexpected argument 'extra'"),
+            ("help nonsense", "Unexpected argument 'nonsense'"),
+            (
+                "sweep --n-points 0",
+                "--n-points must be a positive integer",
+            ),
+        ];
+        for (line, want) in cases {
+            let err = parse_command(&argv(line)).expect_err(line);
+            assert!(err.contains(want), "{line}: expected '{want}' in '{err}'");
+        }
+        // Negative numbers are values, not flags.
+        let map = parse_flat_args(&argv("--z-h -5 --no-dcbr")).unwrap();
+        assert_eq!(map["--z-h"], "-5");
+        // An unknown flag at the end still gets the did-you-mean error, not
+        // "requires a value".
+        let err = parse_command(&argv("sweep --z-injctions")).unwrap_err();
+        assert!(err.contains("Did you mean '--z-injections'"), "{err}");
+        // `help <subcommand>` is `<subcommand> --help`.
+        match parse_command(&argv("help sweep")).unwrap() {
+            Command::HelpFor(sub) => assert_eq!(sub, "sweep"),
+            other => panic!("expected HelpFor, got {other:?}"),
+        }
+    }
+
+    /// R-3: each subcommand and injection type accepts only the flags it
+    /// reads. `--delta-rho` is read only by `single-burst`, `--threads` only
+    /// by the sweeps, and `--dn-planck` only by `solve`.
+    #[test]
+    fn test_per_subcommand_flag_lists() {
+        let rejected = [
+            (
+                "solve decaying-particle --f-x 1e5 --gamma-x 1e-12 --delta-rho 1e-5",
+                "--delta-rho applies only to `solve single-burst`",
+            ),
+            (
+                "solve tabulated-heating --heating-table t.csv --delta-rho 1e-5",
+                "--delta-rho applies only to `solve single-burst`",
+            ),
+            (
+                "solve monochromatic-photon --x-inj 1 --delta-n-over-n 1e-5 --z-h 1e5 \
+                 --delta-rho 1e-5",
+                "--delta-rho applies only",
+            ),
+            (
+                "solve single-burst --z-h 2e5 --threads 4",
+                "--threads applies only to the sweep subcommands",
+            ),
+            (
+                "sweep --dn-planck 1e-5",
+                "--dn-planck applies only to `solve`",
+            ),
+            (
+                "photon-sweep --x-inj 1 --dn-planck 1e-5",
+                "--dn-planck applies only to `solve`",
+            ),
+        ];
+        for (line, want) in rejected {
+            let err = parse_command(&argv(line)).expect_err(line);
+            assert!(err.contains(want), "{line}: expected '{want}' in '{err}'");
+        }
+        let accepted = [
+            "solve single-burst --z-h 2e5 --delta-rho 1e-5 --dn-planck 1e-6",
+            "solve tabulated-heating --heating-table t.csv --z-end 1e3",
+            "sweep --delta-rho 1e-5 --threads 2",
+            "photon-sweep --x-inj 1 --threads 2",
+            "photon-sweep-batch --x-inj-values 1,2 --threads 2",
+            "solve single-burst --z-h 2e5 --production-grid --no-dcbr --n-points 4000",
+        ];
+        for line in accepted {
+            parse_command(&argv(line)).unwrap_or_else(|e| panic!("{line}: {e}"));
+        }
+        // An unknown injection type still reaches the unknown-type error
+        // instead of a misleading --delta-rho message.
+        assert!(parse_command(&argv("solve singel-burst --delta-rho 1e-5")).is_ok());
+    }
+
+    /// N-2: `solve decaying-particle-photon` with a large `--x-inj-0` used to
+    /// fail grid validation because the refinement zone's center,
+    /// (x_inj_0·1e-7 + x_inj_0)/2 = 90001.5 for x_inj_0 = 1.8e5, lies above
+    /// x_max. The zone still overlaps the grid, and grid construction clips
+    /// it, so validation now accepts it (`SolverBuilder::build` failed the
+    /// same way; only `new` plus `set_injection`, which skip validation, ran).
+    #[test]
+    fn test_solve_large_x_inj_0_runs() {
+        let cmd = parse_command(&argv(
+            "solve decaying-particle-photon --x-inj-0 1.8e5 --f-inj 1e-6 --gamma-x 1e-13 \
+             --z-start 2e4 --z-end 1e4 --n-points 500",
+        ))
+        .unwrap();
+        let Command::Solve(opts) = cmd else {
+            panic!("expected Solve");
+        };
+        let result = execute_solve(&opts).expect("large x_inj_0 must pass validation");
+        assert!(result.snapshot.delta_rho_over_rho.is_finite());
     }
 }

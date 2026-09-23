@@ -476,8 +476,6 @@ def _run_tabulated_heating(
             "tabulated-heating",
             "--heating-table",
             tmp_path,
-            "--delta-rho",
-            str(delta_rho),
             "--z-end",
             str(z_end),
             "--z-start",
@@ -494,7 +492,8 @@ def _run_tabulated_heating(
                 no_dcbr=no_dcbr,
                 production_grid=production_grid,
                 cosmo_params=cosmo_params,
-                n_threads=n_threads,
+                # `solve` runs one solve on one thread; the CLI rejects
+                # --threads there (R-3), so n_threads is not forwarded.
             )
         )
         return _run_rust_binary(cmd, cwd=root, timeout=timeout)
@@ -562,8 +561,6 @@ def _run_tabulated_photon(
             "tabulated-photon",
             "--photon-table",
             tmp_path,
-            "--delta-rho",
-            str(delta_rho),
             "--z-end",
             str(z_end),
             "--z-start",
@@ -580,7 +577,8 @@ def _run_tabulated_photon(
                 no_dcbr=no_dcbr,
                 production_grid=production_grid,
                 cosmo_params=cosmo_params,
-                n_threads=n_threads,
+                # `solve` runs one solve on one thread; the CLI rejects
+                # --threads there (R-3), so n_threads is not forwarded.
             )
         )
         return _run_rust_binary(cmd, cwd=root, timeout=timeout)
@@ -670,7 +668,10 @@ def _run_pde_single_solve(
             "--delta-rho",
             "0",
         ]
-    if injection is not None:
+    # The CLI reads --delta-rho only for single-burst and rejects it for
+    # every other injection type (R-3); those set their energy through their
+    # own parameters.
+    if injection is not None and inj_type == "single-burst":
         cmd.extend(["--delta-rho", str(delta_rho)])
     cmd.extend(["--z-end", str(z_end)])
     # Smart z_start: avoid the Rust CLI default of z=5e6 which wastes
@@ -709,7 +710,8 @@ def _run_pde_single_solve(
             no_dcbr=no_dcbr,
             production_grid=production_grid,
             cosmo_params=cosmo_params,
-            n_threads=n_threads,
+            # `solve` runs one solve on one thread; the CLI rejects
+            # --threads there (R-3), so n_threads is not forwarded.
         )
     )
     return _run_rust_binary(cmd, cwd=root, timeout=timeout)
