@@ -105,6 +105,13 @@ or later runs the wrapper package and the notebooks.
    pip install -e "python/.[notebook]"
    ```
 
+   Keep the `-e` (editable) flag. The package finds the Rust binary
+   (`target/release/spectroxide`), the FIRAS data in `data/`, and the CosmoTherm
+   reference files through paths relative to this checkout. A regular `pip install`
+   copies the Python files away from them, and the package then cannot find them.
+   For the same reason, keep the checkout in place after you install. The
+   install script already uses `-e`.
+
 </details>
 
 ## Quick start
