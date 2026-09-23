@@ -47,6 +47,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .solver import (
+    _require_result_keys,
     get_physics_hash,
     run_sweep,
     run_photon_sweep,
@@ -1057,9 +1058,19 @@ def _build_greens_table(
 
             for local_j, r in enumerate(results):
                 j = chunk_idx[local_j]
-                x_pde = np.asarray(r["x"])
-                dn_pde = np.asarray(r["delta_n"])
-                drho_actual = r.get("drho", delta_rho)
+                _require_result_keys(
+                    r,
+                    ("x", "delta_n", "pde_mu", "pde_y", "drho"),
+                    "_build_greens_table",
+                )
+                x_pde = np.asarray(r["x"], dtype=np.float64)
+                dn_pde = np.asarray(r["delta_n"], dtype=np.float64)
+                drho_actual = r["drho"]
+                if not np.isfinite(drho_actual):
+                    raise RuntimeError(
+                        f"_build_greens_table: non-finite drho at "
+                        f"z_h={z_injections[j]:.4e}; refusing to cache it"
+                    )
 
                 if abs(drho_actual) > 1e-30:
                     scale = 1.0 / drho_actual
@@ -1067,8 +1078,8 @@ def _build_greens_table(
                     scale = 1.0 / delta_rho
 
                 g_th[:, j] = np.interp(x_out, x_pde, dn_pde * scale)
-                mu_arr[j] = r.get("pde_mu", 0.0) * scale
-                y_arr[j] = r.get("pde_y", 0.0) * scale
+                mu_arr[j] = r["pde_mu"] * scale
+                y_arr[j] = r["pde_y"] * scale
                 drho_arr[j] = drho_actual
                 completed[j] = True
 
@@ -1269,8 +1280,9 @@ def _build_photon_greens_table(
 
             results = data["results"]
             for j, r in enumerate(results):
-                x_pde = np.asarray(r["x"])
-                dn_pde = np.asarray(r["delta_n"])
+                _require_result_keys(r, ("x", "delta_n"), "_build_photon_greens_table")
+                x_pde = np.asarray(r["x"], dtype=np.float64)
+                dn_pde = np.asarray(r["delta_n"], dtype=np.float64)
                 g_ph[:, k, j] = np.interp(x_out, x_pde, dn_pde * scale)
 
             completed[k] = True

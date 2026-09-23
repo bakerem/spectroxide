@@ -440,7 +440,72 @@ def _run_rust_binary(cmd, *, cwd, timeout=600):
         ) from e
 
     _emit_solver_warnings(parsed)
+    _nulls_to_nan(parsed)
     return parsed
+
+
+def _nulls_to_nan(parsed):
+    """Turn JSON ``null`` scalars in solver results back into NaN, with a warning.
+
+    The Rust serializer writes every non-finite float as ``null``, so a NaN
+    ``μ`` would otherwise reach Python as *None*.  This keeps it as NaN,
+    which propagates visibly through arithmetic, and warns once per call
+    with the affected keys.  Arrays are left alone; callers convert them
+    with ``np.asarray(..., dtype=float)``, which maps ``None`` to NaN.
+    """
+    if not isinstance(parsed, dict):
+        return
+    entries = [parsed] + [
+        e for e in (parsed.get("results") or []) if isinstance(e, dict)
+    ]
+    bad = set()
+    for entry in entries:
+        for key, val in entry.items():
+            if val is None and key in _FLOAT_RESULT_KEYS:
+                entry[key] = float("nan")
+                bad.add(key)
+    if bad:
+        _warnings.warn(
+            "spectroxide: the solver returned non-finite values for "
+            f"{', '.join(sorted(bad))}; they are kept as NaN",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+
+
+#: Scalar result keys the Rust serializer writes as floats (``null`` = NaN).
+_FLOAT_RESULT_KEYS = frozenset(
+    {
+        "pde_mu",
+        "pde_y",
+        "gf_mu",
+        "gf_y",
+        "drho",
+        "delta_rho_inj",
+        "rho_e",
+        "accumulated_delta_t",
+        "z_h",
+        "x_inj",
+        "delta_n_over_n",
+        "z",
+        "step_count",
+    }
+)
+
+
+def _require_result_keys(entry, keys, where):
+    """Raise ``RuntimeError`` if a solver result lacks any of ``keys``.
+
+    Guards against schema drift between the Python wrapper and the Rust
+    JSON output: a renamed key must fail loudly, not read as zero.
+    """
+    missing = [k for k in keys if k not in entry]
+    if missing:
+        raise RuntimeError(
+            f"{where}: the solver output lacks {missing} (has {sorted(entry)}). "
+            "The Python wrapper and the Rust binary disagree on the JSON "
+            "schema; rebuild the binary with 'cargo build --release'."
+        )
 
 
 def _emit_solver_warnings(parsed):
@@ -550,6 +615,12 @@ def _run_tabulated_heating(
         _os.unlink(tmp_path)
 
 
+#: Largest number of redshift rows written for a tabulated photon source.
+#: Each row holds one value per frequency, so the table file grows as
+#: n_z × n_x.
+_MAX_PHOTON_TABLE_NZ = 500
+
+
 def _run_tabulated_photon(
     *,
     photon_source: PhotonSource,
@@ -583,7 +654,19 @@ def _run_tabulated_photon(
 
     root = Path(project_root) if project_root is not None else _PROJECT_ROOT
 
-    z_grid = np.logspace(np.log10(max(z_end, z_min)), np.log10(z_max), min(n_z, 500))
+    if n_z > _MAX_PHOTON_TABLE_NZ:
+        _warnings.warn(
+            f"photon_source: n_z={n_z} exceeds the tabulated-photon limit; "
+            f"the source is tabulated at {_MAX_PHOTON_TABLE_NZ} redshifts. "
+            f"Pass n_z <= {_MAX_PHOTON_TABLE_NZ} to silence this warning.",
+            UserWarning,
+            stacklevel=3,
+        )
+    z_grid = np.logspace(
+        np.log10(max(z_end, z_min)),
+        np.log10(z_max),
+        min(n_z, _MAX_PHOTON_TABLE_NZ),
+    )
     if x is not None:
         x_grid = np.asarray(x, dtype=np.float64)
     else:
@@ -1831,20 +1914,23 @@ def solve(
         )
     assert not kwargs, f"unconsumed PDE keyword arguments: {sorted(kwargs)}"
     r = data["results"][0]
-    x_arr = np.asarray(r["x"])
-    dn = np.asarray(r["delta_n"])
+    _require_result_keys(r, ("x", "delta_n", "pde_mu", "pde_y", "drho"), "solve()")
+    x_arr = np.asarray(r["x"], dtype=np.float64)
+    dn = np.asarray(r["delta_n"], dtype=np.float64)
     # The Rust output populates z_h for energy-injection bursts but not for
     # monochromatic photon injection; fall back to the injection dict so a
     # fixed-z_h burst reports its redshift (see SolverResult.z_h docstring).
     z_h_out = r.get("z_h")
+    if z_h_out is not None and not np.isfinite(z_h_out):
+        z_h_out = None
     if z_h_out is None and injection is not None:
         z_h_out = injection.get("z_h")
     return SolverResult(
         x=x_arr,
         delta_n=dn,
-        mu=r.get("pde_mu", r.get("gf_mu", 0.0)),
-        y=r.get("pde_y", r.get("gf_y", 0.0)),
-        delta_rho_over_rho=r.get("drho", 0.0),
+        mu=r["pde_mu"],
+        y=r["pde_y"],
+        delta_rho_over_rho=r["drho"],
         method="pde",
         z_h=z_h_out,
         rho_e=r.get("rho_e"),

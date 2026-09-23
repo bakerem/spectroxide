@@ -571,3 +571,99 @@ class TestStaleBinaryWarning:
         with pytest.warns(RuntimeWarning, match="older than src/lib.rs"):
             out = _run_rust_binary(cmd, cwd=tmp_path)
         assert out == {"results": []}
+
+
+# =========================================================================
+# Silent fallbacks removed (R-7)
+# =========================================================================
+
+
+def _fake_binary(root, stdout_json):
+    """Install a stand-in binary under ``root`` that prints ``stdout_json``."""
+    import json as _json
+
+    binary = root / "target" / "release" / "spectroxide"
+    binary.parent.mkdir(parents=True)
+    payload = _json.dumps(stdout_json).replace("'", "'\\''")
+    binary.write_text(f"#!/bin/sh\necho '{payload}'\n")
+    binary.chmod(0o755)
+    return binary
+
+
+class TestNoSilentFallbacks:
+    """Schema drift, NaN results, capped tables, and non-dict mappings."""
+
+    _X = [1.0, 2.0, 3.0]
+    _DN = [1e-6, 2e-6, 1e-6]
+
+    def test_schema_drift_raises(self, tmp_path):
+        # "mu" in place of "pde_mu": the old code returned mu = 0.0.
+        _fake_binary(
+            tmp_path,
+            {
+                "results": [
+                    {"x": self._X, "delta_n": self._DN, "mu": 1e-5, "pde_y": 0.0}
+                ]
+            },
+        )
+        with pytest.raises(RuntimeError, match="lacks.*pde_mu"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                project_root=tmp_path,
+            )
+
+    def test_nan_mu_kept_as_nan_with_warning(self, tmp_path):
+        # The Rust serializer writes NaN as null.
+        _fake_binary(
+            tmp_path,
+            {
+                "results": [
+                    {
+                        "x": self._X,
+                        "delta_n": self._DN,
+                        "pde_mu": None,
+                        "pde_y": 1e-6,
+                        "drho": 1e-5,
+                    }
+                ]
+            },
+        )
+        with pytest.warns(RuntimeWarning, match="non-finite values for pde_mu"):
+            r = solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                project_root=tmp_path,
+            )
+        assert r.mu is not None and np.isnan(r.mu)
+        assert r.y == 1e-6
+
+    def test_photon_source_n_z_cap_warns(self, tmp_path):
+        _fake_binary(
+            tmp_path,
+            {
+                "results": [
+                    {
+                        "x": self._X,
+                        "delta_n": self._DN,
+                        "pde_mu": 0.0,
+                        "pde_y": 0.0,
+                        "drho": 0.0,
+                    }
+                ]
+            },
+        )
+        with pytest.warns(UserWarning, match="n_z=600 exceeds"):
+            solve(
+                photon_source=lambda x, z: 0.0,
+                n_z=600,
+                n_x=5,
+                project_root=tmp_path,
+            )
+
+    def test_validate_cosmology_non_dict_mapping(self):
+        from types import MappingProxyType
+
+        from spectroxide._validation import validate_cosmology
+
+        with pytest.raises(ValueError, match="h must be positive"):
+            validate_cosmology(MappingProxyType({"h": -0.7}))
+        validate_cosmology(MappingProxyType({"h": 0.7}))

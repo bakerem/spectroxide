@@ -18,7 +18,8 @@ The ``warn_*`` helpers issue :class:`UserWarning` and never raise.
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, Mapping
+from collections.abc import Mapping
+from typing import Any, Callable
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -206,7 +207,7 @@ def validate_cosmology(cosmo: Mapping[str, float] | Any | None) -> None:
 
     # Support both dict and Cosmology dataclass
     def _get(key):
-        if isinstance(cosmo, dict):
+        if isinstance(cosmo, Mapping):
             return cosmo.get(key)
         return getattr(cosmo, key, None)
 
