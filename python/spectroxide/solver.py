@@ -823,8 +823,12 @@ def _run_pde_single_solve(
             "single_burst",
             "monochromatic_photon",
         ):
-            # Start just above the injection redshift
-            sigma = max(float(inj_z_h) * 0.04, 100.0)
+            # Start 7 sigma above the injection redshift, with the sigma_z
+            # the run uses (the user's, else the CLI default), as the CLI does.
+            sigma = injection.get("sigma_z")
+            if sigma is None:
+                sigma = max(float(inj_z_h) * 0.04, 100.0)
+            sigma = float(sigma)
             effective_z_start = float(inj_z_h) + 7.0 * sigma
         elif injection["type"] in (
             "decaying_particle",

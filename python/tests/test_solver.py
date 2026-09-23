@@ -771,6 +771,16 @@ def _capture_solve_cmd(monkeypatch, **solve_kwargs):
     return captured["cmd"]
 
 
+def test_solve_default_z_start_uses_user_sigma_z(monkeypatch):
+    """The default z_start is z_h + 7 sigma_z with the run's sigma_z, as in the CLI."""
+    for sigma_z, expected in [(None, 2e5 + 7 * 8e3), (2e3, 2e5 + 7 * 2e3)]:
+        inj = {"type": "single_burst", "z_h": 2e5}
+        if sigma_z is not None:
+            inj["sigma_z"] = sigma_z
+        cmd = _capture_solve_cmd(monkeypatch, injection=inj)
+        assert float(cmd[cmd.index("--z-start") + 1]) == pytest.approx(expected)
+
+
 def test_solve_passes_only_flags_the_cli_reads(monkeypatch):
     """R-3: the CLI rejects --delta-rho for every injection type except
     single-burst, and --threads for `solve`. The wrapper must not send them.
