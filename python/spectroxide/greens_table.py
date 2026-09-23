@@ -54,8 +54,6 @@ from .solver import (
     run_photon_sweep,
 )
 
-_trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
-
 _log = logging.getLogger(__name__)
 
 #: Errors that mean a cached table cannot be read (missing or corrupt
@@ -393,6 +391,7 @@ class GreensTable:
 
         rates = np.array([dq_dz(z) for z in z_arr])
         integrand = param_arr * rates * (1.0 + z_arr)
+        _trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
 
         return float(_trapz(integrand, dx=dln))
 
@@ -508,55 +507,17 @@ class PhotonGreensTable:
         self._build_interpolator()
 
     def _build_interpolator(self):
-        """Split each node into a smooth part and a surviving-photon bump.
-
-        Linear interpolation of the full table across ``x_inj`` nodes
-        turns a narrow y-era bump into two half-bumps at the neighboring
-        nodes (review finding P-7).  So each node ``(x_inj[k], z_h[j])``
-        is split as ``g = S + B``:
-
-        - ``B`` is a Gaussian in ``u = ln(x / x_inj)`` for ``x³ B``, with
-          photon number, center, and width fitted to the node's bump
-          (:func:`_extract_bump`).
-        - ``S = g − B`` is everything else.  It holds the μ, y, and
-          temperature-shift parts.  At fixed survival probability they
-          are affine in ``x_inj`` (energy ``α_ρ x_inj`` minus the part
-          the bump carries), so ``S`` is interpolated linearly
-          in ``x_inj`` (not ``ln x_inj``) at fixed ``x``.
-
-        At a query, the bump is rebuilt at the queried ``x_inj`` from
-        the interpolated number, center, and width.  At the nodes the
-        split is exact, so the stored table is reproduced.
-        """
-        from scipy.interpolate import RegularGridInterpolator as RGI
-
-        _get_interpolator_class()  # clear ImportError if scipy is missing
+        """Build 3D interpolator in (log x, log x_inj, log z_h)."""
         log_x = np.log(self.x)
         log_xi = np.log(self.x_inj)
         log_z = np.log(self.z_h)
-
-        n_x, n_xi, n_z = self.g_ph.shape
-        bump_n = np.zeros((n_xi, n_z))
-        bump_c = np.zeros((n_xi, n_z))
-        bump_s2 = np.zeros((n_xi, n_z))
-        smooth = np.array(self.g_ph, dtype=np.float64, copy=True)
-        for k in range(n_xi):
-            for j in range(n_z):
-                n_b, c_b, s_b = _extract_bump(log_x, self.g_ph[:, k, j], log_xi[k])
-                if n_b > 0.0:
-                    bump_n[k, j] = n_b
-                    bump_c[k, j] = c_b
-                    bump_s2[k, j] = s_b**2
-                    smooth[:, k, j] -= _bump_profile(log_x, log_xi[k], n_b, c_b, s_b)
-
-        opts = dict(method="linear", bounds_error=False, fill_value=None)
-        self._interp = RGI((log_x, self.x_inj, log_z), smooth, **opts)
-        # Number-weighted center and variance, so nodes without a bump
-        # (number 0) do not pull the rebuilt width or center.
-        self._bump_interp = RGI(
-            (log_xi, log_z),
-            np.stack([bump_n, bump_n * bump_c, bump_n * bump_s2], axis=-1),
-            **opts,
+        RGI = _get_interpolator_class()
+        self._interp = RGI(
+            (log_x, log_xi, log_z),
+            self.g_ph,
+            method="linear",
+            bounds_error=False,
+            fill_value=None,
         )
 
     @_val.renamed_kwargs(x_obs="x")
@@ -566,11 +527,8 @@ class PhotonGreensTable:
         """Interpolate ``G_ph(x, x_inj, z_h)``.
 
         Drop-in replacement for :func:`spectroxide.greens.greens_function_photon`.
-        The smooth part is interpolated linearly in ``(log x, x_inj,
-        log z_h)``.  The surviving-photon bump is rebuilt at the queried
-        ``x_inj`` with photon number, center, and width interpolated
-        linearly in ``(log x_inj, log z_h)``.  All three inputs are
-        clipped to the table range (no extrapolation).
+        Uses 3-D linear interpolation in ``(log x, log x_inj,
+        log z_h)`` with edge clipping (no extrapolation).
 
         Parameters
         ----------
@@ -588,18 +546,12 @@ class PhotonGreensTable:
         """
         x = np.atleast_1d(np.asarray(x, dtype=np.float64))
         log_xo = np.log(np.clip(x, self.x[0], self.x[-1]))
-        xi = float(np.clip(x_inj, self.x_inj[0], self.x_inj[-1]))
-        lz = float(np.log(np.clip(z_h, self.z_h[0], self.z_h[-1])))
-        pts = np.column_stack(
-            [log_xo, np.full_like(log_xo, xi), np.full_like(log_xo, lz)]
+        log_xi = np.full_like(
+            log_xo, np.log(np.clip(x_inj, self.x_inj[0], self.x_inj[-1]))
         )
-        result = self._interp(pts)
-
-        n_b, nc_b, ns2_b = self._bump_interp([[np.log(xi), lz]])[0]
-        if n_b > 0.0:
-            s_b = np.sqrt(max(ns2_b / n_b, 0.0))
-            result = result + _bump_profile(log_xo, np.log(xi), n_b, nc_b / n_b, s_b)
-        return result
+        log_z = np.full_like(log_xo, np.log(np.clip(z_h, self.z_h[0], self.z_h[-1])))
+        pts = np.column_stack([log_xo, log_xi, log_z])
+        return self._interp(pts)
 
     @_val.renamed_kwargs(x_grid="x")
     def distortion_from_photon_injection(
@@ -725,118 +677,6 @@ class PhotonGreensTable:
             g_ph=data["g_ph"],
             metadata=metadata,
         )
-
-
-# ---------------------------------------------------------------------------
-# Surviving-photon bump helpers for PhotonGreensTable (review finding P-7)
-# ---------------------------------------------------------------------------
-
-#: Bump width (standard deviation in ln x) up to which the bump is fully
-#: split from the smooth part.  Above ``_BUMP_S_ZERO`` it stays in the
-#: smooth part, and a smoothstep taper joins the two.  A bump that wide
-#: is comparable to the default ``x_inj`` node spacing (ln 1.8 = 0.59), so
-#: plain interpolation resolves it, while the Gaussian-plus-quadratic fit
-#: of :func:`_extract_bump` loses accuracy against the y and μ shapes.
-#: Chosen by scanning a synthetic table built from the analytic photon
-#: Green's function (review finding P-7).
-_BUMP_S_FULL = 0.3
-_BUMP_S_ZERO = 0.5
-
-
-def _bump_profile(log_x, log_x_inj, n_b, c_b, s_b):
-    """Bump ``B(x)`` with ``x³ B`` a Gaussian in ``u = ln(x/x_inj)``.
-
-    ``n_b`` is the photon number ``∫ x² B dx = ∫ x³ B du``, ``c_b`` the
-    center in ``u``, and ``s_b`` the width in ``u``.  This is the shape
-    of the Compton-broadened line in Chluba (2015), Eq. 38–39.
-    """
-    u = log_x - log_x_inj - c_b
-    return (
-        n_b * np.exp(-0.5 * (u / s_b) ** 2 - 3.0 * log_x) / (s_b * np.sqrt(2.0 * np.pi))
-    )
-
-
-def _extract_bump(log_x, g, log_x_inj):
-    """Measure the surviving-photon bump of one table node.
-
-    Works on ``h(u) = x³ g`` with ``u = ln(x/x_inj)``, where the bump is
-    a Gaussian.  Seeds the center at the largest ``h`` within
-    ``|u| < 0.3`` and the width from the half-maximum points, then fits
-    ``h = a₀ + a₁ d + a₂ d² + n_b φ(d; c_b, s_b)`` by least squares on
-    ``|d| ≤ 6 s + 5 du`` (``d = u − c``, ``φ`` the unit Gaussian, ``du``
-    the grid step in ``ln x``), cut at the grid edges.  The linear
-    coefficients are solved exactly for each trial ``(c_b, s_b)``.  The
-    window is recentered and refit, at most three times, until the
-    center and width move by less than 2% of the width.
-
-    Returns
-    -------
-    tuple of float
-        ``(n_b, c_b, s_b)``: photon number, center, and width in ``u``.
-        ``n_b`` is scaled down by a taper between ``_BUMP_S_FULL`` and
-        ``_BUMP_S_ZERO``, and is 0 when no positive bump is found or the
-        grid ends less than ``3 s + 3 du`` from the center.
-    """
-    from scipy.optimize import least_squares
-
-    u = log_x - log_x_inj
-    h = np.exp(3.0 * log_x) * g
-    if not np.all(np.isfinite(h)):
-        return 0.0, 0.0, 0.0
-    du = float(np.median(np.diff(log_x)))
-    near = np.flatnonzero(np.abs(u) < 0.3)
-    if near.size == 0:
-        return 0.0, 0.0, 0.0
-    i_pk = int(near[np.argmax(h[near])])
-    if h[i_pk] <= 0.0:
-        return 0.0, 0.0, 0.0
-    lo, hi = i_pk, i_pk
-    while lo > 0 and h[lo] > 0.5 * h[i_pk]:
-        lo -= 1
-    while hi < len(h) - 1 and h[hi] > 0.5 * h[i_pk]:
-        hi += 1
-    c = float(u[i_pk])
-    s = max((u[hi] - u[lo]) / 2.3548, du)
-    if s > 2.0 * _BUMP_S_ZERO:
-        return 0.0, 0.0, 0.0  # far too broad to split; skip the fit
-
-    n_b = 0.0
-    for _ in range(3):
-        half = 6.0 * s + 5.0 * du
-        need = 3.0 * s + 3.0 * du
-        if c - u[0] < need or u[-1] - c < need:
-            return 0.0, 0.0, 0.0
-        win = np.abs(u - c) <= half
-        uw, hw, cw = u[win], h[win], c
-
-        def design(p):
-            d = uw - cw
-            gauss = np.exp(-0.5 * ((uw - p[0]) / p[1]) ** 2) / (
-                p[1] * np.sqrt(2.0 * np.pi)
-            )
-            return np.column_stack([np.ones_like(d), d, d * d, gauss])
-
-        def resid(p):
-            a = design(p)
-            coef = np.linalg.lstsq(a, hw, rcond=None)[0]
-            return a @ coef - hw
-
-        fit = least_squares(
-            resid,
-            [c, s],
-            bounds=([c - half, 0.5 * du], [c + half, half]),
-            x_scale=[s, s],
-        )
-        settled = abs(fit.x[0] - c) < 0.02 * s and abs(fit.x[1] - s) < 0.02 * s
-        c, s = float(fit.x[0]), float(fit.x[1])
-        n_b = float(np.linalg.lstsq(design(fit.x), hw, rcond=None)[0][3])
-        if settled:
-            break
-    if not n_b > 0.0:
-        return 0.0, 0.0, 0.0
-    t = (s - _BUMP_S_FULL) / (_BUMP_S_ZERO - _BUMP_S_FULL)
-    taper = 1.0 if t <= 0.0 else 0.0 if t >= 1.0 else 1.0 - t * t * (3.0 - 2.0 * t)
-    return n_b * taper, c, s
 
 
 # ---------------------------------------------------------------------------
