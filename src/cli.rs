@@ -1009,8 +1009,10 @@ pub fn print_help() {
 /// sweep-only ones (`--threads`).
 fn print_solver_options_help(for_solve: bool) {
     println!("SOLVER OPTIONS:");
-    println!("  --z-start <z>         Starting redshift. Default: 5e6 for solve (or z_res for");
-    println!("                        resonance scenarios); z_h + 7 sigma_z per point for sweeps");
+    println!("  --z-start <z>         Starting redshift. Default for solve: z_h + 7 sigma_z for");
+    println!("                        single-burst and monochromatic-photon, z_res for");
+    println!("                        resonance scenarios, 5e6 otherwise. Sweeps use");
+    println!("                        z_h + 7 sigma_z per point");
     println!("  --z-end <z>           Final redshift, > 0 (default 500)");
     println!("  --dy-max <val>        Max Compton-y step theta_e*dtau (default 0.02)");
     println!("  --dtau-max <val>      Max Compton optical depth per step (default 10;");
@@ -1594,6 +1596,24 @@ fn validate_and_collect_warnings(
     Ok(warnings)
 }
 
+/// Returns the `z_start` that CLI `solve` uses when the user passes no `--z-start`.
+///
+/// - Resonant conversion (dark photon, axion): z_res, where the solver installs the
+///   impulsive Δn initial condition.
+/// - Single burst and monochromatic photon: z_h + 7σ_z, the upper edge of the
+///   injection window, as in the sweeps and Python `solve()` (ADR 0001). The steps
+///   above it would evolve only the adiabatic-cooling baseline.
+/// - Continuous scenarios (decays, annihilation, tables): 5e6.
+fn default_solve_z_start(injection: &InjectionScenario, cosmo: &Cosmology) -> f64 {
+    if let Some((_, z_res)) = injection.resonance_params(cosmo) {
+        return z_res;
+    }
+    match injection.characteristic_redshift() {
+        Some((_z_h, z_upper)) => z_upper,
+        None => 5e6,
+    }
+}
+
 /// Executes a single PDE solve. Returns result without doing I/O.
 ///
 /// # Errors
@@ -1622,14 +1642,10 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     let n_grid = opts.solver.n_points.unwrap_or(2000);
     let effective_dy_max = opts.solver.dy_max.unwrap_or(SolverConfig::default().dy_max);
     let effective_dtau_max = opts.solver.dtau_max.unwrap_or(10.0);
-    // For resonant conversion scenarios (dark photon, axion), start at z_res if
-    // z_start isn't set explicitly by the user. The IC Δn(x) is installed by
-    // the solver at z_start via InjectionScenario::initial_delta_n.
-    let default_z_start = match injection.resonance_params(&cosmo) {
-        Some((_, z_res)) => z_res,
-        None => 5e6,
-    };
-    let z_start = opts.solver.z_start.unwrap_or(default_z_start);
+    let z_start = opts
+        .solver
+        .z_start
+        .unwrap_or_else(|| default_solve_z_start(&injection, &cosmo));
     let z_end = opts.solver.z_end;
 
     // Resonant conversion: hard-error if NWA gives no resonance in the
@@ -2827,5 +2843,47 @@ mod tests {
         };
         let result = execute_solve(&opts).expect("large x_inj_0 must pass validation");
         assert!(result.snapshot.delta_rho_over_rho.is_finite());
+    }
+
+    /// A-2 / ADR 0001: without `--z-start`, CLI `solve` starts a burst or a photon
+    /// line at z_h + 7σ_z, with σ_z from `--sigma-z` or max(0.04 z_h, 100), and a
+    /// continuous scenario at 5e6.
+    #[test]
+    fn test_solve_default_z_start_per_scenario() {
+        let z_start_of = |line: &str| -> f64 {
+            let Command::Solve(opts) = parse_command(&argv(line)).unwrap() else {
+                panic!("expected Solve");
+            };
+            assert!(opts.solver.z_start.is_none());
+            let cosmo = build_cosmology(&opts.cosmo).unwrap();
+            let inj = build_injection_scenario(&opts.injection_type, &opts.params, 1e-5).unwrap();
+            default_solve_z_start(&inj, &cosmo)
+        };
+        // The ADR's σ_z rule, written out independently of the scenario code.
+        let window = |z_h: f64| z_h + 7.0 * (0.04 * z_h).max(100.0);
+        // σ_z = 0.04 z_h = 8000, so z_start ≈ 2.56e5.
+        assert_eq!(z_start_of("solve single-burst --z-h 2e5"), window(2e5));
+        assert!((window(2e5) - 2.56e5).abs() < 1e-6);
+        // σ_z floor of 100 at low z_h: 2000 + 700.
+        assert_eq!(z_start_of("solve single-burst --z-h 2e3"), 2700.0);
+        // An explicit --sigma-z sets the window.
+        assert_eq!(
+            z_start_of("solve single-burst --z-h 2e5 --sigma-z 1000"),
+            2.07e5
+        );
+        assert_eq!(
+            z_start_of("solve monochromatic-photon --x-inj 3 --delta-n-over-n 1e-5 --z-h 5e4"),
+            window(5e4)
+        );
+        // Continuous scenarios keep 5e6.
+        assert_eq!(
+            z_start_of("solve decaying-particle --f-x 1e5 --gamma-x 1e-10"),
+            5e6
+        );
+        assert_eq!(z_start_of("solve annihilating-dm --f-ann 1e-23"), 5e6);
+        assert_eq!(
+            z_start_of("solve decaying-particle-photon --x-inj-0 1e5 --f-inj 1e-6 --gamma-x 1e-12"),
+            5e6
+        );
     }
 }

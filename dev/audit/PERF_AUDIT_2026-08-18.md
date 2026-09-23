@@ -26,6 +26,14 @@ residual (y/μ ≈ 0.002 there). Since the Gaunt factor is itself a ~1%-accurate
 fit, y at z_h ≳ 10⁶ is not numerically meaningful at its current amplitude —
 fine (it is physically ≈0 there), but do not quote it.
 
+**Note 2026-09-23 (review finding A-2, ADR 0001):** the benchmark above ran CLI `solve` at its
+old default z_start = 5e6. For a burst at z_h = 1e5, 97.6% of those steps evolve only the
+adiabatic-cooling baseline between 5e6 and z_h + 7σ_z, so the 79.7 s and 30.2 s figures mostly
+measure that coasting, not the burst. CLI `solve` now starts burst and photon-line scenarios at
+z_h + 7σ_z (`decisions/0001-default-cli-solve-z-start-to-burst-window.md`); from there the same
+solve takes 0.36 s and 2,539 steps
+(measured 2026-09-23, against 103,987 steps from 5e6). To reproduce the numbers in this record, pass `--z-start 5e6`.
+
 ## Measured baseline
 
 `solve single-burst --z-h 1e5` (n=2000, 103,987 steps): **79.7 s**, single-threaded.

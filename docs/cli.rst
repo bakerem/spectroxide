@@ -124,7 +124,11 @@ supply:
      - Description
    * - ``--z-start Z``
      - (varies)
-     - Starting redshift
+     - Starting redshift. For ``solve``: :math:`z_h + 7\sigma_z` for ``single-burst``
+       and ``monochromatic-photon``, where :math:`\sigma_z` is ``--sigma-z`` or
+       :math:`\max(0.04\,z_h, 100)`; the resonance redshift for
+       ``dark-photon-resonance``; 5e6 for every other type. The sweeps start
+       each point at :math:`z_h + 7\sigma_z`.
    * - ``--z-end Z``
      - 500
      - Final redshift. Must be greater than 0.

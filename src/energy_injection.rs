@@ -1028,7 +1028,7 @@ impl InjectionScenario {
     ///
     /// For burst-like scenarios, returns `Some((z_center, z_upper))` where
     /// `z_upper` is the highest redshift at which injection is active
-    /// (typically z_h + 5σ_z for Gaussians). `z_center` is the peak.
+    /// (z_h + 7σ_z for the Gaussian burst and photon line). `z_center` is the peak.
     ///
     /// For continuous scenarios (decaying particles, annihilation), returns
     /// `None` — injection happens at all z.
