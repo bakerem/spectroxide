@@ -1,0 +1,26 @@
+m=1.5e-12: eps/pub under CCJ24 statistic (diag, T0, resid) with each threshold:
+   floor: max(a,0)+1.645s                 0.979
+   unfloored a+1.645s (paper)             0.863
+   Bayes flat prior >=0, 95%              1.005
+   chi2(g)-chi2(0)=2.71                   0.877
+   chi2(g)-chi2(0)=3.84                   0.974
+m=3.4e-09: eps/pub under CCJ24 statistic (diag, T0, resid) with each threshold:
+   floor: max(a,0)+1.645s                 0.972
+   unfloored a+1.645s (paper)             0.858
+   Bayes flat prior >=0, 95%              0.998
+   chi2(g)-chi2(0)=2.71                   0.871
+   chi2(g)-chi2(0)=3.84                   0.967
+m=1.6e-07: eps/pub under CCJ24 statistic (diag, T0, resid) with each threshold:
+   floor: max(a,0)+1.645s                 0.969
+   unfloored a+1.645s (paper)             0.862
+   Bayes flat prior >=0, 95%              0.999
+   chi2(g)-chi2(0)=2.71                   0.874
+   chi2(g)-chi2(0)=3.84                   0.969
+m=3.6e-06: eps/pub under CCJ24 statistic (diag, T0, resid) with each threshold:
+   floor: max(a,0)+1.645s                 0.960
+   unfloored a+1.645s (paper)             0.872
+   Bayes flat prior >=0, 95%              0.998
+   chi2(g)-chi2(0)=2.71                   0.880
+   chi2(g)-chi2(0)=3.84                   0.974
+mu Delta rho/rho 95% limits: {'floor: max(a,0)+1.645s': '4.09e-05', 'unfloored a+1.645s (paper)': '3.38e-05', 'Bayes flat prior >=0, 95%': '4.43e-05', 'chi2(g)-chi2(0)=2.71': '3.44e-05', 'chi2(g)-chi2(0)=3.84': '4.21e-05'}
+D (Eq26) Delta rho/rho 95% limits: {'floor: max(a,0)+1.645s': '5.00e-05', 'unfloored a+1.645s (paper)': '3.89e-05', 'Bayes flat prior >=0, 95%': '5.27e-05', 'chi2(g)-chi2(0)=2.71': '4.01e-05', 'chi2(g)-chi2(0)=3.84': '4.95e-05'}
