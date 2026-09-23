@@ -270,6 +270,9 @@ pub struct SolverDiagnostics {
     pub(crate) rho_e_invalid_warned: bool,
     /// Whether the once-per-run DC/BR target-guard warning has been pushed.
     pub(crate) dcbr_target_warned: bool,
+    /// Step on which `guard_rho_e` last saw a negative or non-finite ρ_e, so
+    /// the DC/BR target guard does not warn a second time for the same event.
+    pub(crate) rho_e_invalid_step: Option<usize>,
     /// Warning messages collected during solver evolution.
     /// Replaces eprintln! in library code for structured diagnostics.
     pub warnings: Vec<String>,
@@ -886,7 +889,7 @@ impl ThermalizationSolver {
             return out;
         }
         self.diag.rho_e_clamped += 1;
-        if raw > hi {
+        if raw.is_finite() && raw > hi {
             if !self.diag.heating_cap_warned {
                 self.diag.heating_cap_warned = true;
                 self.diag.warnings.push(format!(
@@ -897,7 +900,13 @@ impl ThermalizationSolver {
                      clamped at the cap on this and any later such step."
                 ));
             }
-        } else if !self.diag.rho_e_invalid_warned {
+        } else {
+            // Negative or non-finite (+∞ included): this step's event, for the
+            // DC/BR target guard below.
+            self.diag.rho_e_invalid_step = Some(self.step_count);
+            if self.diag.rho_e_invalid_warned {
+                return out;
+            }
             self.diag.rho_e_invalid_warned = true;
             self.diag.warnings.push(format!(
                 "The electron temperature solve gave T_e/T_z = {raw:.4e} at z = {z:.4e}; a \
@@ -1244,18 +1253,22 @@ impl ThermalizationSolver {
             // heating excess δρ_inj, does not count injected energy twice.
             //
             // The clamp to [0.05, 2] guards the Bose factor exp(x/ρ) − 1. The
-            // upper bound cannot engage, because the predictor ρ_e is capped
-            // at 1.5 (`guard_rho_e`). Adiabatic cooling takes ρ_e below 0.5
+            // upper bound normally does not engage: the predictor ρ_e is capped
+            // at 1.5 (`guard_rho_e`). It can when the predictor comes out
+            // non-finite and the previous step's ρ_e, which the Newton cap
+            // allows up to 3, is kept. Adiabatic cooling takes ρ_e below 0.5
             // near z ≈ 72 but not below 0.05 before DC/BR switch off at
             // θ_z = 1e-8 (z ≈ 21), so the lower bound only catches a broken
-            // ρ_e. When it engages, the first occurrence in a run pushes a
-            // warning, unless `guard_rho_e` already warned about the same
-            // negative ρ_e; later ones only increment the counter.
+            // ρ_e. When the guard engages, the first occurrence in a run
+            // pushes a warning, except on a step where `guard_rho_e` already
+            // reported a negative or non-finite ρ_e; later ones only
+            // increment the counter.
             let rho_eq_dcbr = if (0.05..=2.0).contains(&rho_e) {
                 rho_e
             } else {
                 self.diag.dcbr_target_clamped += 1;
-                if !self.diag.dcbr_target_warned && !self.diag.rho_e_invalid_warned {
+                let same_event = self.diag.rho_e_invalid_step == Some(self.step_count);
+                if !self.diag.dcbr_target_warned && !same_event {
                     self.diag.dcbr_target_warned = true;
                     self.diag.warnings.push(format!(
                         "DC/BR target temperature ρ_e = {rho_e:.4} at z = {:.4e} is outside \

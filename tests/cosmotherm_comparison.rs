@@ -806,7 +806,6 @@ fn test_decaying_particle_vs_cosmotherm_gf_database() {
     // f_X gives an injected Δρ/ρ ≈ 1e-5 in both cases.
     for (z_life, f_x) in [(2.0e5, 3.0e6), (5.0e5, 7.5e6)] {
         let gamma_x = 1.0 / cosmo.cosmic_time(z_life);
-        let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
         let mut solver = ThermalizationSolver::new(cosmo.clone(), GridConfig::production());
         solver
             .set_injection(InjectionScenario::DecayingParticle { f_x, gamma_x })
@@ -828,6 +827,7 @@ fn test_decaying_particle_vs_cosmotherm_gf_database() {
             .filter(|(x, _)| (1.0e-3..=40.0).contains(*x))
             .map(|(&x, &d)| (x, d))
             .unzip();
+        let scenario = solver.injection.as_ref().unwrap();
         let dq_dz = |z: f64| -scenario.heating_rate_per_redshift(z, &cosmo);
         let dn_ct = cosmotherm_gf_delta_n(&dq_dz, &xs).unwrap();
         let p = distortion::decompose_distortion(&xs, &dn_pde);

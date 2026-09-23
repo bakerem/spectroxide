@@ -1458,6 +1458,69 @@ fn test_decaying_particle_y_era_energy() {
     assert_eq!(solver.diag.newton_exhausted, 0);
 }
 
+/// DC and BR drive the low-frequency spectrum to a Planck spectrum at the
+/// actual electron temperature, n → n_pl(x/ρ_e) (Chluba & Sunyaev 2012, Eq. 8;
+/// decisions/0002-relax-dc-br-toward-actual-electron-temperature.md).
+///
+/// During steady heating ρ_e exceeds the Compton-equilibrium value by δρ_inj.
+/// At x ≪ x_c emission and absorption are much faster than Comptonization, so
+/// Δn = n_pl(x/ρ_e) − n_pl(x). With n_pl(x) = 1/x − 1/2 + x/12 + O(x³), this is
+/// (ρ_e − 1)/x × [1 + O(x²/12)], so x·Δn/(ρ_e − 1) = 1. We test at
+/// x = 3e-6 to 3e-5 (grid extended to x_min = 1e-6). Corrections:
+/// - series: x²/12 < 1e-10;
+/// - Compton leakage: (x/x_c)² < 1e-6, with x_c ≈ 0.07 at z = 5000 from the BR
+///   photosphere fit x_c,BR = 1.23e-3 [(1+z)/2e6]^(−0.672) (Chluba 2015);
+/// - finite absorption rate: BR absorption per Thomson time scales as x⁻², so
+///   the lag behind a moving ρ_e scales as x²; it reaches 1% only near
+///   x ≈ 1.5e-4, two orders above the test points in x²;
+/// - number-conserving mode subtracts this step's temperature shift δT·G_bb,
+///   and x·G_bb → 1, so the ratio carries an x-independent offset
+///   −δT_step/(ρ_e − 1), with δT_step a small fraction of ρ_e − 1 per step.
+///
+/// We allow 1%. The former target, ρ_e minus the heating increment, relaxes the
+/// spectrum toward the Compton-equilibrium temperature and gives a ratio of
+/// 0.005 here, because at z = 5000 δρ_inj is almost all of ρ_e − 1.
+#[test]
+fn test_dcbr_relaxes_to_actual_electron_temperature() {
+    let cosmo = Cosmology::default();
+    let f_x = 1e5;
+    let gamma_x = 1.0 / cosmo.cosmic_time(5.0e3);
+    let grid = GridConfig {
+        x_min: 1e-6,
+        ..fast_grid()
+    };
+    let mut solver = ThermalizationSolver::new(cosmo.clone(), grid);
+    solver
+        .set_injection(InjectionScenario::DecayingParticle { f_x, gamma_x })
+        .unwrap();
+    solver.set_config(SolverConfig {
+        z_start: 3.0e6,
+        z_end: 5.0e3,
+        ..SolverConfig::default()
+    });
+    solver.run_with_snapshots(&[5.0e3]);
+    let snap = solver.snapshots.last().unwrap();
+    let excess = snap.rho_e - 1.0;
+    eprintln!("z = {:.1}, ρ_e − 1 = {excess:.4e}", snap.z);
+    assert!(
+        excess > 1e-4,
+        "heating should keep ρ_e above 1, got {excess:.3e}"
+    );
+    for &x_t in &[3e-6, 1e-5, 3e-5] {
+        let i = solver.grid.x.partition_point(|&x| x < x_t);
+        let ratio = solver.grid.x[i] * snap.delta_n[i] / excess;
+        eprintln!(
+            "  x = {:.3e}: x·Δn/(ρ_e − 1) = {ratio:.5}",
+            solver.grid.x[i]
+        );
+        assert!(
+            (ratio - 1.0).abs() < 0.01,
+            "x = {:.3e}: x·Δn/(ρ_e − 1) = {ratio:.4}, expected 1 (DC/BR target must be ρ_e)",
+            solver.grid.x[i]
+        );
+    }
+}
+
 /// A decaying particle with Γ_X = 1e-13 s⁻¹ (lifetime near z ≈ 1000), run on to
 /// z = 500, heats the electrons below recombination until T_e hits
 /// the solver's cap. That regime would ionize the gas while X_e is held on
