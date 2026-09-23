@@ -10,9 +10,9 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test                     # Run all tests (185 unit + 316 integration + 3 doc pass; +4 ignored)
-cargo test --release           # Run tests with optimizations (some solver tests are slow in debug)
-cargo test test_name           # Run a single test by name
+cargo test --release           # Run all tests (185 unit + 318 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release test_name # Run a single test by name
+CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
 cargo run --release --bin spectroxide          # Print help / list subcommands
 cargo run --release --bin check_adiabatic      # Utility: adiabatic cooling check
@@ -84,7 +84,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 - `heat_injection.rs` — 203 integration tests (199 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
-- `coverage_gaps.rs` — 21 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1).
+- `coverage_gaps.rs` — 23 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1).
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 7 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift) and Gaunt-factor spot checks.
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
@@ -150,7 +150,7 @@ These are the hard-won lessons from development. **Violating any of these will s
 
 9. **Tests calibrated to code output cannot catch systematic errors**: If a test asserts `DC/BR > 1e10` because the code produces that value, the test passes even though the physical ratio should be ~17. Tests for physical quantities must derive targets from independent sources (analytic formulas, literature values, dimensional arguments), not from the code itself. When a computed quantity seems extreme, ask: "Is this physically reasonable?"
 
-10. **Unsafe indexing in hot loops**: `kompaneets.rs` uses `get_unchecked` in the Thomas solver, K_old precompute, and Newton inner loop for performance (~15-20% speedup). Safety is guaranteed by `assert!` guards at function entry that verify all slice lengths. **When modifying workspace fields, adding new arrays to the Newton loop, or changing grid sizes, you must update the corresponding asserts.** Debug-mode `debug_assert!` checks also validate inputs (NaN, physical ranges) — these run in `cargo test` but are stripped in release. Run tests in debug mode after any change to these functions.
+10. **Unsafe indexing in hot loops**: `kompaneets.rs` uses `get_unchecked` in the Thomas solver, K_old precompute, and Newton inner loop for performance (~15-20% speedup). Safety is guaranteed by `assert!` guards at function entry that verify all slice lengths. **When modifying workspace fields, adding new arrays to the Newton loop, or changing grid sizes, you must update the corresponding asserts.** `debug_assert!` checks also validate inputs (NaN, physical ranges); they are stripped from a normal release build. After any change to these functions, run the tests in release mode with `CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true`, which keeps them on. Never run tests in debug mode.
 
 11. **MMS verifies the scheme, not the equation**: the manufactured residual `S = ∂_τΔn_m − L[Δn_m]` is built from an operator `L` transcribed from the code's own flux form. Any coefficient error in that form — recoil `2Δn` instead of `Δn`, flux weighted `x³` instead of `x⁴`, the wrong θ normalizing the Comptonization variable — appears in *both* the code and the residual, cancels exactly, and MMS still reports clean convergence at p = 2.00. **A term whose only strong test is MMS or Richardson order is unverified physics.** Pin the formulation separately against targets derived outside the code: exact moment identities, mpmath quadrature, literal CODATA constants, literature fits (`tests/kompaneets_moments.rs` and siblings; `dev/audit/term_coverage_matrix.md` tracks which terms still lack such an anchor). This is the same failure mode mutation testing found from the other end — there a coefficient was written twice and the literature anchor tested the unused copy (F-R2-3). Test *construction* and test *placement* fail independently, and a coverage percentage detects neither.
 

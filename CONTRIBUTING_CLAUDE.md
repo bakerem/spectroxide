@@ -160,7 +160,7 @@ h=0.71, Omega_b=0.044, Omega_m=0.26, Y_p=0.24, T_cmb=2.726, N_eff=3.046 (Chluba 
 - **Do not compare only Green's function results.** Always validate with the full PDE solver.
 - **Do not weaken or delete tests** to make the code pass. Fix the code.
 - **Do not modify Rust struct fields without grepping for every literal instantiation** in `src/`, `tests/`, `examples/`, and `benches/` and updating each one. CI failures from missed call sites waste a review cycle.
-- **Do not modify the `kompaneets.rs` Newton/Thomas hot loops without re-checking the `assert!` slice-length guards.** Those guards are the safety contract for `get_unchecked` indexing; if you add a workspace field or change grid sizing, update the asserts in lock-step and re-run `cargo test` (debug mode runs the `debug_assert!` checks that release strips).
+- **Do not modify the `kompaneets.rs` Newton/Thomas hot loops without re-checking the `assert!` slice-length guards.** Those guards are the safety contract for `get_unchecked` indexing; if you add a workspace field or change grid sizing, update the asserts in lock-step and re-run the tests with `CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release`, which keeps the `debug_assert!` checks that a normal release build strips. Never run tests in debug mode.
 - **Do not skip `cargo clippy --all-targets -- -D warnings` or `cargo fmt --check` before pushing.** CI runs both and treats warnings as errors.
 
 ## Useful references
