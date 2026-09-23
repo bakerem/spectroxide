@@ -92,3 +92,21 @@ observables except (i) the He-recombination derivative entering γ_con
 (up to 25%, mass window m ≈ 1.2–2.5e-9 eV → ≤10.5% on ε limits) and (ii) the
 z ≲ 50 tail (33%, no observable consequence). Item (i) should be stated as a
 validity bound on the dark-photon figure in the paper revision.
+
+## Update 2026-09-22: reduced-mass hydrogen ionization energy (P-4)
+
+Review finding P-4 (`dev/REVIEW_2026-09-22.md`) replaced R_∞hc = 13.6057 eV with
+E_H = R_∞hc/(1 + m_e/m_p) = 13.5983 eV in the hydrogen Saha relation and in
+E_2 = E_H/4 for β_B, in Rust and Python. X_e at five redshifts, against the
+same HyRec-2 file:
+
+| z | before | after | HyRec-2 | before vs HyRec | after vs HyRec |
+|---|---|---|---|---|---|
+| 1600 | 0.994324 | 0.994433 | 0.994464 | −0.014% | −0.003% |
+| 1400 | 0.806559 | 0.808160 | 0.802911 | +0.454% | +0.654% |
+| 1100 | 0.142867 | 0.143658 | 0.143239 | −0.260% | +0.292% |
+| 800 | 3.43502e-3 | 3.45092e-3 | 3.47854e-3 | −1.251% | −0.794% |
+| 500 | 6.63541e-4 | 6.64274e-4 | 6.62001e-4 | +0.233% | +0.343% |
+
+X_e rises everywhere (later recombination). The band maxima in the table
+above predate this change and were not recomputed.
