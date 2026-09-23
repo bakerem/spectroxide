@@ -71,11 +71,12 @@ def _sigma_scale():
 # Fast smoke tests
 # ---------------------------------------------------------------------------
 
+
 def test_unbiased_recovery_smoke():
     sig = _sigma_scale()
     n = 800
     for k, a_true in enumerate([0.0, sig, 5.0 * sig]):
-        a_hat, *_ , sigma_arr, _ = _mc_fits(a_true, n, SEED + k)
+        a_hat, *_, sigma_arr, _ = _mc_fits(a_true, n, SEED + k)
         bias = abs(a_hat.mean() - a_true)
         # Standard error of the mean of a_hat is σ/sqrt(N); allow 4×.
         tol = 4.0 * sig / np.sqrt(n)
@@ -100,6 +101,7 @@ def test_gof_null_smoke():
 # Full-N calibration (slow)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.slow
 def test_error_calibration_full():
     sig = _sigma_scale()
@@ -120,4 +122,6 @@ def test_coverage_95_full():
         # Two-sided 95% interval â ± 1.96σ must cover a_true 95% of the time.
         covered = np.mean(np.abs(a_hat - a_true) <= 1.96 * sig)
         # Binomial MC error on 95% at N=1e4: σ ≈ sqrt(.95·.05/N) ≈ 2.2e-3; allow 4σ.
-        assert abs(covered - 0.95) < 0.01, f"coverage {covered:.4f} at a_true={a_true:.3e}"
+        assert (
+            abs(covered - 0.95) < 0.01
+        ), f"coverage {covered:.4f} at a_true={a_true:.3e}"

@@ -14,6 +14,7 @@ Machine-readable anchors that need no digitization (dark-photon ε(m) via
 ``dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt``) are handled by a
 dedicated comparison script, not here.
 """
+
 from __future__ import annotations
 
 import os
