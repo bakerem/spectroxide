@@ -110,8 +110,10 @@ secondary; the PDE solver computes the science targets.
 ``spectroxide.cosmotherm`` (loaders for CosmoTherm reference data) is a
 development-only cross-validation module: its loaders, conventions, and
 file paths can change without notice, and it is not part of the
-documented API. The one exception, :func:`~spectroxide.cosmotherm.strip_gbb`,
-is re-exported at the top level and documented on the :doc:`greens` page.
+documented API. :func:`~spectroxide.greens.strip_gbb` used to live there;
+it is now in ``spectroxide.greens``, re-exported at the top level, and
+documented on the :doc:`greens` page. The old import path still works
+with a deprecation warning.
 
 .. toctree::
    :maxdepth: 2

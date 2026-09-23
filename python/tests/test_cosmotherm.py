@@ -10,10 +10,10 @@ import pytest
 from spectroxide.cosmotherm import (
     di_to_delta_n,
     cosmotherm_gf_to_delta_n,
-    strip_gbb,
     _compute_g_bb_jy,
 )
 from spectroxide.greens import (
+    strip_gbb,
     planck,
     g_bb,
     mu_shape,

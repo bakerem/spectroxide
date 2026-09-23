@@ -21,7 +21,8 @@ from pathlib import Path
 
 import numpy as np
 
-from spectroxide.cosmotherm import load_greens_database, strip_gbb
+from spectroxide.cosmotherm import load_greens_database
+from spectroxide.greens import strip_gbb
 from spectroxide.greens_table import GreensTable
 
 K_B = 1.380_649e-23

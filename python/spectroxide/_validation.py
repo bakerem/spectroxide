@@ -701,3 +701,36 @@ def warn_table_z_coverage(z_injections, z_min_query, z_max_query):
             "range use extrapolation, which may be inaccurate.",
             stacklevel=3,
         )
+
+
+def renamed_kwargs(**old_to_new: str) -> Callable:
+    """Decorator: accept deprecated keyword names for renamed arguments.
+
+    ``@renamed_kwargs(x_grid="x")`` lets callers still pass ``x_grid=``;
+    the value goes to ``x`` with a ``DeprecationWarning``.  Passing both
+    names raises ``TypeError``.  Positional calls are unaffected.
+    """
+    import functools
+
+    def decorate(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for old, new in old_to_new.items():
+                if old in kwargs:
+                    if new in kwargs:
+                        raise TypeError(
+                            f"{func.__name__}() got both '{old}' and '{new}'; "
+                            f"pass only '{new}'"
+                        )
+                    warnings.warn(
+                        f"{func.__name__}(): '{old}' is deprecated and will be "
+                        f"removed in the next minor release; use '{new}'",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
+                    kwargs[new] = kwargs.pop(old)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorate

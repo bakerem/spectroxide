@@ -32,8 +32,8 @@ from spectroxide.cosmotherm import (
     ct_heating_rate_pwave,
     ct_heating_rate_swave,
     load_greens_database,
-    strip_gbb,
 )
+from spectroxide.greens import strip_gbb
 from spectroxide.greens import G3_PLANCK
 
 K_B = 1.380_649e-23

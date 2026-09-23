@@ -526,44 +526,6 @@ def convolve_cosmotherm_gf(
     return x_out, di
 
 
-def strip_gbb(x: ArrayLike, delta_n: ArrayLike) -> Tuple[NDArray[np.float64], float]:
-    """Remove the unobservable temperature-shift component of a spectrum.
-
-    The Far Infrared Absolute Spectrophotometer measures the CMB spectrum
-    with the absolute temperature as a free parameter, so a uniform shift
-    ΔT/T is unobservable.  CosmoTherm therefore defines the *distortion*
-    as the number-conserving part of
-    ``Δn`` (Chluba & Sunyaev 2012, arXiv:1109.6552): the part satisfying
-    ``∫ x² Δn dx = 0``.  Any nonzero photon-number perturbation is
-    absorbed into ``α · G_bb(x)``.
-
-    This projection is orthogonal to ``μ`` and ``y`` because both
-    ``M(x)`` and ``Y_SZ(x)`` conserve photon number
-    (``∫ x² M dx ≈ 0``, ``∫ x² Y dx ≈ 0``), so there is no cross-talk.
-
-    Parameters
-    ----------
-    x : array_like
-        Dimensionless frequency grid.
-    delta_n : array_like
-        Spectral distortion in occupation-number space.
-
-    Returns
-    -------
-    delta_n_stripped : ndarray of float64
-        Number-conserving distortion (``∫ x² Δn_stripped dx ≈ 0``).
-    alpha : float
-        Temperature-shift coefficient ``ΔT/T``.
-    """
-    from .greens import g_bb
-
-    gbb = g_bb(x)
-
-    alpha = float(_trapz(x**2 * delta_n, x) / _trapz(x**2 * gbb, x))
-
-    return delta_n - alpha * gbb, alpha
-
-
 # ---------------------------------------------------------------------------
 # CosmoTherm-convention DM heating rates
 # ---------------------------------------------------------------------------
@@ -793,3 +755,21 @@ def cosmotherm_gf_distortion(
     nu_ghz = nu_hz / 1e9
 
     return x_out, nu_ghz, di_jy
+
+
+def __getattr__(name):
+    # Deprecated import path: strip_gbb moved to spectroxide.greens (A-7).
+    if name == "strip_gbb":
+        import warnings
+
+        warnings.warn(
+            "spectroxide.cosmotherm.strip_gbb is deprecated and will be "
+            "removed in the next minor release; import it from "
+            "spectroxide.greens or spectroxide",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from .greens import strip_gbb
+
+        return strip_gbb
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

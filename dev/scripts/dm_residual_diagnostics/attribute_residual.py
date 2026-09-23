@@ -25,8 +25,8 @@ from spectroxide.cosmotherm import (
     ct_heating_rate_pwave,
     ct_heating_rate_swave,
     load_greens_database,
-    strip_gbb,
 )
+from spectroxide.greens import strip_gbb
 from spectroxide.greens_table import GreensTable
 
 K_B = 1.380_649e-23

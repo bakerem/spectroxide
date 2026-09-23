@@ -667,3 +667,58 @@ class TestNoSilentFallbacks:
         with pytest.raises(ValueError, match="h must be positive"):
             validate_cosmology(MappingProxyType({"h": -0.7}))
         validate_cosmology(MappingProxyType({"h": 0.7}))
+
+
+class TestDeltaIUsesRunTcmb:
+    """SolverResult.delta_I uses the run's T_CMB, not a fixed 2.726 K (A-7)."""
+
+    def test_default_t_cmb(self):
+        r = SolverResult(
+            x=np.array([1.0]),
+            delta_n=np.array([1e-5]),
+            mu=0.0,
+            y=0.0,
+            delta_rho_over_rho=0.0,
+            method="pde",
+        )
+        assert r.t_cmb == 2.726
+
+    def test_frequency_scales_with_t_cmb(self):
+        # ν = x k_B T0 / h with CODATA 2018 exact k_B and h, typed here.
+        k_b, h = 1.380649e-23, 6.62607015e-34
+        x = np.array([1.0, 3.0])
+        r = SolverResult(
+            x=x,
+            delta_n=np.full(2, 1e-5),
+            mu=0.0,
+            y=0.0,
+            delta_rho_over_rho=0.0,
+            method="pde",
+            t_cmb=2.7255,
+        )
+        nu_ghz, di = r.delta_I
+        np.testing.assert_allclose(nu_ghz, x * k_b * 2.7255 / h / 1e9, rtol=1e-12)
+        # ΔI ∝ ν³ at fixed Δn: ratio to the 2.726 K conversion is (T/2.726)³.
+        _, di_ref = r.__class__(**{**r.__dict__, "t_cmb": 2.726}).delta_I
+        np.testing.assert_allclose(di / di_ref, (2.7255 / 2.726) ** 3, rtol=1e-12)
+
+    def test_pde_result_carries_cosmo_t_cmb(self, tmp_path):
+        _fake_binary(
+            tmp_path,
+            {
+                "results": [
+                    {
+                        "x": [1.0, 2.0],
+                        "delta_n": [1e-6, 1e-6],
+                        "pde_mu": 0.0,
+                        "pde_y": 0.0,
+                        "drho": 0.0,
+                    }
+                ]
+            },
+        )
+        inj = {"type": "single_burst", "z_h": 1e5}
+        r = solve(injection=inj, cosmo=Cosmology.planck2018(), project_root=tmp_path)
+        assert r.t_cmb == 2.7255
+        r = solve(injection=inj, project_root=tmp_path)
+        assert r.t_cmb == 2.726

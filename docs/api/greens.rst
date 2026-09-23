@@ -215,9 +215,9 @@ probability ``P_s``.
 
    from spectroxide.greens import greens_function_photon, mu_from_photon_injection
 
-   # Δn(x_obs) for ΔN/N injected at x_inj = 0.5, z_h = 5e5
-   x_obs = np.logspace(-2, 1.5, 200)
-   dn = greens_function_photon(x_obs, x_inj=0.5, z_h=5e5)
+   # Δn(x) for ΔN/N injected at x_inj = 0.5, z_h = 5e5
+   x = np.logspace(-2, 1.5, 200)
+   dn = greens_function_photon(x, x_inj=0.5, z_h=5e5)
 
    # Total μ from a fractional photon-number injection of 1e-6
    mu = mu_from_photon_injection(x_inj=0.5, z_h=5e5, delta_n_over_n=1e-6)
@@ -287,9 +287,9 @@ photon-number perturbation into :math:`\alpha \cdot G_{bb}(x)`.
 .. autosummary::
    :nosignatures:
 
-   spectroxide.cosmotherm.strip_gbb
+   strip_gbb
 
-.. autofunction:: spectroxide.cosmotherm.strip_gbb
+.. autofunction:: spectroxide.greens.strip_gbb
 
 
 Convenience wrapper

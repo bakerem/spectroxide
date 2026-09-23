@@ -92,9 +92,10 @@ from .greens import (
     decompose_distortion,
     # Unit conversion
     delta_n_to_delta_I,
+    # Temperature-shift removal
+    strip_gbb,
 )
 
-from .cosmotherm import strip_gbb
 from .solver import (
     run_sweep,
     run_photon_sweep,

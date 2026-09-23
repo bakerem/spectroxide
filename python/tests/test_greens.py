@@ -848,3 +848,82 @@ class _nullcontext:
 
     def __exit__(self, *exc):
         return False
+
+
+# =========================================================================
+# Frequency argument named x everywhere; strip_gbb location (A-7)
+# =========================================================================
+
+
+class TestArgumentNames:
+    """``x`` is the frequency argument everywhere; old names still work
+    with a DeprecationWarning."""
+
+    _X = np.linspace(0.5, 20.0, 200)
+
+    @pytest.mark.parametrize(
+        "func, old, extra",
+        [
+            ("greens_function_photon", "x_obs", {"x_inj": 5.0, "z_h": 3e5}),
+            (
+                "distortion_from_heating",
+                "x_grid",
+                {"dq_dz": lambda z: 1e-12, "z_min": 3e5, "z_max": 4e5},
+            ),
+            (
+                "distortion_from_photon_injection",
+                "x_grid",
+                {"x_inj": 5.0, "dn_dz": lambda z: 1e-12, "z_min": 3e5, "z_max": 4e5},
+            ),
+        ],
+    )
+    def test_old_name_warns_and_matches(self, func, old, extra):
+        f = getattr(greens, func)
+        new = f(x=self._X, **extra)
+        with pytest.warns(DeprecationWarning, match=f"'{old}' is deprecated"):
+            legacy = f(**{old: self._X}, **extra)
+        np.testing.assert_array_equal(new, legacy)
+
+    def test_decompose_distortion_x_grid_alias(self):
+        dn = 1e-6 * greens.y_shape(self._X)
+        new = greens.decompose_distortion(x=self._X, delta_n=dn)
+        with pytest.warns(DeprecationWarning, match="'x_grid' is deprecated"):
+            legacy = greens.decompose_distortion(x_grid=self._X, delta_n=dn)
+        assert new["y"] == legacy["y"]
+
+    def test_delta_n_to_delta_I_dn_alias(self):
+        dn = 1e-6 * np.ones_like(self._X)
+        new = greens.delta_n_to_delta_I(x=self._X, delta_n=dn)
+        with pytest.warns(DeprecationWarning, match="'dn' is deprecated"):
+            legacy = greens.delta_n_to_delta_I(x=self._X, dn=dn)
+        np.testing.assert_array_equal(new[1], legacy[1])
+
+    def test_both_names_rejected(self):
+        with pytest.raises(TypeError, match="both 'x_obs' and 'x'"):
+            greens.greens_function_photon(x=self._X, x_obs=self._X, x_inj=5.0, z_h=3e5)
+
+    def test_positional_call_unchanged(self):
+        np.testing.assert_array_equal(
+            greens.greens_function_photon(self._X, 5.0, 3e5),
+            greens.greens_function_photon(x=self._X, x_inj=5.0, z_h=3e5),
+        )
+
+
+class TestStripGbbLocation:
+    def test_top_level_is_greens(self):
+        import spectroxide
+
+        assert spectroxide.strip_gbb is greens.strip_gbb
+
+    def test_cosmotherm_path_deprecated(self):
+        import spectroxide.cosmotherm as ct
+
+        with pytest.warns(DeprecationWarning, match="cosmotherm.strip_gbb"):
+            f = ct.strip_gbb
+        assert f is greens.strip_gbb
+
+    def test_accepts_lists(self):
+        x = list(np.linspace(0.1, 20.0, 400))
+        dn_nc, alpha = greens.strip_gbb(x, list(1e-5 * greens.g_bb(np.array(x))))
+        assert alpha == pytest.approx(1e-5, rel=1e-12)
+        assert np.max(np.abs(dn_nc)) < 1e-18

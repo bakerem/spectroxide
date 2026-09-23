@@ -1385,6 +1385,10 @@ def run_single(
     }
 
 
+#: CMB temperature today of the default cosmology (Rust and Python), in K.
+_DEFAULT_T_CMB = Cosmology.default().t_cmb
+
+
 @dataclass
 class SolverResult:
     """Structured result from a :func:`solve` invocation.
@@ -1419,6 +1423,10 @@ class SolverResult:
         Accumulated temperature shift ``ΔT/T`` from photon-number
         non-conservation absorbed into the blackbody temperature
         (PDE only).
+    t_cmb : float, optional
+        CMB temperature today, in K, of the run's cosmology.  Sets the
+        frequency scale of :attr:`delta_I`.  Default 2.726 K, the default
+        cosmology's value.
     """
 
     x: NDArray[np.float64]
@@ -1430,13 +1438,14 @@ class SolverResult:
     z_h: Optional[float] = None
     rho_e: Optional[float] = None
     accumulated_delta_t: Optional[float] = None
+    t_cmb: float = _DEFAULT_T_CMB
 
     @property
     def delta_I(self) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
         """Intensity distortion ``(ν [GHz], ΔI [Jy/sr])``.
 
         Convenience wrapper around :func:`spectroxide.greens.delta_n_to_delta_I`
-        using the default ``T_0 = 2.726 K``.
+        with ``T_0`` = :attr:`t_cmb`, the run's CMB temperature.
 
         .. note::
            This property allocates two new NumPy arrays on every access
@@ -1449,7 +1458,7 @@ class SolverResult:
             Frequency in GHz and intensity distortion in Jy/sr
             (= 10⁻²⁶ W m⁻² Hz⁻¹ sr⁻¹).
         """
-        return greens.delta_n_to_delta_I(self.x, self.delta_n)
+        return greens.delta_n_to_delta_I(self.x, self.delta_n, t_cmb=self.t_cmb)
 
 
 def solve(
@@ -1935,6 +1944,7 @@ def solve(
         z_h=z_h_out,
         rho_e=r.get("rho_e"),
         accumulated_delta_t=r.get("accumulated_delta_t"),
+        t_cmb=float(cosmo.get("t_cmb", _DEFAULT_T_CMB)) if cosmo else _DEFAULT_T_CMB,
     )
 
 

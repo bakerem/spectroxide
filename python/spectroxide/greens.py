@@ -39,6 +39,8 @@ from . import _validation as _val
 #: ``n_eff``).
 CosmoLike = Mapping[str, float]
 
+_trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
+
 #: Type alias for a scalar or NumPy array of float64 values.
 FloatOrArray = Union[float, NDArray[np.float64]]
 
@@ -449,8 +451,9 @@ def greens_function(x: ArrayLike, z_h: float) -> NDArray[np.float64]:
 # ---------------------------------------------------------------------------
 
 
+@_val.renamed_kwargs(x_grid="x")
 def distortion_from_heating(
-    x_grid: ArrayLike,
+    x: ArrayLike,
     dq_dz: Callable[[ArrayLike], ArrayLike],
     z_min: float,
     z_max: float,
@@ -468,7 +471,7 @@ def distortion_from_heating(
 
     Parameters
     ----------
-    x_grid : array_like
+    x : array_like
         Frequency grid (must be positive and finite).
     dq_dz : callable
         Heating rate ``d(Δρ/ρ_γ)/dz`` as a function of redshift.  Sign
@@ -486,20 +489,20 @@ def distortion_from_heating(
     Returns
     -------
     ndarray of float64
-        Distortion ``Δn(x)`` evaluated on ``x_grid``.
+        Distortion ``Δn(x)`` evaluated on ``x``.
 
     Raises
     ------
     ValueError
-        If ``x_grid`` contains non-positive entries or the redshift range
+        If ``x`` contains non-positive entries or the redshift range
         is invalid.
     """
-    _val.validate_x_positive(x_grid)
+    _val.validate_x_positive(x)
     _val.validate_z_range(z_min, z_max, n_z)
     _val.warn_z_max_regime(z_max)
     _val.warn_analytic_gf_heating(z_min, z_max)
     _val.warn_convolution_resolution(n_z, z_min, z_max)
-    x_grid = np.asarray(x_grid, dtype=np.float64)
+    x = np.asarray(x, dtype=np.float64)
     ln_min = np.log(1.0 + z_min)
     ln_max = np.log(1.0 + z_max)
     dln = (ln_max - ln_min) / max(n_z - 1, 1)
@@ -529,9 +532,9 @@ def distortion_from_heating(
     c_t = 0.25 * (1.0 - jbb)  # shape (n_z,)
 
     # Precompute spectral shapes once: shape (n_x,)
-    m_x = mu_shape(x_grid)
-    y_x = y_shape(x_grid)
-    g_x = g_bb(x_grid)
+    m_x = mu_shape(x)
+    y_x = y_shape(x)
+    g_x = g_bb(x)
 
     # Weighted sum using outer products: delta_n = sum_z hw(z) * G(x, z)
     # = M(x) * sum(c_mu * hw) + Y(x) * sum(c_y * hw) + G(x) * sum(c_t * hw)
@@ -1091,8 +1094,9 @@ def _broadened_bump(x_obs, x_inj, yg):
     return bump, f_int
 
 
+@_val.renamed_kwargs(x_obs="x")
 def greens_function_photon(
-    x_obs: ArrayLike,
+    x: ArrayLike,
     x_inj: float,
     z_h: float,
     sigma_x: float = 0.0,
@@ -1101,7 +1105,7 @@ def greens_function_photon(
 ) -> NDArray[np.float64]:
     """Green's function for monochromatic photon injection.
 
-    Returns ``Δn(x_obs)`` per unit ``ΔN/N`` injected at frequency
+    Returns ``Δn(x)`` per unit ``ΔN/N`` injected at frequency
     ``x_inj`` and redshift ``z_h``.  Uses the universal ``J_μ(z)``
     visibility (same as heat injection) to blend between pure-μ-era and
     pure-y-era contributions:
@@ -1115,13 +1119,13 @@ def greens_function_photon(
     to a narrow ``0.005 x_inj`` Gaussian when ``sigma_x = 0``.
 
     When ``P_s = 0``, reduces to
-    ``α_ρ x_inj · greens_function(x_obs, z_h)``.
+    ``α_ρ x_inj · greens_function(x, z_h)``.
 
     Reference: Chluba (2015), arXiv:1506.06582.
 
     Parameters
     ----------
-    x_obs : float or array_like
+    x : float or array_like
         Observation frequency.
     x_inj : float
         Injection frequency (must be positive and finite).
@@ -1144,21 +1148,21 @@ def greens_function_photon(
     Returns
     -------
     ndarray of float64
-        Spectral distortion ``Δn(x_obs)`` per unit ``ΔN/N``.
+        Spectral distortion ``Δn(x)`` per unit ``ΔN/N``.
 
     Raises
     ------
     ValueError
-        If ``x_obs``, ``x_inj``, or ``z_h`` are out of range, or if
+        If ``x``, ``x_inj``, or ``z_h`` are out of range, or if
         ``z_h`` falls inside the μ–y transition.
     """
     _val.validate_z_h(z_h)
-    _val.validate_x_positive(x_obs, label="x_obs")
+    _val.validate_x_positive(x, label="x")
     _val.validate_x_inj(x_inj)
     _val.warn_z_h_regime(z_h)
     _val.warn_x_inj_regime(x_inj)
     _val.validate_photon_gf_regime(z_h)
-    x_obs = np.asarray(x_obs, dtype=np.float64)
+    x = np.asarray(x, dtype=np.float64)
 
     _j_bb_star = j_bb_star(z_h)
     cosmo = _cosmo_mapping(cosmo)
@@ -1171,11 +1175,11 @@ def greens_function_photon(
 
     # --- mu-era contribution ---
     mu_factor = 1.0 - p_s * X_BALANCED / x_inj
-    mu_part = (3.0 / KAPPA_C) * _j_bb_star * mu_factor * mu_shape(x_obs)
+    mu_part = (3.0 / KAPPA_C) * _j_bb_star * mu_factor * mu_shape(x)
 
     # Temperature shift (energy conservation residual)
     lam = 1.0 - mu_factor * _j_bb_star
-    t_part = lam / 4.0 * temperature_shift_shape(x_obs)
+    t_part = lam / 4.0 * temperature_shift_shape(x)
 
     # Deep mu-era short-circuit: when J_mu ≈ 1, the y-era contribution
     # is zero and computing it risks f_int overflow (exp((a+b)*yg) for
@@ -1191,14 +1195,14 @@ def greens_function_photon(
     yg = _y_compton(z_h, cosmo)
 
     # Broadened surviving photon bump (log-normal in x)
-    bump_shape, f_int = _broadened_bump(x_obs, x_inj, yg)
+    bump_shape, f_int = _broadened_bump(x, x_inj, yg)
 
     # Smooth y-era: energy balance coefficient.
     # f_int = <x>/x_inj = mean energy ratio of the log-normal bump.
     # Surviving photon carries energy P_s * f_int * alpha_x.
     # Remaining (1 - P_s * f_int) goes into smooth y.
     coeff_y = 1.0 - p_s * f_int
-    y_smooth = coeff_y * 0.25 * y_shape(x_obs)
+    y_smooth = coeff_y * 0.25 * y_shape(x)
 
     # Combine mu and y using universal visibility J_mu(z).
     if number_conserving:
@@ -1207,7 +1211,7 @@ def greens_function_photon(
         smooth = alpha_x * (_j_mu * (mu_part + t_part) + (1.0 - _j_mu) * y_smooth)
 
     # Surviving photon bump (broadened by Compton scattering).
-    safe_x = np.where(x_obs > 1e-30, x_obs, 1e-30)
+    safe_x = np.where(x > 1e-30, x, 1e-30)
     if yg >= 1e-6:
         alpha = _alpha_cs(x_inj, yg)
         beta = _beta_cs(x_inj, yg)
@@ -1224,7 +1228,7 @@ def greens_function_photon(
         surviving = p_s * (1.0 - _j_mu) * G2_PLANCK / (safe_x**2) * bump_broad
     elif sigma_x > 0.0:
         norm_g = 1.0 / (sigma_x * np.sqrt(2.0 * np.pi))
-        gauss = np.exp(-((x_obs - x_inj) ** 2) / (2.0 * sigma_x**2)) * norm_g
+        gauss = np.exp(-((x - x_inj) ** 2) / (2.0 * sigma_x**2)) * norm_g
         surviving = p_s * (1.0 - _j_mu) * G2_PLANCK / (safe_x**2) * gauss
     else:
         surviving = p_s * (1.0 - _j_mu) * G2_PLANCK / (safe_x**2) * bump_shape
@@ -1406,8 +1410,9 @@ def y_from_photon_injection(
     )
 
 
+@_val.renamed_kwargs(x_grid="x")
 def distortion_from_photon_injection(
-    x_grid: ArrayLike,
+    x: ArrayLike,
     x_inj: float,
     dn_dz: Callable[[ArrayLike], ArrayLike],
     z_min: float,
@@ -1430,7 +1435,7 @@ def distortion_from_photon_injection(
 
     Parameters
     ----------
-    x_grid : array_like
+    x : array_like
         Observation frequency grid.
     x_inj : float
         Injection frequency (positive, finite).
@@ -1451,14 +1456,14 @@ def distortion_from_photon_injection(
     Returns
     -------
     ndarray of float64
-        Distortion ``Δn(x)`` evaluated on ``x_grid``.
+        Distortion ``Δn(x)`` evaluated on ``x``.
 
     Raises
     ------
     ValueError
         If any active source redshift falls in the μ–y transition band.
     """
-    _val.validate_x_positive(x_grid)
+    _val.validate_x_positive(x)
     _val.validate_x_inj(x_inj)
     _val.validate_z_range(z_min, z_max, n_z)
     _val.warn_x_inj_regime(x_inj)
@@ -1480,7 +1485,7 @@ def distortion_from_photon_injection(
             "(run_photon_sweep) for transition-era injection.",
             stacklevel=3,
         )
-    x_grid = np.asarray(x_grid, dtype=np.float64)
+    x = np.asarray(x, dtype=np.float64)
     ln_min = np.log(1.0 + z_min)
     ln_max = np.log(1.0 + z_max)
     dln = (ln_max - ln_min) / max(n_z - 1, 1)
@@ -1511,10 +1516,10 @@ def distortion_from_photon_injection(
         active &= (z_arr <= lo) | (z_arr >= hi)
     active_idx = np.where(active)[0]
 
-    delta_n = np.zeros_like(x_grid)
+    delta_n = np.zeros_like(x)
     for j in active_idx:
         delta_n += (
-            greens_function_photon(x_grid, x_inj, float(z_arr[j]), sigma_x, cosmo=cosmo)
+            greens_function_photon(x, x_inj, float(z_arr[j]), sigma_x, cosmo=cosmo)
             * sw[j]
         )
 
@@ -1526,12 +1531,51 @@ def distortion_from_photon_injection(
 # ---------------------------------------------------------------------------
 
 
+def strip_gbb(x: ArrayLike, delta_n: ArrayLike) -> Tuple[NDArray[np.float64], float]:
+    """Remove the unobservable temperature-shift component of a spectrum.
+
+    The Far Infrared Absolute Spectrophotometer measures the CMB spectrum
+    with the absolute temperature as a free parameter, so a uniform shift
+    ΔT/T is unobservable.  CosmoTherm therefore defines the *distortion*
+    as the number-conserving part of
+    ``Δn`` (Chluba & Sunyaev 2012, arXiv:1109.6552): the part satisfying
+    ``∫ x² Δn dx = 0``.  Any nonzero photon-number perturbation is
+    absorbed into ``α · G_bb(x)``.
+
+    This projection is orthogonal to ``μ`` and ``y`` because both
+    ``M(x)`` and ``Y_SZ(x)`` conserve photon number
+    (``∫ x² M dx ≈ 0``, ``∫ x² Y dx ≈ 0``), so there is no cross-talk.
+
+    Parameters
+    ----------
+    x : array_like
+        Dimensionless frequency grid.
+    delta_n : array_like
+        Spectral distortion in occupation-number space.
+
+    Returns
+    -------
+    delta_n_stripped : ndarray of float64
+        Number-conserving distortion (``∫ x² Δn_stripped dx ≈ 0``).
+    alpha : float
+        Temperature-shift coefficient ``ΔT/T``.
+    """
+    x = np.asarray(x, dtype=np.float64)
+    delta_n = np.asarray(delta_n, dtype=np.float64)
+    gbb = g_bb(x)
+
+    alpha = float(_trapz(x**2 * delta_n, x) / _trapz(x**2 * gbb, x))
+
+    return delta_n - alpha * gbb, alpha
+
+
 DEFAULT_DECOMP_X_MIN = 0.5
 DEFAULT_DECOMP_X_MAX = 18.0
 
 
+@_val.renamed_kwargs(x_grid="x")
 def decompose_distortion(
-    x_grid: ArrayLike,
+    x: ArrayLike,
     delta_n: ArrayLike,
     z_h: float | None = None,
     method: str = "bf",
@@ -1561,10 +1605,10 @@ def decompose_distortion(
 
     Parameters
     ----------
-    x_grid : array_like
+    x : array_like
         Dimensionless frequency grid ``x = h ν / (k_B T_z)``.
     delta_n : array_like
-        Spectral distortion ``Δn(x)`` (same length as ``x_grid``).
+        Spectral distortion ``Δn(x)`` (same length as ``x``).
     z_h : float, optional
         Injection redshift.  Required when ``method="gf_fit"``; ignored
         (with a warning) for the other methods.
@@ -1576,7 +1620,7 @@ def decompose_distortion(
     dict
         Keys ``mu`` (float), ``y`` (float), ``dT`` (float, ΔT/T),
         ``drho`` (float, Δρ/ρ), ``dn_over_n`` (float, ΔN/N), and
-        ``residual`` (ndarray, ``Δn − model`` on ``x_grid``).  When
+        ``residual`` (ndarray, ``Δn − model`` on ``x``).  When
         ``gf_fit`` is used, also includes ``j_mu_fit``, ``j_bb_star_fit``,
         ``j_y``, ``fit_success``, ``fit_residual``.
 
@@ -1597,7 +1641,7 @@ def decompose_distortion(
                 "Pass method='gf_fit' to use the Green's-function spectral fit.",
                 stacklevel=2,
             )
-        return _decompose_nonlinear_be(x_grid, delta_n)
+        return _decompose_nonlinear_be(x, delta_n)
 
     if method == "gs":
         if z_h is not None:
@@ -1608,7 +1652,7 @@ def decompose_distortion(
                 "Pass method='gf_fit' to use the Green's-function spectral fit.",
                 stacklevel=2,
             )
-        return _decompose_gram_schmidt(x_grid, delta_n)
+        return _decompose_gram_schmidt(x, delta_n)
 
     if method != "gf_fit":
         raise ValueError(
@@ -1619,18 +1663,17 @@ def decompose_distortion(
         raise ValueError("decompose_distortion: method='gf_fit' requires z_h.")
 
     from scipy.optimize import minimize as sp_minimize
-    from .cosmotherm import strip_gbb
 
-    _val.validate_x_positive(x_grid)
-    _val.validate_array_lengths(x_grid, delta_n)
-    _val.warn_x_grid_narrow(x_grid)
-    x_grid = np.asarray(x_grid, dtype=np.float64)
+    _val.validate_x_positive(x)
+    _val.validate_array_lengths(x, delta_n)
+    _val.warn_x_grid_narrow(x)
+    x = np.asarray(x, dtype=np.float64)
     delta_n = np.asarray(delta_n, dtype=np.float64)
     mu_to_energy = 3.0 / KAPPA_C  # ≈ 1.401
 
     # Model-independent integrals
-    dx = np.diff(x_grid)
-    x_mid = 0.5 * (x_grid[:-1] + x_grid[1:])
+    dx = np.diff(x)
+    x_mid = 0.5 * (x[:-1] + x[1:])
     dn_mid = 0.5 * (delta_n[:-1] + delta_n[1:])
     drho = np.sum(x_mid**3 * dn_mid * dx)
     dn_n = np.sum(x_mid**2 * dn_mid * dx)
@@ -1638,7 +1681,7 @@ def decompose_distortion(
     dn_over_n = dn_n / G2_PLANCK
 
     # NC-strip the PDE spectrum
-    dn_nc, _alpha = strip_gbb(x_grid, delta_n)
+    dn_nc, _alpha = strip_gbb(x, delta_n)
 
     # J_y from Chluba's independent fitting formula (fixed)
     j_y_val = j_y(z_h)
@@ -1653,9 +1696,9 @@ def decompose_distortion(
 
     def _residual(params):
         jm, jb = params
-        model = _gf_model(x_grid, jm, jb, j_y_val) * drho_over_rho
-        model_nc, _ = strip_gbb(x_grid, model)
-        return float(np.sum((x_grid**3 * (model_nc - dn_nc)) ** 2))
+        model = _gf_model(x, jm, jb, j_y_val) * drho_over_rho
+        model_nc, _ = strip_gbb(x, model)
+        return float(np.sum((x**3 * (model_nc - dn_nc)) ** 2))
 
     # Initial guess from analytic GF
     res = sp_minimize(
@@ -1680,9 +1723,7 @@ def decompose_distortion(
     dT = drho_over_rho / 4.0 - mu / (4.0 * mu_to_energy) - y_val
 
     # Residual
-    residual = (
-        delta_n - mu * mu_shape(x_grid) - y_val * y_shape(x_grid) - dT * g_bb(x_grid)
-    )
+    residual = delta_n - mu * mu_shape(x) - y_val * y_shape(x) - dT * g_bb(x)
 
     return {
         "mu": mu,
@@ -1999,8 +2040,9 @@ def _decompose_nonlinear_be(
     }
 
 
+@_val.renamed_kwargs(dn="delta_n")
 def delta_n_to_delta_I(
-    x: ArrayLike, dn: ArrayLike, t_cmb: float = 2.726
+    x: ArrayLike, delta_n: ArrayLike, t_cmb: float = 2.726
 ) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Convert ``Δn(x)`` to ``(ν [GHz], ΔI [Jy/sr])``.
 
@@ -2010,7 +2052,7 @@ def delta_n_to_delta_I(
     ----------
     x : array_like
         Dimensionless frequency ``x = h ν / (k_B T_z)``.
-    dn : array_like
+    delta_n : array_like
         Spectral distortion ``Δn(x)``.
     t_cmb : float, optional
         Cosmic microwave background temperature today, in **K**.  Default
@@ -2024,13 +2066,13 @@ def delta_n_to_delta_I(
         Intensity distortion in **Jy/sr** (= 10⁻²⁶ W m⁻² Hz⁻¹ sr⁻¹).
     """
     x = np.asarray(x, dtype=float)
-    dn = np.asarray(dn, dtype=float)
+    delta_n = np.asarray(delta_n, dtype=float)
 
     nu_hz = x * _K_BOLTZMANN * t_cmb / _H_PLANCK
     nu_ghz = nu_hz / 1e9
 
     # ΔI = (2hν³/c²) × Δn, converted to Jy/sr
-    di_si = 2.0 * _H_PLANCK * nu_hz**3 / _C_LIGHT**2 * dn
+    di_si = 2.0 * _H_PLANCK * nu_hz**3 / _C_LIGHT**2 * delta_n
     di_jy = di_si / 1e-26
 
     return nu_ghz, di_jy

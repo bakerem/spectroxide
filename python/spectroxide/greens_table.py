@@ -46,6 +46,7 @@ from typing import Any, Callable, Mapping, Optional, Tuple
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from . import _validation as _val
 from .solver import (
     _require_result_keys,
     get_physics_hash,
@@ -174,7 +175,7 @@ class GreensTable:
         Uses one vectorized 1D cubic spline along the ``z_h`` axis of the
         raw cached ``G_th``, which is the same as an independent spline
         for each frequency point.  Callers wanting a number-conserving result
-        should apply :func:`~spectroxide.cosmotherm.strip_gbb` themselves.
+        should apply :func:`~spectroxide.greens.strip_gbb` themselves.
         """
         from scipy.interpolate import CubicSpline
 
@@ -227,9 +228,10 @@ class GreensTable:
         log_x_query = np.log(np.clip(x, self.x[0], self.x[-1]))
         return np.interp(log_x_query, self._log_x, g_at_z)
 
+    @_val.renamed_kwargs(x_grid="x")
     def distortion_from_heating(
         self,
-        x_grid: ArrayLike,
+        x: ArrayLike,
         dq_dz: HeatingRate,
         z_min: float,
         z_max: float,
@@ -248,12 +250,12 @@ class GreensTable:
         The convolution evaluates linearly in ``(log x, log z_h)`` against
         the *raw* cached ``G_th`` (no build-time NC strip), summed on the
         cache's own ``self.x`` grid, then linearly interpolated to
-        ``x_grid``.  No NC strip is applied; callers that want the
-        number-conserving Δn should call :func:`~spectroxide.cosmotherm.strip_gbb`.
+        ``x``.  No NC strip is applied; callers that want the
+        number-conserving Δn should call :func:`~spectroxide.greens.strip_gbb`.
 
         Parameters
         ----------
-        x_grid : array_like
+        x : array_like
             Output frequency grid.
         dq_dz : callable
             Heating rate ``d(Δρ/ρ_γ)/dz`` (positive for heating).
@@ -267,7 +269,7 @@ class GreensTable:
         Returns
         -------
         ndarray of float64
-            ``Δn(x)`` evaluated on ``x_grid``.
+            ``Δn(x)`` evaluated on ``x``.
         """
         from . import _validation as _val
         from scipy.interpolate import RegularGridInterpolator
@@ -275,7 +277,7 @@ class GreensTable:
         _val.warn_convolution_resolution(n_z, z_min, z_max)
         _val.warn_table_z_coverage(self.z_h, z_min, z_max)
 
-        x_grid = np.asarray(x_grid, dtype=np.float64)
+        x = np.asarray(x, dtype=np.float64)
         ln_min = np.log(1.0 + z_min)
         ln_max = np.log(1.0 + z_max)
         ln_z = np.linspace(ln_min, ln_max, n_z)
@@ -296,7 +298,7 @@ class GreensTable:
 
         active = np.abs(hw) >= 1e-50
         if not np.any(active):
-            return np.zeros_like(x_grid)
+            return np.zeros_like(x)
         hw_active = hw[active]
         z_active = z_arr[active]
 
@@ -324,8 +326,8 @@ class GreensTable:
         # Sum on cache.x grid: dn[i] = Σ_j gf_mat[j, i] * hw_active[j]
         dn = gf_mat.T @ hw_active
 
-        # Linear interp to caller's x_grid (no-op when x_grid == self.x).
-        log_x_query = np.log(np.clip(x_grid, self.x[0], self.x[-1]))
+        # Linear interp to caller's x (no-op when x == self.x).
+        log_x_query = np.log(np.clip(x, self.x[0], self.x[-1]))
         return np.interp(log_x_query, np.log(self.x), dn)
 
     def mu_y_from_heating(
@@ -590,27 +592,28 @@ class PhotonGreensTable:
         i = int(np.clip(np.searchsorted(nodes, value) - 1, 0, len(nodes) - 2))
         return [i, i + 1]
 
+    @_val.renamed_kwargs(x_obs="x")
     def greens_function_photon(
-        self, x_obs: ArrayLike, x_inj: float, z_h: float
+        self, x: ArrayLike, x_inj: float, z_h: float
     ) -> NDArray[np.float64]:
-        """Interpolate ``G_ph(x_obs, x_inj, z_h)``.
+        """Interpolate ``G_ph(x, x_inj, z_h)``.
 
         Drop-in replacement for :func:`spectroxide.greens.greens_function_photon`.
         Where every node of the ``(x_inj, z_h)`` cell has a clean bump,
-        the smooth part is interpolated linearly in ``(log x_obs, x_inj,
+        the smooth part is interpolated linearly in ``(log x, x_inj,
         log z_h)`` and the surviving-photon bump is rebuilt at the
         queried ``x_inj`` with center and width interpolated linearly in
         ``(log x_inj, log z_h)``.  Its photon number is set so that the
         energy on the table grid equals the node energies interpolated
         linearly in ``(x_inj, log z_h)``.  Elsewhere the
-        full table is interpolated linearly in ``(log x_obs, x_inj,
+        full table is interpolated linearly in ``(log x, x_inj,
         log z_h)``, with a blend between the two (see
         ``_build_interpolator``).  All three inputs are clipped to the
         table range (no extrapolation).
 
         Parameters
         ----------
-        x_obs : float or array_like
+        x : float or array_like
             Observation frequency.
         x_inj : float
             Injection frequency.
@@ -620,10 +623,10 @@ class PhotonGreensTable:
         Returns
         -------
         ndarray of float64
-            ``Δn(x_obs)`` per unit ``ΔN/N``.
+            ``Δn(x)`` per unit ``ΔN/N``.
         """
-        x_obs = np.atleast_1d(np.asarray(x_obs, dtype=np.float64))
-        log_xo = np.log(np.clip(x_obs, self.x[0], self.x[-1]))
+        x = np.atleast_1d(np.asarray(x, dtype=np.float64))
+        log_xo = np.log(np.clip(x, self.x[0], self.x[-1]))
         xi = float(np.clip(x_inj, self.x_inj[0], self.x_inj[-1]))
         zq = float(np.clip(z_h, self.z_h[0], self.z_h[-1]))
         lxi, lz = np.log(xi), np.log(zq)
@@ -659,9 +662,10 @@ class PhotonGreensTable:
             return split
         return w * split + (1.0 - w) * plain
 
+    @_val.renamed_kwargs(x_grid="x")
     def distortion_from_photon_injection(
         self,
-        x_grid: ArrayLike,
+        x: ArrayLike,
         x_inj: float,
         dn_dz: Callable[[float], float],
         z_min: float,
@@ -672,7 +676,7 @@ class PhotonGreensTable:
 
         Parameters
         ----------
-        x_grid : array_like
+        x : array_like
             Observation frequency grid.
         x_inj : float
             Injection frequency.
@@ -688,26 +692,26 @@ class PhotonGreensTable:
         Returns
         -------
         ndarray of float64
-            Distortion ``Δn(x)`` on ``x_grid``.
+            Distortion ``Δn(x)`` on ``x``.
         """
         from . import _validation as _val
 
         _val.warn_convolution_resolution(n_z, z_min, z_max)
         _val.warn_table_z_coverage(self.z_h, z_min, z_max)
 
-        x_grid = np.asarray(x_grid, dtype=np.float64)
+        x = np.asarray(x, dtype=np.float64)
         ln_min = np.log(1.0 + z_min)
         ln_max = np.log(1.0 + z_max)
         ln_z = np.linspace(ln_min, ln_max, n_z)
         z_arr = np.exp(ln_z) - 1.0
         dln = ln_z[1] - ln_z[0]
 
-        delta_n = np.zeros_like(x_grid)
+        delta_n = np.zeros_like(x)
         for i, z in enumerate(z_arr):
             rate = dn_dz(z)
             if rate == 0.0:
                 continue
-            g = self.greens_function_photon(x_grid, x_inj, z)
+            g = self.greens_function_photon(x, x_inj, z)
             weight = rate * (1.0 + z) * dln
             if i == 0 or i == len(z_arr) - 1:
                 weight *= 0.5
