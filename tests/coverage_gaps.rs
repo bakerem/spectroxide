@@ -18,7 +18,10 @@ use spectroxide::constants::*;
 use spectroxide::cosmology::Cosmology;
 use spectroxide::energy_injection::InjectionScenario;
 use spectroxide::grid::{FrequencyGrid, GridConfig};
-use spectroxide::solver::{SolverConfig, ThermalizationSolver};
+use spectroxide::solver::{
+    ENERGY_CHECK_MAX_LATE_FRACTION, ENERGY_CHECK_Z_LATE, ENERGY_CLOSURE_ABS_FLOOR,
+    ENERGY_CLOSURE_REL_TOL, SolverConfig, ThermalizationSolver,
+};
 
 // ============================================================================
 // Section 1: Energy conservation per injection scenario
@@ -745,18 +748,139 @@ fn energy_closure_silent_when_resolved() {
 }
 
 /// A burst at z_h = 1000 heats the electrons past the ρ_e cap (the
-/// "Substantial heating" warning) and delivers about half its energy. That
-/// run already warns, so the energy check stays silent. Both skip rules apply
-/// here (all the heat also lies below z = 2000); the unit test
-/// `test_energy_closure_skip_rules` in `solver.rs` isolates the cap rule.
+/// "Substantial heating" warning) and delivers about half its energy. All of
+/// its heat lies below z = 2000, so the late-injection rule silences the
+/// energy check before the cap rule is reached. The unit test
+/// `test_energy_closure_skip_rules` in `solver.rs` and
+/// `energy_closure_capped_shortfall_silent` isolate the cap rule.
 #[test]
-fn energy_closure_skipped_when_rho_e_capped() {
+fn energy_closure_skipped_for_late_capped_burst() {
     let (drho, warnings, _) = burst_run(1000.0, 1e-5, 1700.0, 200.0, 500);
     assert!(
         has_warning(&warnings, "Substantial heating"),
         "{warnings:?}"
     );
-    assert!((drho / 1e-5 - 1.0).abs() > 0.05, "drho = {drho:e}");
+    assert!(drho / 1e-5 - 1.0 < -0.05, "drho = {drho:e}");
+    assert!(!has_warning(&warnings, "Energy closure"), "{warnings:?}");
+}
+
+/// Runs a tabulated heating table on `n_points` from `z_start` to `z_end`
+/// and returns the final Δρ/ρ, the heat the table injects over that range,
+/// and the warnings.
+fn table_run(
+    z_table: Vec<f64>,
+    rate_table: Vec<f64>,
+    z_start: f64,
+    z_end: f64,
+    n_points: usize,
+) -> (f64, f64, Vec<String>) {
+    let scenario = InjectionScenario::TabulatedHeating {
+        z_table,
+        rate_table,
+    };
+    let injected = scenario.injected_delta_rho_between(z_end, z_start).unwrap();
+    let mut solver = ThermalizationSolver::builder(Cosmology::default())
+        .grid(GridConfig {
+            n_points,
+            ..GridConfig::default()
+        })
+        .injection(scenario)
+        .z_range(z_start, z_end)
+        .build()
+        .unwrap();
+    let r = solver.run_to_result(z_end);
+    (r.snapshot.delta_rho_over_rho, injected, r.warnings)
+}
+
+/// A capped run with an excess must still warn. Constant heating
+/// d(Δρ/ρ)/dz = 5.8e-11 on z ∈ [500, 5e6] injects 5.8e-11 × (5e6 − 500)
+/// = 2.9e-4, only 0.03% of it below z = 2000, so the late rule does not
+/// apply. The heat below recombination drives ρ_e to its cap, and the
+/// 500-point grid leaves the spectrum with 24% more energy than was
+/// injected (measured; finding R-1 in dev/REVIEW_2026-09-22.md gives +3%
+/// for this table at 1000 points). The cap only removes heat, so the excess is a grid error and the
+/// energy check must say so.
+#[test]
+fn energy_closure_capped_excess_warns() {
+    let z_table: Vec<f64> = (0..200)
+        .map(|i| 500.0 * 1e4_f64.powf(i as f64 / 199.0))
+        .collect();
+    let rate = vec![5.8e-11; z_table.len()];
+    let (drho, injected, warnings) = table_run(z_table, rate, 5e6, 500.0, 500);
+    eprintln!(
+        "capped excess: drho = {drho:.4e}, injected = {injected:.4e}, ratio = {:.4}",
+        drho / injected
+    );
+    assert!(
+        (injected / (5.8e-11 * (5e6 - 500.0)) - 1.0).abs() < 1e-9,
+        "injected = {injected:e}"
+    );
+    assert!(
+        has_warning(&warnings, "Substantial heating"),
+        "{warnings:?}"
+    );
+    assert!(
+        drho / injected - 1.0 > 0.05,
+        "precondition: excess, drho = {drho:e}"
+    );
+    let closure: Vec<&String> = warnings
+        .iter()
+        .filter(|w| w.starts_with("Energy closure"))
+        .collect();
+    assert_eq!(closure.len(), 1, "{warnings:?}");
+    assert!(closure[0].contains("cannot cause an excess"), "{closure:?}");
+}
+
+/// A capped run with a shortfall stays silent, with the cap as the only skip
+/// rule. A burst at z_h = 2e5 (Δρ/ρ = 1e-5) is followed by constant heating
+/// of 3e-9 per unit z on z ∈ [500, 800]. That tail carries 9e-7, 8.3% of the
+/// total, below the 10% late-injection limit, so the late rule does not
+/// apply. The tail drives ρ_e to its cap, and most of the tail heat never
+/// reaches the photons: they end 7.7% short (measured), beyond the 5%
+/// tolerance. The run already warns "Substantial heating", so the energy
+/// check stays silent.
+#[test]
+fn energy_closure_capped_shortfall_silent() {
+    let (z_h, sigma, burst) = (2e5_f64, 8e3_f64, 1e-5_f64);
+    let tail_rate = 3.0e-9;
+    let z_table: Vec<f64> = (0..4000)
+        .map(|i| 500.0 * 600_f64.powf(i as f64 / 3999.0))
+        .collect();
+    let rate: Vec<f64> = z_table
+        .iter()
+        .map(|&z| {
+            let g = burst / ((2.0 * std::f64::consts::PI).sqrt() * sigma)
+                * (-0.5 * ((z - z_h) / sigma).powi(2)).exp();
+            g + if z <= 800.0 { tail_rate } else { 0.0 }
+        })
+        .collect();
+    let scenario = InjectionScenario::TabulatedHeating {
+        z_table: z_table.clone(),
+        rate_table: rate.clone(),
+    };
+    let gross = scenario.injected_abs_delta_rho_between(500.0, 3e5).unwrap();
+    let late = scenario
+        .injected_abs_delta_rho_between(500.0, ENERGY_CHECK_Z_LATE)
+        .unwrap();
+    let tol = ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR;
+    let (drho, injected, warnings) = table_run(z_table, rate, 3e5, 500.0, 1000);
+    eprintln!(
+        "capped shortfall: drho = {drho:.4e}, injected = {injected:.4e}, ratio = {:.4}",
+        drho / injected
+    );
+    assert!(
+        late / gross < ENERGY_CHECK_MAX_LATE_FRACTION,
+        "precondition: the late rule must not apply, late fraction {}",
+        late / gross
+    );
+    assert!(
+        has_warning(&warnings, "Substantial heating"),
+        "{warnings:?}"
+    );
+    assert!(
+        drho - injected < -tol,
+        "precondition: shortfall beyond the tolerance, drho = {drho:e}"
+    );
     assert!(!has_warning(&warnings, "Energy closure"), "{warnings:?}");
 }
 
