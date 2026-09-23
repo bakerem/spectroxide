@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test --release           # Run all tests (185 unit + 318 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release           # Run all tests (189 unit + 318 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
 cargo test --release test_name # Run a single test by name
 CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
