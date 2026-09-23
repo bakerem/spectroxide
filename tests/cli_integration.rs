@@ -268,3 +268,37 @@ fn test_cli_solve_single_burst_json() {
          (μ={pde_mu:.4e}, y={pde_y:.4e})"
     );
 }
+
+/// A 50-point grid from z = 5e6 produces NaN in Δn. The binary must report
+/// it as an error (exit 1, "Error: ... NaN/Inf ...") instead of panicking
+/// (exit 101), so the Python wrapper raises with the message. Like
+/// `nan_run_returns_error_not_panic` in `coverage_gaps.rs`, this relies on
+/// the 50-point instability as the NaN trigger.
+#[test]
+fn test_cli_nan_run_exits_with_error() {
+    let output = spectroxide_bin()
+        .args([
+            "solve",
+            "single-burst",
+            "--z-h",
+            "3000",
+            "--delta-rho",
+            "1e-5",
+            "--z-start",
+            "5e6",
+            "--z-end",
+            "500",
+            "--n-points",
+            "50",
+        ])
+        .output()
+        .expect("failed to run");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(1), "stderr={stderr}");
+    assert!(stderr.contains("Error:"), "stderr={stderr}");
+    assert!(
+        stderr.contains("NaN/Inf detected in delta_n"),
+        "stderr={stderr}"
+    );
+    assert!(!stderr.contains("panicked"), "stderr={stderr}");
+}

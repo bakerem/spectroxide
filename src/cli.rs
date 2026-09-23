@@ -1707,7 +1707,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
         ..defaults
     });
 
-    let result = solver.run_to_result(z_end);
+    let result = solver.try_run_to_result(z_end)?;
     let last = &result.snapshot;
     eprintln!(
         "PDE result: mu={:.4e}, y={:.4e}, drho={:.4e}, steps={}",
@@ -1844,7 +1844,9 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
             solver.set_config(probe_config);
             solver.diag.warnings.extend(preflight);
 
-            solver.run_with_snapshots(&[z_end]);
+            solver
+                .try_run_with_snapshots(&[z_end])
+                .map_err(|e| format!("sweep z_h={z_h:.3e}: {e}"))?;
             let step_count = solver.step_count;
             let x_grid = solver.grid.x.clone();
             let row_warnings = solver.diag.warnings.clone();
@@ -1975,7 +1977,9 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
             solver.set_config(probe_config);
             solver.diag.warnings.extend(preflight);
 
-            solver.run_with_snapshots(&[z_end]);
+            solver
+                .try_run_with_snapshots(&[z_end])
+                .map_err(|e| format!("photon sweep z_h={z_h:.3e}: {e}"))?;
             let step_count = solver.step_count;
             let x_grid = solver.grid.x.clone();
             let row_warnings = solver.diag.warnings.clone();
@@ -2095,7 +2099,9 @@ pub fn execute_photon_sweep_batch(
             solver.set_config(probe_config);
             solver.diag.warnings.extend(preflight);
 
-            solver.run_with_snapshots(&[z_end]);
+            solver.try_run_with_snapshots(&[z_end]).map_err(|e| {
+                format!("photon sweep batch (x_inj={x_inj:.3e}, z_h={z_h:.3e}): {e}")
+            })?;
             let step_count = solver.step_count;
             let x_grid = solver.grid.x.clone();
             let row_warnings = solver.diag.warnings.clone();

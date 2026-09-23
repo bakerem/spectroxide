@@ -322,6 +322,11 @@ pub struct SolverDiagnostics {
     /// Warning messages collected during solver evolution.
     /// Replaces eprintln! in library code for structured diagnostics.
     pub warnings: Vec<String>,
+    /// Set when the run stopped early because Δn became NaN or infinite.
+    /// [`ThermalizationSolver::try_run_with_snapshots`] and
+    /// [`ThermalizationSolver::try_run_to_result`] return it as `Err`; the
+    /// other run methods and [`ThermalizationSolver::step`] panic with it.
+    pub failure: Option<String>,
 }
 
 /// Full PDE solver for cosmic microwave background (CMB) spectral distortions.
@@ -1014,11 +1019,12 @@ impl ThermalizationSolver {
             delta_g3 += x3 * dn_mid * dx;
             delta_i4 += x3 * x_half * (2.0 * n_pl + 1.0) * dn_mid * dx;
         }
-        assert!(
-            max_dn.is_finite(),
-            "NaN/Inf detected in delta_n at z={}",
-            z_eval
-        );
+        if !max_dn.is_finite() {
+            // Leave the state untouched; step_with_dz sees the non-finite
+            // max|Δn| and returns None without advancing z.
+            self.record_nonfinite_delta_n();
+            return (0.0, 0.0, 0.0, max_dn, 0.0, 0.0);
+        }
 
         let delta_rho_eq = if max_dn > 1e-15 {
             // Use exact computation when the distortion is large enough that
@@ -1230,14 +1236,46 @@ impl ThermalizationSolver {
     ///
     /// Returns the `dz` taken. Most callers should call [`Self::run`] or
     /// [`Self::run_with_snapshots`] instead of stepping manually.
+    ///
+    /// # Panics
+    ///
+    /// Panics if Δn becomes NaN or infinite (see [`SolverDiagnostics::failure`]).
     pub fn step(&mut self) -> f64 {
         let dz = self.adaptive_dz();
-        self.step_with_dz(dz)
+        match self.step_with_dz(dz) {
+            Some(dz) => dz,
+            None => panic!("{}", self.diag.failure.as_deref().unwrap_or_default()),
+        }
+    }
+
+    /// Records the NaN/Inf failure in [`SolverDiagnostics::failure`] for a
+    /// Δn that is no longer finite at the current z.
+    fn record_nonfinite_delta_n(&mut self) {
+        let hint = if self.grid_n_points < MIN_TESTED_GRID_POINTS {
+            format!(
+                "the frequency grid is too coarse (n_points={}; use at least \
+                 {MIN_TESTED_GRID_POINTS})",
+                self.grid_n_points
+            )
+        } else {
+            format!(
+                "time steps too large (reduce dtau_max) or a strong injection \
+                 (n_points={})",
+                self.grid_n_points
+            )
+        };
+        self.diag.failure = Some(format!(
+            "NaN/Inf detected in delta_n at z={:.4e} (after step {}); the run stopped. \
+             Likely cause: {hint}.",
+            self.z, self.step_count
+        ));
     }
 
     /// Takes a single timestep with a specified dz (instead of the adaptive choice).
     /// Used by `run_with_snapshots` to land exactly on requested snapshot redshifts.
-    fn step_with_dz(&mut self, dz: f64) -> f64 {
+    /// Returns the dz taken, or `None` without advancing if Δn is not finite
+    /// (the message is then in [`SolverDiagnostics::failure`]).
+    fn step_with_dz(&mut self, dz: f64) -> Option<f64> {
         let z_new = (self.z - dz).max(self.config.z_end);
         let actual_dz = self.z - z_new;
         let z_mid = self.z - 0.5 * actual_dz;
@@ -1245,6 +1283,9 @@ impl ThermalizationSolver {
         // update_temperatures computes ρ_e via backward Euler and returns dtau + hubble
         let (x_e, _t_c, theta_z_val, max_dn_abs, dtau, h) =
             self.update_temperatures(z_mid, actual_dz);
+        if !max_dn_abs.is_finite() {
+            return None;
+        }
 
         let n_h = self.cosmo.n_h(z_mid);
         let n_he = self.cosmo.f_he() * n_h;
@@ -1608,7 +1649,7 @@ impl ThermalizationSolver {
 
         self.z = z_new;
         self.step_count += 1;
-        actual_dz
+        Some(actual_dz)
     }
 
     /// Integrates from `z_start` to `z_end`, recording a snapshot at each
@@ -1619,7 +1660,27 @@ impl ThermalizationSolver {
     /// to the initial and final state respectively. The returned slice
     /// borrows from `self.snapshots`; for an owned result, use
     /// [`Self::run_to_result`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if Δn becomes NaN or infinite. Use
+    /// [`Self::try_run_with_snapshots`] to get that failure as an `Err`.
     pub fn run_with_snapshots(&mut self, snapshot_redshifts: &[f64]) -> &[SolverSnapshot] {
+        if let Err(msg) = self.try_run_with_snapshots(snapshot_redshifts) {
+            panic!("{msg}");
+        }
+        &self.snapshots
+    }
+
+    /// Like [`Self::run_with_snapshots`], but returns `Err` instead of
+    /// panicking when Δn becomes NaN or infinite. The run stops at the
+    /// failing step; the message is also kept in [`SolverDiagnostics::failure`].
+    /// On `Err`, [`Self::snapshots`] keeps any snapshots saved before the
+    /// failure was detected, and the last of them may already hold NaN.
+    pub fn try_run_with_snapshots(
+        &mut self,
+        snapshot_redshifts: &[f64],
+    ) -> Result<&[SolverSnapshot], String> {
         let initial_dn = self.initial_delta_n.take();
         let injection = self.injection.take();
         // Preserve user-set configuration across the internal reset: reset()
@@ -1734,7 +1795,9 @@ impl ThermalizationSolver {
                     let dz_natural = self.adaptive_dz();
                     if dz_natural >= dz_to_snap {
                         // Would overshoot the snapshot — take exact step to land on it
-                        self.step_with_dz(dz_to_snap);
+                        if self.step_with_dz(dz_to_snap).is_none() {
+                            return Err(self.diag.failure.clone().unwrap_or_default());
+                        }
                         // Save snapshots for all requested redshifts at this z
                         while next_snap < sorted_z.len() && self.z <= sorted_z[next_snap] {
                             self.save_snapshot_at(sorted_z[next_snap]);
@@ -1745,7 +1808,10 @@ impl ThermalizationSolver {
                 }
             }
 
-            self.step();
+            let dz = self.adaptive_dz();
+            if self.step_with_dz(dz).is_none() {
+                return Err(self.diag.failure.clone().unwrap_or_default());
+            }
 
             // Save snapshots for any requested redshifts we've reached or passed
             while next_snap < sorted_z.len() && self.z <= sorted_z[next_snap] {
@@ -1771,6 +1837,15 @@ impl ThermalizationSolver {
             ));
         }
 
+        // The in-loop check sees a NaN only at the start of the next step, so
+        // one produced by the final step is caught here.
+        if self.delta_n.iter().any(|v| !v.is_finite()) {
+            self.record_nonfinite_delta_n();
+        }
+        if let Some(msg) = &self.diag.failure {
+            return Err(msg.clone());
+        }
+
         // Fill remaining snapshots below z_end with final state
         while next_snap < sorted_z.len() {
             self.save_snapshot();
@@ -1790,7 +1865,7 @@ impl ThermalizationSolver {
             self.diag.warnings.push(w);
         }
 
-        &self.snapshots
+        Ok(&self.snapshots)
     }
 
     /// Returns the total Δρ/ρ in the current state: the spectral Δn plus the
@@ -1928,20 +2003,32 @@ impl ThermalizationSolver {
     /// need multiple intermediate snapshots, call
     /// [`Self::run_with_snapshots`] directly and inspect
     /// [`Self::snapshots`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if Δn becomes NaN or infinite. Use [`Self::try_run_to_result`]
+    /// to get that failure as an `Err`.
     pub fn run_to_result(&mut self, z_obs: f64) -> crate::output::SolverResult {
-        self.run_with_snapshots(&[z_obs]);
+        self.try_run_to_result(z_obs)
+            .unwrap_or_else(|msg| panic!("{msg}"))
+    }
+
+    /// Like [`Self::run_to_result`], but returns `Err` instead of panicking
+    /// when Δn becomes NaN or infinite.
+    pub fn try_run_to_result(&mut self, z_obs: f64) -> Result<crate::output::SolverResult, String> {
+        self.try_run_with_snapshots(&[z_obs])?;
         let snapshot = self
             .snapshots
             .last()
             .expect("run_with_snapshots produced no snapshot")
             .clone();
-        crate::output::SolverResult {
+        Ok(crate::output::SolverResult {
             snapshot,
             x_grid: self.grid.x.clone(),
             step_count: self.step_count,
             diag_newton_exhausted: self.diag.newton_exhausted,
             warnings: self.diag.warnings.clone(),
-        }
+        })
     }
 
     /// Creates a builder for configuring a solver with a fluent API.
