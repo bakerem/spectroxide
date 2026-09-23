@@ -786,7 +786,13 @@ def _run_pde_single_solve(
     else:
         # No injection, just initial perturbation: use solve single-burst
         # with zero amplitude as a no-op injection carrier for --dn-planck
-        z_h_dummy = z_start if z_start is not None else 1e5
+        # The carrier must not set z_start: start at the caller's z_start,
+        # else at 5e6 (the CLI's pre-ADR-0001 default, which this path always
+        # relied on), and put the inert burst window just below it, so that
+        # z_h + 7 sigma_z <= z_start as the CLI requires.
+        if z_start is None:
+            z_start = 5e6
+        z_h_dummy = z_start / 1.1
         # Explicit sigma_z so the CLI's 100.0 floor doesn't violate the
         # sigma_z <= 0.3*z_h validator when z_h_dummy < 333 (for example,
         # low-mass dark photons with z_res ~ 200). delta_rho=0 makes sigma_z inert.

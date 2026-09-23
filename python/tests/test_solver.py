@@ -781,6 +781,19 @@ def test_solve_default_z_start_uses_user_sigma_z(monkeypatch):
         assert float(cmd[cmd.index("--z-start") + 1]) == pytest.approx(expected)
 
 
+def test_dn_planck_carrier_sets_z_start(monkeypatch):
+    """The dn_planck-only path starts at the caller's z_start, else 5e6, and
+    keeps its inert burst window below z_start, as the CLI requires."""
+    for z_start, expected in [(None, 5e6), (3e5, 3e5)]:
+        cmd = _capture_solve_cmd(monkeypatch, dn_planck=1e-6, z_start=z_start)
+        assert cmd.count("--z-start") == 1
+        zs = float(cmd[cmd.index("--z-start") + 1])
+        z_h = float(cmd[cmd.index("--z-h") + 1])
+        sigma = float(cmd[cmd.index("--sigma-z") + 1])
+        assert zs == pytest.approx(expected)
+        assert z_h + 7 * sigma <= zs
+
+
 def test_solve_passes_only_flags_the_cli_reads(monkeypatch):
     """R-3: the CLI rejects --delta-rho for every injection type except
     single-burst, and --threads for `solve`. The wrapper must not send them.
