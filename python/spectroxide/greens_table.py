@@ -513,84 +513,51 @@ class PhotonGreensTable:
         Linear interpolation of the full table across ``x_inj`` nodes
         turns a narrow y-era bump into two half-bumps at the neighboring
         nodes (review finding P-7).  So each node ``(x_inj[k], z_h[j])``
-        with a clean, narrow bump is split as ``g = S + B``:
+        is split as ``g = S + B``:
 
         - ``B`` is a Gaussian in ``u = ln(x / x_inj)`` for ``x³ B``, with
           photon number, center, and width fitted to the node's bump
           (:func:`_extract_bump`).
-        - ``S = g − B`` is everything else: the μ, y, and
-          temperature-shift parts.
+        - ``S = g − B`` is everything else.  It holds the μ, y, and
+          temperature-shift parts.  At fixed survival probability they
+          are affine in ``x_inj`` (energy ``α_ρ x_inj`` minus the part
+          the bump carries), so ``S`` is interpolated linearly
+          in ``x_inj`` (not ``ln x_inj``) at fixed ``x``.
 
-        Both ``S`` and the full table are interpolated linearly in
-        ``x_inj``, not ``ln x_inj``.  The energy per unit ``ΔN/N`` is
-        ``α_ρ x_inj``, linear in ``x_inj``, while interpolation in
-        ``ln x_inj`` puts 4.4% too much energy midway between nodes
-        spaced by a factor 1.8.  Where the survival probability varies
-        with ``x_inj`` (near the photosphere ``x_c``), neither choice is
-        exact.
-
-        Each node also gets a weight in [0, 1] (:func:`_extract_bump`):
-        1 for a clean narrow bump, 0 for no bump, a bump too wide or too
-        narrow for the grid, or a bump cut by the grid edge.  A query
-        uses the smallest weight ``w`` of the (up to) four nodes of its
-        ``(x_inj, z_h)`` cell and returns ``w`` times the split result
-        plus ``1 − w`` times plain linear interpolation of the full table
-        in ``(log x, x_inj, log z_h)``.  So the split is used only
-        where every node of the cell has a bump to move, and both paths
-        reproduce the stored table at the nodes.
-
-        In the split path the bump is rebuilt at the queried ``x_inj``
-        with the interpolated center and width.  Its photon number makes
-        the energy on the table grid equal the node energies
-        interpolated linearly in ``x_inj``, so a fit bias at one node
-        changes the shape but not the energy.
-
-        Construction runs one least-squares fit per node: about 5 s for
-        the default 10 × 150 grid.
+        At a query, the bump is rebuilt at the queried ``x_inj`` from
+        the interpolated number, center, and width.  At the nodes the
+        split is exact, so the stored table is reproduced.
         """
-        RGI = _get_interpolator_class()
+        from scipy.interpolate import RegularGridInterpolator as RGI
+
+        _get_interpolator_class()  # clear ImportError if scipy is missing
         log_x = np.log(self.x)
-        self._log_x = log_x
         log_xi = np.log(self.x_inj)
         log_z = np.log(self.z_h)
 
         n_x, n_xi, n_z = self.g_ph.shape
-        bump = np.zeros((n_xi, n_z, 3))  # number, number*center, number*var
-        weight = np.zeros((n_xi, n_z))
+        bump_n = np.zeros((n_xi, n_z))
+        bump_c = np.zeros((n_xi, n_z))
+        bump_s2 = np.zeros((n_xi, n_z))
         smooth = np.array(self.g_ph, dtype=np.float64, copy=True)
         for k in range(n_xi):
             for j in range(n_z):
-                n_b, c_b, s_b, w = _extract_bump(log_x, self.g_ph[:, k, j], log_xi[k])
-                if w > 0.0:
-                    weight[k, j] = w
-                    bump[k, j] = (n_b, n_b * c_b, n_b * s_b**2)
+                n_b, c_b, s_b = _extract_bump(log_x, self.g_ph[:, k, j], log_xi[k])
+                if n_b > 0.0:
+                    bump_n[k, j] = n_b
+                    bump_c[k, j] = c_b
+                    bump_s2[k, j] = s_b**2
                     smooth[:, k, j] -= _bump_profile(log_x, log_xi[k], n_b, c_b, s_b)
-        self._node_weight = weight
-
-        # Energy integrals on the table grid: of the full node, and of
-        # its smooth part.  Used to fix the rebuilt bump's photon number.
-        x3 = self.x[:, None, None] ** 3
-        energy = np.stack(
-            [
-                _trapz(x3 * self.g_ph, self.x, axis=0),
-                _trapz(x3 * smooth, self.x, axis=0),
-            ],
-            axis=-1,
-        )
 
         opts = dict(method="linear", bounds_error=False, fill_value=None)
-        self._interp = RGI((log_x, self.x_inj, log_z), self.g_ph, **opts)
-        self._smooth_interp = RGI((log_x, self.x_inj, log_z), smooth, **opts)
-        self._bump_interp = RGI((log_xi, log_z), bump, **opts)
-        self._energy_interp = RGI((self.x_inj, log_z), energy, **opts)
-
-    @staticmethod
-    def _cell(nodes, value):
-        """Indices of the node interval holding ``value`` (clipped)."""
-        if len(nodes) == 1:
-            return [0]
-        i = int(np.clip(np.searchsorted(nodes, value) - 1, 0, len(nodes) - 2))
-        return [i, i + 1]
+        self._interp = RGI((log_x, self.x_inj, log_z), smooth, **opts)
+        # Number-weighted center and variance, so nodes without a bump
+        # (number 0) do not pull the rebuilt width or center.
+        self._bump_interp = RGI(
+            (log_xi, log_z),
+            np.stack([bump_n, bump_n * bump_c, bump_n * bump_s2], axis=-1),
+            **opts,
+        )
 
     @_val.renamed_kwargs(x_obs="x")
     def greens_function_photon(
@@ -599,17 +566,11 @@ class PhotonGreensTable:
         """Interpolate ``G_ph(x, x_inj, z_h)``.
 
         Drop-in replacement for :func:`spectroxide.greens.greens_function_photon`.
-        Where every node of the ``(x_inj, z_h)`` cell has a clean bump,
-        the smooth part is interpolated linearly in ``(log x, x_inj,
-        log z_h)`` and the surviving-photon bump is rebuilt at the
-        queried ``x_inj`` with center and width interpolated linearly in
-        ``(log x_inj, log z_h)``.  Its photon number is set so that the
-        energy on the table grid equals the node energies interpolated
-        linearly in ``(x_inj, log z_h)``.  Elsewhere the
-        full table is interpolated linearly in ``(log x, x_inj,
-        log z_h)``, with a blend between the two (see
-        ``_build_interpolator``).  All three inputs are clipped to the
-        table range (no extrapolation).
+        The smooth part is interpolated linearly in ``(log x, x_inj,
+        log z_h)``.  The surviving-photon bump is rebuilt at the queried
+        ``x_inj`` with photon number, center, and width interpolated
+        linearly in ``(log x_inj, log z_h)``.  All three inputs are
+        clipped to the table range (no extrapolation).
 
         Parameters
         ----------
@@ -628,39 +589,17 @@ class PhotonGreensTable:
         x = np.atleast_1d(np.asarray(x, dtype=np.float64))
         log_xo = np.log(np.clip(x, self.x[0], self.x[-1]))
         xi = float(np.clip(x_inj, self.x_inj[0], self.x_inj[-1]))
-        zq = float(np.clip(z_h, self.z_h[0], self.z_h[-1]))
-        lxi, lz = np.log(xi), np.log(zq)
-        ones = np.ones_like(log_xo)
-
-        w = float(
-            self._node_weight[
-                np.ix_(self._cell(self.x_inj, xi), self._cell(self.z_h, zq))
-            ].min()
+        lz = float(np.log(np.clip(z_h, self.z_h[0], self.z_h[-1])))
+        pts = np.column_stack(
+            [log_xo, np.full_like(log_xo, xi), np.full_like(log_xo, lz)]
         )
-        plain = None
-        if w < 1.0:
-            plain = self._interp(np.column_stack([log_xo, xi * ones, lz * ones]))
-            if w == 0.0:
-                return plain
+        result = self._interp(pts)
 
-        split = self._smooth_interp(np.column_stack([log_xo, xi * ones, lz * ones]))
-        n_b, nc_b, ns2_b = self._bump_interp([[lxi, lz]])[0]
-        c_b, s_b = nc_b / n_b, np.sqrt(max(ns2_b / n_b, 0.0))
-        # Photon number from energy: the result's energy on the table
-        # grid equals the node energies interpolated linearly in x_inj,
-        # which is exact where the energy is α_ρ x_inj.  A fit bias in
-        # the bump number at one node then changes the shape, not the
-        # energy.  At a node this returns the node's own number.
-        e_full, e_smooth = self._energy_interp([[xi, lz]])[0]
-        e_unit = _trapz(
-            self.x**3 * _bump_profile(self._log_x, lxi, 1.0, c_b, s_b), self.x
-        )
-        if e_unit > 0.0:
-            n_b = (e_full - e_smooth) / e_unit
-        split = split + _bump_profile(log_xo, lxi, n_b, c_b, s_b)
-        if plain is None:
-            return split
-        return w * split + (1.0 - w) * plain
+        n_b, nc_b, ns2_b = self._bump_interp([[np.log(xi), lz]])[0]
+        if n_b > 0.0:
+            s_b = np.sqrt(max(ns2_b / n_b, 0.0))
+            result = result + _bump_profile(log_xo, np.log(xi), n_b, nc_b / n_b, s_b)
+        return result
 
     @_val.renamed_kwargs(x_grid="x")
     def distortion_from_photon_injection(
@@ -792,15 +731,16 @@ class PhotonGreensTable:
 # Surviving-photon bump helpers for PhotonGreensTable (review finding P-7)
 # ---------------------------------------------------------------------------
 
-#: Bump width (standard deviation in ln x) up to which a node's bump is
-#: moved with ``x_inj`` at full weight; the weight falls smoothly to 0 at
-#: ``_BUMP_S_ZERO``.  True surviving-photon bumps reach 0.25 near
-#: z_h = 2.5e4.  The x³ Y_SZ peak of a pure y distortion fits as a false
-#: "bump" of width about 0.40, which ``_BUMP_S_ZERO`` excludes.  Chosen
-#: by scanning a synthetic table built from the analytic photon Green's
-#: function (review finding P-7).
-_BUMP_S_FULL = 0.25
-_BUMP_S_ZERO = 0.35
+#: Bump width (standard deviation in ln x) up to which the bump is fully
+#: split from the smooth part.  Above ``_BUMP_S_ZERO`` it stays in the
+#: smooth part, and a smoothstep taper joins the two.  A bump that wide
+#: is comparable to the default ``x_inj`` node spacing (ln 1.8 = 0.59), so
+#: plain interpolation resolves it, while the Gaussian-plus-quadratic fit
+#: of :func:`_extract_bump` loses accuracy against the y and μ shapes.
+#: Chosen by scanning a synthetic table built from the analytic photon
+#: Green's function (review finding P-7).
+_BUMP_S_FULL = 0.3
+_BUMP_S_ZERO = 0.5
 
 
 def _bump_profile(log_x, log_x_inj, n_b, c_b, s_b):
@@ -832,32 +772,24 @@ def _extract_bump(log_x, g, log_x_inj):
     Returns
     -------
     tuple of float
-        ``(n_b, c_b, s_b, w)``: photon number, center, and width in
-        ``u``, and a weight ``w``.  ``w`` is 1 for widths up to
-        ``_BUMP_S_FULL``, falls smoothly to 0 at ``_BUMP_S_ZERO``, and is
-        0 when no positive bump is found, the fitted width is below the
-        grid step ``du`` (the grid does not resolve the bump), or the
+        ``(n_b, c_b, s_b)``: photon number, center, and width in ``u``.
+        ``n_b`` is scaled down by a taper between ``_BUMP_S_FULL`` and
+        ``_BUMP_S_ZERO``, and is 0 when no positive bump is found or the
         grid ends less than ``3 s + 3 du`` from the center.
     """
-    try:
-        from scipy.optimize import least_squares
-    except ImportError:
-        raise ImportError(
-            "scipy is required for Green's function tables. "
-            "Install it with: pip install scipy"
-        ) from None
+    from scipy.optimize import least_squares
 
     u = log_x - log_x_inj
     h = np.exp(3.0 * log_x) * g
     if not np.all(np.isfinite(h)):
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0
     du = float(np.median(np.diff(log_x)))
     near = np.flatnonzero(np.abs(u) < 0.3)
     if near.size == 0:
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0
     i_pk = int(near[np.argmax(h[near])])
     if h[i_pk] <= 0.0:
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0
     lo, hi = i_pk, i_pk
     while lo > 0 and h[lo] > 0.5 * h[i_pk]:
         lo -= 1
@@ -866,14 +798,14 @@ def _extract_bump(log_x, g, log_x_inj):
     c = float(u[i_pk])
     s = max((u[hi] - u[lo]) / 2.3548, du)
     if s > 2.0 * _BUMP_S_ZERO:
-        return 0.0, 0.0, 0.0, 0.0  # far too broad to split; skip the fit
+        return 0.0, 0.0, 0.0  # far too broad to split; skip the fit
 
     n_b = 0.0
     for _ in range(3):
         half = 6.0 * s + 5.0 * du
         need = 3.0 * s + 3.0 * du
         if c - u[0] < need or u[-1] - c < need:
-            return 0.0, 0.0, 0.0, 0.0
+            return 0.0, 0.0, 0.0
         win = np.abs(u - c) <= half
         uw, hw, cw = u[win], h[win], c
 
@@ -900,11 +832,11 @@ def _extract_bump(log_x, g, log_x_inj):
         n_b = float(np.linalg.lstsq(design(fit.x), hw, rcond=None)[0][3])
         if settled:
             break
-    if not n_b > 0.0 or s < du:
-        return 0.0, 0.0, 0.0, 0.0
+    if not n_b > 0.0:
+        return 0.0, 0.0, 0.0
     t = (s - _BUMP_S_FULL) / (_BUMP_S_ZERO - _BUMP_S_FULL)
     taper = 1.0 if t <= 0.0 else 0.0 if t >= 1.0 else 1.0 - t * t * (3.0 - 2.0 * t)
-    return n_b, c, s, taper
+    return n_b * taper, c, s
 
 
 # ---------------------------------------------------------------------------
