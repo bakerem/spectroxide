@@ -1,6 +1,7 @@
 import numpy as np, glob
 from stats import *
-ccj = np.loadtxt('/home/bakerem/spectroxide/dev/data/cosmotherm_dp_lims.csv', delimiter=',')
+ccj = np.loadtxt('/home/bakerem/spectroxide/dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt')
+ccj = ccj[ccj[:, 0] <= 1.5e-4]  # drop the contour-closure row at m ~ 1e-3 eV
 epub = lambda m: 10**np.interp(np.log10(m), np.log10(ccj[:,0]), np.log10(ccj[:,1]))
 steps = [
  ('S0 CCJ24: diag, resid, T0 fixed, floor a>=0', dict()),

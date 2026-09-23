@@ -33,9 +33,11 @@ For the paper's own statistic (full covariance, column 2 minus B(T), floating T)
 Their Sect. 5 (source lines 626–645) says only "simple Gaussian likelihood". Two readings fit the published curve:
 
 - **A floored best fit,** with diagonal covariance and column 3: 0.978–0.989 of the author-supplied curve.
-- **A Bayesian flat prior on γ_con ≥ 0,** with a 95% upper limit U = â + σΦ⁻¹(1 − 0.05Φ(k)): 0.998–1.005 of the hand-digitized curve, and 1.004–1.026 of the author-supplied curve. For a Gaussian likelihood this equals the asymptotic CLs limit. It gives Δρ/ρ < 5.27e-5, close to the 5.3e-5 in their text.
+- **A Bayesian flat prior on γ_con ≥ 0,** with a 95% upper limit U = â + σΦ⁻¹(1 − 0.05Φ(k)): 1.004–1.026 of the author-supplied curve. For a Gaussian likelihood this equals the asymptotic CLs limit. It gives Δρ/ρ < 5.27e-5, close to the 5.3e-5 in their text.
 
-Our two copies of the CCJ24 curve disagree by up to 3.3% below 1.6e-7 eV and 4.0% up to 3e-5 eV, on a dense grid (the author-supplied `dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt` against the hand-digitized `dev/data/cosmotherm_dp_lims.csv`). That is more than the gap between the two readings, so the evidence we have cannot pick one.
+The two readings land on opposite sides of the curve, each within 2.6%. We have no error budget for the remaining template differences at that level, so we do not pick one.
+
+**2026-09-23:** every notebook and script now uses only the author-supplied AxionLimits curve. This record first also compared a hand-digitized copy, `dev/data/cosmotherm_dp_lims.csv`, which differs from the AxionLimits curve by up to 3.3% below 1.6e-7 eV and 4.0% up to 3e-5 eV. The PDE templates in `dev/scripts/ccj24_gap/` were rerun at ε equal to the AxionLimits curve. That changes them by at most 4e-5 of their peak across the FIRAS band, and the ratios above do not change.
 
 ## Which limit is correct
 
@@ -48,4 +50,4 @@ Both limits are valid, but they answer different questions. The unfloored one-si
 
 ## Notebook
 
-`notebooks/observational/dp_firas_limit_conventions.ipynb` (`d110653`) plots every statistic above against both CCJ24 curves, with the step table and a goodness-of-fit (GoF) limit. The earlier GoF code had the right form (absolute χ² at fixed amplitude against χ²₄₁) but projected the nuisance templates out of the model and not the data, and used diagonal errors. The corrected GoF limit is 1.21 of CCJ24, not 1.35, so CCJ24 did not use a GoF test. FIRAS χ²_min/dof = 48.6/40 (p = 0.17) with full covariance.
+`notebooks/observational/dp_firas_limit_conventions.ipynb` was rewritten on 2026-09-23. It runs 30 PDE templates (`dev/scripts/ccj24_gap/make_grid_templates.py`) through five statistics and divides each by the AxionLimits CCJ24 curve: a literal reading of CCJ24 Sect. 5 (diagonal errors, model-only projection, χ² on their ε grid, limit at Δχ² = 2.71, 3.84, or 4 above the grid minimum), a GoF test with the full covariance and χ²₄₁, and the paper statistic. Medians: 0.887, 0.983, 0.995, 1.230, and 0.849. Δχ² = 3.84 or 4 above the grid minimum reproduces CCJ24. The floored and Bayesian readings above are no longer in the notebook.

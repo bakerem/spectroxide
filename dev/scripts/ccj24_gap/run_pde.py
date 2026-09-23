@@ -2,7 +2,8 @@ import sys, numpy as np
 from spectroxide import g_bb
 from spectroxide.solver import solve
 from spectroxide.dark_photon import gc_per_epsilon_sq
-ccj = np.loadtxt('/home/bakerem/spectroxide/dev/data/cosmotherm_dp_lims.csv', delimiter=',')
+ccj = np.loadtxt('/home/bakerem/spectroxide/dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt')
+ccj = ccj[ccj[:, 0] <= 1.5e-4]  # drop the contour-closure row at m ~ 1e-3 eV
 def eps_pub(m):
     return 10**np.interp(np.log10(m), np.log10(ccj[:,0]), np.log10(ccj[:,1]))
 m = float(sys.argv[1])

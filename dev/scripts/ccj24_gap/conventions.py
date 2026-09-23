@@ -12,7 +12,8 @@ def convs(a, s):
     out['chi2(g)-chi2(0)=3.84'] = k+np.sqrt(k*k+3.84) if k<0 else k+1.96
     out['Feldman-Cousins-like: 1.645 at k=0 bound'] = None
     return {kk: v for kk, v in out.items() if v is not None}
-ccj = np.loadtxt('/home/bakerem/spectroxide/dev/data/cosmotherm_dp_lims.csv', delimiter=',')
+ccj = np.loadtxt('/home/bakerem/spectroxide/dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt')
+ccj = ccj[ccj[:, 0] <= 1.5e-4]  # drop the contour-closure row at m ~ 1e-3 eV
 epub = lambda m: 10**np.interp(np.log10(m), np.log10(ccj[:,0]), np.log10(ccj[:,1]))
 import glob
 for f in sorted(glob.glob('tmpl_*.npz'), key=lambda s: float(s[5:-4])):
