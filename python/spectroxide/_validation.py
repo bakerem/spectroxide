@@ -709,6 +709,16 @@ def renamed_kwargs(**old_to_new: str) -> Callable:
     ``@renamed_kwargs(x_grid="x")`` lets callers still pass ``x_grid=``;
     the value goes to ``x`` with a ``DeprecationWarning``.  Passing both
     names raises ``TypeError``.  Positional calls are unaffected.
+
+    The wrapper this creates adds one stack frame between the caller and
+    ``func``, defined here in ``_validation.py``. A warning raised inside
+    ``func`` (or a helper it calls) with a ``stacklevel`` tuned for the
+    undecorated call chain would resolve one frame too shallow and blame
+    this module instead of the caller. To keep every such warning's
+    filename correct regardless of its original ``stacklevel``, warnings
+    raised while ``func`` runs are captured and re-issued from here with
+    ``stacklevel=2``, which by construction points at whoever called the
+    decorated function.
     """
     import functools
 
@@ -729,7 +739,12 @@ def renamed_kwargs(**old_to_new: str) -> Callable:
                         stacklevel=2,
                     )
                     kwargs[new] = kwargs.pop(old)
-            return func(*args, **kwargs)
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                result = func(*args, **kwargs)
+            for w in caught:
+                warnings.warn(w.message, stacklevel=2)
+            return result
 
         return wrapper
 

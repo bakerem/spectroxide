@@ -663,6 +663,24 @@ class TestValidation:
             _val.warn_x_grid_narrow(np.array([0.5, 1.0, 2.0]))
             assert len(w) >= 1
 
+    def test_renamed_kwargs_warning_attributes_to_caller(self):
+        """The ``renamed_kwargs`` decorator adds a stack frame defined in
+        _validation.py between the caller and the wrapped function. A
+        warning raised inside the wrapped function (here
+        ``warn_x_inj_regime``, stacklevel tuned for the undecorated call
+        chain) must still resolve to this test's frame, not to
+        _validation.py or greens.py.
+        """
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            greens.greens_function_photon(
+                x=np.linspace(0.3, 15.0, 50), x_inj=1e-3, z_h=5e3
+            )
+        assert len(w) == 1
+        assert w[0].filename == __file__
+
 
 # =========================================================================
 # Photon-injection μ/y partners and cosmology-aware P_s (A-6)
