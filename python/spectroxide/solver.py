@@ -19,7 +19,9 @@ This module uses the following conventions:
 from __future__ import annotations
 
 import functools
+import inspect
 import json
+import warnings as _warnings
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -1440,10 +1442,12 @@ def solve(
         Use the :data:`DEBUG` quality preset instead of
         :data:`PRODUCTION`.  Default *False*.
     **kwargs
-        PDE-mode tuning knobs forwarded to the Rust binary
-        (``dy_max``, ``n_points``, ``dtau_max``, ``number_conserving``,
-        ``no_dcbr``, ``cosmo_params``, ``timeout``, ``n_threads``, …);
-        see :func:`run_sweep` for the full list and their defaults.
+        PDE-mode tuning knobs forwarded to the Rust binary: ``dy_max``,
+        ``n_points``, ``production_grid``, ``dtau_max``,
+        ``dtau_max_photon_source``, ``number_conserving``, ``nc_z_min``,
+        ``no_dcbr``, ``timeout``, ``n_threads``, ``project_root``, and
+        ``dn_planck``; see :func:`run_sweep` for their defaults.
+        ``cosmo_params`` is a deprecated alias of ``cosmo``.
 
     Returns
     -------
@@ -1456,12 +1460,170 @@ def solve(
     Raises
     ------
     ValueError
-        If incompatible arguments are supplied (for example, ``method="pde"``
-        but neither ``injection`` nor ``dq_dz`` nor ``photon_source``).
+        If ``method`` is not one of the three valid values, or if a
+        required argument is missing (for example, ``method="pde"`` but
+        neither ``injection`` nor ``dq_dz`` nor ``photon_source``).
     TypeError
-        If ``table`` is neither :class:`GreensTable`,
-        :class:`PhotonGreensTable`, str, Path, nor *None*.
+        If a keyword is unknown, or if an argument is set that the chosen
+        method and mode cannot use (for example, ``cosmo`` or ``z_start``
+        with ``method="greens_function"``). All argument checks run before
+        any solve.  Also raised if ``table`` is neither
+        :class:`GreensTable`, :class:`PhotonGreensTable`, str, Path, nor
+        *None*.
     """
+    # Check every argument before any work, so that a typo or an argument
+    # the chosen method cannot use fails at once and not after a solve.
+    if method not in _SOLVE_METHODS:
+        raise ValueError(
+            f"method={method!r} is not valid; use one of "
+            f"{', '.join(repr(m) for m in _SOLVE_METHODS)}"
+        )
+    if "cosmo_params" in kwargs:
+        if cosmo is not None:
+            raise TypeError(
+                "solve() got both 'cosmo' and 'cosmo_params'; pass only 'cosmo'"
+            )
+        _warnings.warn(
+            "'cosmo_params' is deprecated and will be removed in the next "
+            "minor release; use 'cosmo'",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        cosmo = kwargs.pop("cosmo_params")
+    if "dark_photon_depletion" in kwargs:
+        raise TypeError(
+            "`dark_photon_depletion=γ_con` was removed. Use "
+            "`injection={'type': 'dark_photon_resonance', "
+            "'epsilon': ε, 'm_ev': m}`; γ_con and z_res are computed "
+            "internally."
+        )
+    unknown = sorted(set(kwargs) - _PDE_KWARGS)
+    if unknown:
+        raise TypeError(f"solve() got unexpected keyword arguments: {unknown}")
+
+    args = dict(
+        injection=injection,
+        cosmo=cosmo,
+        z_start=z_start,
+        z_end=z_end,
+        z_h=z_h,
+        delta_rho=delta_rho,
+        x=x,
+        x_min=x_min,
+        x_max=x_max,
+        n_x=n_x,
+        dq_dz=dq_dz,
+        photon_source=photon_source,
+        table=table,
+        z_min=z_min,
+        z_max=z_max,
+        n_z=n_z,
+        verify_hash=verify_hash,
+        debug=debug,
+    )
+    given = {name for name, value in args.items() if _is_given(name, value)}
+    x_grid_args = {"x", "x_min", "x_max", "n_x"}
+    z_int_args = {"z_min", "z_max", "n_z"}
+
+    if method == "greens_function":
+        if injection is not None:
+            raise ValueError(
+                "injection= is PDE-only and is ignored by "
+                "method='greens_function'. For the Green's function, pass "
+                "z_h= (single burst) or dq_dz= (custom heating) directly, "
+                "e.g. solve(method='greens_function', z_h=2e5)."
+            )
+        if z_h is not None and dq_dz is not None:
+            raise TypeError(
+                "method='greens_function' takes z_h (single burst) or dq_dz "
+                "(custom heating), not both"
+            )
+        _reject_unused(
+            "method='greens_function'",
+            given | set(kwargs),
+            allowed=(
+                {"z_h", "delta_rho"} | x_grid_args
+                if dq_dz is None
+                else {"dq_dz"} | x_grid_args | z_int_args
+            ),
+            hint="The heat Green's function is not cosmology-aware and has no "
+            "z_start, z_end, or solver settings; use method='pde' for those.",
+        )
+    elif method == "table":
+        from .greens_table import PhotonGreensTable
+
+        if isinstance(table, PhotonGreensTable):
+            if injection is None or "x_inj" not in injection:
+                raise ValueError("PhotonGreensTable requires injection with 'x_inj'")
+            extra = sorted(set(injection) - {"type", "x_inj", "delta_n_over_n"})
+            if extra:
+                raise TypeError(
+                    f"method='table' with a PhotonGreensTable uses only the "
+                    f"'x_inj' and 'delta_n_over_n' injection keys; got {extra}. "
+                    "Pass z_h as a top-level argument."
+                )
+            if z_h is None:
+                raise ValueError("method='table' with a PhotonGreensTable requires z_h")
+            allowed = {"injection", "z_h", "table", "verify_hash"} | x_grid_args
+        else:
+            if z_h is not None and dq_dz is not None:
+                raise TypeError(
+                    "method='table' takes z_h (single burst) or dq_dz "
+                    "(custom heating), not both"
+                )
+            allowed = {"table", "verify_hash"} | x_grid_args
+            if dq_dz is None:
+                allowed |= {"z_h", "delta_rho"}
+            else:
+                allowed |= {"dq_dz"} | z_int_args
+        _reject_unused(
+            "method='table'",
+            given | set(kwargs),
+            allowed=allowed,
+            hint="Tables are built for one cosmology and have no z_start, "
+            "z_end, or solver settings; use method='pde' for those.",
+        )
+    else:  # method == "pde"
+        has_injection = injection is not None or "dn_planck" in kwargs
+        n_sources = has_injection + (dq_dz is not None) + (photon_source is not None)
+        if n_sources > 1:
+            raise TypeError(
+                "method='pde' takes exactly one of injection= (optionally with "
+                "dn_planck=), dq_dz=, or photon_source="
+            )
+        if z_h is not None:
+            if n_sources == 0:
+                raise ValueError(
+                    "z_h is only used with method='greens_function' or "
+                    "method='table'. For PDE, pass injection={'type': "
+                    f"'single_burst', 'z_h': {z_h}}} with delta_rho={delta_rho} "
+                    "as a top-level parameter."
+                )
+            raise TypeError(
+                "z_h is not used by method='pde'; put the injection redshift "
+                "in the injection dict, e.g. injection={'type': "
+                f"'single_burst', 'z_h': {z_h}}}"
+            )
+        if has_injection:
+            _val.validate_pde_injection_grid_args(
+                x, x_min, x_max, n_x, defaults=(0.01, 30.0, 500)
+            )
+        allowed = {"cosmo", "z_start", "z_end", "debug"} | set(kwargs)
+        if has_injection:
+            allowed |= {"injection"}
+            if injection is not None:
+                allowed |= {"delta_rho"}
+        elif dq_dz is not None:
+            allowed |= {"dq_dz", "delta_rho"} | z_int_args
+        elif photon_source is not None:
+            allowed |= {"photon_source", "delta_rho"} | z_int_args | x_grid_args
+        _reject_unused(
+            "method='pde'",
+            given | set(kwargs),
+            allowed=allowed,
+            hint="table= and verify_hash= belong to method='table'.",
+        )
+
     # Accept Cosmology objects directly (convert to dict for CLI)
     if isinstance(cosmo, Cosmology):
         cosmo = cosmo.to_dict()
@@ -1535,13 +1697,6 @@ def solve(
         )
 
     if method == "greens_function":
-        if injection is not None:
-            raise ValueError(
-                "injection= is PDE-only and is ignored by "
-                "method='greens_function'. For the Green's function, pass "
-                "z_h= (single burst) or dq_dz= (custom heating) directly, "
-                "e.g. solve(method='greens_function', z_h=2e5)."
-            )
         result = run_single(
             z_h=z_h,
             delta_rho=delta_rho,
@@ -1553,7 +1708,6 @@ def solve(
             z_min=z_min,
             z_max=z_max,
             n_z=n_z,
-            **kwargs,
         )
         x_arr = np.asarray(result["x"])
         dn = np.asarray(result["delta_n"])
@@ -1575,31 +1729,10 @@ def solve(
             z_h=z_h,
         )
 
-    # PDE mode — catch common mistake of passing z_h without injection dict
-    if (
-        z_h is not None
-        and injection is None
-        and dq_dz is None
-        and photon_source is None
-    ):
-        raise ValueError(
-            "z_h is only used with method='greens_function' or method='table'. "
-            f"For PDE, pass injection={{'type': 'single_burst', 'z_h': {z_h}}} "
-            f"with delta_rho={delta_rho} as a top-level parameter."
-        )
-
     # PDE mode dispatches directly to one of three single-solve helpers.
     # ``run_sweep`` is reserved for redshift sweeps and is no longer on
     # this path.  Pop the helper kwargs from ``**kwargs`` and forward.
     _dn_planck = kwargs.pop("dn_planck", None)
-    if "dark_photon_depletion" in kwargs:
-        kwargs.pop("dark_photon_depletion")
-        raise TypeError(
-            "`dark_photon_depletion=γ_con` was removed. Use "
-            "`injection={'type': 'dark_photon_resonance', "
-            "'epsilon': ε, 'm_ev': m}`; γ_con and z_res are computed "
-            "internally."
-        )
     n_pts, prod_grid, dtau_ps = _resolve_quality_settings(
         kwargs.pop("n_points", None),
         kwargs.pop("production_grid", None),
@@ -1624,9 +1757,6 @@ def solve(
         n_threads=kwargs.pop("n_threads", None),
     )
     if injection is not None or _dn_planck is not None:
-        _val.validate_pde_injection_grid_args(
-            x, x_min, x_max, n_x, defaults=(0.01, 30.0, 500)
-        )
         data = _run_pde_single_solve(
             injection=injection,
             dn_planck=_dn_planck,
@@ -1653,8 +1783,7 @@ def solve(
             "method='pde' requires one of: injection={...}, dq_dz=..., "
             "photon_source=..., or dn_planck=..."
         )
-    if kwargs:
-        raise TypeError(f"solve() got unexpected keyword arguments: {sorted(kwargs)}")
+    assert not kwargs, f"unconsumed PDE keyword arguments: {sorted(kwargs)}"
     r = data["results"][0]
     x_arr = np.asarray(r["x"])
     dn = np.asarray(r["delta_n"])
@@ -1675,3 +1804,51 @@ def solve(
         rho_e=r.get("rho_e"),
         accumulated_delta_t=r.get("accumulated_delta_t"),
     )
+
+
+#: Valid values of the ``method`` argument of :func:`solve`.
+_SOLVE_METHODS = ("pde", "greens_function", "table")
+
+#: Keyword arguments that :func:`solve` forwards to the PDE helpers.
+_PDE_KWARGS = frozenset(
+    {
+        "dn_planck",
+        "n_points",
+        "production_grid",
+        "dtau_max_photon_source",
+        "project_root",
+        "timeout",
+        "dy_max",
+        "dtau_max",
+        "number_conserving",
+        "nc_z_min",
+        "no_dcbr",
+        "n_threads",
+    }
+)
+
+_SOLVE_DEFAULTS = {
+    name: p.default
+    for name, p in inspect.signature(solve).parameters.items()
+    if p.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD
+}
+
+
+def _is_given(name, value):
+    """Return True if ``solve()`` argument ``name`` differs from its default."""
+    default = _SOLVE_DEFAULTS[name]
+    if default is None:
+        return value is not None
+    if value is default:
+        return False
+    try:
+        return bool(value != default)
+    except (TypeError, ValueError):
+        return True
+
+
+def _reject_unused(where, given, *, allowed, hint):
+    """Raise ``TypeError`` naming each argument in ``given`` outside ``allowed``."""
+    unused = sorted(set(given) - set(allowed))
+    if unused:
+        raise TypeError(f"solve({where}) does not use {', '.join(unused)}. {hint}")

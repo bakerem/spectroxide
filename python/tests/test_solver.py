@@ -281,11 +281,12 @@ class TestSolveGF:
         assert len(result.x) == 200
         np.testing.assert_allclose(result.x, x)
 
-    def test_solve_with_cosmology_object(self):
-        """Can pass a Cosmology object."""
+    def test_solve_rejects_cosmology(self):
+        """The heat Green's function is not cosmology-aware, so cosmo= is an
+        error, not a silently ignored argument (A-1)."""
         cosmo = Cosmology.planck2018()
-        result = solve(method="greens_function", z_h=1e5, delta_rho=1e-5, cosmo=cosmo)
-        assert np.isfinite(result.mu)
+        with pytest.raises(TypeError, match="cosmo"):
+            solve(method="greens_function", z_h=1e5, delta_rho=1e-5, cosmo=cosmo)
 
     def test_solve_with_dq_dz(self):
         """Can pass a custom heating rate function."""
@@ -349,3 +350,135 @@ class TestRunSingle:
         """Must provide either z_h or dq_dz."""
         with pytest.raises(ValueError):
             run_single()
+
+
+# =========================================================================
+# solve() — argument checks before dispatch (A-1, R-7)
+# =========================================================================
+
+# A project root with no binary: any call that got past the argument checks
+# would fail with FileNotFoundError or RuntimeError, not TypeError.
+_NO_BINARY = "/nonexistent/spectroxide-root"
+
+
+class TestSolveArgumentChecks:
+    """solve() rejects bad or unusable arguments before any work."""
+
+    def test_unknown_method(self):
+        with pytest.raises(ValueError, match="method='gf' is not valid"):
+            solve(method="gf", z_h=1e5)
+
+    def test_unknown_keyword_before_pde_solve(self):
+        with pytest.raises(TypeError, match="unexpected keyword.*n_pionts"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                n_pionts=100,
+                project_root=_NO_BINARY,
+            )
+
+    def test_removed_dark_photon_depletion(self):
+        with pytest.raises(TypeError, match="dark_photon_depletion"):
+            solve(dark_photon_depletion=1e-3, project_root=_NO_BINARY)
+
+    @pytest.mark.parametrize(
+        "extra",
+        [
+            {"z_start": 3e5},
+            {"z_end": 100.0},
+            {"photon_source": lambda x, z: 0.0},
+            {"n_points": 2000},
+            {"debug": True},
+            {"table": "some.npz"},
+            {"verify_hash": False},
+        ],
+    )
+    def test_greens_function_rejects_unused(self, extra):
+        name = next(iter(extra))
+        with pytest.raises(TypeError, match=name):
+            solve(method="greens_function", z_h=1e5, **extra)
+
+    def test_greens_function_rejects_z_h_and_dq_dz(self):
+        with pytest.raises(TypeError, match="not both"):
+            solve(method="greens_function", z_h=1e5, dq_dz=lambda z: 0.0)
+
+    def test_greens_function_burst_rejects_z_integration_args(self):
+        with pytest.raises(TypeError, match="n_z"):
+            solve(method="greens_function", z_h=1e5, n_z=100)
+
+    def test_greens_function_heating_rejects_delta_rho(self):
+        with pytest.raises(TypeError, match="delta_rho"):
+            solve(method="greens_function", dq_dz=lambda z: 0.0, delta_rho=1e-4)
+
+    def test_table_rejects_cosmo_before_loading(self):
+        # table=None would load or build the default table; the check must
+        # fire first.
+        with pytest.raises(TypeError, match="cosmo"):
+            solve(method="table", z_h=1e5, cosmo={"h": 0.7})
+
+    def test_table_rejects_injection_for_heat_table(self):
+        with pytest.raises(TypeError, match="injection"):
+            solve(method="table", z_h=1e5, injection={"x_inj": 1.0})
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"injection": {"type": "single_burst", "z_h": 1e5}, "dq_dz": abs},
+            {"dq_dz": abs, "photon_source": lambda x, z: 0.0},
+            {"dn_planck": 1e-5, "dq_dz": abs},
+        ],
+    )
+    def test_pde_rejects_two_sources(self, kwargs):
+        with pytest.raises(TypeError, match="exactly one"):
+            solve(project_root=_NO_BINARY, **kwargs)
+
+    def test_pde_rejects_top_level_z_h_with_injection(self):
+        with pytest.raises(TypeError, match="z_h is not used"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                z_h=1e5,
+                project_root=_NO_BINARY,
+            )
+
+    def test_pde_z_h_without_source(self):
+        with pytest.raises(ValueError, match="z_h is only used"):
+            solve(z_h=1e5, project_root=_NO_BINARY)
+
+    def test_pde_injection_rejects_z_integration_args(self):
+        with pytest.raises(TypeError, match="z_max"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                z_max=1e6,
+                project_root=_NO_BINARY,
+            )
+
+    def test_pde_heating_rejects_x_grid(self):
+        with pytest.raises(TypeError, match="n_x"):
+            solve(dq_dz=abs, n_x=100, project_root=_NO_BINARY)
+
+    def test_pde_rejects_table(self):
+        with pytest.raises(TypeError, match="table"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                table="some.npz",
+                project_root=_NO_BINARY,
+            )
+
+    def test_cosmo_params_alias_warns(self):
+        # The alias is accepted; the call then fails only because the
+        # binary is missing, which proves the checks passed.
+        with pytest.warns(DeprecationWarning, match="cosmo_params"):
+            with pytest.raises((FileNotFoundError, RuntimeError)):
+                solve(
+                    injection={"type": "single_burst", "z_h": 1e5},
+                    cosmo_params={"h": 0.7},
+                    project_root=_NO_BINARY,
+                )
+
+    def test_cosmo_params_and_cosmo_conflict(self):
+        with pytest.raises(TypeError, match="both 'cosmo' and 'cosmo_params'"):
+            solve(
+                injection={"type": "single_burst", "z_h": 1e5},
+                cosmo={"h": 0.7},
+                cosmo_params={"h": 0.7},
+                project_root=_NO_BINARY,
+            )
