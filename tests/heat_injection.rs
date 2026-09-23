@@ -1523,7 +1523,8 @@ fn test_dcbr_relaxes_to_actual_electron_temperature() {
 
 /// A decaying particle with Γ_X = 1e-13 s⁻¹ (lifetime near z ≈ 1000), run on to
 /// z = 500, heats the electrons below recombination until T_e hits
-/// the solver's cap. That regime would ionize the gas while X_e is held on
+/// the solver's cap. That regime would change the ionization history (hotter
+/// electrons recombine more slowly) while X_e is held on
 /// its recombination history, so the solver must say so with exactly one
 /// warning per run (decisions/0002-..., Addendum).
 #[test]
@@ -1546,7 +1547,7 @@ fn test_decaying_particle_late_heating_warns() {
         .diag
         .warnings
         .iter()
-        .filter(|w| w.contains("ionize the gas"))
+        .filter(|w| w.contains("change the ionization history"))
         .count();
     assert_eq!(
         n_warn, 1,

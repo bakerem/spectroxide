@@ -263,7 +263,7 @@ pub struct SolverDiagnostics {
     /// warning; later ones only increment this counter.
     pub dcbr_target_clamped: usize,
     /// Whether the once-per-run warning for ρ_e reaching its upper cap
-    /// (heating strong enough to ionize the gas) has been pushed.
+    /// (heating strong enough to change the ionization history) has been pushed.
     pub(crate) heating_cap_warned: bool,
     /// Whether the once-per-run warning for a negative or non-finite ρ_e has
     /// been pushed.
@@ -875,9 +875,10 @@ impl ThermalizationSolver {
     /// non-finite value increments `diag.rho_e_clamped`.
     ///
     /// The upper cap is reached only when heating drives T_e far above the
-    /// photon temperature. Such heating would collisionally ionize the gas,
-    /// while the solver holds X_e on its recombination history, so the first
-    /// hit in a run pushes a warning that results may be inaccurate. A
+    /// photon temperature. Such heating would change the ionization history
+    /// (hotter electrons recombine more slowly), while the solver holds X_e on
+    /// its standard recombination history, so the first hit in a run pushes a
+    /// warning that results may be inaccurate. A
     /// negative or non-finite ρ_e pushes its own once-per-run warning.
     fn guard_rho_e(&mut self, raw: f64, hi: f64, z: f64) -> Option<f64> {
         let out = if raw.is_finite() {
@@ -894,10 +895,9 @@ impl ThermalizationSolver {
                 self.diag.heating_cap_warned = true;
                 self.diag.warnings.push(format!(
                     "Substantial heating: at z = {z:.4e} the electron temperature reached \
-                     the cap T_e/T_z = {hi}. Heating this strong would raise T_e enough to \
-                     ionize the gas, but the solver holds the ionization fraction X_e fixed \
-                     at its recombination history, so the results may be inaccurate. T_e is \
-                     clamped at the cap on this and any later such step."
+                     the cap T_e/T_z = {hi}. Heating this strong would change the ionization \
+                     history (hotter electrons recombine more slowly), so results may be \
+                     inaccurate. T_e is clamped at the cap on this and any later such step."
                 ));
             }
         } else {

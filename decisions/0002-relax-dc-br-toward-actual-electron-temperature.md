@@ -91,8 +91,9 @@ Injection below z ≈ 1000 is outside the Green's-function formalism. That match
 CosmoTherm Green's-function database (z = 1000 to 5e6).
 
 Heating strong enough to reach the solver's ρ_e caps (1.5 in the backward-Euler predictor, 3.0
-after the coupled Newton solve) now pushes one warning per run. Such heating would ionize the gas,
-while the solver holds X_e on its recombination history. In that regime the old target went
+after the coupled Newton solve) now pushes one warning per run: "Heating this strong would change
+the ionization history (hotter electrons recombine more slowly), so results may be inaccurate."
+The solver holds X_e on its standard recombination history. In that regime the old target went
 negative (ρ_dcbr = −3.2 at z ≈ 910 with the cap raised to 20) and was silently clamped to 0.5.
 
 The implementation lowers the guard on the DC/BR target from [0.5, 2] to [0.05, 2], so that
