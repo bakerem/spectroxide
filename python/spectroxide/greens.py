@@ -813,11 +813,16 @@ def _softplus(a):
         return np.log1p(np.exp(a))
 
 
-def _gaunt_ff_nr(x, theta_e, z_charge):
-    """Non-relativistic free-free Gaunt factor (softplus interpolation)."""
-    if theta_e < 1e-30 or x < 1e-30:
+def _gaunt_ff_nr(x_e, theta_e, z_charge):
+    """Non-relativistic free-free Gaunt factor (softplus interpolation).
+
+    ``x_e`` is h nu / (k T_e) = x / rho_e, not the grid variable x = h nu / (k T_z).
+    The low-frequency limit is the classical Gaunt factor of Draine (2011),
+    Eq. 10.9. Mirrors ``gaunt_ff_nr`` in ``src/bremsstrahlung.rs``.
+    """
+    if theta_e < 1e-30 or x_e < 1e-30:
         return 1.0
-    arg = _S3_PI * (np.log(2.25 / (x * z_charge)) + 0.5 * np.log(theta_e)) + 1.425
+    arg = _S3_PI * (np.log(2.25 / (x_e * z_charge)) + 0.5 * np.log(theta_e)) + 1.425
     return 1.0 + _softplus(arg)
 
 
@@ -846,8 +851,9 @@ def _br_emission_coefficient_with_he(
     phi = theta_z / theta_e
     temp_factor = theta_e ** (-3.5) * np.exp(-x * phi) / phi**3
 
-    g_z1 = _gaunt_ff_nr(x, theta_e, 1.0)
-    g_z2 = _gaunt_ff_nr(x, theta_e, 2.0)
+    # The Gaunt factor takes x_e = x * phi = h nu / (k T_e), not the grid x.
+    g_z1 = _gaunt_ff_nr(x * phi, theta_e, 1.0)
+    g_z2 = _gaunt_ff_nr(x * phi, theta_e, 2.0)
 
     n_hii = min(x_e_frac, 1.0) * n_h
     n_heiii = y_he_ii * n_he
