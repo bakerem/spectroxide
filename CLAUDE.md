@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test --release           # Run all tests (189 unit + 318 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release           # Run all tests (189 unit + 320 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
 cargo test --release test_name # Run a single test by name
 CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -84,7 +84,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 - `heat_injection.rs` — 203 integration tests (199 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
-- `coverage_gaps.rs` — 23 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1).
+- `coverage_gaps.rs` — 23 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1; the small-grid test runs 50 points per ADR 0004).
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 7 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift) and Gaunt-factor spot checks.
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
@@ -93,6 +93,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 - `physics_identities.rs` — 12 tests + 1 ignored: closed-form and published identities added by the physics-check audit (`dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`): Thomson depth vs Planck z_*, exact moments of the G_bb/M/Y shapes, Kompaneets first/second moment identities and H-theorem, quasi-stationary T_e energy return, DC/BR crossover redshift, grid-boundary independence, T_e Compton/adiabatic balance, α_th = 5/2 (ignored, ~7 min), plus the sensitivity-directed photon anchors T-PS-1/2/3 (P_s(x_c) = 1/e, x_c vs Chluba 2015 Eq. 25, μ at x_inj = x_c), and the reduced-mass hydrogen ionization energy from typed CODATA values.
 - `mms_convergence.rs` — 8 tests: method of manufactured solutions on the Kompaneets kernel and the coupled path, plus the photon-number ledger identity. **Verifies the discretization, not the equation** — see Pitfall #11.
 - `conservation_fuzz.rs` — 3 tests: randomized energy/number-closure fuzzing across scenarios and grids.
+- `heat_delivery.rs` — 2 tests: fraction of injected heat that reaches the photons after recombination (burst at z_h = 1000, decay with lifetime at z = 1000), pinned to an independent gas-temperature integration (`dev/audit/fix_a_cn_old_half_ab.md`). Both fail without ADR 0004.
 
 **The moment-hierarchy suite** (`dev/audit/KOMPANEETS_VERIFICATION_RESULTS.md`, plan `dev/PLAN_KOMPANEETS_MOMENT_VERIFICATION_2026-07-07.md`). These exist to pin the *formulation* against targets derived outside the code, closing the Pitfall #11 gap that MMS cannot reach. Coverage is tracked per physical term in `dev/audit/term_coverage_matrix.md`.
 - `kompaneets_moments.rs` — 11 tests: the exact moment hierarchy `dM_k/dy = (k−2)(k+1)M_k − (k−2)M_{k+1}` (derived by integration by parts on the *published* Kompaneets equation, coefficients not taken from the code) at k = 3,4,5; the Zel'dovich–Sunyaev energy law; the (φ−1) heating branch against the analytic Y_SZ shape *and* amplitude — the only test that exercises that branch, since every other kernel test runs at φ = 1 where it vanishes; a Δn² linearity diagnostic; and the H-theorem at Δn ~ n_pl, the only fully nonlinear check in the repo. Two tiers: tier-a carries the independent physics, tier-b adds the measured stimulated/quadratic term `C_k` to separate regime contamination from real failure.
