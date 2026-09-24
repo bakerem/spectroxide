@@ -248,74 +248,15 @@ def build_all():
     ])
 
     # ------------------------------------------------------------------
-    # 4. DM Scenario Comparison (Fig 4) — from dev/notebooks/pde_greens_function.ipynb
+    # 4. DM Scenario Comparison (Fig 4) — maintained by hand, NOT generated.
     # ------------------------------------------------------------------
-    gf_cells = read_notebook_cells(root / "dev" / "notebooks" / "pde_greens_function.ipynb")
-    gf_code = {i: src for i, (ct, src) in enumerate(gf_cells) if ct == "code"}
-
-    def find_gf_cell(keyword):
-        for i, src in gf_code.items():
-            if keyword in src:
-                return i, src
-        return None, None
-
-    # Use explicit cell index for imports (cell 1) and strip sys.path hack
-    gf_imports = gf_cells[1][1]
-    # Remove sys.path.insert line
-    gf_imports = "\n".join(
-        line for line in gf_imports.splitlines()
-        if "sys.path.insert" not in line
-    )
-    _ = None  # unused
-    _, gf_params = find_gf_cell("f_ann_CT_sw = 1e-22")      # cell 3
-    _, gf_ct_load = find_gf_cell("z_h_ct, x_ct, g_th_ct = load_greens_database")  # cell 5
-    _, gf_pde_table = find_gf_cell("Build PDE-derived Green's function table")  # cell 7
-    _, gf_convolve = find_gf_cell("Convolve PDE GF table with DM")  # cell 8
-    _, gf_dm_pde = find_gf_cell("dm_injections =")          # cell 12
-    _, gf_strip = find_gf_cell("pde_no_gbb = {}")           # cell 14
-    _, gf_figure = find_gf_cell("Paper figure: all DM scenarios overlaid")  # cell 20
-
-    # Fix paths in cells
-    gf_pde_table = gf_pde_table.replace(
-        'CACHE_PATH = pathlib.Path("../data/pde_gf_table_cache.npz")',
-        "CACHE_PATH = PROJECT_ROOT / 'dev' / 'data' / 'pde_gf_table_cache.npz'"
-    ).replace(
-        'CACHE_PATH = pathlib.Path("../data/pde_gf_table_cache.npz")',
-        "CACHE_PATH = PROJECT_ROOT / 'dev' / 'data' / 'pde_gf_table_cache.npz'"
-    )
-
-    gf_dm_pde = gf_dm_pde.replace(
-        'PDE_CACHE = pathlib.Path("../data/pde_dm_results_nc_cache.npz")',
-        "PDE_CACHE = PROJECT_ROOT / 'dev' / 'data' / 'pde_dm_results_nc_cache.npz'"
-    )
-
-    gf_figure = gf_figure.replace(
-        'plt.savefig("../../notebooks/figures/pde_gf_dm_comparison.pdf", dpi=SAVE_DPI)',
-        "plt.savefig(FIG_DIR / 'pde_gf_dm_comparison.pdf', dpi=SAVE_DPI)"
-    )
-
-    write_notebook("dm_scenario_comparison", [
-        ("markdown",
-         "# Dark Matter Spectral Distortions: PDE vs GF\n\n"
-         "Generates `pde_gf_dm_comparison.pdf` (Figure 4 in paper).\n\n"
-         "Three DM scenarios (decay, s-wave, p-wave annihilation) compared "
-         "across PDE solver, CosmoTherm GF convolution, and spectroxide GF table."),
-        ("code", _SETUP + "\n" + gf_imports),
-        ("markdown", "## DM scenario parameters"),
-        ("code", gf_params),
-        ("markdown", "## CosmoTherm GF convolution"),
-        ("code", gf_ct_load),
-        ("markdown", "## PDE GF table (build or load cache)"),
-        ("code", gf_pde_table),
-        ("markdown", "## Convolve PDE GF table with DM heating rates"),
-        ("code", gf_convolve),
-        ("markdown", "## Direct PDE runs"),
-        ("code", gf_dm_pde),
-        ("markdown", "## Strip G_bb from PDE"),
-        ("code", gf_strip),
-        ("markdown", "## Figure"),
-        ("code", gf_figure),
-    ])
+    # This section used to rebuild dm_scenario_comparison.ipynb from
+    # dev/notebooks/pde_greens_function.ipynb. That source still holds the
+    # 2026-04-14 cells (f_ann divided by n_H_0, f_ann = 1e-22/1e-26 eV/s,
+    # N = 2000, a cache check on z range and n_points only), so every
+    # regeneration silently reverted the hand-fixed figure notebook: it
+    # over-injected s- and p-wave energy by 1/n_H_0 = 5.28 and no longer
+    # matched the paper's parameters. Edit the notebook directly.
 
     # ------------------------------------------------------------------
     # 5. Pathological Heating (Fig 5) — from dev/notebooks/remake_pathological_figure.ipynb
