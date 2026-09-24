@@ -20,7 +20,8 @@ Outputs:
     j_mu_fit     (N_z,)        analytic J_μ(z_h), held fixed (not fitted)
     j_bb_fit     (N_z,)        fitted P / J_μ(z_h); unbounded, and not a J_bb*
                                estimate where the spectrum is mostly y
-    j_y_fixed    (N_z,)        J_y from Chluba formula (fixed per z_h)
+    j_y_fit      (N_z,)        fitted J_y (tables built before 190390d store the
+                               Chluba formula under the key j_y_fixed)
     n_points     scalar         grid resolution used
 """
 import sys
@@ -97,7 +98,7 @@ pde_mu_arr = np.zeros(n_z)
 pde_y_arr = np.zeros(n_z)
 j_mu_fit_arr = np.zeros(n_z)
 j_bb_fit_arr = np.zeros(n_z)
-j_y_fixed_arr = np.zeros(n_z)
+j_y_fit_arr = np.zeros(n_z)
 
 for k, r in enumerate(results):
     z_h = z_h_grid[k]
@@ -116,13 +117,13 @@ for k, r in enumerate(results):
     gf_mid = 0.5 * (gf[:-1] + gf[1:])
     drho_arr[k] = np.sum(x_mid**3 * gf_mid * dx) / G3_PLANCK
 
-    # Per-spectrum decomposition (extracts J_mu, J_bb* fits)
+    # Per-spectrum decomposition (extracts J_mu, J_bb*, and J_y fits)
     dec = decompose_distortion(x_pde, dn, z_h=z_h, method="gf_fit")
     pde_mu_arr[k] = dec["mu"] / DELTA_RHO
     pde_y_arr[k] = dec["y"] / DELTA_RHO
     j_mu_fit_arr[k] = dec["j_mu_fit"]
     j_bb_fit_arr[k] = dec["j_bb_star_fit"]
-    j_y_fixed_arr[k] = dec["j_y"]
+    j_y_fit_arr[k] = dec["j_y"]
 
     if (k + 1) % 20 == 0 or k == n_z - 1:
         print(f"  {k + 1}/{n_z} spectra processed")
@@ -143,7 +144,7 @@ np.savez(
     pde_y=pde_y_arr,
     j_mu_fit=j_mu_fit_arr,
     j_bb_fit=j_bb_fit_arr,
-    j_y_fixed=j_y_fixed_arr,
+    j_y_fit=j_y_fit_arr,
     n_points=N_POINTS,
 )
 print(f"\nSaved: {outpath}")
@@ -154,11 +155,11 @@ print(f"  dn_nc:    ({n_z}, {n_x})")
 
 # ── Quick summary ───────────────────────────────────────────────────────
 print(f"\n{'z_h':>10s}  {'Δρ/ρ':>8s}  {'μ':>10s}  {'y':>10s}  "
-      f"{'J_μ fit':>8s}  {'J_bb* fit':>8s}  {'J_y':>8s}")
+      f"{'J_μ fit':>8s}  {'J_bb* fit':>8s}  {'J_y fit':>8s}")
 print("=" * 75)
 for k in range(0, n_z, max(1, n_z // 25)):
     print(f"{z_h_grid[k]:10.3e}  {drho_arr[k]:8.4f}  {pde_mu_arr[k]:10.4f}  "
           f"{pde_y_arr[k]:10.4e}  {j_mu_fit_arr[k]:8.4f}  "
-          f"{j_bb_fit_arr[k]:8.4f}  {j_y_fixed_arr[k]:8.4f}")
+          f"{j_bb_fit_arr[k]:8.4f}  {j_y_fit_arr[k]:8.4f}")
 
 print(f"\nTotal runtime: {time.time() - t0:.0f}s")

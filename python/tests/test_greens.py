@@ -292,7 +292,8 @@ class TestGfFitRecovery:
     The synthetic spectrum is the method's own ansatz built from a μ
     visibility P = J_μ J_bb* and a y visibility J_y, both offset from the
     analytic Chluba (2013) values. A fit that returns the analytic values,
-    or holds J_y at the formula, misses them by the offset (10%). The grid spans x ∈ [1e-4, 80] so that the measured
+    or holds J_y at the formula, misses them by the offset (10%). The
+    grid spans x ∈ [1e-4, 80] so that the measured
     Δρ/ρ equals the injected value to 3e-7; on a truncated band the
     energy normalization alone would bias P at the percent level.
     """
@@ -1090,6 +1091,62 @@ class TestBremsstrahlungGaunt:
                         f"code={g_code:.6f}, Draine={g_draine:.6f}, rel_err={rel_err:.2e}"
                     )
         assert max_rel_err < 2e-4
+
+
+class TestGfFitXRange:
+    """``x_range`` sets the fit band for ``gf_fit`` and nothing else."""
+
+    X = np.geomspace(1e-4, 80.0, 40000)
+    Z_H = 7e4
+
+    def _exact(self):
+        return TestGfFitRecovery._spectrum(
+            self.X, self.Z_H, 0.9 * greens.j_mu(self.Z_H), 1e-5, jy=0.8
+        )
+
+    def test_default_is_documented_band(self):
+        dn = self._exact() * (1.0 + 0.1 * np.exp(-self.X))
+        a = greens.decompose_distortion(self.X, dn, z_h=self.Z_H, method="gf_fit")
+        b = greens.decompose_distortion(
+            self.X,
+            dn,
+            z_h=self.Z_H,
+            method="gf_fit",
+            x_range=(greens.GF_FIT_X_MIN, greens.GF_FIT_X_MAX),
+        )
+        assert a["mu"] == b["mu"] and a["y"] == b["y"]
+
+    def test_narrow_band_recovers_exact_ansatz(self):
+        res = greens.decompose_distortion(
+            self.X, self._exact(), z_h=self.Z_H, method="gf_fit", x_range=(1.0, 10.0)
+        )
+        assert abs(res["j_y"] - 0.8) < 1e-6
+
+    def test_band_changes_fit_off_ansatz(self):
+        """Off the ansatz, the fitted amplitudes depend on the band."""
+        dn = self._exact() * (1.0 + 0.1 * np.exp(-self.X))
+        wide = greens.decompose_distortion(self.X, dn, z_h=self.Z_H, method="gf_fit")
+        low = greens.decompose_distortion(
+            self.X, dn, z_h=self.Z_H, method="gf_fit", x_range=(0.5, 3.0)
+        )
+        assert abs(low["j_y"] - wide["j_y"]) > 1e-3
+
+    def test_other_method_rejects_x_range(self):
+        dn = self._exact()
+        with pytest.raises(ValueError):
+            greens.decompose_distortion(
+                self.X, dn, z_h=self.Z_H, method="bf", x_range=(0.5, 20.0)
+            )
+
+    def test_band_with_too_few_points_raises(self):
+        with pytest.raises(ValueError):
+            greens.decompose_distortion(
+                self.X,
+                self._exact(),
+                z_h=self.Z_H,
+                method="gf_fit",
+                x_range=(100.0, 200.0),
+            )
 
 
 class TestGfFitRejectsBadInput:
