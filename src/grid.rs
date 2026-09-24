@@ -102,8 +102,14 @@ impl GridConfig {
                 self.x_max
             ));
         }
-        if self.n_points < 10 {
-            return Err(format!("n_points must be >= 10, got {}", self.n_points));
+        if self.n_points < 100 {
+            return Err(format!(
+                "n_points must be >= 100, got {}. This is a sanity floor, not an \
+                 accuracy bound: below ~100 points the solver can return NaN or \
+                 garbage with T_e pinned at its cap. Use n_points >= 1000 for \
+                 accurate results (see MIN_TESTED_GRID_POINTS).",
+                self.n_points
+            ));
         }
         if !self.log_fraction.is_finite() || self.log_fraction < 0.0 || self.log_fraction >= 1.0 {
             return Err(format!(

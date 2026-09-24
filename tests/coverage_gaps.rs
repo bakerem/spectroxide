@@ -704,10 +704,12 @@ fn injected_delta_rho_between_closed_forms() {
 /// R-1 reproduction: a 100-point grid started at z = 5e6 ends with
 /// Δρ/ρ ≈ −1.5e-2 for an injected +1e-5 and used to exit cleanly. The
 /// energy-closure and small-grid warnings must both fire. The same failed
-/// run with the burst at z_h = 1600, where nearly all of the heat lands
-/// below z = 2000, must skip the energy check (late-injection rule). The
-/// run takes > 100,000 steps, so it also checks that the progress line
-/// stays out of `warnings` (R-5).
+/// run with the burst at z_h = 1600 must also warn. Before ADR 0004 the
+/// late-injection rule skipped it, because nearly all of its heat lands
+/// below z = 2000; physically that heat reaches the photons to 1e-5
+/// (`dev/scripts/heatloss/heat_delivery_expectation.py`), and none of it
+/// falls below the new cutoff z = 600. The first run takes > 100,000 steps,
+/// so it also checks that the progress line stays out of `warnings` (R-5).
 #[test]
 fn energy_closure_warns_on_coarse_grid() {
     let (drho, warnings, steps) = burst_run(3000.0, 1e-5, 5e6, 500.0, 100);
@@ -729,7 +731,7 @@ fn energy_closure_warns_on_coarse_grid() {
         "drho = {drho_late:e}"
     );
     assert!(
-        !has_warning(&warnings_late, "Energy closure"),
+        has_warning(&warnings_late, "Energy closure"),
         "{warnings_late:?}"
     );
 }
@@ -748,13 +750,13 @@ fn energy_closure_silent_when_resolved() {
 }
 
 /// A burst at z_h = 1000 heats the electrons past the ρ_e cap (the
-/// "Substantial heating" warning) and delivers about half its energy. All of
-/// its heat lies below z = 2000, so the late-injection rule silences the
-/// energy check before the cap rule is reached. The unit test
-/// `test_energy_closure_skip_rules` in `solver.rs` and
-/// `energy_closure_capped_shortfall_silent` isolate the cap rule.
+/// "Substantial heating" warning) and delivers about half its energy. Only
+/// 3e-5 of its heat lies below z = 600, so the late-injection rule does not
+/// apply (before ADR 0004 it did, with its cutoff at z = 2000), and the cap
+/// rule alone silences the shortfall. `test_energy_closure_late_rule` in
+/// `solver.rs` checks the uncapped burst at z_h = 1000.
 #[test]
-fn energy_closure_skipped_for_late_capped_burst() {
+fn energy_closure_silent_for_capped_burst_at_recombination() {
     let (drho, warnings, _) = burst_run(1000.0, 1e-5, 1700.0, 200.0, 500);
     assert!(
         has_warning(&warnings, "Substantial heating"),
@@ -794,12 +796,12 @@ fn table_run(
 
 /// A capped run with an excess must still warn. Constant heating
 /// d(Δρ/ρ)/dz = 5.8e-11 on z ∈ [500, 5e6] injects 5.8e-11 × (5e6 − 500)
-/// = 2.9e-4, only 0.03% of it below z = 2000, so the late rule does not
+/// = 2.9e-4, only 0.002% of it below z = 600, so the late rule does not
 /// apply. The heat below recombination drives ρ_e to its cap, and the
 /// 500-point grid leaves the spectrum with 24% more energy than was
 /// injected (measured; finding R-1 in dev/REVIEW_2026-09-22.md gives +3%
-/// for this table at 1000 points). The cap only removes heat, so the excess is a grid error and the
-/// energy check must say so.
+/// for this table at 1000 points). The cap only removes heat, so the excess
+/// is a grid error and the energy check must say so.
 #[test]
 fn energy_closure_capped_excess_warns() {
     let z_table: Vec<f64> = (0..200)
@@ -828,15 +830,18 @@ fn energy_closure_capped_excess_warns() {
         .filter(|w| w.starts_with("Energy closure"))
         .collect();
     assert_eq!(closure.len(), 1, "{warnings:?}");
-    assert!(closure[0].contains("cannot cause an excess"), "{closure:?}");
+    assert!(
+        closure[0].contains("hit its cap") && closure[0].contains("cannot cause an excess"),
+        "{closure:?}"
+    );
 }
 
-/// A capped run with a shortfall stays silent, with the cap as the only skip
-/// rule. A burst at z_h = 2e5 (Δρ/ρ = 1e-5) is followed by constant heating
-/// of 3e-9 per unit z on z ∈ [500, 800]. That tail carries 9e-7, 8.3% of the
-/// total, below the 10% late-injection limit, so the late rule does not
-/// apply. The tail drives ρ_e to its cap, and most of the tail heat never
-/// reaches the photons: they end 7.7% short (measured), beyond the 5%
+/// A capped run with a shortfall stays silent, with the cap rule alone. A
+/// burst at z_h = 2e5 (Δρ/ρ = 1e-5) is followed by constant heating of 3e-9
+/// per unit z on z ∈ [500, 800]. That tail carries 9e-7, 8.3% of the total.
+/// The third of it below z = 600 is 2.8% of the total, below the 3%
+/// late-injection limit, so the late rule does not apply. The tail drives
+/// ρ_e to its cap, and most of the tail heat never reaches the photons: they end 7.7% short (measured), beyond the 5%
 /// tolerance. The run already warns "Substantial heating", so the energy
 /// check stays silent.
 #[test]
@@ -932,22 +937,38 @@ fn energy_closure_tabulated_heating() {
 /// No input produces NaN deterministically (`set_initial_delta_n` rejects
 /// it), so this test relies on the 50-point instability. If a robustness fix
 /// removes it, find another trigger rather than deleting the test.
+///
+/// `GridConfig::validate` now rejects `n_points < 100` (review decision
+/// 2026-09-23: 100 is a sanity floor, not an accuracy bound — the coarse
+/// instability this test needs lives strictly below it), so `.builder()`
+/// can no longer construct this grid. Built directly via
+/// `ThermalizationSolver::new` + `set_injection` + `set_config`, which
+/// bypasses `GridConfig::validate` by design (see its doc comment); this is
+/// safe here because `SingleBurst` has no refinement zones or resonance
+/// handling that the builder would otherwise add.
 #[test]
 fn nan_run_returns_error_not_panic() {
     let build = || {
-        ThermalizationSolver::builder(Cosmology::default())
-            .grid(GridConfig {
+        let mut solver = ThermalizationSolver::new(
+            Cosmology::default(),
+            GridConfig {
                 n_points: 50,
                 ..GridConfig::default()
-            })
-            .injection(InjectionScenario::SingleBurst {
+            },
+        );
+        solver
+            .set_injection(InjectionScenario::SingleBurst {
                 z_h: 3000.0,
                 delta_rho_over_rho: 1e-5,
                 sigma_z: 120.0,
             })
-            .z_range(5e6, 500.0)
-            .build()
-            .unwrap()
+            .unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 5e6,
+            z_end: 500.0,
+            ..SolverConfig::default()
+        });
+        solver
     };
     let mut solver = build();
     let err = match solver.try_run_to_result(500.0) {
@@ -979,37 +1000,49 @@ fn nan_run_returns_error_not_panic() {
     assert!(msg.contains("NaN/Inf detected in delta_n"), "{msg}");
 }
 
-/// A coarse 50-point grid runs to completion without panicking and carries
+/// A coarse 100-point grid runs to completion without panicking and carries
 /// the small-grid warning.
 ///
 /// This was `smallest_accepted_grid_runs_and_warns` on the 10-point grid,
-/// the smallest that validation accepts. There the answer is garbage with or
-/// without ADR 0004: before it, Δρ/ρ = 15.9 with ρ_e at its cap; after it,
-/// NaN. At 50 points and above both versions are finite and agree to 0.3%
-/// (`dev/audit/fix_a_cn_old_half_ab.md`), so the test moved there
-/// (follows ADR 0004).
+/// then moved to 50 (the smallest grid that validation accepted at the
+/// time, following ADR 0004: before it, Δρ/ρ = 15.9 with ρ_e at its cap;
+/// after it, NaN). `GridConfig::validate` now rejects `n_points < 100`
+/// (review decision 2026-09-23: a sanity floor, not an accuracy bound), so
+/// the test moved to 100, the new smallest accepted grid. At 100 points and
+/// above the result is finite though inaccurate (μ ~16% off).
 #[test]
 fn coarse_grid_runs_and_warns() {
-    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 50);
+    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 100);
     assert!(drho.is_finite());
     assert!(
-        has_warning(&warnings, "Frequency grid has n_points=50"),
+        has_warning(&warnings, "Frequency grid has n_points=100"),
         "{warnings:?}"
     );
 }
 
-/// The smallest grid validation accepts (10 points, `GridConfig::validate`)
-/// never returns silently. Its answer is garbage either way, so the run must
-/// either stop with the NaN error, naming the coarse grid as the likely
-/// cause, or return with the small-grid warning. A panic fails the test.
-///
-/// Before ADR 0004 this run returned Δρ/ρ = 15.9 with ρ_e at its cap; after
-/// it, Δn goes to NaN. Both outcomes satisfy this test.
+/// `GridConfig::validate` rejects `n_points` below the 100-point floor
+/// (review decision 2026-09-23) with a clear error naming the minimum.
+#[test]
+fn grid_floor_rejects_below_100() {
+    let err = GridConfig {
+        n_points: 99,
+        ..GridConfig::default()
+    }
+    .validate()
+    .expect_err("99 points must be rejected below the 100-point floor");
+    assert!(err.contains("n_points"), "{err}");
+    assert!(err.contains("100"), "{err}");
+}
+
+/// The smallest grid `GridConfig::validate` accepts (100 points, since the
+/// review decision 2026-09-23 raised the floor from 10) must never return
+/// silently: it either runs and carries the small-grid warning, or fails
+/// cleanly with an `Err` that names the coarse grid as the cause.
 #[test]
 fn smallest_accepted_grid_never_returns_silently() {
     let mut solver = ThermalizationSolver::builder(Cosmology::default())
         .grid(GridConfig {
-            n_points: 10,
+            n_points: 100,
             ..GridConfig::default()
         })
         .injection(InjectionScenario::SingleBurst {
@@ -1022,18 +1055,18 @@ fn smallest_accepted_grid_never_returns_silently() {
         .unwrap();
     match solver.try_run_to_result(1e5) {
         Ok(r) => {
-            eprintln!("10 points: Ok, Δρ/ρ = {:e}", r.snapshot.delta_rho_over_rho);
+            eprintln!("100 points: Ok, Δρ/ρ = {:e}", r.snapshot.delta_rho_over_rho);
             assert!(
-                has_warning(&r.warnings, "Frequency grid has n_points=10"),
+                has_warning(&r.warnings, "Frequency grid has n_points=100"),
                 "returned Δρ/ρ = {:e} without the small-grid warning: {:?}",
                 r.snapshot.delta_rho_over_rho,
                 r.warnings
             );
         }
         Err(e) => {
-            eprintln!("10 points: Err, {e}");
+            eprintln!("100 points: Err, {e}");
             assert!(e.contains("NaN/Inf detected in delta_n"), "{e}");
-            assert!(e.contains("too coarse (n_points=10"), "{e}");
+            assert!(e.contains("too coarse (n_points=100"), "{e}");
         }
     }
 }

@@ -269,13 +269,22 @@ fn test_cli_solve_single_burst_json() {
     );
 }
 
-/// A 50-point grid from z = 5e6 produces NaN in Δn. The binary must report
-/// it as an error (exit 1, "Error: ... NaN/Inf ...") instead of panicking
-/// (exit 101), so the Python wrapper raises with the message. Like
-/// `nan_run_returns_error_not_panic` in `coverage_gaps.rs`, this relies on
-/// the 50-point instability as the NaN trigger.
+/// A grid below the 100-point validation floor (`GridConfig::validate`,
+/// review decision 2026-09-23) must be rejected cleanly (exit 1, "Error:
+/// ... n_points ...") instead of panicking, so the Python wrapper raises
+/// with the message.
+///
+/// Before the floor was raised, this test instead ran a 50-point grid from
+/// z = 5e6 to reach the solver's *runtime* NaN detection (checked in
+/// `nan_run_returns_error_not_panic` in `coverage_gaps.rs`). The CLI always
+/// calls `grid_config.validate()` before building the solver (`src/cli.rs`),
+/// so `--n-points` below 100 is now intercepted there and never reaches the
+/// solver; the CLI-level "solver NaN becomes a clean exit, not a panic" path
+/// no longer has a reproducer through the public binary (the Rust API can
+/// still exercise it via `ThermalizationSolver::new`, which bypasses
+/// `validate`, as `nan_run_returns_error_not_panic` now does).
 #[test]
-fn test_cli_nan_run_exits_with_error() {
+fn test_cli_rejects_grid_below_floor() {
     let output = spectroxide_bin()
         .args([
             "solve",
@@ -296,9 +305,7 @@ fn test_cli_nan_run_exits_with_error() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(output.status.code(), Some(1), "stderr={stderr}");
     assert!(stderr.contains("Error:"), "stderr={stderr}");
-    assert!(
-        stderr.contains("NaN/Inf detected in delta_n"),
-        "stderr={stderr}"
-    );
+    assert!(stderr.contains("n_points"), "stderr={stderr}");
+    assert!(stderr.contains("100"), "stderr={stderr}");
     assert!(!stderr.contains("panicked"), "stderr={stderr}");
 }
