@@ -41,7 +41,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 **Physics layer** — each module owns one physical process:
 - `kompaneets.rs` — Compton scattering via Fokker-Planck equation. IMEX solver: Crank-Nicolson for Kompaneets + backward Euler for DC/BR, with nonlinear Newton iteration. Largest and most numerically delicate module.
 - `double_compton.rs` — DC emission (γe → γγe), photon-number changing. Semi-implicit backward Euler.
-- `bremsstrahlung.rs` — BR emission (e+ion → e+ion+γ). Non-relativistic Gaunt factor: Born approximation (Brussaard & van de Hulst 1962) with softplus interpolation (Chluba, Ravenni & Bolliet 2020, MNRAS 492, 177).
+- `bremsstrahlung.rs` — BR emission (e+ion → e+ion+γ). Non-relativistic Gaunt factor: Born approximation (Brussaard & van de Hulst 1962) with softplus interpolation (Draine 2011, *Physics of the Interstellar and Intergalactic Medium*, Ch. 10).
 - `electron_temp.rs` — Electron temperature T_e. Perturbative quasi-stationary equilibrium.
 - `recombination.rs` — Ionization fraction X_e(z). Peebles 3-level atom ODE (z<1500), Saha (z>1500). Cached with O(log N) lookup.
 **Infrastructure layer**:
