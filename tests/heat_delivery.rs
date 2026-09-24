@@ -15,7 +15,8 @@
 //! Before ADR 0004 the old Crank-Nicolson half of the coupled step used the
 //! step-start ρ_e while the gas row used the backward-Euler ρ_e, which lost
 //! about ½ Δln X_e of each step's heat. Both tests fail on that code: the
-//! burst delivered 0.938 and the decay 0.849.
+//! burst delivered 0.938 and the decay 0.849. The burst tolerance, 3e-5, is a
+//! fifth of the physical loss (1.38e-4), so full delivery (1.0) also fails.
 //!
 //! Delivered heat is the photon Δρ/ρ of a run with injection minus that of a
 //! run with zero amplitude and otherwise identical settings. The baseline

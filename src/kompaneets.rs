@@ -600,8 +600,8 @@ pub struct DcbrCoupling<'a> {
 /// * `rho_coupling` - if `Some`, ρ_e = T_e/T_z becomes an extra unknown of the bordered Newton
 ///   system, with a backward-Euler row that starts from `rho_e_old`. Only φ = 1/ρ_e inside the
 ///   new flux is iterated. The old flux and the prefactor stay at `theta_e`, so the photon-side
-///   heating matches the gas row (see the time-centering note in the body). If `None`, T_e is
-///   held at `theta_e` over the whole step.
+///   heating is close to backward Euler, like the gas row (see the time-centering note in the
+///   body for the residual). If `None`, T_e is held at `theta_e` over the whole step.
 /// * `ws` - workspace from [`KompaneetsWorkspace::new`] built for the same `grid`
 /// * `max_dn_abs` - current max|Δn|, used for the adaptive Newton tolerance. Pass 0.0 for the
 ///   tightest tolerance (equivalent to the old fixed 1e-14).
@@ -686,12 +686,17 @@ pub fn kompaneets_step_coupled_inplace(
     // Time centering in θ_e (ADR 0004). The old Crank-Nicolson half, both its
     // φ and the Comptonization prefactor below, uses the passed `theta_e`,
     // with or without `rho_coupling`. In the coupled solver `theta_e` is the
-    // step's backward-Euler predictor for ρ_e. So the (φ − 1) heating term is
-    // effectively backward Euler, like the ρ_e row, and the heat the photons
-    // receive equals the heat the gas gives up, up to the difference between
-    // the predictor and the Newton result. Δn keeps Crank-Nicolson centering.
-    // Evaluating this half at the step-start ρ_e (`rho_e_old`) instead lost
-    // about ½ Δln X_e of each step's heat after recombination.
+    // step's backward-Euler predictor ρ_p for ρ_e, so the (φ − 1) heating term
+    // is close to backward Euler, like the ρ_e row. Δn keeps Crank-Nicolson
+    // centering. Photon gain minus gas loss per step is then
+    //   2θ_z Δτ G₃ [(ρ_p − ρ_new)(2 − ρ_eqⁿ⁺¹/ρ_new) + (ρ_eqⁿ − ρ_eqⁿ⁺¹)]
+    //   + θ_z Δτ (Q − 4G₃)(ρ_e − 1),
+    // with Q = Σ x⁴ n_pl(1+n_pl) Δx the discrete zero point (last term to
+    // first order in ρ_e − 1). The first term vanishes when the predictor
+    // equals the Newton result. The ρ_eq terms remain: `rho_source` holds ρ_eq
+    // from the step-start Δn. Evaluating this half at the step-start ρ_e
+    // (`rho_e_old`) put ρ_old in place of ρ_p, which lost about ½ Δln X_e of
+    // each step's heat after recombination.
     let phi_old = theta_z / theta_e;
 
     let mut rho_e = theta_e / theta_z; // initial guess (from update_temperatures)

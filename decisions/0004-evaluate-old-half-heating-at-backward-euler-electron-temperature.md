@@ -82,3 +82,50 @@ Measured in a scratch A/B study (`dev/audit/fix_a_cn_old_half_ab.md`):
   `src/kompaneets.rs`. The Newton loop never refreshes the prefactor, so that comment is already
   wrong on `main`.
 - **Reversal:** easy, since the change is two expressions.
+
+## Addendum (2026-09-23)
+
+A physics audit found that the Decision overstates the energy balance. With a
+discrete zero-flux Kompaneets step, photon energy gain minus gas energy loss
+per step is
+
+    M = 2θ_z Δτ G₃ [(ρ_a − ρ_new)(2 − ρ_eqⁿ⁺¹/ρ_new) + (ρ_eqⁿ − ρ_eqⁿ⁺¹)]
+        + θ_z Δτ (Q − 4G₃)(ρ_e − 1),
+
+where ρ_a is the ρ_e of the old half and of the prefactor (ρ_old before this
+record, the predictor ρ_p after it), ρ_eqⁿ is the ρ_eq in `rho_source`, built
+from the step-start Δn, and ρ_eqⁿ⁺¹ is the equilibrium of the new Δn. Q = Σ x⁴
+n_pl(1 + n_pl) Δx is the discrete zero point, and the last term is first order
+in ρ_e − 1. The derivation also treats the flux moment of Δn as equal to the
+solver's ρ_eq. That holds to discretization accuracy, and up to the terms the
+perturbative ρ_eq drops (Pitfall #4), which are second order in Δn times
+ρ_e − 1. We checked this form against `kompaneets_step_coupled_inplace` and
+`update_temperatures` in `src/solver.rs`, and a fresh-context verifier
+rederived it with a symbolic check.
+
+So the fix removes only the first term's (ρ_old − ρ_new) driver. Three
+corrections to the Decision's "equals ... up to the difference between the
+predictor and the Newton result":
+
+- The predictor-minus-Newton term carries a factor 2 − ρ_eq/ρ_new, not 1. At
+  z = 200, where T_e/T_z = 0.854 (`dev/scripts/heatloss/baseline_expectation.py`),
+  that factor is 0.83.
+- The ρ_eq-lag term ρ_eqⁿ − ρ_eqⁿ⁺¹ remains. It is the start-of-step ρ_eq lag
+  that investigation I-1 (`dev/REVIEW_2026-09-22.md`) diagnosed and that the
+  rejected ADR 0003 would have removed, and the (Q − 4G₃) term is the second
+  I-1 cause. They are why the soft-photon energy residual survives this
+  record: removing both took I-1's x = 0.01, z_h = 3e5 closure from +22% to
+  −0.4%. In the μ era they add to the predictor term, and I-1 left −8% at
+  z_h = 2e6 unexplained after removing both.
+- The Context formula "photons receive 2θ_zΔτ(ρ_old + ρ_new − 2ρ_eq)" is first
+  order in ρ − 1. The exact new-half contribution is (ρ_a/ρ_new)(ρ_new −
+  ρ_eqⁿ⁺¹), not ρ_new − ρ_eq.
+
+Known limitations, both on non-default paths that this record does not change:
+
+- `cn_dcbr` pairs Crank–Nicolson DC/BR photon rows with a backward-Euler
+  H_dcbr term in the gas row, so the DC/BR exchange does not balance per step.
+- On the split DC/BR path (`!coupled_dcbr`), the predictor in
+  `update_temperatures` includes H_dcbr while the Newton ρ_e row does not
+  (no `DcbrCoupling` is passed). The predictor differs from the Newton result
+  by construction there, so the first term of M does not vanish.

@@ -163,11 +163,19 @@ files. The summed per-step mismatch is −5.7463e-10 in A, against
 −5.7447e-10 predicted, and −8.5e-14 in B. The verifier corrected the decay
 normalization and the Δτ_max = 0.3 row above. It also noted two points:
 
-- With Fix A the mismatch is 2θ_z Δτ (ρ_p − ρ_new), where ρ_p is the
-  predictor. It vanishes only when the predictor equals the Newton result.
-  So some residual remains where they differ: the predictor's 1.5 clamp
-  against 3 in Newton, and, in the μ era, the linearized DC/BR heating term
-  evaluated at the old Δn. That fits the μ-era residual above.
+- With Fix A the mismatch has a predictor term 2θ_z Δτ G₃ (ρ_p − ρ_new)(2 −
+  ρ_eqⁿ⁺¹/ρ_new), where ρ_p is the predictor. The factor 2 − ρ_eq/ρ_new is
+  0.83 at z = 200. That term vanishes only when the predictor equals the
+  Newton result, and they differ through the predictor's 1.5 clamp against 3
+  in Newton and, in the μ era, the linearized DC/BR heating term evaluated at
+  the old Δn. (Corrected 2026-09-23; the verifier's original wording, "the
+  mismatch is 2θ_z Δτ (ρ_p − ρ_new)", dropped the terms below.)
+- Two terms survive Fix A whatever the predictor does:
+  2θ_z Δτ G₃ (ρ_eqⁿ − ρ_eqⁿ⁺¹), from ρ_eq in `rho_source` built from the
+  step-start Δn, and θ_z Δτ (Q − 4G₃)(ρ_e − 1), from the discrete zero point
+  Q = Σ x⁴ n_pl(1 + n_pl) Δx. These are the two causes found in investigation
+  I-1 of `dev/REVIEW_2026-09-22.md`, and they fit the μ-era residual above.
+  ADR 0004's addendum has the full form.
 - On `main` the Newton loop never refreshes the diffusion prefactor, so the
   "genuine CN in θ_e" comment in `kompaneets.rs` is already wrong. The
   `rho_coupling` doc comment becomes wrong with the fix. Both need rewriting
