@@ -590,7 +590,10 @@ def ct_heating_rate_pwave(
     """Heating rate ``d(Δρ/ρ)/dz`` for p-wave DM annihilation.
 
     Same as :func:`ct_heating_rate_swave` but with an extra ``(1+z)``
-    factor from ``⟨σv⟩ ∝ v² ∝ T ∝ (1+z)``:
+    factor from ``⟨σv⟩ ∝ (1+z)``. This is the Chluba (2013,
+    arXiv:1304.6120, Sec. 3.2) convention, ``⟨σv⟩ ≃ T/m``, valid when the
+    dark-matter temperature tracks the photons (``T_χ = T_γ``). A cold,
+    non-relativistic relic gives ``⟨σv⟩ ∝ (1+z)²`` instead:
 
     .. math::
 
@@ -618,7 +621,8 @@ def ct_heating_rate_pwave(
     rho_g = rho_gamma(z, cosmo)
     hz = _cosmo_hubble(z, cosmo)
 
-    # p-wave: extra (1+z) factor from ⟨σv⟩ ∝ (1+z)
+    # p-wave: extra (1+z) factor from ⟨σv⟩ ∝ (1+z) (Chluba 2013 convention,
+    # valid for T_χ = T_γ; cold relics give (1+z)²)
     # dQ/dt = f_ann_CT [eV/s] × n_H(z) × (1+z)⁴  [eV/m³/s]
     dq_dt = f_ann_CT * _EV_SI * n_h * (1.0 + z) ** 4
     return dq_dt / (rho_g * hz * (1.0 + z))
@@ -637,7 +641,8 @@ def ct_heating_rate_decay(
     z : float or array_like
         Redshift.
     f_x_eV : float
-        Energy injection parameter ``f_X`` in **eV**.
+        Energy injection parameter ``f_X`` in **eV** per hydrogen nucleus
+        (the rate multiplies ``n_H``, not the baryon number density).
     gamma_x : float
         Decay rate ``Γ_X`` in **1/s**.
     cosmo : Mapping, optional

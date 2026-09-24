@@ -51,7 +51,7 @@ secondary; the PDE solver computes the science targets.
 
       ``spectroxide.greens`` — pure-Python implementation of the
       three-component analytic Green's function of Chluba (2013, MNRAS
-      436, 2232). Spectral shapes, μ/y/T branching functions,
+      434, 352). Spectral shapes, μ/y/T branching functions,
       energy-injection and photon-injection convolutions. An
       approximation — accuracy is documented on that page.
 

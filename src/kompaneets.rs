@@ -800,6 +800,15 @@ pub fn kompaneets_step_coupled_inplace(
     // Newton iteration for the coupled system:
     //   Δn_new - Δn_old = dτ/2 (K_new(φ) + K_old(φ_old))  [CN for Kompaneets]
     //                    + dτ · em · (neq - Δn_new)          [BE for DC/BR]
+    //
+    // This is a lagged Newton iteration, not an exact one. The residual
+    // evaluates `em`, `neq` (and through them H_dcbr in the ρ_e row) at the
+    // step-start ρ_eq and never updates them, so it has no DC/BR dependence
+    // on the ρ_e iterate. The Jacobian nevertheless carries those
+    // derivatives: `dcbr_crho` in `c_vec` and `rc.dh_drho` in `d_rho`. The
+    // Jacobian is therefore not the derivative of the residual being
+    // solved. This changes the iteration path and convergence rate, not the
+    // converged answer, which is the root of the lagged-coefficient residual.
     let mut converged = false;
     let mut last_max_delta: f64 = f64::NAN;
     for _newton in 0..max_newton_iter {
@@ -894,10 +903,12 @@ pub fn kompaneets_step_coupled_inplace(
                 //
                 // `em_rates` and `neq_vals` are precomputed by the solver
                 // at the step-start ρ_eq and held fixed across Newton
-                // iterations. `dem_drho`/`dneq_drho` carry their analytical
-                // derivatives w.r.t. ρ_eq; we use them below to close the
-                // Δn-row Jacobian on ρ_e (c_vec). For CN mode the "old"
-                // half is frozen — its ρ_eq derivative does not contribute.
+                // iterations, so the residual below does not depend on the
+                // ρ_e iterate through them. `dem_drho`/`dneq_drho` carry
+                // their analytical derivatives w.r.t. ρ_eq; we still add them
+                // to the Δn-row Jacobian on ρ_e (c_vec), which makes this a
+                // lagged Newton step (see the note above the loop). For CN
+                // mode the "old" half is frozen and gets no derivative.
                 let (dcbr_residual, dcbr_jac, dcbr_crho) = if has_dcbr {
                     let em = *em_rates.get_unchecked(i);
                     let neq = *neq_vals.get_unchecked(i);
@@ -956,11 +967,13 @@ pub fn kompaneets_step_coupled_inplace(
                 //   (a) Kompaneets flux: ∂F/∂ρ_e through the n_pl(1+n_pl)/ρ²
                 //       piece (analytical; already in the Planck-subtracted
                 //       split form used here).
-                //   (b) DC/BR residual: ∂(dcbr_residual)/∂ρ_eq, carried in
+                //   (b) DC/BR: ∂(dcbr_residual)/∂ρ_eq, carried in
                 //       `dcbr_crho` above and plumbed via `dem_drho` /
-                //       `dneq_drho`. Closing this piece restores formal
-                //       quadratic Newton convergence in the ρ_e direction
-                //       when DC/BR is strong (high z, photon-injection burst).
+                //       `dneq_drho`. The residual holds `em` and `neq` at
+                //       the step-start ρ_eq, so this is the derivative of a
+                //       term the residual does not update: the Jacobian is
+                //       lagged, and convergence in the ρ_e direction is not
+                //       formally quadratic. The converged Δn is unaffected.
                 if has_rho_coupling {
                     let dfdr_l = *ws.dfdr_half.get_unchecked(i - 1);
                     let dfdr_r = *ws.dfdr_half.get_unchecked(i);
@@ -990,7 +1003,9 @@ pub fn kompaneets_step_coupled_inplace(
             let rhs_rho = -(rho_e - rc.rho_e_old)
                 + dtau * (rc.r_compton * (rc.rho_source - h_dcbr - rho_e) - rc.lambda_exp * rho_e);
 
-            // d = dR_ρ/dρ_e = 1 + dτ·(R·(1 + dH/dρ_e) + H·t_C)
+            // d = 1 + dτ·(R·(1 + dH/dρ_e) + H·t_C). `h_dcbr` above uses the
+            // frozen `wem` and `neq_vals`, so the residual has no dH/dρ_e;
+            // the `dh_drho` term is a lagged-Newton Jacobian entry only.
             let d_rho = 1.0 + dtau * (rc.r_compton * (1.0 + rc.dh_drho) + rc.lambda_exp);
 
             // Steps 1+2: T·u = r and T·v = c share the same matrix, so they

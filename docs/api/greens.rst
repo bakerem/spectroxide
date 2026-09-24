@@ -7,7 +7,7 @@ Analytic Green's function (``spectroxide.greens``)
 .. important::
 
    This module is the analytic three-component approximation of
-   Chluba (2013, MNRAS 436, 2232; arXiv:1304.6120), implemented in pure
+   Chluba (2013, MNRAS 434, 352; arXiv:1304.6120), implemented in pure
    Python. It is *not* the partial differential equation (:term:`PDE`)
    solver — for production work prefer the :doc:`PDE solver <solver>`.
    Use this module for fast estimates, pedagogical exploration, and the
