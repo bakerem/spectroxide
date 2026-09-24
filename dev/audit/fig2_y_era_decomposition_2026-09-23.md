@@ -63,3 +63,9 @@ Scripts: `dev/scripts/y_estimator/compare.py` (both estimators on the 118 stored
   the J_y formula exactly. They are not the Rust decomposition.
 - CosmoTherm entries above z_h ≈ 4e5 are stored without the exp(−(z/2e6)^{5/2}) factor, so they
   are left off the plot.
+- **Appendix fit with x³ weighting** (same model, fitted to x³Δn over [0.5, 18]): y lands close to
+  the visibility fit (largest gap −0.135 in 4y/Δρ, at z_h ≈ 6.9e4), but μ overshoots to 1.75 Δρ/ρ
+  there (+0.56 above the visibility fit), well above the 1.401 energy limit. With ΔT free, the
+  weighting moves the transition-era residual from y into μ instead of removing it. PDE and
+  CosmoTherm agree through every estimator. Plot panels: estimators on top, differences from the
+  visibility fit below.

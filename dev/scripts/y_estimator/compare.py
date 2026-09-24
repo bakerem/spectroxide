@@ -22,11 +22,14 @@ def strip(x, dn):
     g = g_bb(x)
     return dn - np.trapz(x**2 * dn, x) / np.trapz(x**2 * g, x) * g
 
-def est_bf(x, dn, lo=0.5, hi=18.0):
-    """Linear 3-shape fit, unweighted trapz on Delta n (paper appendix, linearised)."""
+def est_bf(x, dn, lo=0.5, hi=18.0, power=0):
+    """Linear 3-shape fit on Delta n (paper appendix, linearised; the Rust nonlinear fit agrees to
+    1e-5). power=0: unweighted, as in the code. power=3: the same model fitted to x^power Delta n
+    (intensity-weighted)."""
     m = (x >= lo) & (x <= hi); xm = x[m]
     A = np.array([g_bb(xm) / xm, g_bb(xm), y_shape(xm)]).T   # BE mu shape is -G/x
     w = np.empty_like(xm); w[1:-1] = 0.5 * (xm[2:] - xm[:-2]); w[0] = 0.5*(xm[1]-xm[0]); w[-1] = 0.5*(xm[-1]-xm[-2])
+    w = w * xm ** (2 * power)
     s = np.sqrt(w)
     c, *_ = np.linalg.lstsq(A * s[:, None], dn[m] * s, rcond=None)
     return -c[0], c[1], c[2]          # mu, delta, y
@@ -52,8 +55,9 @@ for i, z in enumerate(zp):
     dn_b = dn - (base["dn_baseline"][j[0]] if len(j) else 0.0)
     E = np.trapz(x**3 * dn_b, x) / G3
     mu, dl, y = est_bf(x, dn)
+    mu3, dl3, y3 = est_bf(x, dn, power=3)
     P, Jy = est_vis(x, strip(x, dn_b), E)
-    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, rust_4y=4*float(t["pde_y"][i])/E,
+    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, bf3_mu=mu3/E, bf3_4y=4*y3/E, rust_4y=4*float(t["pde_y"][i])/E,
                      rust_mu=float(t["pde_mu"][i])/E, vis_P=float(P), vis_Jy=float(Jy)))
 out["pde"] = rows
 # --- CosmoTherm GF database ---
@@ -64,8 +68,9 @@ for k, z in enumerate(zc):
     E = np.trapz(xc**3 * dn, xc) / G3
     if not np.isfinite(E) or E <= 0: continue
     mu, dl, y = est_bf(xc, dn)
+    mu3, dl3, y3 = est_bf(xc, dn, power=3)
     P, Jy = est_vis(xc, strip(xc, dn), E)
-    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, vis_P=float(P), vis_Jy=float(Jy)))
+    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, bf3_mu=mu3/E, bf3_4y=4*y3/E, vis_P=float(P), vis_Jy=float(Jy)))
 out["ct"] = rows
 json.dump(out, open(sys.argv[1], "w"))
 for tag in ("pde", "ct"):
