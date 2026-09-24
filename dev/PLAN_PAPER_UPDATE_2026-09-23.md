@@ -72,3 +72,32 @@ for EB to review.
   fixed too (`9460243`), but it still saves to the paper figure path with its N = 2000 method, so
   running it overwrites Fig. 4. Held: same notebook is modified
   in the main working tree.
+
+## TODO for EB (2026-09-24)
+
+Figures (the paper now reads spectroxide's `notebooks/figures/` through a symlink at
+`~/cosmoxide/notebooks/figures`; the old directory is `figures.pre-symlink-2026-09-24`):
+1. Decide what to commit from the figure run in the spectroxide working tree; then merge
+   `review/convergence-nb`, `review/gf-fit-optimizer`, `review/fig4-dm-notebook`.
+2. Fig. 3: add `solve` to the imports (both notebook copies), rerun, recheck ref1 line 162 and the
+   ref1 line 124 comment.
+3. Fig. 2: pick the y option in the paper `\rtodo`; regenerate on `review/gf-fit-optimizer`.
+4. Fig. 4: the working tree shows the 2026-08-10 PDF (correct); the branch has the 8000-point
+   regeneration. Fix the cosmoxide notebook copy (n_H0). Optionally tighten "≲ 2%" to "≲ 0.5% RMS"
+   (paper and ref1 line 127).
+5. Fig. 8: review the pre-existing notebook edits now visible in `dp_firas_pde_constraints.pdf`;
+   the PDE curve is from the 2026-08-10 cache.
+6. cosmoxide git now shows the tracked figure PDFs deleted plus a new symlink: commit or revert.
+   Files only in the old directory (posters, `dp_firas_statistic_ladder.pdf`, untracked
+   `helium_kink_gamma_con.*`) are in the backup directory.
+
+Paper:
+7. Review the uncommitted `\radd`/`\rdel` edits; add `Draine2011` to refs.bib through Zotero;
+   confirm the Draine equation number; resolve the X_e accuracy `\rtodo`.
+
+Code and physics (not blocking the paper):
+8. `dev/notebooks/pde_greens_function.ipynb` still saves to the Fig. 4 path with N = 2000.
+9. Late heat hits the T_e cap at small amplitudes (z_h = 800, Δρ/ρ ≥ 1e-7): runs warn, results wrong.
+10. Recheck R1-A′ with identical decompositions; the 0.6–0.8% y floor at z_h ≤ 4e3 is unexplained.
+11. Table 1 generator scripts live only in `~/cosmoxide/dev/scripts`.
+12. Nothing is pushed.
