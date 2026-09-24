@@ -44,8 +44,8 @@ baseline, divided by the injected energy.
 
 | Case | A | B | Independent |
 |---|---|---|---|
-| Baseline, z_start = 1700, 5%-of-z steps | 0.864 | 1.0025 | 1 (−6.105e-10) |
-| Baseline, z_start = 1700, Δτ_max = 1e-3, 0.1% steps | 0.9986 | 1.0002 | 1 |
+| Baseline, z_start = 1700, 5%-of-z steps | 0.864 | 1.0018 | 1 (−6.109e-10) |
+| Baseline, z_start = 1700, Δτ_max = 1e-3, 0.1% steps | 0.9979 | 0.9995 | 1 |
 | Baseline, z_start = 5e6 | 0.9774 | 0.9977 | 1 (−5.150e-9) |
 | Baseline, z_start = 5e6, Δτ_max = 1 | 0.9874 | 0.9996 | 1 |
 | Baseline, z_start = 5e6, Δτ_max = 1, 0.2% steps | 0.9982 | | 1 |
@@ -54,7 +54,7 @@ baseline, divided by the injected energy.
 | Decay, lifetime at z = 5e3 (z_start = 5e6) | 0.9912 | 0.9999 | 1.0000 |
 | Decay, lifetime at z = 2e5 (z_start = 5e6) | 0.9970 | 0.9986 | 1.0000 |
 
-For the baselines, the table gives the ratio to the independent value. A
+For the baselines, the table gives the ratio to the independent value. The z_start = 1700 reference is −6.109e-10, computed with X_e from `spectroxide.ionization_fraction`; an earlier −6.105e-10 used a coarsely sampled ledger X_e (1.2% interpolation error near z = 1400). A
 converges toward B as the steps shrink. B barely moves. The injected energy
 of a decay is computed per n_H with T_0 = 2.726 K, the solver's convention
 (`energy_injection.rs:819`, `constants.rs:93`). The independent scripts use
