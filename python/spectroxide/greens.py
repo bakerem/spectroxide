@@ -1621,13 +1621,25 @@ def decompose_distortion(
 
     **``method="bf"`` (default):** Nonlinear least-squares fit of
     Δn(x) = [n_pl(x/(1+δ)) − n_pl(x)] + [n_BE(x+μ) − n_pl(x)] + y·Y_SZ(x)
-    on x ∈ [0.5, 18], bootstrapped from a linear Gram-Schmidt initial guess
-    and refined by Levenberg-Marquardt. See :func:`_decompose_nonlinear_be`.
+    on x ∈ [0.5, 18], minimizing the intensity residual
+    ``∫ [x³ (Δn − model)]² dx`` (ADR 0006), bootstrapped from a linear
+    Gram-Schmidt initial guess and refined by Levenberg-Marquardt. See
+    :func:`_decompose_nonlinear_be`.
 
     **``method="gs"``:** Linear Gram-Schmidt orthogonalization of
-    (Y_SZ, M, G) over the same band (Chluba & Jeong 2014, Appendix A).
+    (Y_SZ, M, G) over the same band and with the same intensity weight
+    (Chluba & Jeong 2014, Appendix A).
     Agrees with ``bf`` on μ and y to numerical precision at realistic
     injection amplitudes; see :func:`_decompose_gram_schmidt`.
+
+    **``method="nc"``:** the temperature shift is removed by photon-number
+    conservation (:func:`strip_gbb`, over the whole grid), then μ and y are
+    fitted linearly to the stripped spectrum with the same band and
+    intensity weight. This tracks the Chluba (2013) visibility functions
+    (J_μ to 0.031, J_y to 0.006 on the 118 Table 1 bursts), where ``bf``
+    and ``gs`` give J_μ up to 1.25 in the μ–y transition. Use it when
+    comparing with visibility-function targets. See
+    :func:`_decompose_number_conserving`.
 
     **``method="gf_fit"`` (requires z_h):** Green's-function spectral fit
     for visibility-function calibration, the estimator that defines J_μ
@@ -1656,7 +1668,7 @@ def decompose_distortion(
     z_h : float, optional
         Injection redshift.  Required when ``method="gf_fit"``; ignored
         (with a warning) for the other methods.
-    method : {"bf", "gs", "gf_fit"}, optional
+    method : {"bf", "gs", "nc", "gf_fit"}, optional
         Decomposition method (default ``"bf"``).
     x_range : (float, float), optional
         Fit band for ``method="gf_fit"`` (default
@@ -1694,21 +1706,23 @@ def decompose_distortion(
             )
         return _decompose_nonlinear_be(x, delta_n)
 
-    if method == "gs":
+    if method in ("gs", "nc"):
         if z_h is not None:
             import warnings
 
             warnings.warn(
-                "decompose_distortion: z_h is ignored for method='gs'. "
+                f"decompose_distortion: z_h is ignored for method={method!r}. "
                 "Pass method='gf_fit' to use the Green's-function spectral fit.",
                 stacklevel=2,
             )
-        return _decompose_gram_schmidt(x, delta_n)
+        if method == "gs":
+            return _decompose_gram_schmidt(x, delta_n)
+        return _decompose_number_conserving(x, delta_n)
 
     if method != "gf_fit":
         raise ValueError(
             f"decompose_distortion: unknown method={method!r}; "
-            "expected 'bf', 'gs', or 'gf_fit'."
+            "expected 'bf', 'gs', 'nc', or 'gf_fit'."
         )
     if z_h is None:
         raise ValueError("decompose_distortion: method='gf_fit' requires z_h.")
@@ -1808,6 +1822,16 @@ def decompose_distortion(
     }
 
 
+def _band_intensity_weights(x_grid, x_min, x_max):
+    """Band mask and intensity weights ``x⁶ dx`` (ADR 0006).
+
+    A weighted sum of squared Δn residuals with these weights is the squared
+    intensity residual ``∫ [x³ (Δn − model)]² dx``.
+    """
+    mask, dx = _band_trap_weights(x_grid, x_min, x_max)
+    return mask, dx * x_grid**6
+
+
 def _band_trap_weights(x_grid, x_min, x_max):
     """Indices and trapezoidal weights for points inside [x_min, x_max]."""
     n = len(x_grid)
@@ -1838,9 +1862,12 @@ def _decompose_gram_schmidt(
     """CJ2014 Appendix-A Gram–Schmidt decomposition over ``[x_min, x_max]``.
 
     Constructs an orthonormal basis ``(e_y, e_μ, e_T)`` from
-    ``(Y_SZ, M, G_bb)`` using Gram–Schmidt under the trapezoidal inner
+    ``(Y_SZ, M, G_bb)`` using Gram–Schmidt under the intensity inner
     product
-    ``⟨a, b⟩ = ∫_{x_min}^{x_max} a(x) b(x) dx``,
+    ``⟨a, b⟩ = ∫_{x_min}^{x_max} x⁶ a(x) b(x) dx`` (trapezoid rule).
+    CJ2014 build their vectors from intensities ``ΔI ∝ x³Δn`` in channels
+    uniform in ν and sum them without weight; this integral is the
+    continuum limit of that sum (ADR 0006),
     then projects ``Δn`` and back-substitutes for ``(μ, y, ΔT/T)`` in the
     linear basis ``Δn ≈ μ M + y · Y_SZ + δT · G``.
 
@@ -1871,7 +1898,7 @@ def _decompose_gram_schmidt(
 
     drho_over_rho, dn_over_n = _energy_integrals(x_grid, delta_n)
 
-    mask, dx = _band_trap_weights(x_grid, x_min, x_max)
+    mask, dx = _band_intensity_weights(x_grid, x_min, x_max)
     xb = x_grid[mask]
     wb = dx[mask]
     dn_b = delta_n[mask]
@@ -1932,6 +1959,73 @@ def _decompose_gram_schmidt(
     }
 
 
+def _decompose_number_conserving(
+    x_grid: ArrayLike,
+    delta_n: ArrayLike,
+    x_min: float = DEFAULT_DECOMP_X_MIN,
+    x_max: float = DEFAULT_DECOMP_X_MAX,
+) -> dict:
+    """μ and y with the temperature shift removed by photon-number conservation.
+
+    Mirrors the Rust ``spectroxide::distortion::decompose_number_conserving``.
+    ``ΔT/T`` is fixed, not fitted: :func:`strip_gbb` removes the ``G_bb``
+    component that carries the photon-number change, from ``Δn`` and from
+    the shapes ``−G_bb/x`` (linearized Bose–Einstein μ) and ``Y_SZ``. μ and y
+    then come from a linear least-squares fit to the stripped spectrum
+    minimizing ``∫ [x³ (Δn − model)]² dx`` on ``[x_min, x_max]`` (ADR 0006).
+    The photon-number integrals use the trapezoid rule of :func:`strip_gbb`;
+    the Rust version uses the midpoint-product rule, and on the 4000-point
+    production grid the two differ by at most 5×10⁻⁵ Δρ/ρ in μ.
+
+    Returns
+    -------
+    dict
+        Keys ``mu``, ``y``, ``dT`` (the number-conserving shift), ``drho``,
+        ``dn_over_n`` (all floats), and ``residual`` (ndarray).
+    """
+    _val.validate_x_positive(x_grid)
+    _val.validate_array_lengths(x_grid, delta_n)
+    _val.warn_x_grid_narrow(x_grid)
+    x_grid = np.asarray(x_grid, dtype=np.float64)
+    delta_n = np.asarray(delta_n, dtype=np.float64)
+    drho_over_rho, dn_over_n = _energy_integrals(x_grid, delta_n)
+
+    dn_s, dT = strip_gbb(x_grid, delta_n)
+    m_s, _ = strip_gbb(x_grid, -g_bb(x_grid) / x_grid)
+    y_s, _ = strip_gbb(x_grid, y_shape(x_grid))
+    mask, w = _band_intensity_weights(x_grid, x_min, x_max)
+    if mask.sum() < 3:
+        import warnings as _warnings
+
+        _warnings.warn(
+            f"_decompose_number_conserving: only {int(mask.sum())} grid point(s) fall in "
+            f"the decomposition band [{x_min}, {x_max}]; returning mu=y=0. "
+            "Widen the band or supply a denser x grid to extract physical mu/y.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return {
+            "mu": 0.0,
+            "y": 0.0,
+            "dT": dT,
+            "drho": drho_over_rho,
+            "dn_over_n": dn_over_n,
+            "residual": delta_n.copy(),
+        }
+    a = np.stack([m_s[mask], y_s[mask]], axis=1) * np.sqrt(w[mask])[:, None]
+    b = dn_s[mask] * np.sqrt(w[mask])
+    mu, y_val = np.linalg.lstsq(a, b, rcond=None)[0]
+    residual = dn_s - mu * m_s - y_val * y_s
+    return {
+        "mu": float(mu),
+        "y": float(y_val),
+        "dT": float(dT),
+        "drho": float(drho_over_rho),
+        "dn_over_n": float(dn_over_n),
+        "residual": residual,
+    }
+
+
 def _decompose_nonlinear_be(
     x_grid: ArrayLike,
     delta_n: ArrayLike,
@@ -1946,7 +2040,8 @@ def _decompose_nonlinear_be(
 
     ``Δn(x) = [n_pl(x/(1+δ)) − n_pl(x)] + [n_BE(x+μ) − n_pl(x)] + y · Y_SZ(x)``
 
-    by Levenberg–Marquardt over the band ``[x_min, x_max]``,
+    by Levenberg–Marquardt over the band ``[x_min, x_max]``, minimizing
+    the intensity residual ``∫ [x³ (Δn − model)]² dx`` (ADR 0006),
     bootstrapped from :func:`_decompose_gram_schmidt` (converted to the
     B&F parameterization using ``δ_BF = δ_GS + μ/β_μ``).  The LM iteration
     refines the ``O(μ²)`` nonlinear correction; for realistic injection
@@ -1985,7 +2080,7 @@ def _decompose_nonlinear_be(
 
     drho_over_rho, dn_over_n = _energy_integrals(x_grid, delta_n)
 
-    mask, dx = _band_trap_weights(x_grid, x_min, x_max)
+    mask, dx = _band_intensity_weights(x_grid, x_min, x_max)
     xb = x_grid[mask]
     wb = dx[mask]
     dn_b = delta_n[mask]

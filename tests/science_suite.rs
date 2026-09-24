@@ -8,21 +8,23 @@
 //! numerical variations across platforms, but tight enough that a
 //! significant physics regression will be caught.
 
+use spectroxide::distortion::{self, DistortionParams};
 use spectroxide::greens;
 use spectroxide::prelude::*;
-use spectroxide::solver::SolverSnapshot;
 
 fn rel_err(value: f64, target: f64) -> f64 {
     (value - target).abs() / target.abs().max(1e-30)
 }
 
+/// Runs a single burst and returns μ and y with the temperature shift removed by
+/// photon-number conservation, the split the visibility-function targets use (ADR 0006).
 fn run_single_burst(
     z_h: f64,
     sigma_z: f64,
     delta_rho_over_rho: f64,
     z_start: f64,
     z_end: f64,
-) -> SolverSnapshot {
+) -> DistortionParams {
     let cosmo = Cosmology::default();
     let mut solver = ThermalizationSolver::new(cosmo, GridConfig::default());
     solver
@@ -38,16 +40,16 @@ fn run_single_burst(
         ..SolverConfig::default()
     });
     solver.run_with_snapshots(&[z_end]);
-    solver
+    let snap = solver
         .snapshots
         .last()
-        .cloned()
-        .expect("expected at least one snapshot")
+        .expect("expected at least one snapshot");
+    distortion::decompose_number_conserving(&solver.grid.x, &snap.delta_n)
 }
 
 // ---------------------------------------------------------------------------
 // mu-era: PDE solver must match Green's function to <10%
-// Measured error: ~8.6%. Tolerance: 10%.
+// Measured error: 1.25% (number-conserving decomposition, ADR 0006). Tolerance: 10%.
 // The PDE includes full numerical thermalization while GF uses fitting
 // formulas, so ~10% agreement is expected in the deep mu-era.
 // ---------------------------------------------------------------------------
@@ -64,6 +66,12 @@ fn science_mu_era_coefficient_pde() {
         * drho;
 
     let err = rel_err(snapshot.mu, mu_expected);
+    eprintln!(
+        "mu-era: mu={:.4e}, GF mu={mu_expected:.4e}, err={:.2}%, |y/mu|={:.2}%",
+        snapshot.mu,
+        err * 100.0,
+        (snapshot.y / snapshot.mu).abs() * 100.0
+    );
     assert!(
         err < 0.10,
         "mu-era: PDE mu={:.4e} vs GF mu={:.4e}, err={:.1}% (limit 10%)",
@@ -71,9 +79,7 @@ fn science_mu_era_coefficient_pde() {
         mu_expected,
         err * 100.0
     );
-    // μ-era injection should be μ-dominated. Under the B&F decomposition the
-    // r-type residual of the PDE spectrum partitions partly into y, giving
-    // |y/μ| ~ 5% in the μ-era (vs < 1% under the old energy-neutral fit).
+    // μ-era injection should be μ-dominated.
     assert!(
         snapshot.y.abs() < 0.1 * snapshot.mu.abs(),
         "mu-era should be mu-dominated: |y/mu|={:.2}% (limit 10%)",
@@ -83,7 +89,7 @@ fn science_mu_era_coefficient_pde() {
 
 // ---------------------------------------------------------------------------
 // y-era: PDE solver must match Green's function to <2%
-// Measured error: ~0.25%. Tolerance: 2%.
+// Measured error: 0.03% (number-conserving decomposition, ADR 0006). Tolerance: 2%.
 // In the y-era, Kompaneets redistribution is negligible so PDE and GF
 // agree much better than in the mu-era.
 // ---------------------------------------------------------------------------
@@ -96,6 +102,12 @@ fn science_y_era_coefficient_pde() {
 
     let y_expected = 0.25 * greens::visibility_j_y(z_h) * drho;
     let err = rel_err(snapshot.y, y_expected);
+    eprintln!(
+        "y-era: y={:.4e}, GF y={y_expected:.4e}, err={:.2}%, |mu/y|={:.2}%",
+        snapshot.y,
+        err * 100.0,
+        (snapshot.mu / snapshot.y).abs() * 100.0
+    );
     assert!(
         err < 0.02,
         "y-era: PDE y={:.4e} vs GF y={:.4e}, err={:.2}% (limit 2%)",
@@ -103,7 +115,7 @@ fn science_y_era_coefficient_pde() {
         y_expected,
         err * 100.0
     );
-    // y-era should have negligible μ: measured |μ/y| ≈ 2.2%
+    // y-era should have negligible μ: measured |μ/y| ≈ 1.4%
     assert!(
         snapshot.mu.abs() < 0.04 * snapshot.y.abs(),
         "y-era should be y-dominated: |mu/y|={:.2}% (limit 4%)",

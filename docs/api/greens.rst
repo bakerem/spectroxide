@@ -263,10 +263,14 @@ to intensity units (Jy/sr).
    nu_ghz, dI = delta_n_to_delta_I(x, dn)    # nu in GHz, dI in Jy/sr
 
 :func:`decompose_distortion` is the entry point — it dispatches via a
-``method=`` keyword to the non-linear blackbody-temperature solve
-(``"be"``, default) or the linear Gram-Schmidt fit (``"gs"``).  Both
-underlying routines are private (``_decompose_nonlinear_be`` /
-``_decompose_gram_schmidt``); reach them through ``decompose_distortion``.
+``method=`` keyword. ``"bf"`` (default) is the nonlinear Bianchini & Fabbian
+fit and ``"gs"`` the linear Chluba & Jeong (2014) Gram-Schmidt fit; both fit
+μ, y and ΔT/T to the intensity residual ∫[x³(Δn − model)]² dx on
+x ∈ [0.5, 18] (ADR 0006). ``"nc"`` fixes ΔT/T by photon-number conservation
+first and fits only μ and y; use it to compare with the Chluba (2013)
+visibility functions. ``"gf_fit"`` is the visibility-function calibration fit.
+The underlying routines are private; reach them through
+``decompose_distortion``.
 
 .. autofunction:: spectroxide.greens.decompose_distortion
 .. autofunction:: spectroxide.greens.delta_n_to_delta_I

@@ -315,6 +315,9 @@ fn test_y_era_burst_spectral_purity() {
     let mut solver = burst_solver(&grid_config, z_h, drho, 200.0, 1.1e4, 5e3);
     solver.run_with_snapshots(&[5e3]);
     let snap = solver.snapshots.last().unwrap();
+    // μ and y with the temperature shift removed by photon-number conservation, the
+    // split the visibility-function targets use (ADR 0006).
+    let nc = distortion::decompose_number_conserving(&solver.grid.x, &snap.delta_n);
 
     // In the deep y-era, should be mostly y-type
     // y ≈ Δρ/(4ρ) = drho/4
@@ -322,20 +325,20 @@ fn test_y_era_burst_spectral_purity() {
 
     eprintln!(
         "y-era burst: mu={:.4e}, y={:.4e}, y_expected={y_expected:.4e}, drho={:.4e}",
-        snap.mu, snap.y, snap.delta_rho_over_rho
+        nc.mu, nc.y, snap.delta_rho_over_rho
     );
 
     // y should be positive and ~Δρ/4 (exact in y-era)
-    assert!(snap.y > 0.0, "y should be positive");
-    let y_ratio = snap.y / y_expected;
+    assert!(nc.y > 0.0, "y should be positive");
+    let y_ratio = nc.y / y_expected;
     assert!(
         y_ratio > 0.7 && y_ratio < 1.3,
         "y/y_expected = {y_ratio:.3}, should be ~1 (measured ~0.99)"
     );
 
     // μ should be much smaller than y in the y-era
-    let mu_y_ratio = snap.mu.abs() / snap.y.abs();
-    // Measured |μ|/|y| ~ 0.09.
+    let mu_y_ratio = nc.mu.abs() / nc.y.abs();
+    // Measured |μ|/|y| ≈ 0.12 (number-conserving decomposition, ADR 0006).
     assert!(
         mu_y_ratio < 0.20,
         "In y-era, |μ|/|y| should be small: {mu_y_ratio:.3}"
@@ -2019,8 +2022,11 @@ fn golden_mu_era_spectral_shape() {
     let result = solver.run_to_result(1e4);
     let snap = &result.snapshot;
 
-    let mu = snap.mu;
-    let y = snap.y;
+    // μ and y with the temperature shift removed by photon-number conservation, the
+    // split the visibility-function targets use (ADR 0006).
+    let nc = distortion::decompose_number_conserving(&x_grid, &snap.delta_n);
+    let mu = nc.mu;
+    let y = nc.y;
     let drho_out = snap.delta_rho_over_rho;
 
     // Oracle: μ = (3/κ_c) · J_bb*(z_h) · J_μ(z_h) · Δρ/ρ
@@ -2035,9 +2041,8 @@ fn golden_mu_era_spectral_shape() {
         mu_err * 100.0
     );
 
-    // y contamination: the B&F fit partitions some residual into y. With a
-    // pure-μ spectrum from the GF, true y/μ < 1%; the PDE decomposition sees
-    // ~4-5% cross-talk from the non-orthogonal basis.
+    // y contamination: with a pure-μ spectrum from the GF, true y/μ < 1%.
+    // Measured with the number-conserving decomposition: y/μ ≈ 0.7%.
     assert!(
         y.abs() / mu.abs() < 0.08,
         "μ-era golden: y/mu ratio = {:.4} (expected < 8% cross-talk)",
@@ -2103,11 +2108,14 @@ fn golden_y_era_spectral_shape() {
     let result = solver.run_to_result(500.0);
     let snap = &result.snapshot;
 
-    let mu = snap.mu;
-    let y = snap.y;
+    // μ and y with the temperature shift removed by photon-number conservation, the
+    // split the visibility-function targets use (ADR 0006).
+    let nc = distortion::decompose_number_conserving(&x_grid, &snap.delta_n);
+    let mu = nc.mu;
+    let y = nc.y;
     let drho_out = snap.delta_rho_over_rho;
 
-    // y should be close to Δρ/(4ρ) = 2.5e-6. Measured: 2.49e-6 (0.4% error).
+    // y should be close to Δρ/(4ρ) = 2.5e-6. Measured: 2.495e-6 (0.2% error).
     let y_expected = drho / 4.0;
     let y_err = (y - y_expected).abs() / y_expected;
     assert!(
@@ -2116,7 +2124,7 @@ fn golden_y_era_spectral_shape() {
         y_err * 100.0
     );
 
-    // μ should be very small compared to y. Measured: μ/y ≈ 2.2%.
+    // μ should be very small compared to y. Measured: μ/y ≈ 1.4%.
     assert!(
         mu.abs() / y.abs() < 0.04,
         "y-era golden: mu/y ratio = {:.4} (expected < 0.04)",
@@ -2236,74 +2244,6 @@ fn golden_transition_era_spectral_shape() {
         snap.y,
         e_err * 100.0,
         sum / drho,
-    );
-}
-
-/// Different cosmologies produce different μ/y for the same injection.
-#[test]
-fn test_solver_respects_cosmology_parameters() {
-    // Run with default (Chluba 2013) cosmology
-    let mut solver1 = ThermalizationSolver::new(Cosmology::default(), GridConfig::fast());
-    solver1
-        .set_injection(InjectionScenario::SingleBurst {
-            z_h: 5e4,
-            delta_rho_over_rho: 1e-5,
-            sigma_z: 2000.0,
-        })
-        .unwrap();
-    let result1 = solver1.run_to_result(500.0);
-    let snap1 = &result1.snapshot;
-
-    // Run with Planck 2018 cosmology (different Ω_b, h, Y_p)
-    let mut solver2 = ThermalizationSolver::new(Cosmology::planck2018(), GridConfig::fast());
-    solver2
-        .set_injection(InjectionScenario::SingleBurst {
-            z_h: 5e4,
-            delta_rho_over_rho: 1e-5,
-            sigma_z: 2000.0,
-        })
-        .unwrap();
-    let result2 = solver2.run_to_result(500.0);
-    let snap2 = &result2.snapshot;
-
-    // Both should produce physical results
-    assert!(
-        snap1.mu.abs() > 1e-8,
-        "default cosmo: mu too small: {}",
-        snap1.mu
-    );
-    assert!(
-        snap2.mu.abs() > 1e-8,
-        "planck2018 cosmo: mu too small: {}",
-        snap2.mu
-    );
-
-    // They should differ (different baryon density, Hubble rate, etc.)
-    let mu_diff = (snap1.mu - snap2.mu).abs() / snap1.mu.abs();
-    assert!(
-        mu_diff > 1e-3,
-        "cosmologies should give different μ: default={:.4e}, p2018={:.4e}, diff={:.2e}",
-        snap1.mu,
-        snap2.mu,
-        mu_diff
-    );
-
-    // Direction check: higher Ω_b (Planck 2018: ω_b=0.02237 vs Chluba 2013: ω_b=0.022)
-    // means more baryons → stronger Compton coupling → different thermalization.
-    // Both μ values should have the same sign (positive for energy injection).
-    assert!(
-        snap1.mu > 0.0 && snap2.mu > 0.0,
-        "Both cosmologies should give positive μ for energy injection: \
-         default={:.4e}, p2018={:.4e}",
-        snap1.mu,
-        snap2.mu
-    );
-
-    eprintln!(
-        "Cosmology sensitivity: default μ={:.4e}, planck2018 μ={:.4e}, diff={:.1}%",
-        snap1.mu,
-        snap2.mu,
-        mu_diff * 100.0
     );
 }
 

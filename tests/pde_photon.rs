@@ -10,6 +10,7 @@ mod common;
 use common::*;
 use spectroxide::constants::*;
 use spectroxide::cosmology::Cosmology;
+use spectroxide::distortion;
 use spectroxide::energy_injection::InjectionScenario;
 use spectroxide::greens;
 use spectroxide::grid::{GridConfig, RefinementZone};
@@ -193,9 +194,10 @@ fn test_pde_vs_gf_photon_injection_high_x() {
     let dn_over_n = 1e-5;
     let z_h = 2.0e5;
 
-    let last = &photon_run(&grid_config, x_inj, dn_over_n, sigma_x, z_h, 500.0).snap;
-
-    let mu_pde = last.mu;
+    let run = photon_run(&grid_config, x_inj, dn_over_n, sigma_x, z_h, 500.0);
+    // μ with the temperature shift removed by photon-number conservation, the split
+    // Chluba (2015) Eq. 30 uses through J_μ (ADR 0006).
+    let mu_pde = distortion::decompose_number_conserving(&run.x, &run.snap.delta_n).mu;
 
     // Analytic prediction from Chluba 2015 Eq. 30.
     let alpha_rho = G2_PLANCK / G3_PLANCK;
@@ -243,9 +245,10 @@ fn test_pde_vs_gf_photon_injection_low_x() {
     let dn_over_n = 1e-5;
     let z_h = 2.0e5;
 
-    let last = &photon_run(&grid_config, x_inj, dn_over_n, sigma_x, z_h, 500.0).snap;
-
-    let mu_pde = last.mu;
+    let run = photon_run(&grid_config, x_inj, dn_over_n, sigma_x, z_h, 500.0);
+    // μ with the temperature shift removed by photon-number conservation, the split
+    // Chluba (2015) Eq. 30 uses through J_μ (ADR 0006).
+    let mu_pde = distortion::decompose_number_conserving(&run.x, &run.snap.delta_n).mu;
     // Analytic Chluba 2015 Eq.30 with P_s ≈ 1 at x=2, z=2e5.
     let alpha_rho = G2_PLANCK / G3_PLANCK;
     let j_bb = greens::visibility_j_bb_star(z_h);
@@ -1504,19 +1507,22 @@ fn test_decaying_particle_photon_soft_pde() {
     });
     solver.run_with_snapshots(&[500.0]);
     let snap = solver.snapshots.last().unwrap();
+    // μ with the temperature shift removed by photon-number conservation, the split
+    // the Chluba (2013) visibility functions use (ADR 0006).
+    let mu = distortion::decompose_number_conserving(&solver.grid.x, &snap.delta_n).mu;
 
     assert!(
-        snap.mu > 0.0 && snap.delta_rho_over_rho > 0.0,
+        mu > 0.0 && snap.delta_rho_over_rho > 0.0,
         "μ and Δρ/ρ must both be positive: μ={:.4e}, Δρ/ρ={:.4e}",
-        snap.mu,
+        mu,
         snap.delta_rho_over_rho,
     );
 
-    let mu_over_drho = snap.mu / snap.delta_rho_over_rho;
+    let mu_over_drho = mu / snap.delta_rho_over_rho;
     eprintln!(
         "Soft-photon decay (x_inj_0=100, Γ=2e-9): μ={:.4e}, Δρ/ρ={:.4e}, \
          μ/(Δρ/ρ)={mu_over_drho:.4}",
-        snap.mu, snap.delta_rho_over_rho,
+        mu, snap.delta_rho_over_rho,
     );
     assert!(
         (1.15..=1.42).contains(&mu_over_drho),

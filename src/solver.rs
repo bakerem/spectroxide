@@ -2965,12 +2965,14 @@ mod tests {
 
         solver.run_with_snapshots(&[1e5]);
         let last = solver.snapshots.last().unwrap();
+        // μ with the temperature shift removed by photon-number conservation (ADR 0006).
+        let mu = crate::distortion::decompose_number_conserving(&solver.grid.x, &last.delta_n).mu;
 
         let mu_expected = (3.0 / KAPPA_C) * drho; // = 1.401 * drho, no J_bb* with DC/BR off
-        let mu_err = (last.mu - mu_expected).abs() / mu_expected;
+        let mu_err = (mu - mu_expected).abs() / mu_expected;
         eprintln!(
             "disable_dcbr: μ = {:.4e}, expected (3/κ_c)·Δρ/ρ = {:.4e}, err = {:.2}%",
-            last.mu,
+            mu,
             mu_expected,
             mu_err * 100.0
         );
@@ -2978,7 +2980,7 @@ mod tests {
             mu_err < 0.05,
             "disable_dcbr: μ = {:.4e} vs pure-Kompaneets target {:.4e} \
              (err {:.2}%, tol 5%)",
-            last.mu,
+            mu,
             mu_expected,
             mu_err * 100.0
         );

@@ -37,7 +37,12 @@ pub struct DistortionParams {
     pub residual: Vec<f64>,
 }
 
-/// Collects trapezoidal weights and indices for grid points within [x_min, x_max].
+/// Collects intensity weights and indices for grid points within [x_min, x_max].
+///
+/// Each weight is x⁶ times the trapezoid width dx, so a weighted sum of squared
+/// Δn residuals is the squared intensity residual ∫ [x³(Δn − model)]² dx.
+/// Chluba & Jeong (2014) Appendix A project intensity in channels uniform in ν,
+/// and FIRAS measures intensity; ADR 0006 records the choice.
 ///
 /// Precondition: the supplied grid should extend beyond [x_min, x_max] on both
 /// sides. The half-weight rule at the ends keys off the *parent array's* edges,
@@ -61,7 +66,7 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
             0.5 * (x_grid[i + 1] - x_grid[i - 1])
         };
         idx.push(i);
-        w.push(dx);
+        w.push(dx * x_grid[i].powi(6));
     }
     (idx, w)
 }
@@ -75,10 +80,12 @@ fn band_weights(x_grid: &[f64], x_min: f64, x_max: f64) -> (Vec<usize>, Vec<f64>
 ///   1. e_y  = Y_SZ / |Y_SZ|
 ///   2. e_μ  = M⊥  / |M⊥|,   with M⊥  = M  − (M·e_y) e_y
 ///   3. e_T  = G⊥  / |G⊥|,   with G⊥  = G  − (G·e_y) e_y − (G·e_μ) e_μ
-/// under the inner product ⟨a, b⟩ = ∫_{x_min}^{x_max} a(x) b(x) dx
-/// (trapezoidal rule on the supplied grid). This generalizes CJ2014's
-/// uniform-channel flat sum to the solver's non-uniform x-grid and reduces to it in
-/// the continuum limit.
+/// under the intensity inner product ⟨a, b⟩ = ∫_{x_min}^{x_max} x⁶ a(x) b(x) dx
+/// (trapezoidal rule on the supplied grid). CJ2014 build their vectors from
+/// intensities ΔI ∝ x³Δn in channels uniform in ν and sum them without weight;
+/// this integral is the continuum limit of that sum on the solver's non-uniform
+/// grid. With these shapes it reproduces their basis norms {|Y_SZ|, |M⊥|, |G⊥|}
+/// to 0.3% (ADR 0006).
 ///
 /// After projection, the coefficients (a_y, a_μ, a_T) = (⟨Δn, e_y⟩, ⟨Δn, e_μ⟩,
 /// ⟨Δn, e_T⟩) are mapped back to (μ, y, ΔT/T) through exact back-substitution of
@@ -209,8 +216,8 @@ pub fn decompose_gram_schmidt(
 ///                        + [n_BE(x+μ)    − n_pl(x)]
 ///                        + y · Y_SZ(x)
 /// with δ ≡ ΔT/T₀. Fits (μ, δ, y) by Levenberg-Marquardt on the band
-/// [x_min, x_max] with a trapezoidal inner product matching
-/// `decompose_gram_schmidt`.
+/// [x_min, x_max] with the intensity inner product of
+/// `decompose_gram_schmidt`, i.e. it minimizes ∫ [x³(Δn − model)]² dx (ADR 0006).
 ///
 /// Initial guess: bootstrap from `decompose_gram_schmidt` (converted using
 /// δ_BF = δ_GS + μ/β_μ). This gives the linearized optimum for free; the
@@ -381,7 +388,8 @@ pub fn decompose_nonlinear_be(
 /// Decomposes a spectral distortion into μ, y, and temperature shift components.
 ///
 /// Default method: Bianchini & Fabbian (2022) nonlinear fit on the band
-/// [`DEFAULT_DECOMP_X_MIN`, `DEFAULT_DECOMP_X_MAX`] = [0.5, 18].
+/// [`DEFAULT_DECOMP_X_MIN`, `DEFAULT_DECOMP_X_MAX`] = [0.5, 18], weighted by
+/// intensity: it minimizes ∫ [x³(Δn − model)]² dx (ADR 0006).
 ///
 /// For the linear alternative (CJ2014 Appendix A Gram-Schmidt), call
 /// [`decompose_gram_schmidt`] directly. The two methods agree on μ and y to
@@ -396,11 +404,92 @@ pub fn decompose_nonlinear_be(
 ///
 /// Domain of validity: for spectra with support outside span{M, Y_SZ, G_bb} —
 /// for example, frozen or locked-in photon-injection bumps from z < 1100 that never
-/// Comptonized — the returned (μ, y, ΔT/T) is the in-band L² best fit, not a
+/// Comptonized — the returned (μ, y, ΔT/T) is the in-band intensity-weighted best fit, not a
 /// physical decomposition. Inspect `residual` before interpreting the triple
 /// in that regime.
 pub fn decompose_distortion(x_grid: &[f64], delta_n: &[f64]) -> DistortionParams {
     decompose_nonlinear_be(x_grid, delta_n, DEFAULT_DECOMP_X_MIN, DEFAULT_DECOMP_X_MAX)
+}
+
+/// Decomposes Δn into μ and y after removing the temperature shift by photon-number
+/// conservation.
+///
+/// The temperature shift is fixed, not fitted: ΔT/T = ∫x²Δn dx / ∫x²G dx over the
+/// whole grid, the same number-conserving split the solver and CosmoTherm use
+/// (Chluba & Sunyaev 2012). That G component is removed from Δn and from the μ
+/// shape −G/x and Y_SZ; μ and y then come from a linear least-squares fit to the
+/// stripped spectrum with the intensity weight of [`decompose_distortion`],
+/// ∫ [x³(Δn − model)]² dx on [`DEFAULT_DECOMP_X_MIN`, `DEFAULT_DECOMP_X_MAX`].
+///
+/// This tracks the visibility functions of Chluba (2013), whose M and Y_SZ carry
+/// no photon number, so their temperature term holds all of it: on the 118
+/// Table 1 bursts μ/[(3/κ_c)Δρ/ρ] agrees with J_bb*·J_μ to 0.031 (0.012 for
+/// z_h ≥ 3×10⁵) and 4y/(Δρ/ρ) with J_y to 0.006. [`decompose_distortion`], which
+/// fits ΔT/T freely, gives J_μ up to 1.25 there, as in Chluba & Jeong (2014)
+/// Fig. 1. Use this function when comparing against visibility-function targets
+/// (ADR 0006).
+///
+/// μ is the amplitude of the linearized Bose–Einstein shape −G/x, which equals the
+/// nonlinear μ of [`decompose_nonlinear_be`] to O(μ²). The returned
+/// `delta_t_over_t` is the number-conserving shift.
+pub fn decompose_number_conserving(x_grid: &[f64], delta_n: &[f64]) -> DistortionParams {
+    assert_eq!(
+        x_grid.len(),
+        delta_n.len(),
+        "x_grid and delta_n length mismatch"
+    );
+    let n = x_grid.len();
+    let drho_over_rho_val = delta_rho_over_rho(x_grid, delta_n);
+    let dn_over_n_val = delta_n_over_n(x_grid, delta_n);
+
+    let g: Vec<f64> = x_grid.iter().map(|&x| g_bb(x)).collect();
+    let m: Vec<f64> = x_grid.iter().zip(&g).map(|(&x, &gi)| -gi / x).collect();
+    let yv: Vec<f64> = x_grid.iter().map(|&x| y_shape(x)).collect();
+    // Photon-number coefficient of each vector on G_bb, with one quadrature for all.
+    let g_number = delta_n_over_n(x_grid, &g);
+    let number_coeff = |v: &[f64]| delta_n_over_n(x_grid, v) / g_number;
+    let (a_dn, a_m, a_y) = (number_coeff(delta_n), number_coeff(&m), number_coeff(&yv));
+
+    let (idx, w) = band_weights(x_grid, DEFAULT_DECOMP_X_MIN, DEFAULT_DECOMP_X_MAX);
+    if idx.len() < 3 {
+        return DistortionParams {
+            mu: 0.0,
+            y: 0.0,
+            delta_t_over_t: a_dn,
+            delta_rho_over_rho: drho_over_rho_val,
+            delta_n_over_n: dn_over_n_val,
+            residual: delta_n.to_vec(),
+        };
+    }
+    // Normal equations for the stripped spectrum on the stripped shapes.
+    let (mut mm, mut my, mut yy, mut md, mut yd) = (0.0, 0.0, 0.0, 0.0, 0.0);
+    for (q, &i) in idx.iter().enumerate() {
+        let (ms, ys, ds) = (
+            m[i] - a_m * g[i],
+            yv[i] - a_y * g[i],
+            delta_n[i] - a_dn * g[i],
+        );
+        mm += w[q] * ms * ms;
+        my += w[q] * ms * ys;
+        yy += w[q] * ys * ys;
+        md += w[q] * ms * ds;
+        yd += w[q] * ys * ds;
+    }
+    let det = mm * yy - my * my;
+    let mu = (md * yy - yd * my) / det;
+    let y = (yd * mm - md * my) / det;
+
+    let residual = (0..n)
+        .map(|i| delta_n[i] - a_dn * g[i] - mu * (m[i] - a_m * g[i]) - y * (yv[i] - a_y * g[i]))
+        .collect();
+    DistortionParams {
+        mu,
+        y,
+        delta_t_over_t: a_dn,
+        delta_rho_over_rho: drho_over_rho_val,
+        delta_n_over_n: dn_over_n_val,
+        residual,
+    }
 }
 
 /// Returns the (mu, y, delta_t_over_t) tuple as a convenience wrapper.
@@ -820,6 +909,224 @@ mod tests {
             "ΔT offset: predicted {:.3e}, observed {:.3e}",
             predicted_offset,
             observed_offset
+        );
+    }
+
+    /// PIXIE-like channels of Chluba & Jeong (2014): 30–1000 GHz in steps of `step_ghz`,
+    /// as dimensionless x at T₀ = 2.725 K. SI constants typed literally (exact since 2019).
+    fn cj2014_channels(step_ghz: f64) -> Vec<f64> {
+        let (h, k_b, t0): (f64, f64, f64) = (6.626_070_15e-34, 1.380_649e-23, 2.725);
+        let n = ((1000.0 - 30.0) / step_ghz).round() as usize + 1;
+        (0..n)
+            .map(|i| h * (30.0 + step_ghz * i as f64) * 1e9 / (k_b * t0))
+            .collect()
+    }
+
+    /// Solves the least-squares fit of `d` on the columns of `a` (3 columns) by normal
+    /// equations and Cramer's rule. Independent of the code under test.
+    fn lstsq3(a: &[[f64; 3]], d: &[f64]) -> [f64; 3] {
+        let mut n = [[0.0; 3]; 3];
+        let mut b = [0.0; 3];
+        for (row, &di) in a.iter().zip(d) {
+            for p in 0..3 {
+                b[p] += row[p] * di;
+                for q in 0..3 {
+                    n[p][q] += row[p] * row[q];
+                }
+            }
+        }
+        let det = |m: &[[f64; 3]; 3]| {
+            m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
+        };
+        let d0 = det(&n);
+        let mut out = [0.0; 3];
+        for (c, o) in out.iter_mut().enumerate() {
+            let mut m = n;
+            for r in 0..3 {
+                m[r][c] = b[r];
+            }
+            *o = det(&m) / d0;
+        }
+        out
+    }
+
+    /// Anchors the intensity metric to Chluba & Jeong (2014) Appendix A, which gives
+    /// the Gram–Schmidt norms {|Y_SZ|, |M⊥|, |G⊥|} ≃ {73.3, 7.99, 21.4} × 10⁻¹⁸
+    /// W m⁻² Hz⁻¹ sr⁻¹ for 15 GHz channels with G_T, Y_SZ, M in intensity units
+    /// (ΔI = 2(kT₀)³/(hc)² x³ Δn). The Δn metric gives |M⊥|/|Y_SZ| = 0.230 instead
+    /// of 0.109, so this pins the x³ weight of ADR 0006.
+    #[test]
+    fn test_cj2014_basis_norms_are_intensity_norms() {
+        let (h, k_b, c, t0): (f64, f64, f64, f64) =
+            (6.626_070_15e-34, 1.380_649e-23, 299_792_458.0, 2.725);
+        let i0 = 2.0 * (k_b * t0).powi(3) / (h * c).powi(2);
+        let xs = cj2014_channels(15.0);
+        let vec = |f: fn(f64) -> f64| -> Vec<f64> {
+            xs.iter().map(|&x| i0 * x.powi(3) * f(x) * 1e18).collect()
+        };
+        let (yv, mv, gv) = (vec(y_shape), vec(mu_shape), vec(g_bb));
+        let dot = |a: &[f64], b: &[f64]| a.iter().zip(b).map(|(p, q)| p * q).sum::<f64>();
+        let ny = dot(&yv, &yv).sqrt();
+        let ey: Vec<f64> = yv.iter().map(|v| v / ny).collect();
+        let my = dot(&mv, &ey);
+        let mp: Vec<f64> = mv.iter().zip(&ey).map(|(m, e)| m - my * e).collect();
+        let nm = dot(&mp, &mp).sqrt();
+        let em: Vec<f64> = mp.iter().map(|v| v / nm).collect();
+        let (gy, gm) = (dot(&gv, &ey), dot(&gv, &em));
+        let gp: Vec<f64> = (0..xs.len())
+            .map(|i| gv[i] - gy * ey[i] - gm * em[i])
+            .collect();
+        let ng = dot(&gp, &gp).sqrt();
+        for (got, want, name) in [(ny, 73.3, "|Y_SZ|"), (nm, 7.99, "|M⊥|"), (ng, 21.4, "|G⊥|")]
+        {
+            let err = (got - want).abs() / want;
+            assert!(
+                err < 0.01,
+                "{name} = {got:.3} vs CJ2014 {want} (err {:.2}%)",
+                err * 100.0
+            );
+        }
+    }
+
+    /// `decompose_gram_schmidt` and the default `decompose_nonlinear_be` must be the
+    /// CJ2014 intensity estimator: on a spectrum with a
+    /// component outside span{M, Y_SZ, G}, where the metric decides the answer, it
+    /// must match an independent least-squares fit to intensities in 1 GHz channels
+    /// over the same band. The out-of-span term x·G_bb moves the unweighted fit's y
+    /// by several times the tolerance.
+    #[test]
+    fn test_gram_schmidt_matches_cj2014_channel_fit() {
+        let xs = cj2014_channels(1.0);
+        let (lo, hi) = (xs[0], *xs.last().unwrap());
+        let (mu0, y0, t0) = (1e-5, 3e-6, 2e-6);
+        let spec = |x: f64| mu0 * mu_shape(x) + y0 * y_shape(x) + t0 * g_bb(x) + 2e-6 * x * g_bb(x);
+        let a: Vec<[f64; 3]> = xs
+            .iter()
+            .map(|&x| {
+                [
+                    x.powi(3) * mu_shape(x),
+                    x.powi(3) * y_shape(x),
+                    x.powi(3) * g_bb(x),
+                ]
+            })
+            .collect();
+        let d: Vec<f64> = xs.iter().map(|&x| x.powi(3) * spec(x)).collect();
+        let [mu_cj, y_cj, _] = lstsq3(&a, &d);
+
+        let x_grid = log_grid(8000, 1e-3, 40.0);
+        let dn: Vec<f64> = x_grid.iter().map(|&x| spec(x)).collect();
+        let bf = decompose_nonlinear_be(&x_grid, &dn, lo, hi);
+        assert!(
+            (bf.mu - mu_cj).abs() < 0.01 * mu0 && (bf.y - y_cj).abs() < 0.01 * y0,
+            "B&F μ = {:.5e}, y = {:.5e} vs CJ2014 channel fit {mu_cj:.5e}, {y_cj:.5e}",
+            bf.mu,
+            bf.y
+        );
+        let p = decompose_gram_schmidt(&x_grid, &dn, lo, hi);
+        assert!(
+            (p.mu - mu_cj).abs() < 0.01 * mu0,
+            "GS μ = {:.5e} vs CJ2014 channel fit {mu_cj:.5e}",
+            p.mu
+        );
+        assert!(
+            (p.y - y_cj).abs() < 0.01 * y0,
+            "GS y = {:.5e} vs CJ2014 channel fit {y_cj:.5e}",
+            p.y
+        );
+    }
+
+    /// Anchors `decompose_number_conserving` with closed-form photon-number integrals.
+    ///
+    /// (a) Δn = ε·n_pl: ∫x²n_pl dx = 2ζ(3) and ∫x²G dx = 6ζ(3), so ΔT/T = ε/3.
+    /// (b) Out of span: Δn = μM + yY_SZ + a·xG. M and Y_SZ carry no photon number, and
+    ///     ∫x³G dx = 4π⁴/15, so the stripped spectrum is μM + yY_SZ + a(x − c)G with
+    ///     c = (4π⁴/15)/(6ζ(3)). The reference μ, y come from a 2×2 least-squares fit
+    ///     of x³·a(x − c)G on x³M, x³Y_SZ over [0.5, 18] on a separate uniform grid.
+    #[test]
+    fn test_decompose_number_conserving_analytic() {
+        const ZETA3: f64 = 1.202_056_903_159_594_3;
+        let x_grid = log_grid(6000, 1e-4, 60.0);
+        let eps = 1e-5;
+        let dn: Vec<f64> = x_grid.iter().map(|&x| eps * planck(x)).collect();
+        let p = decompose_number_conserving(&x_grid, &dn);
+        let err = (p.delta_t_over_t - eps / 3.0).abs() / (eps / 3.0);
+        assert!(
+            err < 1e-4,
+            "ε·n_pl: ΔT/T = {:.6e}, expected ε/3 (err {err:.1e})",
+            p.delta_t_over_t
+        );
+
+        let (mu0, y0, a) = (1e-5, 2e-6, 1e-6);
+        let c = (4.0 * std::f64::consts::PI.powi(4) / 15.0) / (6.0 * ZETA3);
+        let n = 200_001;
+        let (mut mm, mut my, mut yy, mut md, mut yd) = (0.0, 0.0, 0.0, 0.0, 0.0);
+        for i in 0..n {
+            let x = 0.5 + 17.5 * i as f64 / (n - 1) as f64;
+            let w = if i == 0 || i == n - 1 { 0.5 } else { 1.0 } * x.powi(6);
+            let (m, yv, r) = (mu_shape(x), y_shape(x), a * (x - c) * g_bb(x));
+            mm += w * m * m;
+            my += w * m * yv;
+            yy += w * yv * yv;
+            md += w * m * r;
+            yd += w * yv * r;
+        }
+        let det = mm * yy - my * my;
+        let (dmu, dy) = ((md * yy - yd * my) / det, (yd * mm - md * my) / det);
+        let dn: Vec<f64> = x_grid
+            .iter()
+            .map(|&x| mu0 * mu_shape(x) + y0 * y_shape(x) + a * x * g_bb(x))
+            .collect();
+        let p = decompose_number_conserving(&x_grid, &dn);
+        assert!(
+            (p.mu - (mu0 + dmu)).abs() < 1e-3 * dmu.abs().max(1e-3 * mu0),
+            "out of span: μ = {:.6e}, reference {:.6e}",
+            p.mu,
+            mu0 + dmu
+        );
+        assert!(
+            (p.y - (y0 + dy)).abs() < 1e-3 * dy.abs().max(1e-3 * y0),
+            "out of span: y = {:.6e}, reference {:.6e}",
+            p.y,
+            y0 + dy
+        );
+    }
+
+    /// The number-conserving decomposition recovers pure shapes, puts a pure
+    /// temperature shift entirely into ΔT/T, and ignores any added G_bb.
+    #[test]
+    fn test_decompose_number_conserving_pure_shapes() {
+        let x_grid = log_grid(4000, 1e-4, 50.0);
+        let make = |f: &dyn Fn(f64) -> f64| x_grid.iter().map(|&x| f(x)).collect::<Vec<f64>>();
+        let (mu0, y0, t0) = (1e-5, 2e-6, 3e-6);
+        let p = decompose_number_conserving(&x_grid, &make(&|x| mu0 * mu_shape(x)));
+        assert!((p.mu - mu0).abs() < 1e-3 * mu0, "pure μ: μ = {:.5e}", p.mu);
+        assert!(p.y.abs() < 1e-3 * mu0, "pure μ: y = {:.3e}", p.y);
+        let p = decompose_number_conserving(&x_grid, &make(&|x| y0 * y_shape(x)));
+        assert!((p.y - y0).abs() < 1e-3 * y0, "pure y: y = {:.5e}", p.y);
+        assert!(p.mu.abs() < 1e-3 * y0, "pure y: μ = {:.3e}", p.mu);
+        let p = decompose_number_conserving(&x_grid, &make(&|x| t0 * g_bb(x)));
+        assert!(
+            (p.delta_t_over_t - t0).abs() < 1e-6 * t0,
+            "pure G: ΔT/T = {:.5e}",
+            p.delta_t_over_t
+        );
+        assert!(
+            p.mu.abs() < 1e-9 * t0 && p.y.abs() < 1e-9 * t0,
+            "pure G: μ = {:.3e}, y = {:.3e}",
+            p.mu,
+            p.y
+        );
+        let mix = make(&|x| mu0 * mu_shape(x) + y0 * y_shape(x));
+        let shifted = make(&|x| mu0 * mu_shape(x) + y0 * y_shape(x) + t0 * g_bb(x));
+        let (a, b) = (
+            decompose_number_conserving(&x_grid, &mix),
+            decompose_number_conserving(&x_grid, &shifted),
+        );
+        assert!(
+            (a.mu - b.mu).abs() < 1e-9 * mu0 && (a.y - b.y).abs() < 1e-9 * y0,
+            "added G_bb moved μ or y"
         );
     }
 }

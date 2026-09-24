@@ -285,6 +285,56 @@ class TestDecomposition:
         assert abs(result["mu"] - mu) / mu < 0.05
         assert abs(result["y"] - y_val) / y_val < 0.05
 
+    def test_gs_matches_cj2014_channel_fit(self):
+        """Gram–Schmidt is the Chluba & Jeong (2014) intensity fit (ADR 0006).
+
+        A spectrum with an out-of-span term x·G_bb, where the metric decides the
+        answer, must give the same μ and y as a least-squares fit to intensities
+        x³Δn in 1 GHz channels over 30–1000 GHz. The unweighted Δn fit misses by
+        more than 20 times the tolerance.
+        """
+        h, k_b = 6.62607015e-34, 1.380649e-23  # exact SI values
+        xc = h * np.arange(30.0, 1000.1, 1.0) * 1e9 / (k_b * 2.725)
+        mu0, y0 = 1e-5, 3e-6
+
+        def spec(x):
+            g = greens.g_bb(x)
+            return (
+                mu0 * greens.mu_shape(x)
+                + y0 * greens.y_shape(x)
+                + 2e-6 * g
+                + 2e-6 * x * g
+            )
+
+        a = np.stack([greens.mu_shape(xc), greens.y_shape(xc), greens.g_bb(xc)], axis=1)
+        mu_cj, y_cj, _ = np.linalg.lstsq(
+            a * xc[:, None] ** 3, spec(xc) * xc**3, rcond=None
+        )[0]
+        x = np.geomspace(1e-3, 40.0, 8000)
+        r = greens._decompose_gram_schmidt(x, spec(x), xc[0], xc[-1])
+        assert abs(r["mu"] - mu_cj) < 0.01 * mu0
+        assert abs(r["y"] - y_cj) < 0.01 * y0
+
+    def test_nc_photon_number_anchor(self):
+        """For Δn = ε n_pl, ΔT/T = ε ∫x²n_pl dx / ∫x²G dx = ε · 2ζ(3)/6ζ(3) = ε/3."""
+        x = np.geomspace(1e-4, 60.0, 6000)
+        eps = 1e-5
+        r = greens.decompose_distortion(x, eps / np.expm1(x), method="nc")
+        assert abs(r["dT"] - eps / 3) < 1e-4 * eps / 3
+
+    def test_nc_pure_shapes_and_added_temperature_shift(self):
+        """method="nc" recovers μ and y and puts any G_bb into ΔT/T only."""
+        x = np.geomspace(1e-4, 50.0, 4000)
+        mu0, y0, t0 = 1e-5, 2e-6, 3e-6
+        base = mu0 * greens.mu_shape(x) + y0 * greens.y_shape(x)
+        a = greens.decompose_distortion(x, base, method="nc")
+        b = greens.decompose_distortion(x, base + t0 * greens.g_bb(x), method="nc")
+        assert abs(a["mu"] - mu0) < 1e-3 * mu0
+        assert abs(a["y"] - y0) < 1e-3 * y0
+        assert abs(a["mu"] - b["mu"]) < 1e-9 * mu0
+        assert abs(a["y"] - b["y"]) < 1e-9 * y0
+        assert abs((b["dT"] - a["dT"]) - t0) < 1e-6 * t0
+
 
 class TestGfFitRecovery:
     """``method="gf_fit"`` must recover known visibility amplitudes.
