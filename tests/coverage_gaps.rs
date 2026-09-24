@@ -35,8 +35,8 @@ use spectroxide::solver::{
 
 // (energy_conservation_single_burst_{y_era,mu_era,transition} removed:
 // strictly subsumed by test_heat_energy_conservation_sweep_tight in
-// heat_injection.rs, which sweeps 7 redshifts including {5e3, 5e4, 2e5}
-// at 2% tolerance — tighter than each of the singletons it replaces.)
+// pde_heat.rs, which sweeps 7 redshifts including {5e3, 5e4, 2e5}
+// at 0.6% tolerance — tighter than each of the singletons it replaces.)
 
 #[test]
 fn energy_conservation_decaying_particle() {
@@ -269,7 +269,7 @@ fn energy_conservation_photon_injection_x1() {
     );
     // The scenario's source is G₂·gauss(x)/x², so ∫x³Δn dx / G₃ = α_ρ x_inj ΔN/N
     // is exact for it — no finite-σ_x correction (unlike the x_inj²-normalised
-    // helper in tests/heat_injection.rs; see dev/audit/energy_conservation_audit.md).
+    // helper in tests/common/mod.rs; see dev/audit/energy_conservation_audit.md).
     // Measured err = 3.4e-4; tolerance 2e-3 leaves 6× for the first-order
     // temporal residual to grow with z_h.
     assert!(
