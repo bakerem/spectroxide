@@ -841,8 +841,12 @@ def _gaunt_ff_nr(x_e, theta_e, z_charge):
     """Non-relativistic free-free Gaunt factor (softplus interpolation).
 
     ``x_e`` is h nu / (k T_e) = x / rho_e, not the grid variable x = h nu / (k T_z).
-    The low-frequency limit is the classical Gaunt factor of Draine (2011),
-    Eq. 10.9. Mirrors ``gaunt_ff_nr`` in ``src/bremsstrahlung.rs``.
+    This is Draine (2011), *Physics of the Interstellar and Intergalactic
+    Medium*, Ch. 10 interpolation formula (equation number believed to be
+    10.8, not confirmed), rewritten in (x_e, theta_e); the low-frequency limit
+    is the classical Gaunt factor, Draine Eq. 10.9. Chluba, Ravenni & Bolliet
+    (2020) remains the accurate reference for exact Gaunt factors but is not
+    the source of this fit. Mirrors ``gaunt_ff_nr`` in ``src/bremsstrahlung.rs``.
     """
     if theta_e < 1e-30 or x_e < 1e-30:
         return 1.0

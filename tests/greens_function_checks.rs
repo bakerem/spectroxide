@@ -386,6 +386,58 @@ fn gaunt_ff_classical_limit_matches_draine() {
     }
 }
 
+/// Draine (2011), *Physics of the Interstellar and Intergalactic Medium*, Ch. 10,
+/// non-relativistic thermal Gaunt-factor interpolation, in physical (ν, T_e) units:
+///
+///   g_ff ≈ ln{exp[5.960 − (√3/π) ln(Z ν₉ T₄^{−3/2})] + e},  ν₉ = ν/1 GHz, T₄ = T_e/1e4 K.
+///
+/// (Equation number believed to be 10.8; not confirmed against the printed page.) This
+/// is the full interpolation the code's fit reproduces — not just its low-frequency
+/// classical limit above — via ln(e^a + e) = 1 + softplus(a − 1).
+#[test]
+fn gaunt_ff_nr_matches_draine_ch10_physical_units() {
+    use spectroxide::bremsstrahlung::gaunt_ff_nr;
+
+    // CODATA 2018, typed as literals (independent of constants.rs).
+    let h = 6.626_070_15e-34_f64; // J s, exact by SI definition
+    let k_b = 1.380_649e-23_f64; // J/K, exact by SI definition
+    let m_e = 9.109_383_701_5e-31_f64; // kg
+    let c = 299_792_458.0_f64; // m/s, exact by SI definition
+    let m_e_c2 = m_e * c * c; // J
+
+    let mut max_rel_err = 0.0_f64;
+    for &log10_nu in &[6.0_f64, 7.5, 9.0, 10.5, 12.0, 13.5, 15.0] {
+        let nu_hz = 10.0_f64.powf(log10_nu);
+        for &log10_t in &[3.5_f64, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0] {
+            let t_e_k = 10.0_f64.powf(log10_t);
+            for &z in &[1.0_f64, 2.0] {
+                let nu9 = nu_hz / 1.0e9;
+                let t4 = t_e_k / 1.0e4;
+                let a = 5.960 - SQRT3_OVER_PI * (z * nu9 * t4.powf(-1.5)).ln();
+                let g_draine = (a.exp() + std::f64::consts::E).ln();
+
+                // Convert to the code's variables.
+                let x_e = h * nu_hz / (k_b * t_e_k);
+                let theta_e = k_b * t_e_k / m_e_c2;
+                let g_code = gaunt_ff_nr(x_e, theta_e, z);
+
+                let rel_err = (g_code - g_draine).abs() / g_draine;
+                max_rel_err = max_rel_err.max(rel_err);
+                assert!(
+                    rel_err < 2e-4,
+                    "gaunt_ff_nr vs Draine Ch. 10 at ν={nu_hz:e} Hz, T_e={t_e_k:e} K, Z={z}: \
+                     code={g_code:.6}, Draine={g_draine:.6}, rel_err={rel_err:.2e}"
+                );
+            }
+        }
+    }
+    // Established (2026-09-23): agreement is 4.6e-5 relative over this grid.
+    assert!(
+        max_rel_err < 2e-4,
+        "max relative error {max_rel_err:.2e} exceeds tolerance"
+    );
+}
+
 /// K_BR prefactor α λ_e³/(2π√(6π)), λ_e = h/(m_e c), from CODATA 2018 values typed
 /// here (Chluba & Sunyaev 2012, Eq. 14). Nothing is imported from constants.rs.
 fn br_prefactor_literal() -> f64 {

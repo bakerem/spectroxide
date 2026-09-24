@@ -168,7 +168,8 @@ h=0.71, Omega_b=0.044, Omega_m=0.26, Y_p=0.24, T_cmb=2.726, N_eff=3.046 (Chluba 
 - Chluba & Sunyaev (2012), MNRAS 419, 1294 — CosmoTherm paper, primary reference for equations
 - Chluba (2013), MNRAS 434, 352 — Green's function formalism
 - Chluba (2015), arXiv:1506.06582 — Photon injection
-- Chluba, Ravenni & Bolliet (2020), MNRAS 492, 177 — BR Gaunt factor (BRpack)
+- Chluba, Ravenni & Bolliet (2020), MNRAS 492, 177 — BR Gaunt factor (BRpack), the accurate reference for exact Gaunt factors
+- Draine (2011), *Physics of the Interstellar and Intergalactic Medium*, Ch. 10 — source of the softplus Gaunt-factor interpolation actually used in `bremsstrahlung.rs`
 
 ## Example: adding a simple scenario
 

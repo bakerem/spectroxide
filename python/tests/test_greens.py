@@ -988,3 +988,42 @@ class TestBremsstrahlungGaunt:
                     )
                     g = greens._gaunt_ff_nr(x_e, theta_e, z)
                     assert abs(g - g_d) < 1e-3
+
+    def test_matches_draine_ch10_physical_units(self):
+        """Full fit vs Draine (2011) Ch. 10 interpolation in physical (nu, T_e) units.
+
+        g_ff ~ ln{exp[5.960 - (sqrt(3)/pi) ln(Z nu9 T4^-1.5)] + e},
+        nu9 = nu / 1 GHz, T4 = T_e / 1e4 K (equation number believed to be 10.8,
+        not confirmed). Mirrors
+        ``gaunt_ff_nr_matches_draine_ch10_physical_units`` in
+        ``tests/greens_function_checks.rs``.
+        """
+        # CODATA 2018, typed as literals (independent of the module constants).
+        h = 6.62607015e-34  # J s, exact by SI definition
+        k_b = 1.380649e-23  # J/K, exact by SI definition
+        m_e = 9.1093837015e-31  # kg
+        c = 299792458.0  # m/s, exact by SI definition
+        m_e_c2 = m_e * c**2  # J
+
+        max_rel_err = 0.0
+        for log10_nu in (6.0, 7.5, 9.0, 10.5, 12.0, 13.5, 15.0):
+            nu_hz = 10.0**log10_nu
+            for log10_t in (3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0):
+                t_e_k = 10.0**log10_t
+                for z in (1.0, 2.0):
+                    nu9 = nu_hz / 1.0e9
+                    t4 = t_e_k / 1.0e4
+                    a = 5.960 - self.S3_PI * np.log(z * nu9 * t4**-1.5)
+                    g_draine = np.log(np.exp(a) + np.e)
+
+                    x_e = h * nu_hz / (k_b * t_e_k)
+                    theta_e = k_b * t_e_k / m_e_c2
+                    g_code = greens._gaunt_ff_nr(x_e, theta_e, z)
+
+                    rel_err = abs(g_code - g_draine) / g_draine
+                    max_rel_err = max(max_rel_err, rel_err)
+                    assert rel_err < 2e-4, (
+                        f"nu={nu_hz:e} Hz, T_e={t_e_k:e} K, Z={z}: "
+                        f"code={g_code:.6f}, Draine={g_draine:.6f}, rel_err={rel_err:.2e}"
+                    )
+        assert max_rel_err < 2e-4

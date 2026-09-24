@@ -9296,7 +9296,8 @@ fn test_gaunt_ff_cross_validation() {
         "Gaunt factor(Z=2) should be < Gaunt(Z=1): g(Z=2)={g_z2:.3}, g(Z=1)={g_z1:.3}"
     );
 
-    // Case 4: Known asymptotic — the CRB20 formula is:
+    // Case 4: Known asymptotic — the code's fit is the Draine (2011), Ch. 10
+    // interpolation, rewritten in (x_e, theta_e):
     //   g_ff = 1 + softplus((√3/π)·ln(2.25·θ_e^{1/2}/(x·Z)) + 1.425)
     // For large argument (classical limit): softplus(a) → a, so
     //   g_ff → 1 + (√3/π)·ln(2.25·θ_e^{1/2}/(x·Z)) + 1.425
@@ -9304,11 +9305,12 @@ fn test_gaunt_ff_cross_validation() {
     //   arg_inner = ln(2.25 × 0.1 / 1e-5) = ln(22500) ≈ 10.02
     //   g_ff ≈ 1 + (√3/π)×10.02 + 1.425 ≈ 1 + 5.52 + 1.425 ≈ 7.95
     let g_asymptotic = gaunt_ff_nr(1e-5, 1e-2, 1.0);
-    let g_crb20 = 1.0 + sqrt3_over_pi * (2.25_f64 * (1e-2_f64).sqrt() / 1e-5).ln() + 1.425;
-    let rel_err = (g_asymptotic - g_crb20).abs() / g_crb20;
+    let g_draine_asymptotic =
+        1.0 + sqrt3_over_pi * (2.25_f64 * (1e-2_f64).sqrt() / 1e-5).ln() + 1.425;
+    let rel_err = (g_asymptotic - g_draine_asymptotic).abs() / g_draine_asymptotic;
     assert!(
         rel_err < 0.01,
-        "Gaunt factor at asymptotic limit: code={g_asymptotic:.3}, CRB20={g_crb20:.3}, err={:.1}%",
+        "Gaunt factor at asymptotic limit: code={g_asymptotic:.3}, Draine={g_draine_asymptotic:.3}, err={:.1}%",
         rel_err * 100.0
     );
 }

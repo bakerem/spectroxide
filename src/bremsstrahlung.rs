@@ -13,7 +13,10 @@
 //! - Karzas & Latter (1961) — original Gaunt factors
 //! - Itoh et al. (2000) — relativistic thermal BR fits
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294 [Eq. 14]
-//! - Chluba, Ravenni & Bolliet (2020), MNRAS 492, 177 (BRpack)
+//! - Draine (2011), *Physics of the Interstellar and Intergalactic Medium*,
+//!   Ch. 10 — source of the non-relativistic Gaunt-factor interpolation used here
+//! - Chluba, Ravenni & Bolliet (2020), MNRAS 492, 177 (BRpack) — accurate
+//!   reference for exact Gaunt factors (not the source of the fit below)
 
 use crate::constants::*;
 #[cfg(test)]
@@ -45,19 +48,29 @@ const LN_1_125: f64 = 0.1177_8303_5656_3834;
 /// low frequencies while staying ≥ 1 at high frequencies:
 ///   g_ff = 1 + softplus((√3/π)(ln(2.25/(x_e Z)) + ½ ln θ_e) + 1.425)
 ///
+/// This is Draine (2011), *Physics of the Interstellar and Intergalactic
+/// Medium* (Princeton University Press), Ch. 10 interpolation formula
+///   g_ff ≈ ln{exp[5.960 − (√3/π) ln(Z ν₉ T₄^{−3/2})] + e},  ν₉ = ν/1 GHz, T₄ = T_e/1e4 K,
+/// rewritten in (x_e, θ_e) via the identity ln(e^a + e) = 1 + softplus(a − 1).
+/// The two forms agree to 4.6e-5 relative over ν = 1e6–1e15 Hz, T_e = 3e3–1e7 K,
+/// Z = 1, 2 (equation number believed to be 10.8, not confirmed against the
+/// printed page). The constants 5.960 and 1.425 are the same interpolation in
+/// different units:
+///   1.425 = 4.960 − (√3/π)[ln 2.25 + ln(m_ec²/(h·1 GHz)) − (3/2) ln(m_ec²/(k_B·1e4 K))],
+/// the bracket being the unit conversion from (ν₉, T₄) to (x_e, θ_e).
+///
 /// For a large softplus argument this becomes
 /// g_ff → (√3/π) ln(2.25 θ_e^{1/2}/(Z x_e)) + 2.425 = (√3/π) ln(C θ_e^{1/2}/(Z x_e)) − 3.7e-4,
 /// with C = 2^{5/2} e^{−5γ_E/2}/α = 183.107, because
 /// 1.425 = (√3/π) ln(C/2.25) − 1 = 1.42537. That is the classical (kT_e ≪ Z² Ry,
-/// hν ≪ kT_e) Gaunt factor of Draine (2011), *Physics of the Interstellar and
-/// Intergalactic Medium*, Eq. 10.9, g = (√3/π)[ln((2kT_e)^{3/2}/(π Z e² m_e^{1/2} ν)) − 5γ_E/2],
+/// hν ≪ kT_e) Gaunt factor, g = (√3/π)[ln((2kT_e)^{3/2}/(π Z e² m_e^{1/2} ν)) − 5γ_E/2],
 /// written in (x_e, θ_e). So the ½ ln θ_e term is the classical θ_e^{1/2} dependence,
 /// and Z enters linearly through the Coulomb parameter. The softplus and the
-/// "+1" offset make g ≥ 1 at high frequency. This fit form is used in CosmoTherm
-/// (J. Chluba, private communication); it does not appear in Chluba, Ravenni &
-/// Bolliet (2020, arXiv:1911.08861), whose BRpack tabulations are the accurate
-/// reference. `tests/greens_function_checks.rs` pins the low-frequency limit
-/// against Draine's formula.
+/// "+1" offset make g ≥ 1 at high frequency. Chluba, Ravenni & Bolliet (2020,
+/// arXiv:1911.08861)'s BRpack tabulations remain the accurate reference for
+/// exact Gaunt factors but are not the source of this fit.
+/// `tests/greens_function_checks.rs` pins both the low-frequency classical
+/// limit and the full fit against Draine's Ch. 10 interpolation directly.
 pub fn gaunt_ff_nr(x_e: f64, theta_e: f64, z_charge: f64) -> f64 {
     if theta_e < 1e-30 {
         return 1.0;
