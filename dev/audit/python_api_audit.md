@@ -128,6 +128,7 @@ params are undocumented was **wrong** — `t_cmb`/`t_dust` are documented in the
 (NumPy convention).
 
 ### 2.6 DOC-STALE — `dev/audit/census/census_python.json`
+(2026-09-24: `dev/audit/census/` was removed from the tree; it is in git history at commit `492842a`.)
 Lists three deleted test files (`test_anisotropy.py`, `test_dm_baryon.py`, `test_fh_basis.py`)
 and omits two existing ones (`test_adversarial_inputs.py`, `test_literature_curves.py`).
 

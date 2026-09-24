@@ -136,7 +136,8 @@ figures are regenerated (Phase 4 / B4).
 
 `dev/audit/TEST_PROVENANCE.md` classifies all 624 tests carrying numeric
 assertions (1343 assertions; inventory in `test_assertions.json`, raw
-classification fragments in `census/`):
+classification fragments in `census/`, removed 2026-09-24 and kept in git
+history at commit `492842a`):
 
 | Class | Tests |
 |---|---|

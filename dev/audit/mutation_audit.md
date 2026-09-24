@@ -10,6 +10,9 @@ survivors (16%)** before dying; EB stopped it rather than spend the ~13 further
 days it needed. Verified full-suite lower bound: **63.6%** (§Escalation). The
 close-out fixes and the physics checks the campaign motivated are tracked in
 `R2_WRAPUP_TODO.md` and recorded under §Findings / §New tests added.
+**Raw output:** removed from the tree on 2026-09-24 (bloat review H-5). The
+paths `dev/audit/mutation/...` below and `dev/scripts/run_mutation_shards.sh`
+exist in git history; check them out from commit `492842a`.
 
 ## Method (how to reproduce)
 

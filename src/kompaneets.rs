@@ -572,8 +572,8 @@ pub struct DcbrCoupling<'a> {
 /// Takes one Kompaneets and DC/BR step in place, using pre-allocated workspace.
 ///
 /// Modifies `delta_n` from old values to new values.
-/// Identical physics to `kompaneets_step_nonlinear_coupled` but avoids
-/// per-step heap allocations.
+/// All buffers come from the caller's workspace, so the step makes no heap
+/// allocations.
 ///
 /// DC/BR is handled with backward Euler within the Newton iteration:
 /// the DC/BR residual `dτ × em × (neq - Δn_new)` and Jacobian `dτ × em`

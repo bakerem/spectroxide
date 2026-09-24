@@ -318,7 +318,8 @@ the installed version's docs rather than guessing key names.
 tests listed, and the headline: "N physics-module mutants, M survivors, all
 triaged; K new externally-anchored tests added." CI is NOT extended with
 mutation runs (too slow); instead commit `mutants.out/outcomes.json`
-snapshots under `dev/audit/mutation/` for auditability.
+snapshots under `dev/audit/mutation/` for auditability. (2026-09-24: removed
+from the tree; in git history at commit `492842a`.)
 
 **Gate:** zero un-triaged survivors in the six tier-1 Rust modules and the
 four Python limit-pipeline modules.

@@ -2,6 +2,8 @@
 
 Generated 2026-07-03 by `dev/scripts/build_test_provenance.py` from the assertion inventory (`dev/scripts/extract_test_assertions.py`, 1343 numeric assertions in 619 tests).
 
+**Snapshot, not maintained.** This table records the suite as of 2026-07-03. It still lists tests deleted since then, including every test in the removed Python files `test_anisotropy.py`, `test_fh_basis.py`, and `test_dm_baryon.py`, and it does not reflect the 2026-09-24 bloat-review deletions (`dev/REVIEW_BLOAT_2026-09-24.md`).
+
 Every test with a numeric assertion is classified by the origin of its target value:
 
 - **analytic** — closed-form result verifiable independently of the code

@@ -162,7 +162,8 @@ pub struct SolverOpts {
     pub n_points: Option<usize>,
     /// Disable double-Compton and bremsstrahlung emission and absorption (`--no-dcbr`).
     pub disable_dcbr: bool,
-    /// Split the DC/BR step into separate DC and BR substeps (`--split-dcbr`).
+    /// Solve DC/BR in a separate backward-Euler step after the Kompaneets
+    /// Newton solve, instead of inside it (`--split-dcbr`). Diagnostic only.
     pub split_dcbr: bool,
     /// Use Crank-Nicolson (instead of backward Euler) for the DC/BR solve
     /// (`--cn-dcbr`). Diagnostic only — known to fail at low x.

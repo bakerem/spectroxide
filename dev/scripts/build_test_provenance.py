@@ -5,6 +5,9 @@ of {file, test, provenance, target, source, flag, note}) plus the raw
 inventory (dev/audit/test_assertions.json) for cross-checking coverage.
 
 Usage: python dev/scripts/build_test_provenance.py <fragment.json> [...]
+
+The 2026-07-03 fragments (dev/audit/census/*.json) were removed from the tree
+on 2026-09-24; check them out from commit 492842a to rerun this script.
 """
 
 import json

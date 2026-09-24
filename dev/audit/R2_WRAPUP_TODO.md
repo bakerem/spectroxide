@@ -62,6 +62,8 @@ the survivors already pin down every distinct failure *class*.
 `/tmp/claude-1000/spx-mut{,-b,-c}/out_esc/` → `dev/audit/mutation/rust_escalation/`
 (856 KB: `outcomes.json`, `missed/caught/timeout/unviable.txt` per shard, plus
 `ESCALATION_README.md`). **/tmp is volatile — this was the one urgent item.**
+(2026-09-24: `dev/audit/mutation/` was removed from the tree; it is in git
+history at commit `492842a`.)
 The three worker trees can now be deleted.
 
 | Shard | escalated | caught | still missed |
