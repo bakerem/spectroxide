@@ -161,7 +161,6 @@ fn run_kernel_mms(
             dem_drho_eq: &zeros,
             dneq_drho_eq: &zeros,
             photon_source: Some(&src),
-            cn_dcbr: false,
         };
         let (converged, _rho, _corr) = kompaneets_step_coupled_inplace(
             grid,
@@ -439,7 +438,6 @@ fn photon_number_conserved_coupled_path_pure_compton() {
             dem_drho_eq: &zeros,
             dneq_drho_eq: &zeros,
             photon_source: None,
-            cn_dcbr: false,
         };
         let (converged, _, _) = kompaneets_step_coupled_inplace(
             &grid,
@@ -498,7 +496,6 @@ fn photon_number_ledger_identity_with_dcbr_and_source() {
             dem_drho_eq: &zeros,
             dneq_drho_eq: &zeros,
             photon_source: Some(&src),
-            cn_dcbr: false,
         };
         let (converged, _, _) = kompaneets_step_coupled_inplace(
             &grid,

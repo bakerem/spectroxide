@@ -474,15 +474,6 @@ pub fn br_emission_coefficient_fast_preln(x: f64, ln_x: f64, pre: &BrPrecomputed
     pre.base_factor * exp_xphi * species_sum
 }
 
-// NOTE: `br_heating_integral` was removed (F-R2-2, mutation-audit R2). It was a
-// non-production standalone duplicate of the BR contribution to the electron
-// temperature equation; production code computes DC+BR heating jointly in
-// `solver::dcbr_heating_with_derivative`. It had no production callers (only its
-// own test + one `heat_injection` test). Deleting it removes 48 mutants that
-// survived the lean subset only because their sole exerciser lived in the
-// excluded `heat_injection` suite. Mirrors the earlier `dc_heating_integral`
-// removal (F-R2-1). See dev/audit/mutation_audit.md.
-
 /// Computes the BR contribution to the photon equation RHS (test-only).
 ///
 /// Production code uses the coupled inplace solver with precomputed rates.
@@ -671,10 +662,6 @@ mod tests {
             }
         }
     }
-
-    // test_br_heating_integral_zero_for_planck removed with br_heating_integral
-    // (F-R2-2). Its Planck-vanishing property is covered for the production DC+BR
-    // heating path by the solver's electron-temperature tests.
 
     #[test]
     fn test_br_rhs_nonzero_for_te_ne_tz() {

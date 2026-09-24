@@ -1085,14 +1085,18 @@ impl InjectionScenario {
     /// For continuous scenarios (decaying particles, annihilation), returns
     /// `None` — injection happens at all z.
     pub fn characteristic_redshift(&self) -> Option<(f64, f64)> {
+        self.gaussian_burst()
+            .map(|(z_h, sigma_z)| (z_h, z_h + 7.0 * sigma_z))
+    }
+
+    /// Returns `(z_h, σ_z)` for the scenarios with a Gaussian time profile
+    /// (`SingleBurst`, `MonochromaticPhotonInjection`), and `None` otherwise.
+    pub(crate) fn gaussian_burst(&self) -> Option<(f64, f64)> {
         match self {
-            InjectionScenario::SingleBurst { z_h, sigma_z, .. } => {
-                Some((*z_h, z_h + 7.0 * sigma_z))
+            InjectionScenario::SingleBurst { z_h, sigma_z, .. }
+            | InjectionScenario::MonochromaticPhotonInjection { z_h, sigma_z, .. } => {
+                Some((*z_h, *sigma_z))
             }
-            InjectionScenario::MonochromaticPhotonInjection { z_h, sigma_z, .. } => {
-                Some((*z_h, z_h + 7.0 * sigma_z))
-            }
-            // Continuous injection: active at all redshifts
             _ => None,
         }
     }

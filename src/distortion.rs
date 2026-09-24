@@ -577,11 +577,6 @@ mod tests {
         );
     }
 
-    // (test_decompose_convenience removed in 2026-04 triage: identical 5000-pt
-    // pure-μ setup as test_decompose_pure_mu; the only difference is calling
-    // `decompose()` (a 3-tuple convenience wrapper) instead of
-    // `decompose_distortion()`. Trivial wrapper test.)
-
     #[test]
     fn test_firas_check_values() {
         let params = DistortionParams {

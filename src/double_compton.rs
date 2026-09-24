@@ -15,8 +15,7 @@
 //! - Chluba & Sunyaev (2012), MNRAS 419, 1294 [Eq. 10-13]
 
 use crate::constants::*;
-// planck is only used by the cfg(test) dc_rhs helper and the unit tests since
-// the production dc_heating_integral was removed (R2 mutation audit).
+// planck is used only by the cfg(test) dc_rhs helper and the unit tests.
 #[cfg(test)]
 use crate::spectrum::planck;
 
@@ -74,10 +73,9 @@ pub fn dc_high_freq_suppression(x: f64) -> f64 {
 ///
 /// where n_eq is the equilibrium distribution (Planck at the electron temperature).
 /// Delegates to [`dc_prefactor`] × [`dc_high_freq_suppression`] so that this
-/// function and the solver hot loop share one implementation of K_DC. Before
-/// the R2 mutation audit these were two hand-maintained copies of the same
-/// arithmetic and only *this* one was covered by the DC/BR literature anchor,
-/// leaving the production prefactor unpinned (fix A1).
+/// function and the solver hot loop share one implementation of K_DC, and the
+/// DC/BR literature anchor on this function pins the production prefactor
+/// (R2 mutation audit, fix A1).
 pub fn dc_emission_coefficient(x: f64, theta_z: f64) -> f64 {
     dc_emission_coefficient_fast(x, dc_prefactor(theta_z))
 }
@@ -125,14 +123,6 @@ pub fn dc_rhs(x: &[f64], delta_n: &[f64], theta_z: f64, theta_e: f64) -> Vec<f64
 
     rhs
 }
-
-// NOTE: the standalone `dc_heating_integral` was removed (2026-07-06, R2
-// mutation audit). It duplicated the DC-heating logic that the production solver
-// actually uses — `dcbr_heating_with_derivative` in solver.rs — but was called
-// by no production path (only a single test exercising the trivial Planck→0
-// case, which could not catch scaling/normalization mutations). Mutation testing
-// flagged 41 surviving mutants on this dead duplicate; removing it eliminates the
-// duplicate-divergence hazard. The live DC heating term lives in solver.rs.
 
 #[cfg(test)]
 mod tests {

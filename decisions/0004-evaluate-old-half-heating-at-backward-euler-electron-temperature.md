@@ -139,3 +139,10 @@ heat and the excess bound by any late cooling. This is a worst-case bound, not t
 loss" named above, because heat injected just above z_end can be lost almost entirely by an amount
 z_end sets. Loss table and reasoning: `dev/audit/heat_delivery_near_recombination.md`, section
 "Energy-closure late rule".
+
+## Addendum 2026-09-24: `cn_dcbr` removed
+
+The first known limitation above no longer applies. `SolverConfig::cn_dcbr`, the builder setter,
+and the `--cn-dcbr` flag are gone (bloat review P-5, `dev/REVIEW_BLOAT_2026-09-24.md`). Nothing
+turned the option on, and pitfall #3 in CLAUDE.md already rules out Crank–Nicolson for the stiff
+DC/BR rates at low x. DC/BR now always uses backward Euler inside the Newton solve.

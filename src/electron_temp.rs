@@ -72,9 +72,6 @@ mod tests {
         );
     }
 
-    // test_theta_e_with_scaling removed: theta_e_with(θ_z) is defined as
-    // rho_e * θ_z, so asserting (1.05 * θ_z).abs() < 1e-30 was tautological.
-
     /// Verifies ρ_eq = 1 exactly for any Bose-Einstein distribution.
     ///
     /// Analytic anchor: for n_BE(x, μ) = 1/(e^{x+μ}-1), n(1+n) = −dn/dx, so

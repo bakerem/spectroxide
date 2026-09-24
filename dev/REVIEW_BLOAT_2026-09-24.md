@@ -25,7 +25,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | 3 | T-2, T-6 to T-10, T-13 | Done 2026-09-24 (see phase 3 notes) | see `git log` |
 | 4 | T-4, T-5, T-14, T-16 | Done 2026-09-24 (see phase 4 notes); T-11 find-index merge not done | see `git log` |
 | 5 | C-1 | Done 2026-09-24 (see phase 5 notes); premise corrected | see `git log` |
-| 6 | P-3, P-5, P-6, P-10, P-11 | Not started | |
+| 6 | P-3, P-5, P-6, P-10, P-11 | Done 2026-09-24 (see phase 6 notes); P-10 Gaussian dq/dz not merged | see `git log` |
 | 7 | P-1, P-2, P-4, P-7, P-8, P-9 | Not started | |
 | 8 | Y-1, Y-2 | Not started | |
 
@@ -174,6 +174,18 @@ Phase 5 notes (2026-09-24).
 - Measured locally (2 test threads, this machine): the full default suite takes about 9 minutes of test time, the axion step 100 s including its build. On GitHub the workflow's wall clock should not grow, since the 36-minute coverage job already dominates it. Not yet measured on GitHub; that needs a push.
 
 **Phase 6: production removals.** P-5 (with the ADR 0004 addendum), P-6, P-3, P-10, P-11. Rerun the `debug_assertions` release suite, since P-5 touches the unsafe Newton loop (pitfall #10).
+
+Phase 6 notes (2026-09-24).
+
+- P-5: removed `SolverConfig::cn_dcbr`, `DcbrCoupling::cn_dcbr`, the builder setter, `--cn-dcbr`, and the workspace buffers `dcbr_em_old` and `dcbr_neq_old`. `solve --cn-dcbr` never took effect anyway: `execute_solve` called `set_config` after `apply_solver_flags`, which reset the field. ADR 0004 has a dated addendum. The test `test_builder_photon_nc_cn_setters` became `test_builder_photon_nc_setters`.
+- P-6: removed `nc_stride` and `--nc-stride`. Nothing set it, so the removed condition was always true.
+- P-3: `execute_solve` calls `build_solver_config` once and passes the same config to validation and `set_config`.
+- P-10: `InjectionScenario::gaussian_burst` now feeds `characteristic_redshift` and the solver's step control, and the solver calls `has_photon_source` instead of repeating its match. Not done: sharing the Gaussian dq/dz in `cli.rs`, because a shared helper reorders the floating-point product and would break bit-identity of the Green's-function columns.
+- P-11: removed the notes about removed functions and tests (`bremsstrahlung.rs`, `double_compton.rs`, `greens.rs`, and three `src` test modules), the "used to" history in `cli.rs` and `solver.rs`, and the pre-ADR-0004 story and table in the `ENERGY_CHECK_Z_LATE` doc (the table's values stay in one sentence). Audit labels such as (R-3) and (R2 mutation audit, fix A1) stay as cross-references.
+- Bit-identity: 18 CLI cases (every `solve` injection type including both tabulated types, `--split-dcbr`, `--no-number-conserving`, `--no-dcbr`, `--dn-planck`, `sweep`, `photon-sweep`, `photon-sweep-batch`, `greens`) give byte-identical stdout and stderr before and after, except `physics_hash`, which changes with any source edit.
+- A production-code-reviewer found no correctness issue and no dangling reference.
+- The CLI now rejects `--cn-dcbr` and `--nc-stride` as unknown flags; no tracked script passes them.
+- Suite after phase 6: 450 pass and 4 ignored in the default build, 459 and 4 with `--features axion`, unchanged; the `debug_assertions` release lib run passes (192).
 
 **Phase 7: production refactors.** P-1, P-2, P-8, P-9, then P-4 (warning text changes), then P-7 (struct literals across tests and examples).
 

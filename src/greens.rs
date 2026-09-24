@@ -464,9 +464,6 @@ fn tau_ff_survival(x: f64, z_h: f64, cosmo: &Cosmology) -> f64 {
     (-tau).exp()
 }
 
-// (Arsenadze x'-dependent transition table removed: not well supported by
-// physics. Photon injection now uses the universal J_μ(z) visibility.)
-
 // ---------------------------------------------------------------------------
 // Compton broadening helpers for surviving photon bump
 // ---------------------------------------------------------------------------

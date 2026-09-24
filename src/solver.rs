@@ -52,17 +52,10 @@ pub const ENERGY_CLOSURE_ABS_FLOOR: f64 = 1e-8;
 /// in the meantime. An independent integration of that balance
 /// (`dev/scripts/heatloss/heat_delivery_expectation.py`, narrow bursts with
 /// σ_z = 0.04 z_h, run to z = 200) gives the fraction of heat that never
-/// reaches the photons:
-///
-/// | z_h  | 1500 | 1000   | 800    | 700    | 600    | 550    | 500    | 400    | 300  |
-/// |------|------|--------|--------|--------|--------|--------|--------|--------|------|
-/// | lost | 2e-6 | 6.5e-5 | 9.3e-4 | 2.7e-3 | 6.4e-3 | 9.6e-3 | 1.4e-2 | 3.4e-2 | 0.12 |
-///
-/// Heat injected above z = 600 therefore loses at most 0.7%, far inside
-/// [`ENERGY_CLOSURE_REL_TOL`]. Before ADR 0004 this cutoff was z = 2000,
-/// because the solver itself lost about 5% of the heat injected near
-/// recombination; ADR 0004 removed that loss. Full table, including decays
-/// and z_end = 100: `dev/audit/heat_delivery_near_recombination.md`.
+/// reaches the photons: 6.5e-5 at z_h = 1000, 6.4e-3 at 600, 1.4e-2 at 500,
+/// and 0.12 at 300. Heat injected above z = 600 therefore loses at most 0.7%,
+/// far inside [`ENERGY_CLOSURE_REL_TOL`]. Full table, including decays and
+/// z_end = 100: `dev/audit/heat_delivery_near_recombination.md`.
 pub const ENERGY_CHECK_Z_LATE: f64 = 600.0;
 
 /// When more than this fraction of the gross injected heat falls below
@@ -151,10 +144,6 @@ pub struct SolverConfig {
     /// Maximum number of Newton iterations per Kompaneets step.
     /// Default 10. Increase for extreme injection parameters.
     pub max_newton_iter: usize,
-    /// Use Crank-Nicolson (instead of backward Euler) for DC/BR.
-    /// Second-order in time, matching CosmoTherm's scheme. May be less
-    /// stable at very low x where DC/BR rates diverge.
-    pub cn_dcbr: bool,
 }
 
 impl SolverConfig {
@@ -197,8 +186,8 @@ impl SolverConfig {
         if !self.dtau_max.is_finite() || self.dtau_max <= 0.0 {
             return Err(format!("dtau_max must be positive, got {}", self.dtau_max));
         }
-        // A zero, negative, or NaN cap used to switch the photon-source step
-        // limit off silently (R-2).
+        // The step limit applies only when the cap is positive, so a zero,
+        // negative, or NaN cap would switch it off silently (R-2).
         if !self.dtau_max_photon_source.is_finite() || self.dtau_max_photon_source <= 0.0 {
             return Err(format!(
                 "dtau_max_photon_source must be positive, got {}",
@@ -269,7 +258,6 @@ impl Default for SolverConfig {
             nc_z_min: 5.0e4,
             dtau_max_photon_source: 1.0,
             max_newton_iter: 10,
-            cn_dcbr: false,
         }
     }
 }
@@ -485,9 +473,6 @@ pub struct ThermalizationSolver {
     /// over-thermalization. See Chluba (2013), arXiv:1304.6120.
     /// Enabled by default.
     pub number_conserving: bool,
-    /// Apply NC stripping every nc_stride steps (default 1 = every step).
-    /// Higher values reduce NC-DC/BR feedback at high z.
-    pub nc_stride: usize,
     /// Cumulative δT/T subtracted from Δn by number conservation.
     /// Added back to ρ_eq so T_e tracks the true (shifted) reference.
     pub accumulated_delta_t: f64,
@@ -755,7 +740,6 @@ impl ThermalizationSolver {
             komp_ws,
             planck_grid,
             number_conserving: true,
-            nc_stride: 1,
             accumulated_delta_t: 0.0,
             g_bb_grid,
             g2_gbb_discrete,
@@ -884,7 +868,6 @@ impl ThermalizationSolver {
         self.disable_dcbr = false;
         self.coupled_dcbr = true;
         self.number_conserving = true;
-        self.nc_stride = 1;
         for v in self.emission_rates.iter_mut() {
             *v = 0.0;
         }
@@ -928,20 +911,12 @@ impl ThermalizationSolver {
         // Before the injection (z > z_h + 5σ), allow larger steps but ensure
         // we don't overshoot the injection window entirely.
         // Applies to both SingleBurst and MonochromaticPhotonInjection.
-        let burst_params: Option<(f64, f64)> = match &self.injection {
-            Some(InjectionScenario::SingleBurst { z_h, sigma_z, .. }) => Some((*z_h, *sigma_z)),
-            Some(InjectionScenario::MonochromaticPhotonInjection { z_h, sigma_z, .. }) => {
-                Some((*z_h, *sigma_z))
-            }
-            _ => None,
-        };
-        let is_photon_source = matches!(
-            &self.injection,
-            Some(InjectionScenario::MonochromaticPhotonInjection { .. })
-                | Some(InjectionScenario::DecayingParticlePhoton { .. })
-                | Some(InjectionScenario::TabulatedPhotonSource { .. })
-        );
-        if let Some((z_h, sigma_z)) = burst_params {
+        let burst = self.injection.as_ref().and_then(|inj| inj.gaussian_burst());
+        let is_photon_source = self
+            .injection
+            .as_ref()
+            .is_some_and(|inj| inj.has_photon_source());
+        if let Some((z_h, sigma_z)) = burst {
             let z_upper = z_h + 5.0 * sigma_z;
             let z_lower = z_h - 5.0 * sigma_z;
             if self.z >= z_lower && self.z <= z_upper {
@@ -1374,12 +1349,6 @@ impl ThermalizationSolver {
             let y_he_ii = crate::recombination::saha_he_ii(z_approx, &self.cosmo);
             let y_he_i = crate::recombination::saha_he_i(z_approx, &self.cosmo);
 
-            // Save old DC/BR buffers for CN DC/BR option
-            if self.config.cn_dcbr {
-                self.komp_ws.dcbr_em_old[..n].copy_from_slice(&self.emission_rates[..n]);
-                self.komp_ws.dcbr_neq_old[..n].copy_from_slice(&self.n_eq_minus_n_pl[..n]);
-            }
-
             // Precompute DC/BR rates for the coupled solve (reuse pre-allocated buffers)
             // Hoist x-independent prefactors out of the grid loop
             let dc_pre = dc_prefactor(theta_z_val);
@@ -1616,7 +1585,6 @@ impl ThermalizationSolver {
                     } else {
                         None
                     },
-                    cn_dcbr: self.config.cn_dcbr,
                 })
             } else {
                 None
@@ -1711,10 +1679,7 @@ impl ThermalizationSolver {
         // Number-conserving mode: subtract temperature shift G_bb from Δn.
         // This prevents DC/BR-created low-x photons from accumulating as a
         // secular T-shift that masks the physical distortion shape.
-        if self.number_conserving
-            && self.z > self.config.nc_z_min
-            && (self.nc_stride <= 1 || self.step_count % self.nc_stride == 0)
-        {
+        if self.number_conserving && self.z > self.config.nc_z_min {
             self.subtract_temperature_shift();
         }
 
@@ -1764,7 +1729,6 @@ impl ThermalizationSolver {
         let saved_disable_dcbr = self.disable_dcbr;
         let saved_coupled_dcbr = self.coupled_dcbr;
         let saved_number_conserving = self.number_conserving;
-        let saved_nc_stride = self.nc_stride;
         self.reset();
         self.config = saved_config;
         self.z = self.config.z_start;
@@ -1772,7 +1736,6 @@ impl ThermalizationSolver {
         self.disable_dcbr = saved_disable_dcbr;
         self.coupled_dcbr = saved_coupled_dcbr;
         self.number_conserving = saved_number_conserving;
-        self.nc_stride = saved_nc_stride;
         self.injection = injection;
 
         // Frequency grid sanity: the μ/y decomposition silently returns
@@ -2176,7 +2139,6 @@ pub struct SolverBuilder {
     number_conserving: bool,
     max_newton_iter: Option<usize>,
     dtau_max_photon_source: Option<f64>,
-    cn_dcbr: Option<bool>,
 }
 
 impl SolverBuilder {
@@ -2196,7 +2158,6 @@ impl SolverBuilder {
             number_conserving: true,
             max_newton_iter: None,
             dtau_max_photon_source: None,
-            cn_dcbr: None,
         }
     }
 
@@ -2235,7 +2196,6 @@ impl SolverBuilder {
         self.nc_z_min = Some(config.nc_z_min);
         self.max_newton_iter = Some(config.max_newton_iter);
         self.dtau_max_photon_source = Some(config.dtau_max_photon_source);
-        self.cn_dcbr = Some(config.cn_dcbr);
         self
     }
 
@@ -2287,14 +2247,6 @@ impl SolverBuilder {
     /// is off ([`SolverConfig::nc_z_min`], default 5e4; 0 applies it at all z).
     pub fn nc_z_min(mut self, val: f64) -> Self {
         self.nc_z_min = Some(val);
-        self
-    }
-
-    /// Uses Crank-Nicolson instead of backward Euler for DC/BR
-    /// ([`SolverConfig::cn_dcbr`]). Diagnostic: it can fail at low x, where the
-    /// DC/BR rates diverge.
-    pub fn cn_dcbr(mut self) -> Self {
-        self.cn_dcbr = Some(true);
         self
     }
 
@@ -2354,7 +2306,6 @@ impl SolverBuilder {
                 .dtau_max_photon_source
                 .unwrap_or(defaults.dtau_max_photon_source),
             max_newton_iter: self.max_newton_iter.unwrap_or(defaults.max_newton_iter),
-            cn_dcbr: self.cn_dcbr.unwrap_or(defaults.cn_dcbr),
         };
         config.validate()?;
 
@@ -3080,8 +3031,8 @@ mod tests {
 
     #[test]
     fn test_solver_builder_config_roundtrip() {
-        // Regression: solver_config() used to drop dtau_max_photon_source and
-        // cn_dcbr, silently substituting defaults in build(). Every field is
+        // Regression: solver_config() used to drop dtau_max_photon_source,
+        // silently substituting defaults in build(). Every field is
         // set to a non-default value and asserted individually, so wiring a
         // future field through the builder incompletely fails here.
         let supplied = SolverConfig {
@@ -3093,7 +3044,6 @@ mod tests {
             nc_z_min: 3.3e4,
             dtau_max_photon_source: 0.37,
             max_newton_iter: 14,
-            cn_dcbr: !SolverConfig::default().cn_dcbr,
         };
         let solver = SolverBuilder::new(Cosmology::default())
             .grid_fast()
@@ -3116,7 +3066,6 @@ mod tests {
             supplied.dtau_max_photon_source
         );
         assert_eq!(solver.config.max_newton_iter, supplied.max_newton_iter);
-        assert_eq!(solver.config.cn_dcbr, supplied.cn_dcbr);
     }
 
     #[test]
@@ -3222,10 +3171,10 @@ mod tests {
         assert!(json.contains("\"diag_newton_exhausted\":"));
     }
 
-    /// A-7: the builder sets `dtau_max_photon_source`, `nc_z_min`, and `cn_dcbr`,
+    /// A-7: the builder sets `dtau_max_photon_source` and `nc_z_min`,
     /// and leaves each at its `SolverConfig` default when not called.
     #[test]
-    fn test_builder_photon_nc_cn_setters() {
+    fn test_builder_photon_nc_setters() {
         let defaults = SolverConfig::default();
         let plain = ThermalizationSolver::builder(Cosmology::default())
             .build()
@@ -3235,17 +3184,13 @@ mod tests {
             defaults.dtau_max_photon_source
         );
         assert_eq!(plain.config.nc_z_min, defaults.nc_z_min);
-        assert_eq!(plain.config.cn_dcbr, defaults.cn_dcbr);
-        assert!(!defaults.cn_dcbr);
 
         let set = ThermalizationSolver::builder(Cosmology::default())
             .dtau_max_photon_source(0.25)
             .nc_z_min(0.0)
-            .cn_dcbr()
             .build()
             .unwrap();
         assert_eq!(set.config.dtau_max_photon_source, 0.25);
         assert_eq!(set.config.nc_z_min, 0.0);
-        assert!(set.config.cn_dcbr);
     }
 }

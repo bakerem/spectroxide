@@ -427,9 +427,6 @@ pub struct KompaneetsWorkspace {
     // so we compute it once per step and reuse it in both the h_dcbr pass
     // and the bp_dot_u/bp_dot_v pass.
     wem: Vec<f64>,
-    // DC/BR old-step buffers for Crank-Nicolson DC/BR option:
-    pub(crate) dcbr_em_old: Vec<f64>,
-    pub(crate) dcbr_neq_old: Vec<f64>,
 }
 
 /// Parameters for coupling ρ_e into the bordered Newton system.
@@ -522,8 +519,6 @@ impl KompaneetsWorkspace {
             c_vec: vec![0.0; ng],
             v_buf: vec![0.0; ng],
             wem: vec![0.0; ng],
-            dcbr_em_old: vec![0.0; ng],
-            dcbr_neq_old: vec![0.0; ng],
         }
     }
 }
@@ -564,9 +559,6 @@ pub struct DcbrCoupling<'a> {
     /// during a narrow injection window). `None` preserves the legacy
     /// pre-add caller code path.
     pub photon_source: Option<&'a [f64]>,
-    /// Use Crank-Nicolson (instead of backward Euler) for DC/BR.
-    /// Requires old-step DC/BR buffers in the workspace.
-    pub cn_dcbr: bool,
 }
 
 /// Takes one Kompaneets and DC/BR step in place, using pre-allocated workspace.
@@ -609,9 +601,8 @@ pub struct DcbrCoupling<'a> {
 ///
 /// # Panics
 /// Panics if `delta_n`, one of the `ws` buffers asserted at the top of the function, or a
-/// slice in `dcbr` is shorter than `grid.n` (`grid.n − 1` for the half-point buffers). The
-/// old-step DC/BR buffers are checked only when `dcbr.cn_dcbr` is set, and `photon_source` only
-/// when it is `Some`. These entry `assert!` guards are what make the `get_unchecked` indexing
+/// slice in `dcbr` is shorter than `grid.n` (`grid.n − 1` for the half-point buffers). `photon_source`
+/// is checked only when it is `Some`. These entry `assert!` guards are what make the `get_unchecked` indexing
 /// in the hot loops sound, so keep them in step with any new buffer. The tridiagonal solve
 /// asserts separately, also in release builds, on a zero pivot; a workspace built for a
 /// different grid triggers that one.
@@ -753,18 +744,13 @@ pub fn kompaneets_step_coupled_inplace(
         if let Some(ps) = dc.photon_source {
             assert!(ps.len() >= ng);
         }
-        if dc.cn_dcbr {
-            assert!(ws.dcbr_em_old.len() >= ng);
-            assert!(ws.dcbr_neq_old.len() >= ng);
-        }
     }
 
     // Hoist Option dispatch out of the inner loop. Extract DC/BR slice references
-    // and mode flags once so the hot loop body has no per-point Option checks.
+    // and the has_dcbr flag once so the hot loop body has no per-point Option checks.
     // The empty slices are never indexed (guarded by has_dcbr / has_phot_src).
     static EMPTY: [f64; 0] = [];
-    let (has_dcbr, use_cn, em_rates, neq_vals, dem_drho, dneq_drho, phot_src_vals): (
-        bool,
+    let (has_dcbr, em_rates, neq_vals, dem_drho, dneq_drho, phot_src_vals): (
         bool,
         &[f64],
         &[f64],
@@ -774,7 +760,6 @@ pub fn kompaneets_step_coupled_inplace(
     ) = if let Some(dc) = dcbr {
         (
             true,
-            dc.cn_dcbr,
             dc.emission_rates,
             dc.n_eq_minus_n_pl,
             dc.dem_drho_eq,
@@ -782,7 +767,7 @@ pub fn kompaneets_step_coupled_inplace(
             dc.photon_source.unwrap_or(&EMPTY),
         )
     } else {
-        (false, false, &EMPTY, &EMPTY, &EMPTY, &EMPTY, &EMPTY)
+        (false, &EMPTY, &EMPTY, &EMPTY, &EMPTY, &EMPTY)
     };
     let has_phot_src = !phot_src_vals.is_empty();
     let has_rho_coupling = rho_coupling.is_some();
@@ -828,18 +813,7 @@ pub fn kompaneets_step_coupled_inplace(
         for &bi in &[0_usize, ng - 1] {
             let (dcbr_res, dcbr_jac) = if has_dcbr {
                 let em = em_rates[bi];
-                let neq = neq_vals[bi];
-                if use_cn {
-                    let em_old = ws.dcbr_em_old[bi];
-                    let neq_old = ws.dcbr_neq_old[bi];
-                    let old_part = 0.5 * dtau * em_old * (neq_old - ws.dn_old[bi]);
-                    (
-                        old_part + 0.5 * dtau * em * (neq - delta_n[bi]),
-                        0.5 * dtau * em,
-                    )
-                } else {
-                    (dtau * em * (neq - delta_n[bi]), dtau * em)
-                }
+                (dtau * em * (neq_vals[bi] - delta_n[bi]), dtau * em)
             } else {
                 (0.0, 0.0)
             };
@@ -904,26 +878,17 @@ pub fn kompaneets_step_coupled_inplace(
                 // ρ_e iterate through them. `dem_drho`/`dneq_drho` carry
                 // their analytical derivatives w.r.t. ρ_eq; we still add them
                 // to the Δn-row Jacobian on ρ_e (c_vec), which makes this a
-                // lagged Newton step (see the note above the loop). For CN
-                // mode the "old" half is frozen and gets no derivative.
+                // lagged Newton step (see the note above the loop).
                 let (dcbr_residual, dcbr_jac, dcbr_crho) = if has_dcbr {
                     let em = *em_rates.get_unchecked(i);
                     let neq = *neq_vals.get_unchecked(i);
                     let dem = *dem_drho.get_unchecked(i);
                     let dneq = *dneq_drho.get_unchecked(i);
-                    // d(dcbr_residual)/d(ρ_eq) from the "new" half, with BE
-                    // weight 1 and CN weight 0.5.
-                    let new_crho = -dtau * (dem * (neq - dn_i) + em * dneq);
-                    if use_cn {
-                        let em_old = *ws.dcbr_em_old.get_unchecked(i);
-                        let neq_old = *ws.dcbr_neq_old.get_unchecked(i);
-                        let old_part =
-                            0.5 * dtau * em_old * (neq_old - *ws.dn_old.get_unchecked(i));
-                        let new_res = 0.5 * dtau * em * (neq - dn_i);
-                        (old_part + new_res, 0.5 * dtau * em, 0.5 * new_crho)
-                    } else {
-                        (dtau * em * (neq - dn_i), dtau * em, new_crho)
-                    }
+                    (
+                        dtau * em * (neq - dn_i),
+                        dtau * em,
+                        -dtau * (dem * (neq - dn_i) + em * dneq),
+                    )
                 } else {
                     (0.0, 0.0, 0.0)
                 };
@@ -1550,7 +1515,6 @@ mod tests {
             dem_drho_eq: &dem,
             dneq_drho_eq: &dneq,
             photon_source: None,
-            cn_dcbr: false,
         };
 
         let (converged, rho_e, last_delta) = kompaneets_step_coupled_inplace(
@@ -1661,7 +1625,6 @@ mod tests {
             dem_drho_eq: &zeros,
             dneq_drho_eq: &zeros,
             photon_source: None,
-            cn_dcbr: false,
         };
         for _ in 0..5 {
             let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
@@ -1700,7 +1663,6 @@ mod tests {
             dem_drho_eq: &zeros,
             dneq_drho_eq: &zeros,
             photon_source: Some(&source),
-            cn_dcbr: false,
         };
         let (conv, _rho, _d) = kompaneets_step_coupled_inplace(
             &grid,

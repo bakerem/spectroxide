@@ -165,15 +165,9 @@ pub struct SolverOpts {
     /// Solve DC/BR in a separate backward-Euler step after the Kompaneets
     /// Newton solve, instead of inside it (`--split-dcbr`). Diagnostic only.
     pub split_dcbr: bool,
-    /// Use Crank-Nicolson (instead of backward Euler) for the DC/BR solve
-    /// (`--cn-dcbr`). Diagnostic only — known to fail at low x.
-    pub cn_dcbr: bool,
     /// Keep the photon-number-conserving Kompaneets correction enabled
     /// (default true; disabled with `--no-number-conserving`).
     pub number_conserving: bool,
-    /// Apply the number-conserving correction every `nc_stride` steps
-    /// (`--nc-stride`).
-    pub nc_stride: Option<usize>,
     /// Lower-z cutoff `--nc-z-min` below which the number-conserving
     /// correction is suppressed.
     pub nc_z_min: Option<f64>,
@@ -237,9 +231,7 @@ impl Default for SolverOpts {
             n_points: None,
             disable_dcbr: false,
             split_dcbr: false,
-            cn_dcbr: false,
             number_conserving: true,
-            nc_stride: None,
             nc_z_min: None,
             production_grid: false,
             dn_planck: None,
@@ -296,9 +288,7 @@ const SOLVER_KEYS: &[&str] = &[
     "--production-grid",
     "--no-dcbr",
     "--split-dcbr",
-    "--cn-dcbr",
     "--no-number-conserving",
-    "--nc-stride",
     "--nc-z-min",
     "--no-auto-refine",
 ];
@@ -317,7 +307,6 @@ const BOOL_FLAGS: &[&str] = &[
     "--production-grid",
     "--no-dcbr",
     "--split-dcbr",
-    "--cn-dcbr",
     "--no-number-conserving",
     "--no-auto-refine",
 ];
@@ -732,8 +721,7 @@ pub fn parse_command(args: &[String]) -> Result<Command, String> {
 /// # Errors
 /// Returns `Err` if a flag appears twice, or if an argument is neither a flag
 /// nor a flag's value (a stray positional word, or a value given to a flag in
-/// the boolean-flag list). These used to be accepted: the last duplicate won and
-/// stray words were dropped (R-3). A value flag with no value maps to an
+/// the boolean-flag list), per R-3. A value flag with no value maps to an
 /// empty string, so that an unknown flag still gets the "did you mean" error;
 /// flag validation then rejects the missing value.
 pub fn parse_flat_args(args: &[String]) -> Result<HashMap<String, String>, String> {
@@ -807,7 +795,7 @@ fn parse_solver_opts(map: &HashMap<String, String>) -> Result<SolverOpts, String
             .get("--dtau-max")
             .map(|s| s.parse().map_err(|_| "Invalid --dtau-max"))
             .transpose()?,
-        // 0 used to mean "use the default" (R-3); a count of zero is an error.
+        // A count of zero is an error, not "use the default" (R-3).
         n_points: match map.get("--n-points") {
             Some(s) => match s.parse::<usize>() {
                 Ok(0) => return Err("--n-points must be a positive integer, got 0".into()),
@@ -818,12 +806,7 @@ fn parse_solver_opts(map: &HashMap<String, String>) -> Result<SolverOpts, String
         },
         disable_dcbr: map.contains_key("--no-dcbr"),
         split_dcbr: map.contains_key("--split-dcbr"),
-        cn_dcbr: map.contains_key("--cn-dcbr"),
         number_conserving: !map.contains_key("--no-number-conserving"),
-        nc_stride: map
-            .get("--nc-stride")
-            .map(|s| s.parse().map_err(|_| "Invalid --nc-stride"))
-            .transpose()?,
         nc_z_min: map
             .get("--nc-z-min")
             .map(|s| s.parse().map_err(|_| "Invalid --nc-z-min"))
@@ -1032,10 +1015,7 @@ fn print_solver_options_help(for_solve: bool) {
     println!("DIAGNOSTIC FLAGS (sensitivity probes, not production runs):");
     println!("  --no-dcbr             Disable double-Compton + bremsstrahlung");
     println!("  --split-dcbr          Operator-split DC/BR instead of the coupled Newton solve");
-    println!("  --cn-dcbr             Crank-Nicolson DC/BR (can fail at low x; default is");
-    println!("                        backward Euler, the validated path)");
     println!("  --no-number-conserving  Disable the number-conserving T-shift subtraction");
-    println!("  --nc-stride <n>       Apply NC subtraction every n steps (default 1)");
     println!("  --nc-z-min <z>        Minimum z for NC subtraction (default 5e4; 0 = all z)");
     if for_solve {
         println!("  --dn-planck <val>     Initial Planck-shaped Delta n amplitude at z_start");
@@ -1514,14 +1494,6 @@ fn diagnostic_flag_warnings(solver_opts: &SolverOpts) -> Vec<String> {
                 .to_string(),
         );
     }
-    if solver_opts.cn_dcbr {
-        out.push(
-            "--cn-dcbr selects Crank-Nicolson for DC/BR. The CN scheme can produce negative \
-             diagonals at low x where DC/BR rates diverge (CLAUDE.md pitfall #3); the default \
-             backward-Euler is the validated path. Diagnostic flag only."
-                .to_string(),
-        );
-    }
     out
 }
 
@@ -1533,24 +1505,14 @@ fn apply_solver_flags(solver: &mut ThermalizationSolver, solver_opts: &SolverOpt
         eprintln!("  Warning: {w}");
         solver.diag.warnings.push(w);
     }
-    if let Some(stride) = solver_opts.nc_stride {
-        solver.nc_stride = stride;
-    }
     if solver_opts.split_dcbr {
         solver.coupled_dcbr = false;
-    }
-    if solver_opts.cn_dcbr {
-        solver.config.cn_dcbr = true;
     }
 }
 
 /// Validates a (config, grid, injection) combination the same way
 /// `SolverBuilder::build` does, returning the soft warnings that should
 /// surface to the caller. Hard errors are propagated as `Err`.
-///
-/// The CLI used to bypass this entirely by going through
-/// `ThermalizationSolver::new` and `set_config`; this helper restores the
-/// validation chain without forcing every call site to use the builder.
 fn validate_and_collect_warnings(
     config: &SolverConfig,
     grid_config: &GridConfig,
@@ -1638,8 +1600,6 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     eprintln!("Injection: {}", opts.injection_type);
 
     let n_grid = opts.solver.n_points;
-    let effective_dy_max = opts.solver.dy_max.unwrap_or(SolverConfig::default().dy_max);
-    let effective_dtau_max = opts.solver.dtau_max.unwrap_or(10.0);
     let z_start = opts
         .solver
         .z_start
@@ -1671,21 +1631,9 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
         }
     }
 
-    let defaults_for_validate = SolverConfig::default();
-    let probe_config = SolverConfig {
-        z_start,
-        z_end,
-        dy_max: effective_dy_max,
-        dtau_max: effective_dtau_max,
-        nc_z_min: opts.solver.nc_z_min.unwrap_or(5.0e4),
-        dtau_max_photon_source: opts
-            .solver
-            .dtau_max_photon_source
-            .unwrap_or(defaults_for_validate.dtau_max_photon_source),
-        ..defaults_for_validate
-    };
+    let config = build_solver_config(&opts.solver, z_start, z_end);
     let preflight_warnings =
-        validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
+        validate_and_collect_warnings(&config, &grid_config, &injection, &cosmo)?;
 
     let mut solver = ThermalizationSolver::new(cosmo, grid_config);
     apply_solver_flags(&mut solver, &opts.solver);
@@ -1705,21 +1653,7 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
         solver.set_initial_delta_n(initial_dn);
     }
 
-    // Note: execute_solve uses explicit dy_max/dtau_max from its own defaults,
-    // not the shared build_solver_config helper, because it has special is_continuous logic.
-    let defaults = SolverConfig::default();
-    solver.set_config(SolverConfig {
-        z_start,
-        z_end,
-        dy_max: effective_dy_max,
-        dtau_max: effective_dtau_max,
-        nc_z_min: opts.solver.nc_z_min.unwrap_or(5.0e4),
-        dtau_max_photon_source: opts
-            .solver
-            .dtau_max_photon_source
-            .unwrap_or(defaults.dtau_max_photon_source),
-        ..defaults
-    });
+    solver.set_config(config);
 
     let result = solver.try_run_to_result(z_end)?;
     let last = &result.snapshot;
