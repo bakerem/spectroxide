@@ -33,8 +33,8 @@ pub const MIN_TESTED_GRID_POINTS: usize = 1000;
 
 /// Relative tolerance of the post-run energy-closure check (R-1): the solver
 /// warns when the final Δρ/ρ misses the injected heat by more than this
-/// fraction of it. Bursts at z_h ≥ 1600 close to within 0.7% at the default
-/// grid (N = 2000) and Δτ_max = 10.
+/// fraction of it. Since ADR 0004, bursts at z_h = 1e3 to 2e6 deliver their
+/// heat to within 0.7% at Δτ_max = 10 (`dev/audit/fix_a_cn_old_half_ab.md`).
 pub const ENERGY_CLOSURE_REL_TOL: f64 = 0.05;
 
 /// Absolute slack added to the energy-closure tolerance. It covers the
@@ -43,18 +43,72 @@ pub const ENERGY_CLOSURE_REL_TOL: f64 = 0.05;
 /// null burst, N = 2000), so injections below ~1e-7 are not flagged for it.
 pub const ENERGY_CLOSURE_ABS_FLOOR: f64 = 1e-8;
 
-/// Redshift below which injected heat does not fully reach the photons. See
-/// [`ENERGY_CHECK_MAX_LATE_FRACTION`].
-pub const ENERGY_CHECK_Z_LATE: f64 = 2000.0;
+/// Redshift below which adiabatic cooling of the gas keeps a significant part
+/// of injected heat from the photons. See [`ENERGY_CHECK_MAX_LATE_FRACTION`].
+///
+/// After recombination, Compton scattering hands a gas temperature excess to
+/// the photons on a time that grows from 3e-5 Hubble times at z = 1000 to
+/// 1e-2 at z = 500 and 0.25 at z = 200, and the excess cools adiabatically
+/// in the meantime. An independent integration of that balance
+/// (`dev/scripts/heatloss/heat_delivery_expectation.py`, narrow bursts with
+/// σ_z = 0.04 z_h, run to z = 200) gives the fraction of heat that never
+/// reaches the photons:
+///
+/// | z_h  | 1500 | 1000   | 800    | 700    | 600    | 550    | 500    | 400    | 300  |
+/// |------|------|--------|--------|--------|--------|--------|--------|--------|------|
+/// | lost | 2e-6 | 6.5e-5 | 9.3e-4 | 2.7e-3 | 6.4e-3 | 9.6e-3 | 1.4e-2 | 3.4e-2 | 0.12 |
+///
+/// Heat injected above z = 600 therefore loses at most 0.7%, far inside
+/// [`ENERGY_CLOSURE_REL_TOL`]. Before ADR 0004 this cutoff was z = 2000,
+/// because the solver itself lost about 5% of the heat injected near
+/// recombination; ADR 0004 removed that loss. Full table, including decays
+/// and z_end = 100: `dev/audit/heat_delivery_near_recombination.md`.
+pub const ENERGY_CHECK_Z_LATE: f64 = 600.0;
 
-/// The energy-closure check is skipped when more than this fraction of the
-/// injected heat falls below [`ENERGY_CHECK_Z_LATE`]. Measured delivery
-/// (N = 2000, Δτ_max = 10, cooling baseline removed) is 99.3–99.7% for bursts
-/// at z_h ≥ 1600 but 94–97% at z_h = 700–1300. At z_h = 1300 the deficit is
-/// step error (99.8% at Δτ_max = 0.1); at z_h ≤ 1000 about 5% stays lost at
-/// Δτ_max = 0.1. With at most this fraction below z = 2000, the late part
-/// moves the total by at most 0.7%.
-pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.1;
+/// When more than this fraction of the gross injected heat falls below
+/// [`ENERGY_CHECK_Z_LATE`], the energy-closure check allows all of that late
+/// heat to go missing: its heating part widens the tolerance on the
+/// shortfall side, and its cooling part on the excess side.
+///
+/// Heat below z = 600 can be lost almost entirely. Of a burst centered on
+/// z_end = 200, 88% of the heat injected before z_end has not reached the
+/// photons (most of it is still in the gas); a burst at z_h = 200 run to
+/// z = 100 loses 41%. The rule therefore assumes the worst case. Below this
+/// fraction the check keeps the plain tolerance: 5%, minus the 0.7% physical
+/// loss above z = 600, minus the numerical delivery error after ADR 0004 (up
+/// to 0.6% at z_h = 1e6 to 2e6, N = 4000, Δτ_max = 10), leaves 3.7% for
+/// late heat lost. 3% keeps a margin.
+pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.03;
+
+/// Returns how far the final Δρ/ρ may fall below (first) and rise above
+/// (second) the expected energy before the energy-closure check warns (R-1).
+///
+/// `gross` is the gross injected heat ∫|dq/dz| dz of the run; `late_abs` and
+/// `late_net` are the gross and net heat injected below
+/// [`ENERGY_CHECK_Z_LATE`]. Both bounds start at [`ENERGY_CLOSURE_REL_TOL`]
+/// of `gross` plus [`ENERGY_CLOSURE_ABS_FLOOR`]. If `late_abs` exceeds
+/// [`ENERGY_CHECK_MAX_LATE_FRACTION`] of `gross`, the late heating part,
+/// (late_abs + late_net)/2, widens the shortfall bound, since the gas may keep
+/// all of it from the photons, and the late cooling part,
+/// (late_abs − late_net)/2, widens the excess bound for the same reason. With
+/// `capped` (ρ_e hit its cap) any shortfall is allowed.
+fn energy_closure_allowance(gross: f64, late_abs: f64, late_net: f64, capped: bool) -> (f64, f64) {
+    let tol = ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR;
+    let (late_heat, late_cool) = if late_abs > ENERGY_CHECK_MAX_LATE_FRACTION * gross {
+        (
+            (0.5 * (late_abs + late_net)).max(0.0),
+            (0.5 * (late_abs - late_net)).max(0.0),
+        )
+    } else {
+        (0.0, 0.0)
+    };
+    let short = if capped {
+        f64::INFINITY
+    } else {
+        tol + late_heat
+    };
+    (short, tol + late_cool)
+}
 
 /// Tunable solver parameters.
 ///
@@ -1893,16 +1947,15 @@ impl ThermalizationSolver {
     ///
     /// Applies only to scenarios with a known injected energy (single burst,
     /// heating table); photon injection is excluded because its closure is
-    /// known to be off by 7–45% for x_inj ≲ 0.03 (investigation I-1). The
-    /// check is skipped when more than [`ENERGY_CHECK_MAX_LATE_FRACTION`] of
-    /// the injected energy falls below z = [`ENERGY_CHECK_Z_LATE`], where heat
-    /// near recombination does not fully reach the photons.
+    /// known to be off by 7–45% for x_inj ≲ 0.03 (investigation I-1).
     ///
     /// When ρ_e hit its cap (that run already warns "Substantial heating"),
-    /// the check is one-sided. The cap discards heat the electrons could not
-    /// hold, so a shortfall is expected and stays silent. The cap cannot add
-    /// energy, so an excess beyond the same tolerance still warns, with text
-    /// that points to a numerical error instead.
+    /// a shortfall is expected and stays silent: the cap discards heat the
+    /// electrons could not hold. The cap cannot add energy, so an excess
+    /// beyond the tolerance still warns, with text that points to a numerical
+    /// error. When more than [`ENERGY_CHECK_MAX_LATE_FRACTION`] of the heat
+    /// falls below z = [`ENERGY_CHECK_Z_LATE`], the tolerance also allows all
+    /// of that late heat to be lost ([`energy_closure_allowance`]).
     fn energy_closure_warning(&self, z_run_start: f64, drho_initial: f64) -> Option<String> {
         if self.step_count == 0 {
             return None;
@@ -1917,33 +1970,44 @@ impl ThermalizationSolver {
         if gross == 0.0 || !gross.is_finite() || !injected.is_finite() {
             return None;
         }
-        let late = if z_final < ENERGY_CHECK_Z_LATE {
-            inj.injected_abs_delta_rho_between(z_final, ENERGY_CHECK_Z_LATE.min(z_run_start))
-                .unwrap_or(0.0)
+        let (late_abs, late_net) = if z_final < ENERGY_CHECK_Z_LATE {
+            let z_hi = ENERGY_CHECK_Z_LATE.min(z_run_start);
+            (
+                inj.injected_abs_delta_rho_between(z_final, z_hi)
+                    .unwrap_or(0.0),
+                inj.injected_delta_rho_between(z_final, z_hi).unwrap_or(0.0),
+            )
         } else {
-            0.0
+            (0.0, 0.0)
         };
-        if late / gross > ENERGY_CHECK_MAX_LATE_FRACTION {
-            return None;
-        }
+        let capped = self.diag.heating_cap_warned;
+        let (allow_short, allow_excess) =
+            energy_closure_allowance(gross, late_abs, late_net, capped);
         let expected = drho_initial + injected;
         let measured = self.total_delta_rho_over_rho();
         let diff = measured - expected;
-        if diff.abs() <= ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR {
+        if -allow_short <= diff && diff <= allow_excess {
             return None;
         }
-        if self.diag.heating_cap_warned {
-            if diff < 0.0 {
-                return None;
-            }
+        let late_note = if late_abs > ENERGY_CHECK_MAX_LATE_FRACTION * gross {
+            format!(
+                " {:.0}% of the heat was injected below z = {ENERGY_CHECK_Z_LATE:.0}, \
+                 where the gas can keep it from the photons; the tolerance already \
+                 allows for losing all of it.",
+                100.0 * late_abs / gross
+            )
+        } else {
+            String::new()
+        };
+        if capped {
             return Some(format!(
                 "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
                  injection delivered only {expected:.4e} between z = {z_run_start:.3e} and \
                  z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). The \
                  electron temperature hit its cap in this run, but the cap only removes \
-                 heat, so it cannot cause an excess. An excess points to a numerical \
-                 error, for example an under-resolved frequency grid (this one has \
-                 n_points={}; try more) or time steps that are too large (reduce \
+                 heat, so it cannot cause an excess.{late_note} An excess points to a \
+                 numerical error, for example an under-resolved frequency grid (this one \
+                 has n_points={}; try more) or time steps that are too large (reduce \
                  dtau_max). A large injection (|Δρ/ρ| near 1e-2 or more) or a \
                  diagnostic flag can also cause it. Do not trust μ and y from this run.",
                 100.0 * diff / gross,
@@ -1954,7 +2018,7 @@ impl ThermalizationSolver {
         Some(format!(
             "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
              injection delivered {expected:.4e} between z = {z_run_start:.3e} and \
-             z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). \
+             z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%).{late_note} \
              Possible causes: a coarse frequency grid (this one has n_points={}; \
              try more), large time steps (reduce dtau_max), a large injection \
              (|Δρ/ρ| near 1e-2 or more), or a diagnostic flag. Check that μ and y \
@@ -2353,10 +2417,10 @@ impl SolverBuilder {
 mod tests {
     use super::*;
 
-    /// R-1 skip rules, tested on the check itself so that each rule is
-    /// exercised alone. The base run fails closure with a shortfall (a
+    /// R-1 exceptions, tested on the check itself so that each is exercised
+    /// alone. The base run fails closure with a shortfall (a
     /// 100-point grid from z = 5e6 ends near Δρ/ρ = −1.5e-2 for an injected
-    /// 1e-5, with all heat above z = 2000), so the check fires; the ρ_e-cap
+    /// 1e-5, with all heat above z = 600), so the check fires; the ρ_e-cap
     /// flag must silence a shortfall. A second run adds a known initial Δn:
     /// the check must count that energy as expected, or it would warn on a
     /// well-resolved run. The same run, checked against a wrong expectation,
@@ -2433,6 +2497,120 @@ mod tests {
             "{excess:?}"
         );
         assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_none());
+    }
+
+    /// Late-heat rule after ADR 0004. A burst at z_h = 1000 (σ_z = 100) puts
+    /// 3e-5 of its heat below z = [`ENERGY_CHECK_Z_LATE`] and physically
+    /// loses 1.4e-4 of it by z = 200, so the check keeps its plain tolerance:
+    /// the correct run is silent and a 30% error of either sign warns. The
+    /// old rule (cutoff z = 2000) skipped this run. Δρ/ρ = 2e-7 keeps ρ_e
+    /// below its cap (5e-7 reaches it) and makes the tolerance 10% of the
+    /// heat, half of it the 1e-8 absolute floor.
+    ///
+    /// A burst at z_h = 600 puts half its heat below z = 600. Late heat reaches
+    /// the ρ_e cap at small amplitude (a burst at z_h = 500 caps at 1e-8), so
+    /// this run uses 1e-10. It is silent, and a shortfall of 5e-8, beyond the
+    /// tolerance plus all the late heat, still warns; the old rule skipped it.
+    ///
+    /// The errors are made by shifting the expected energy, as in
+    /// `test_energy_closure_skip_rules`. The widening itself is checked on
+    /// [`energy_closure_allowance`] for heating, cooling, mixed, and capped
+    /// cases, with bounds worked out by hand.
+    #[test]
+    fn test_energy_closure_late_rule() {
+        let run = |z_h: f64, amp: f64| {
+            let burst = InjectionScenario::SingleBurst {
+                z_h,
+                delta_rho_over_rho: amp,
+                sigma_z: 100.0,
+            };
+            let late = burst
+                .injected_abs_delta_rho_between(200.0, ENERGY_CHECK_Z_LATE)
+                .unwrap()
+                / burst
+                    .injected_abs_delta_rho_between(200.0, z_h + 700.0)
+                    .unwrap();
+            let mut solver = ThermalizationSolver::new(Cosmology::default(), GridConfig::fast());
+            solver.set_injection(burst).unwrap();
+            solver.set_config(SolverConfig {
+                z_start: z_h + 700.0,
+                z_end: 200.0,
+                ..SolverConfig::default()
+            });
+            solver.run_with_snapshots(&[200.0]);
+            assert!(!solver.diag.heating_cap_warned, "z_h = {z_h}: ρ_e capped");
+            let closure: Vec<&String> = solver
+                .diag
+                .warnings
+                .iter()
+                .filter(|w| w.starts_with("Energy closure"))
+                .collect();
+            assert!(closure.is_empty(), "z_h = {z_h}: {closure:?}");
+            (solver, late)
+        };
+
+        let amp = 2e-7;
+        let (solver, late) = run(1000.0, amp);
+        assert!(late < 1e-4, "late fraction {late}");
+        let z0 = 1700.0;
+        assert!(solver.energy_closure_warning(z0, 0.0).is_none());
+        let short = solver.energy_closure_warning(z0, 0.3 * amp);
+        assert!(short.is_some(), "30% shortfall at z_h = 1000 must warn");
+        let excess = solver.energy_closure_warning(z0, -0.3 * amp);
+        assert!(
+            excess
+                .as_deref()
+                .is_some_and(|w| !w.contains("cannot cause") && !w.contains("below z =")),
+            "{excess:?}"
+        );
+
+        let (solver, late) = run(600.0, 1e-10);
+        assert!(
+            late > ENERGY_CHECK_MAX_LATE_FRACTION,
+            "late fraction {late}"
+        );
+        let short = solver.energy_closure_warning(1300.0, 5e-8);
+        assert!(
+            short
+                .as_deref()
+                .is_some_and(|w| w.contains("below z = 600")),
+            "{short:?}"
+        );
+
+        let g = 1e-5;
+        let tol = ENERGY_CLOSURE_REL_TOL * g + ENERGY_CLOSURE_ABS_FLOOR;
+        let close = |(s, e): (f64, f64), (s0, e0): (f64, f64)| {
+            assert!(
+                (s - s0).abs() < 1e-12 * g && (e - e0).abs() < 1e-12 * g,
+                "got ({s:e}, {e:e}), expected ({s0:e}, {e0:e})"
+            );
+        };
+        // At most ENERGY_CHECK_MAX_LATE_FRACTION late: plain tolerance.
+        close(
+            energy_closure_allowance(g, 0.03 * g, 0.03 * g, false),
+            (tol, tol),
+        );
+        // Late heating widens the shortfall side only.
+        close(
+            energy_closure_allowance(g, 0.5 * g, 0.5 * g, false),
+            (tol + 0.5 * g, tol),
+        );
+        // Late cooling widens the excess side only.
+        close(
+            energy_closure_allowance(g, 0.5 * g, -0.5 * g, false),
+            (tol, tol + 0.5 * g),
+        );
+        // 0.3 g of late heating and 0.1 g of late cooling.
+        close(
+            energy_closure_allowance(g, 0.4 * g, 0.2 * g, false),
+            (tol + 0.3 * g, tol + 0.1 * g),
+        );
+        // A capped run allows any shortfall.
+        let (s, e) = energy_closure_allowance(g, 0.5 * g, 0.5 * g, true);
+        assert!(
+            s.is_infinite() && (e - tol).abs() < 1e-12 * g,
+            "({s:e}, {e:e})"
+        );
     }
 
     /// Checks that the analytic dH/dρ_e in `dcbr_heating_with_derivative` matches a
