@@ -96,6 +96,33 @@ mirror divergences, all already fixed.
   photon) with mean `x_inj·f_int`; structure is internally consistent and the
   y_γ→0 fallback (narrow Gaussian) is sane. Flag for a dedicated Arsenadze pass.
 
+- **M-5 (energy non-closure at low z from the J_bb* prefactor, added
+  2026-09-23, review finding P-10):** `J_bb*(z) = 0.983 J_bb (1 − 0.0381
+  (z/z_μ)^2.29)` tends to 0.983, not 1, as z → 0, because the fit (Chluba 2015
+  Eq. 13) is valid only for 3×10⁵ ≲ z ≲ 6×10⁶. Below that range the T-part
+  weight `(1 − J_bb*)/4` stays at 0.017/4 while `J_y → 1` already carries all
+  the energy, so `G_th` over-counts energy by 1.7% even in the pure y-era. This
+  is a different cause from M-3, which comes from `J_y ≠ 1 − J_μ` in the
+  transition. Measured with the Python `greens_function` (`∫x³ G_th dx / G₃`,
+  scipy `quad` on x ∈ [10⁻⁶, 60]), which matches the closed form
+  `J_μ J_bb* + J_y + 1 − J_bb*` to all printed digits:
+
+  | z_h   | energy ratio | J_bb*   | J_y     | J_μ     |
+  |-------|--------------|---------|---------|---------|
+  | 1e3   | 1.01745      | 0.98300 | 0.99997 | 0.00048 |
+  | 5e3   | 1.02512      | 0.98300 | 0.99836 | 0.00993 |
+  | 1e4   | 1.04271      | 0.98300 | 0.99027 | 0.03605 |
+  | 3e5   | 1.01548      | 0.97376 | 0.01548 | 1.00000 |
+  | 1e6   | 1.00070      | 0.81349 | 0.00070 | 1.00000 |
+
+  At z_h = 10³ the 1.745% excess splits into 1.700% from `1 − J_bb*` and
+  0.045% from the J_μ and J_y tails. The photon Green's function at P_s = 0
+  weights the T-part by J_μ and the y-part by 1 − J_μ, so it closes energy
+  exactly (measured 1.00000 at z_h = 10³, 10⁴, 3×10⁴ and 3×10⁵ for
+  x_inj = 5) and therefore is not α_ρ x_inj G_th; the docstrings in
+  `greens.rs` and `greens.py` used to claim that it was. Not fixed: `G_th`
+  follows the published fits, and callers needing strict closure use the PDE.
+
 ### Warnings (regime-dependent)
 
 - **W-1 (P_s branch stitch):** `photon_survival_probability_numerical` uses the

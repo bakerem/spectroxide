@@ -584,7 +584,13 @@ fn in_photon_gf_transition_band(z_h: f64) -> bool {
 /// where G_μ is the μ-era contribution (M + G_bb terms) and G_y is the
 /// y-era contribution (Y_SZ + surviving bump).
 ///
-/// When P_s = 0 (soft photon limit), reduces to α_ρ × x_inj × G_th(x, z_h).
+/// When P_s = 0 (soft photon limit), this does not reduce to
+/// α_ρ × x_inj × G_th(x, z_h). The two combine the visibilities differently:
+///
+///   G_ph / (α_ρ x_inj) = G_th − (1 − J_μ)(1 − J_bb*) G_bb/4 + (1 − J_μ − J_y) Y_SZ/4.
+///
+/// At P_s = 0 the photon form closes energy exactly, while G_th does not
+/// (see `dev/audit/greens_audit.md`, M-3 and M-5).
 ///
 /// # Arguments
 /// * `x_obs` - observation frequency
