@@ -249,7 +249,7 @@ fn chluba2013_energy_conservation() {
 // =========================================================================
 
 // chluba2013_visibility_function_physical_properties removed: duplicated by
-// test_visibility_function_physical_constraints in heat_injection.rs (wider
+// test_visibility_function_physical_constraints in gf_visibility.rs (wider
 // z-range, finer sampling) and test_visibility_functions_physical_bounds
 // in greens.rs unit tests.
 

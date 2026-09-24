@@ -3,8 +3,8 @@
 # it touches nothing in Cargo.toml and adds no production dependency.
 
 # Fast-but-sensitive test subset run against each mutant first (R2.2). If a
-# mutant survives this set, escalate that file to the full heat_injection suite
-# by hand. These are the suites most likely to kill a physics mutation quickly.
+# mutant survives this set, escalate that file to the full integration suites
+# (pde_heat, pde_photon, solver_numerics, components, ...) by hand. These are the suites most likely to kill a physics mutation quickly.
 test_tool = "cargo"
 additional_cargo_test_args = [
     "--release",

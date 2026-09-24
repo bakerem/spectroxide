@@ -23,7 +23,7 @@
 //! (`solver.rs::update_temperatures`, sets `self.rho_eq`) with no public
 //! accessor — per the plan we do not add plumbing to read it. That fused path
 //! is cross-validated against the ratio path tested here by the existing
-//! `test_full_te_perturbative_vs_brute_force` (heat_injection.rs:11182, 10%).
+//! `test_full_te_perturbative_vs_brute_force` (components.rs, 10%).
 
 use spectroxide::spectrum::{compton_equilibrium_ratio, mu_shape, y_shape};
 

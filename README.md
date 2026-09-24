@@ -309,7 +309,14 @@ python/spectroxide/
 └── _validation.py         # Input validation (errors + warnings)
 
 tests/
-├── heat_injection.rs      # Core physics integration tests
+├── common/mod.rs          # Shared test setup and cached PDE runs
+├── pde_heat.rs            # PDE: heat injection (bursts, decay, annihilation)
+├── pde_photon.rs          # PDE: photon injection
+├── solver_numerics.rs     # PDE: stability, stepping, null tests
+├── gf_visibility.rs       # Green's functions, visibility, decomposition
+├── components.rs          # Cosmology, grid, rates, kernel, table I/O
+├── dark_sector.rs         # Photon depletion and resonant conversion
+├── heat_delivery.rs       # Post-recombination heat delivery
 ├── adversarial_inputs.rs  # Edge cases, bad inputs
 ├── cosmotherm_comparison.rs # PDE vs CosmoTherm reference data
 ├── greens_function_checks.rs # GF spectral shapes, limits, conservation

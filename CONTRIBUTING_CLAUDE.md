@@ -40,7 +40,7 @@ cd python && pip install -e ".[plot]"
 - **Distortion decomposition** (`src/distortion.rs`): Extracts (mu, y, DeltaT/T) from the solved spectrum.
 - **Green's function** (`src/greens.rs`): Fast approximate mode. Visibility functions J_bb*, J_mu, J_y.
 - **Python** (`python/spectroxide/`): Wraps Rust binary and pure-Python Green's function.
-- **Tests** (`tests/`): 430+ Rust tests across 8 files (`heat_injection.rs` is the main integration file; others cover adversarial inputs, coverage gaps, CosmoTherm comparison, Green's-function checks, convergence order, command-line interface (CLI) integration, and the science suite). A separate Python test suite lives under `python/tests/`.
+- **Tests** (`tests/`): 450+ Rust tests. The main integration files are `pde_heat.rs`, `pde_photon.rs`, `solver_numerics.rs`, `gf_visibility.rs`, `components.rs`, and `dark_sector.rs`, with shared setup in `tests/common/mod.rs`; others cover adversarial inputs, coverage gaps, CosmoTherm comparison, Green's-function checks, convergence order, command-line interface (CLI) integration, and the science suite). A separate Python test suite lives under `python/tests/`.
 
 ## How to add a new energy injection scenario
 

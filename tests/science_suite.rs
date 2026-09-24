@@ -287,7 +287,7 @@ fn science_deep_thermalization_pde_z3e6() {
 }
 
 // (science_energy_conservation_single_burst removed: strictly subsumed by
-// test_heat_energy_conservation_sweep_tight in heat_injection.rs, which sweeps
+// test_heat_energy_conservation_sweep_tight in pde_heat.rs, which sweeps
 // 7 redshifts including {1e4, 5e4, 2e5} at 2% tolerance — tighter than this
 // 3% three-point version.)
 

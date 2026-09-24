@@ -23,7 +23,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | 1 | X-1 | Done 2026-09-24 (see note under X-1) | see `git log` |
 | 2 | T-1, T-3, T-11, T-12, T-15, D-5 | Done 2026-09-24 (see phase 2 notes) | see `git log` |
 | 3 | T-2, T-6 to T-10, T-13 | Done 2026-09-24 (see phase 3 notes) | see `git log` |
-| 4 | T-4, T-5, T-14, T-16 | Not started | |
+| 4 | T-4, T-5, T-14, T-16 | Done 2026-09-24 (see phase 4 notes); T-11 find-index merge not done | see `git log` |
 | 5 | C-1 | Not started | |
 | 6 | P-3, P-5, P-6, P-10, P-11 | Not started | |
 | 7 | P-1, P-2, P-4, P-7, P-8, P-9 | Not started | |
@@ -153,6 +153,16 @@ Phase 3 notes (2026-09-24). Two fresh claim-verifiers checked 45 deletions: 26 c
 - Dated audit records (`TEST_PROVENANCE.md`, `test_assertions.json`, `test_redundancy_audit.md`, `R2_WRAPUP_TODO.md`, the 2026-07 plan files) still name deleted tests. They are records of their dates and were left as written.
 
 **Phase 4: test structure.** T-14 shared helpers, then the T-4 and T-5 tables (each row keeps its original tolerance), then the T-16 split. Update the test counts in CLAUDE.md.
+
+Phase 4 notes (2026-09-24).
+
+- T-16 first: a script moved every item of `tests/heat_injection.rs` verbatim into `pde_heat.rs` (44 tests + 1 ignored), `pde_photon.rs` (26), `solver_numerics.rs` (15), `gf_visibility.rs` (20), `components.rs` (23), and `dark_sector.rs` (3, plus 5 behind `--features axion`), with shared helpers in `tests/common/mod.rs`. Numbered section banners were dropped; comment blocks that explain a test stay above it.
+- T-4 and T-5 changed approach. Folding the tests into tables would have renamed tests that CLAUDE.md and the term-coverage matrix cite, and forced a tolerance decision per row. Instead every test keeps its name and assertions, and `common::memo` runs each distinct PDE configuration once per test binary (`standard_burst`, `photon_run`, `baseline_run`, keyed on every input). The eight T-5 tests went from 22 runs to 9; the T-4 photon tests from about 36 to about 22.
+- T-14: 26 repeated burst setups now call `burst_solver`; inline photon initial spectra (6) and Gaussian heating closures (3) call the shared helpers. `science_suite::run_single_burst` and `coverage_gaps::burst_run` were left alone: they differ in σ, grid, and return type, and `coverage_gaps.rs` carries unrelated uncommitted work.
+- A fresh claim-verifier confirmed that the 55 changed tests build bit-identical solver inputs, keep every assertion and tolerance, and that the other 82 moved byte for byte.
+- The verifier found a pre-existing bug. In `test_nc_energy_y_era_and_high_z_mu`, the reference runs for parts 2 and 3 never set `number_conserving = false`, and `ThermalizationSolver::new` defaults it to `true`, so each part compared a run with itself. Both reference runs now turn NC off. Part 2 (y-era, below `nc_z_min` = 5e4) still agrees bit for bit, as it must. Part 3 (z_h = 2e5) now differs by 4e-9 in μ/Δρ, with NC slightly further from 1.401; the test passes on its 1% slack, so its comment no longer claims that NC improves μ.
+- Not done: merging the find-index tests (T-11), since four of them sit in `coverage_gaps.rs`.
+- Lines: 9,095 in `heat_injection.rs` became 8,254 across the seven files. Suite: 450 pass and 4 ignored in the default build, 459 and 4 with `--features axion`, unchanged from phase 3.
 
 **Phase 5: CI.** C-1, with a measured runtime.
 

@@ -35,7 +35,7 @@ jobs:
       - name: Doc tests
         run: cargo test --release --doc
       # The axion feature's own tests are the unit tests in src/axion.rs and
-      # four heat_injection tests. The integration suites above contain no
+      # five tests in tests/dark_sector.rs. The integration suites above contain no
       # axion tests, so rerunning them with the feature would double their
       # build and run time for no coverage; only the library suite reruns.
       - name: Unit tests (axion feature)
