@@ -58,10 +58,13 @@ pub enum InjectionScenario {
         f_ann: f64,
     },
 
-    /// Annihilating dark matter (p-wave, <σv> ∝ v² ∝ T ∝ (1+z))
+    /// Annihilating dark matter (p-wave, <σv> ∝ (1+z)).
     ///
     /// Rate: dE/(dt dV) = f_ann × n_H(z) × (1+z)⁴, an extra (1+z) relative to
-    /// s-wave capturing the velocity-dependent cross section <σv> ∝ v² ∝ T ∝ (1+z).
+    /// s-wave. This is the Chluba (2013, arXiv:1304.6120, Sec. 3.2) convention,
+    /// <σv> ≃ T/m ∝ (1+z), which holds when the dark-matter temperature tracks
+    /// the photons (T_χ = T_γ). A cold, non-relativistic relic has v² ∝ (1+z)²
+    /// and so <σv> ∝ (1+z)², which this scenario does not model.
     AnnihilatingDMPWave {
         /// f_ann: energy injection rate parameter [eV/s].
         /// Same definition as AnnihilatingDM but includes the present-day value
@@ -831,7 +834,8 @@ impl InjectionScenario {
             }
 
             InjectionScenario::AnnihilatingDMPWave { f_ann } => {
-                // p-wave DM annihilation: ⟨σv⟩ ∝ v² ∝ T ∝ (1+z), adding one (1+z).
+                // p-wave DM annihilation: ⟨σv⟩ ∝ (1+z), adding one (1+z). Chluba (2013)
+                // convention, valid for T_χ = T_γ; cold relics give (1+z)².
                 // dE/(dt dV) = f_ann × n_H(z) × (1+z)⁴
                 // d(Δρ/ρ)/dt = f_ann × n_H(z) × (1+z)⁴ / ρ_γ(z)
                 //            ∝ (1+z)⁷ / (1+z)⁴ = (1+z)³

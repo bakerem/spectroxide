@@ -206,7 +206,12 @@ class TestCTHeatingRates:
         np.testing.assert_allclose(r2, 2.0 * r1, rtol=1e-10)
 
     def test_pwave_vs_swave_ratio(self):
-        """p-wave dQ/dz = s-wave dQ/dz × (1+z) because ⟨σv⟩ ∝ v² ∝ T ∝ (1+z)."""
+        """p-wave dQ/dz = s-wave dQ/dz × (1+z).
+
+        This is the Chluba (2013, arXiv:1304.6120) convention ⟨σv⟩ ∝ (1+z),
+        valid for T_χ = T_γ; cold relics give (1+z)². Both sides of the
+        CosmoTherm comparison use it, so this test cannot check the convention.
+        """
         from spectroxide.cosmotherm import ct_heating_rate_swave, ct_heating_rate_pwave
 
         z = 1e5
