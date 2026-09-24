@@ -438,7 +438,9 @@ pub struct KompaneetsWorkspace {
 /// the (N+1)-th unknown solved simultaneously with Δn. The system
 /// becomes bordered tridiagonal, solved in O(N) with two Thomas solves.
 pub struct RhoECoupling {
-    /// ρ_e at the start of this timestep (before update_temperatures).
+    /// ρ_e at the start of this timestep (before update_temperatures). Only the
+    /// backward-Euler ρ_e row uses it; the old Crank-Nicolson flux uses the
+    /// predictor `theta_e` (ADR 0004).
     pub rho_e_old: f64,
     /// Compton coupling coefficient R = (8/3)(ρ̃_γ/α_h).
     /// This is the rate at which Compton scattering drives ρ_e → ρ_eq,
@@ -583,8 +585,10 @@ pub struct DcbrCoupling<'a> {
 /// * `grid` - frequency grid with `grid.n` ≥ 3 points
 /// * `delta_n` - distortion Δn = n − n_pl on `grid`. Holds the old values on entry and the
 ///   new values on return.
-/// * `theta_e` - electron temperature kT_e/(m_e c²) (dimensionless). With `rho_coupling`, this
-///   is only the initial Newton guess for ρ_e = θ_e/θ_z.
+/// * `theta_e` - electron temperature kT_e/(m_e c²) (dimensionless). It sets the Comptonization
+///   prefactor for the whole step and φ = θ_z/θ_e in the old Crank-Nicolson flux. With
+///   `rho_coupling`, pass the step's backward-Euler predictor; it also seeds the Newton iterate
+///   for ρ_e = θ_e/θ_z (ADR 0004).
 /// * `theta_z` - reference temperature kT_z/(m_e c²) (dimensionless)
 /// * `dtau` - step size in Thomson optical depth, dτ = N_e σ_T c dt (dimensionless, ≥ 0)
 /// * `dcbr` - DC/BR coupling data. `emission_rates` is a rate per Thomson time,
@@ -594,9 +598,10 @@ pub struct DcbrCoupling<'a> {
 ///   grid-edge cells, whose Δn is held fixed. With x_min ≪ 1 and x_max ≥ 30 that leakage is
 ///   negligible.
 /// * `rho_coupling` - if `Some`, ρ_e = T_e/T_z becomes an extra unknown of the bordered Newton
-///   system. `rho_e_old` then sets φ in the old Crank-Nicolson flux and also the Comptonization
-///   prefactor θ_e for the whole step; only φ = 1/ρ_e inside the new flux is iterated (see the
-///   time-centering note in the body). If `None`, T_e is held at `theta_e` over the whole step.
+///   system, with a backward-Euler row that starts from `rho_e_old`. Only φ = 1/ρ_e inside the
+///   new flux is iterated. The old flux and the prefactor stay at `theta_e`, so the photon-side
+///   heating matches the gas row (see the time-centering note in the body). If `None`, T_e is
+///   held at `theta_e` over the whole step.
 /// * `ws` - workspace from [`KompaneetsWorkspace::new`] built for the same `grid`
 /// * `max_dn_abs` - current max|Δn|, used for the adaptive Newton tolerance. Pass 0.0 for the
 ///   tightest tolerance (equivalent to the old fixed 1e-14).
@@ -640,17 +645,6 @@ pub fn kompaneets_step_coupled_inplace(
     max_newton_iter: usize,
 ) -> (bool, f64, f64) {
     let ng = grid.n;
-    // θ_e for the CN "old" flux uses the step-start ρ_e when provided by
-    // the caller (coupled mode). Without a `RhoECoupling` we assume T_e is
-    // constant over the step and use the passed θ_e for both CN half-steps;
-    // callers that evolve T_e via `update_temperatures` but do not enable the
-    // bordered Newton should pass `rho_coupling = Some(...)` to preserve
-    // time-centering (the `dh_drho`/`lambda_exp`/etc. fields can be zeroed).
-    let theta_e_old = if let Some(rc) = rho_coupling {
-        theta_z * rc.rho_e_old
-    } else {
-        theta_e
-    };
 
     // Assert workspace sizes so the compiler can elide per-element bounds checks
     // in the hot inner loops. All workspace arrays are allocated to ng or ng-1
@@ -689,13 +683,16 @@ pub fn kompaneets_step_coupled_inplace(
     debug_assert!(max_dn_abs.is_finite(), "max_dn_abs={max_dn_abs}");
     debug_assert!(ng >= 3, "grid too small: ng={ng}");
 
-    // For the "old" part of CN, use the step-start ρ_e.
-    // When coupled, rho_e_old is the pre-update value; otherwise use theta_e/theta_z.
-    let phi_old = if let Some(rc) = rho_coupling {
-        1.0 / rc.rho_e_old
-    } else {
-        theta_z / theta_e
-    };
+    // Time centering in θ_e (ADR 0004). The old Crank-Nicolson half, both its
+    // φ and the Comptonization prefactor below, uses the passed `theta_e`,
+    // with or without `rho_coupling`. In the coupled solver `theta_e` is the
+    // step's backward-Euler predictor for ρ_e. So the (φ − 1) heating term is
+    // effectively backward Euler, like the ρ_e row, and the heat the photons
+    // receive equals the heat the gas gives up, up to the difference between
+    // the predictor and the Newton result. Δn keeps Crank-Nicolson centering.
+    // Evaluating this half at the step-start ρ_e (`rho_e_old`) instead lost
+    // about ½ Δln X_e of each step's heat after recombination.
+    let phi_old = theta_z / theta_e;
 
     let mut rho_e = theta_e / theta_z; // initial guess (from update_temperatures)
     let mut phi = 1.0 / rho_e;
@@ -703,14 +700,12 @@ pub fn kompaneets_step_coupled_inplace(
     // Save old delta_n for CN formula
     ws.dn_old[..ng].copy_from_slice(&delta_n[..ng]);
 
-    // Fill per-step coefficients with θ_e_old for the K_old precompute
-    // below. Inside the Newton loop these are overwritten with θ_e
-    // evaluated at the current ρ_e iterate, so K_new and its Jacobian stay
-    // time-centred with the evolving electron temperature (genuine CN in θ_e,
-    // not frozen-θ_e). In non-coupled mode rho_e is constant within a step,
-    // so the refresh reproduces theta_e_old and is effectively a no-op.
+    // Fill the Comptonization prefactor θ_e/(x² Δx) once per step. The Newton
+    // loop does not refresh it (see the note there), so both Crank-Nicolson
+    // halves use the predictor `theta_e`; only φ = 1/ρ_e in the new flux is
+    // iterated.
     for i in 1..ng - 1 {
-        ws.inv_x2_dx_cell[i] = theta_e_old * ws.inv_x2_dx_cell_geom[i];
+        ws.inv_x2_dx_cell[i] = theta_e * ws.inv_x2_dx_cell_geom[i];
         ws.half_dtau_coeff[i] = 0.5 * dtau * ws.inv_x2_dx_cell[i];
     }
 
@@ -803,20 +798,17 @@ pub fn kompaneets_step_coupled_inplace(
     let mut converged = false;
     let mut last_max_delta: f64 = f64::NAN;
     for _newton in 0..max_newton_iter {
-        // Note on θ_e time-centering (audit H5): in principle a fully time-
-        // centred CN-in-θ_e would refresh `inv_x2_dx_cell[i]` and
-        // `half_dtau_coeff[i]` with θ_e evaluated at the current ρ_e iterate
-        // each Newton pass. We do not do this. Refreshing changes the
-        // residual without updating `c_vec` to include the matching
-        // ∂(inv_x2_dx_cell)/∂ρ_e contribution, which breaks the bordered
-        // Newton Jacobian and can produce catastrophic non-convergence
-        // (observed: |Δρ/ρ| ~ 1 for post-recombination scenarios). Instead,
-        // the prefactor is held at θ_e_old for the whole step; φ = 1/ρ_e
-        // inside the flux is still iterated and the Jacobian is consistent.
-        // The time-centring error on θ_e is O(Δρ_e × θ_e) ~ 10⁻⁷ at z ~ 2×10⁶
-        // with |Δρ_e| < 10⁻³ — well below the CN truncation floor. Restoring
-        // a genuine CN in θ_e would require extending `c_vec` with the
-        // ∂(inv_x2_dx_cell)/∂ρ_e contribution.
+        // Note on θ_e time-centering (audit H5, ADR 0004): this loop does
+        // not refresh `inv_x2_dx_cell[i]` or `half_dtau_coeff[i]` with θ_e at
+        // the current ρ_e iterate. Refreshing them changes the residual
+        // without adding the matching ∂(inv_x2_dx_cell)/∂ρ_e term to
+        // `c_vec`, which breaks the bordered Newton Jacobian and caused
+        // non-convergence after recombination (|Δρ/ρ| ~ 1). The prefactor
+        // therefore stays at the predictor `theta_e` for the whole step, in
+        // both Crank-Nicolson halves. Only φ = 1/ρ_e in the new flux is
+        // iterated, and the Jacobian is consistent with that. The prefactor
+        // error is of order (ρ_predictor − ρ_Newton) θ_z. Iterating the
+        // prefactor would need that ∂(inv_x2_dx_cell)/∂ρ_e term in `c_vec`.
 
         // Boundary conditions: zero Kompaneets flux, but allow DC/BR relaxation.
         for &bi in &[0_usize, ng - 1] {
