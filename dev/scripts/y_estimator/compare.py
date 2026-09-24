@@ -34,6 +34,17 @@ def est_bf(x, dn, lo=0.5, hi=18.0, power=0):
     c, *_ = np.linalg.lstsq(A * s[:, None], dn[m] * s, rcond=None)
     return -c[0], c[1], c[2]          # mu, delta, y
 
+def est_bf_nc(x, dn, lo=0.5, hi=18.0, power=0):
+    """Appendix model with the temperature shift removed first: strip G_bb from the data and the
+    shapes by photon-number conservation, then fit mu (BE shape -G/x) and y. power as in est_bf."""
+    m = (x >= lo) & (x <= hi); xm = x[m]
+    A = np.array([strip(x, g_bb(x) / x)[m], strip(x, y_shape(x))[m]]).T
+    w = np.empty_like(xm); w[1:-1] = 0.5 * (xm[2:] - xm[:-2]); w[0] = 0.5*(xm[1]-xm[0]); w[-1] = 0.5*(xm[-1]-xm[-2])
+    w = w * xm ** (2 * power); s = np.sqrt(w)
+    c, *_ = np.linalg.lstsq(A * s[:, None], strip(x, dn)[m] * s, rcond=None)
+    return -c[0], c[1]
+
+
 def est_vis(x, dn_nc, drho, lo=0.5, hi=20.0):
     """Per-spectrum Table 1 recipe: returns P = J_mu J_bb*, J_y."""
     m = (x >= lo) & (x <= hi); xm = x[m]
@@ -56,8 +67,10 @@ for i, z in enumerate(zp):
     E = np.trapz(x**3 * dn_b, x) / G3
     mu, dl, y = est_bf(x, dn)
     mu3, dl3, y3 = est_bf(x, dn, power=3)
+    mun, yn = est_bf_nc(x, dn)
     P, Jy = est_vis(x, strip(x, dn_b), E)
-    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, bf3_mu=mu3/E, bf3_4y=4*y3/E, rust_4y=4*float(t["pde_y"][i])/E,
+    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, bf3_mu=mu3/E, bf3_4y=4*y3/E,
+                     bfnc_mu=mun/E, bfnc_4y=4*yn/E, rust_4y=4*float(t["pde_y"][i])/E,
                      rust_mu=float(t["pde_mu"][i])/E, vis_P=float(P), vis_Jy=float(Jy)))
 out["pde"] = rows
 # --- CosmoTherm GF database ---
@@ -69,8 +82,10 @@ for k, z in enumerate(zc):
     if not np.isfinite(E) or E <= 0: continue
     mu, dl, y = est_bf(xc, dn)
     mu3, dl3, y3 = est_bf(xc, dn, power=3)
+    mun, yn = est_bf_nc(xc, dn)
     P, Jy = est_vis(xc, strip(xc, dn), E)
-    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, bf3_mu=mu3/E, bf3_4y=4*y3/E, vis_P=float(P), vis_Jy=float(Jy)))
+    rows.append(dict(z=float(z), E=float(E), bf_mu=mu/E, bf_4y=4*y/E, bf3_mu=mu3/E, bf3_4y=4*y3/E,
+                     bfnc_mu=mun/E, bfnc_4y=4*yn/E, vis_P=float(P), vis_Jy=float(Jy)))
 out["ct"] = rows
 json.dump(out, open(sys.argv[1], "w"))
 for tag in ("pde", "ct"):

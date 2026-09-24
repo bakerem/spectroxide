@@ -69,3 +69,8 @@ Scripts: `dev/scripts/y_estimator/compare.py` (both estimators on the 118 stored
   weighting moves the transition-era residual from y into μ instead of removing it. PDE and
   CosmoTherm agree through every estimator. Plot panels: estimators on top, differences from the
   visibility fit below.
+- **Appendix fit with the temperature shift removed first** (strip G_bb from data and shapes by
+  photon-number conservation, then fit μ and y unweighted on [0.5, 18]): the y excess halves (peak
+  4y/Δρ ≈ 1.3, +0.87 above the visibility fit at z_h ≈ 7.2e4) but μ is unchanged (−0.65). This
+  variant spans the same shapes as the visibility fit and differs only in weight and band, so the
+  remaining gap is the weighting.

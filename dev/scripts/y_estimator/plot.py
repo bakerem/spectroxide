@@ -14,6 +14,7 @@ EST = [  # key for mu, key for 4y, label, color, marker
     ("vis_mu", "vis_Jy", "visibility fit ($x^3$, $\\Delta T$ removed)", C["orange"], "o"),
     ("bf_mu", "bf_4y", "appendix fit (unweighted, as in paper)", C["blue"], "s"),
     ("bf3_mu", "bf3_4y", "appendix fit, $x^3$-weighted", C["teal"], "^"),
+    ("bfnc_mu", "bfnc_4y", "appendix fit, unweighted, $\\Delta T$ removed", C["purple"], "D"),
 ]
 for rows in (p, c):
     for r in rows: r["vis_mu"] = 1.401 * r["vis_P"]
