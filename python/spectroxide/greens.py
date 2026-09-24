@@ -891,15 +891,21 @@ def _br_emission_coefficient_with_he(
     return _BR_PREFACTOR * temp_factor * species_sum
 
 
+# Largest z at which the numerical P_s uses the raw tau_ff integral. Independent of
+# the photon-GF validity window (1e4, 3e5): at 1e4 the analytic exp(-x_c/x)
+# over-absorbs badly, and the two forms are closest near 5e4 (ADR 0005 addendum).
+P_S_TAU_FF_Z_MAX = 5.0e4
+
+
 def _photon_survival_probability_numerical(x, z_h, cosmo):
     """Numerical P_s using integrated DC+BR optical depth for the y-era.
 
-    For z_h > 5e4 (mu-era), falls back to the analytic exp(-x_c/x).
-    For z_h <= 5e4 (y-era), integrates tau_ff from z=200 to z_h.
+    For z_h > 5e4, falls back to the analytic exp(-x_c/x).
+    For z_h <= 5e4, integrates tau_ff from z=200 to z_h.
 
     Reference: Chluba (2015), arXiv:1506.06582, Eq. 29/32
     """
-    if z_h > 5.0e4:
+    if z_h > P_S_TAU_FF_Z_MAX:
         return float(photon_survival_probability(np.array([x]), z_h)[0])
     if x < 1e-30:
         return 0.0
@@ -1148,7 +1154,7 @@ def greens_function_photon(
         Injection frequency (must be positive and finite).
     z_h : float
         Injection redshift.  Must lie outside the μ–y transition band
-        ``(5e4, 2e5)``; otherwise a :class:`ValueError` is raised.
+        ``(1e4, 3e5)``; otherwise a :class:`ValueError` is raised.
     sigma_x : float, optional
         Intrinsic Gaussian width of the surviving photon line (default 0;
         the line is still drawn with a width of ``0.005 x_inj``).  When
@@ -1335,7 +1341,7 @@ def mu_from_photon_injection(
     _val.warn_z_h_regime(z_h)
     _val.warn_x_inj_regime(x_inj)
     _val.validate_photon_gf_regime(z_h)
-    if cosmo is None and z_h <= 5.0e4:
+    if cosmo is None and z_h <= P_S_TAU_FF_Z_MAX:
         import warnings
 
         warnings.warn(
@@ -1452,7 +1458,7 @@ def distortion_from_photon_injection(
                        \\frac{d(\\Delta N / N)}{dz'} \\, dz'.
 
     Active redshifts must avoid the μ–y transition band
-    ``(5e4, 2e5)``; if the integration range overlaps it, points landing
+    ``(1e4, 3e5)``; if the integration range overlaps it, points landing
     in the band raise :class:`ValueError` (preceded by a warning).
 
     Parameters

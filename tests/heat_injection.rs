@@ -3598,9 +3598,9 @@ fn test_photon_survival_regime_structure() {
 /// Soft photon absorption: x_inj << x_c → P_s ≈ 0 → always positive μ.
 #[test]
 fn test_photon_gf_soft_photon_absorbed() {
-    let z_h = 2.0e5;
+    let z_h = 3.0e5; // photon-GF mu-era edge (ADR 0005)
     let dn_over_n = 1e-5;
-    // x_inj = 1e-4 << x_c(2e5) ~ 0.002
+    // x_inj = 1e-4 << x_c(3e5) ~ 0.002
     let x_inj = 1e-4;
 
     let mu = greens::mu_from_photon_injection(x_inj, z_h, dn_over_n);
@@ -3883,7 +3883,7 @@ fn test_pde_vs_gf_photon_injection_y_era() {
 
     // The GF μ should be much smaller than in the μ-era
     let mu_gf = greens::mu_from_photon_injection(x_inj, z_h, dn_over_n);
-    let mu_gf_mu_era = greens::mu_from_photon_injection(x_inj, 2.0e5, dn_over_n);
+    let mu_gf_mu_era = greens::mu_from_photon_injection(x_inj, 3.0e5, dn_over_n);
     eprintln!("  μ_GF(y-era) = {mu_gf:.4e}, μ_GF(μ-era) = {mu_gf_mu_era:.4e}");
     assert!(
         mu_gf.abs() < 0.1 * mu_gf_mu_era.abs(),
@@ -4588,7 +4588,7 @@ fn test_photon_injection_mu_y_systematics() {
 ///   (energy and number effects cancel exactly)
 #[test]
 fn test_photon_injection_gf_algebraic_identities() {
-    let z_h = 2.0e5;
+    let z_h = 3.0e5; // photon-GF mu-era edge (ADR 0005)
 
     // Identity 1: P_s → 0 limit
     let x_soft = 1e-6; // So soft that P_s ≈ 0

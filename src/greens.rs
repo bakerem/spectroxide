@@ -353,16 +353,21 @@ pub fn photon_survival_probability(x: f64, z: f64) -> f64 {
 /// Returns the photon survival probability: numerical τ_ff in the y-era, analytic at
 /// higher z.
 ///
-/// At z ≤ 5×10⁴ (y-era): P_s = exp(−τ_ff) where τ_ff is the integrated DC+BR
+/// At z ≤ 5×10⁴: P_s = exp(−τ_ff) where τ_ff is the integrated DC+BR
 /// absorption optical depth (Chluba 2015, Eq. 29/32). The raw absorption integral
 /// is valid here because Compton scattering is weak (y_γ << 1).
 ///
-/// At z > 5×10⁴ (μ-era): P_s = exp(−x_c/x), the quasi-stationary approximation
-/// which correctly accounts for Compton redistribution. The raw τ_ff integral
-/// would overestimate absorption here because it ignores Compton upscattering.
+/// At z > 5×10⁴: P_s = exp(−x_c/x), the quasi-stationary approximation, which
+/// accounts for Compton redistribution. The raw τ_ff integral would overestimate
+/// absorption here because it ignores Compton upscattering.
+///
+/// The switch sits at 5×10⁴, inside the μ-y transition band 10⁴ < z < 3×10⁵ that
+/// the photon GF rejects, because there the two forms are closest. At 10⁴ the
+/// analytic form over-absorbs badly (P_s(x=0.1) = 0.65 against 0.999 from τ_ff), so
+/// the switch does not follow the GF's y-era limit (ADR 0005 addendum).
 pub fn photon_survival_probability_numerical(x: f64, z_h: f64, cosmo: &Cosmology) -> f64 {
-    // μ-era: use the analytic formula (accounts for Compton redistribution)
-    if z_h > 5.0e4 {
+    // Above the switch: use the analytic formula (accounts for Compton redistribution)
+    if z_h > P_S_TAU_FF_Z_MAX {
         return photon_survival_probability(x, z_h);
     }
     tau_ff_survival(x, z_h, cosmo)
@@ -539,11 +544,16 @@ fn broadened_bump(x_obs: f64, x_inj: f64, yg: f64) -> (f64, f64) {
 }
 
 /// Photon-injection Green's function (GF) is only valid in the deep μ-era
-/// (z_h ≳ 2×10⁵) or the y-era (z_h ≲ 5×10⁴). In the μ-y transition window,
+/// (z_h ≳ 3×10⁵) or the y-era (z_h ≲ 10⁴). In the μ-y transition window,
 /// the simple μ+y decomposition misses residual (r-type) contributions;
 /// callers must fall back to the PDE solver.
-const PHOTON_GF_Y_ERA_Z_MAX: f64 = 5.0e4;
-const PHOTON_GF_MU_ERA_Z_MIN: f64 = 2.0e5;
+const PHOTON_GF_Y_ERA_Z_MAX: f64 = 1.0e4;
+const PHOTON_GF_MU_ERA_Z_MIN: f64 = 3.0e5;
+
+/// Largest redshift at which `photon_survival_probability_numerical` uses the raw
+/// τ_ff integral; above it the analytic exp(−x_c/x) applies. Independent of the GF
+/// validity window (ADR 0005 addendum).
+const P_S_TAU_FF_Z_MAX: f64 = 5.0e4;
 
 #[inline]
 fn assert_photon_gf_regime(z_h: f64) {
@@ -608,7 +618,7 @@ fn in_photon_gf_transition_band(z_h: f64) -> bool {
 /// * `cosmo` - cosmological parameters (for Compton y_γ)
 ///
 /// # Panics
-/// Panics if `z_h` lies in the μ-y transition band, 5×10⁴ < z_h < 2×10⁵, where the μ and y
+/// Panics if `z_h` lies in the μ-y transition band, 10⁴ < z_h < 3×10⁵, where the μ and y
 /// decomposition misses the residual distortion. Use the PDE solver there.
 ///
 /// References:
@@ -706,7 +716,7 @@ pub fn greens_function_photon(
 ///   - P_s ≈ 0 (soft photons absorbed): μ > 0 always (pure energy injection)
 ///
 /// # Panics
-/// Panics if `z_h` lies in the μ-y transition band, 5×10⁴ < z_h < 2×10⁵, where the μ and y
+/// Panics if `z_h` lies in the μ-y transition band, 10⁴ < z_h < 3×10⁵, where the μ and y
 /// decomposition misses the residual distortion. Use the PDE solver there.
 ///
 /// Reference: Chluba (2015), Eq. C7
@@ -931,7 +941,7 @@ mod tests {
     /// Checks value anchors for the low-z τ_ff integral (R2 mutation audit, fix P2).
     ///
     /// `photon_survival_probability_numerical` short-circuits to the analytic
-    /// μ-era form above z = 5×10⁴, so only z_h < 5×10⁴ exercises
+    /// μ-era form above z = 5×10⁴, so only z_h ≤ 5×10⁴ exercises
     /// `tau_ff_survival` — the branch that sets the
     /// Far Infrared Absolute Spectrophotometer (FIRAS) photon-injection
     /// limits in this fork's post-recombination regime. Every pre-audit test of
@@ -1378,7 +1388,7 @@ mod tests {
     fn test_mu_from_photon_injection_sign_flip() {
         // At high x_inj > x₀ with P_s ≈ 1: positive μ (like energy injection)
         // At low x_inj < x₀ with P_s ≈ 1: negative μ (unique to photon injection)
-        let z_h = 2.0e5;
+        let z_h = 3.0e5;
         let dn_over_n = 1e-5;
 
         let mu_high = mu_from_photon_injection(10.0, z_h, dn_over_n);
@@ -1397,11 +1407,11 @@ mod tests {
     #[test]
     fn test_mu_from_photon_injection_balanced() {
         // At x_inj = x₀ with P_s ≈ 1: μ should be near zero
-        let z_h = 2.0e5;
+        let z_h = 3.0e5;
         let dn_over_n = 1e-5;
         let mu = mu_from_photon_injection(X_BALANCED, z_h, dn_over_n);
 
-        // P_s at x₀ ≈ 3.6 is very close to 1 at z=2e5, so the zero
+        // P_s at x₀ ≈ 3.6 is very close to 1 at z=3e5, so the zero
         // should be very accurate
         let p_s = photon_survival_probability(X_BALANCED, z_h);
         assert!(p_s > 0.99, "P_s at x₀ should be ~1");
@@ -1640,7 +1650,7 @@ mod tests {
     fn test_distortion_from_photon_injection_spectrum() {
         let x_grid: Vec<f64> = (1..30).map(|i| 0.5 * i as f64).collect();
         let x_inj = 5.0;
-        let z_h = 2.0e5;
+        let z_h = 3.5e5;
         let sigma_z = 5000.0;
         let dn_over_n = 1e-5;
         let dn_dz = |z: f64| -> f64 {

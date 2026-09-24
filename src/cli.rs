@@ -993,7 +993,7 @@ pub fn print_help() {
     println!();
     println!("UNITS AND CONVENTIONS:");
     println!("  x        dimensionless frequency x = h nu / (k T_z), with T_z = T_CMB (1+z)");
-    println!("  z        redshift (dimensionless); mu-era z > ~5e4, y-era z < ~1e4");
+    println!("  z        redshift (dimensionless); mu-era z > ~3e5, y-era z < ~1e4");
     println!("  delta-rho    fractional injected energy Delta rho / rho");
     println!("  delta-n-over-n  fractional injected photon number Delta n / n");
     println!();

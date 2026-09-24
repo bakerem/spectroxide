@@ -435,7 +435,7 @@ fn main() {
     let mut gfp_inputs = Vec::new();
     for &(x_inj, z_h, sigma_x) in &[
         (1.0_f64, 1.0e4_f64, 0.05_f64),
-        (0.01, 3.0e4, 0.0),
+        (0.01, 5.0e3, 0.0),
         (5.0, 3.0e5, 0.1),
     ] {
         for x_obs in logspace(0.1, 20.0, 12) {

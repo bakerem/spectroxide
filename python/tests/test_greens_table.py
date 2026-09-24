@@ -65,18 +65,18 @@ def _make_heating_table(n_x=100, n_z=10):
 def _make_photon_table(n_x=80, n_xinj=3, n_z=5):
     """Build a synthetic PhotonGreensTable from the analytic photon GF.
 
-    z_h grid sits outside the mu-y transition window (5e4, 2e5), where the
+    z_h grid sits outside the mu-y transition window (1e4, 3e5), where the
     photon GF is intentionally invalid.
     """
     x = np.logspace(-2, np.log10(30), n_x)
     x_inj = np.array([0.5, 3.6, 10.0])[:n_xinj]
-    z_h_default = np.array([1e3, 1e4, 5e4, 2e5, 1e6])
+    z_h_default = np.array([1e3, 3e3, 1e4, 3e5, 1e6])
     if n_z != len(z_h_default):
         # Build a custom grid that skips the transition; split between eras.
         n_y = max(n_z // 2, 1)
         n_mu = n_z - n_y
-        y_grid = np.logspace(np.log10(1e3), np.log10(5e4), n_y)
-        mu_grid = np.logspace(np.log10(2e5), 6, n_mu)
+        y_grid = np.logspace(np.log10(1e3), np.log10(1e4), n_y)
+        mu_grid = np.logspace(np.log10(3e5), 6, n_mu)
         z_h = np.concatenate([y_grid, mu_grid])
     else:
         z_h = z_h_default

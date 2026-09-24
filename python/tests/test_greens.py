@@ -400,7 +400,7 @@ class TestPhotonInjection:
 
     def test_photon_gf_high_x_dominated_by_survival(self):
         """At high x_inj, P_s → 1 so the photon GF is large; at low x_inj, P_s → 0."""
-        z_h = 2e5
+        z_h = 3e5
         x_obs = 5.0
         g_high = greens.greens_function_photon(x_obs, 10.0, z_h, sigma_x=0.0)
         g_low = greens.greens_function_photon(x_obs, 0.01, z_h, sigma_x=0.0)
@@ -409,7 +409,7 @@ class TestPhotonInjection:
 
     def test_mu_sign_flip_at_x_balanced(self):
         """μ should flip sign at x_inj = x₀ ≈ 3.60."""
-        z_h = 2e5
+        z_h = 3e5
         dn_n = 1e-5
         mu_high = greens.mu_from_photon_injection(10.0, z_h, dn_n)
         mu_low = greens.mu_from_photon_injection(2.0, z_h, dn_n)
@@ -505,12 +505,12 @@ class TestPhotonGFPaths:
 
     def test_mu_from_photon_injection(self):
         """mu_from_photon_injection at high z should give positive μ for x > x₀."""
-        mu = greens.mu_from_photon_injection(10.0, 2e5, 1e-5)
+        mu = greens.mu_from_photon_injection(10.0, 3e5, 1e-5)
         assert mu > 0
 
     def test_greens_function_photon_with_sigma(self):
         """Photon GF with nonzero sigma_x should still produce a result."""
-        z_h = 2e5
+        z_h = 3e5
         x_obs = np.linspace(0.5, 20.0, 50)
         g = greens.greens_function_photon(x_obs, 5.0, z_h, sigma_x=0.5)
         assert len(g) == len(x_obs)
@@ -518,7 +518,7 @@ class TestPhotonGFPaths:
 
     def test_greens_function_photon_number_conserving(self):
         """NC mode should strip G_bb component."""
-        z_h = 2e5
+        z_h = 3e5
         x_obs = 5.0
         g_std = greens.greens_function_photon(x_obs, 5.0, z_h)
         g_nc = greens.greens_function_photon(x_obs, 5.0, z_h, number_conserving=True)
@@ -534,10 +534,18 @@ class TestPhotonGFPaths:
             greens.greens_function_photon(x_obs, 5.0, 8e4)
         with pytest.raises(ValueError, match="mu-y transition"):
             greens.greens_function_photon(x_obs, 5.0, 1.5e5)
-        # Boundaries (5e4 and 2e5) and outside the window remain valid.
-        greens.greens_function_photon(x_obs, 5.0, 5e4)
-        greens.greens_function_photon(x_obs, 5.0, 2e5)
+        # The y-era ends at 1e4 (ADR 0005), so the former boundary 5e4 is inside the band.
+        with pytest.raises(ValueError, match="mu-y transition"):
+            greens.greens_function_photon(x_obs, 5.0, 5e4)
+        with pytest.raises(ValueError, match="mu-y transition"):
+            greens.greens_function_photon(x_obs, 5.0, 1.1e4)
+        # The mu-era starts at 3e5 (ADR 0005), so 2e5 is inside the band.
+        with pytest.raises(ValueError, match="mu-y transition"):
+            greens.greens_function_photon(x_obs, 5.0, 2e5)
+        # Boundaries (1e4 and 3e5) and outside the window remain valid.
         greens.greens_function_photon(x_obs, 5.0, 1e4)
+        greens.greens_function_photon(x_obs, 5.0, 3e5)
+        greens.greens_function_photon(x_obs, 5.0, 5e3)
         greens.greens_function_photon(x_obs, 5.0, 5e5)
 
 
@@ -831,7 +839,7 @@ class TestPhotonInjectionMuY:
         "x_inj, z_h, x_lo, x_hi",
         [
             (1e-3, 5e3, 0.3, 15.0),  # absorbed, y-era
-            (1e-3, 3e4, 0.3, 15.0),  # absorbed, J_μ ≈ 0.25
+            (1e-3, 1e4, 0.3, 15.0),  # absorbed, y-era edge, J_μ ≈ 0.04 (ADR 0005)
             (10.0, 5e3, 0.3, 6.0),  # surviving line kept out of the band
             (2.0, 3e5, 0.3, 15.0),  # μ-era
         ],

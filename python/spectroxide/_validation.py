@@ -411,15 +411,15 @@ def warn_z_max_regime(z_max):
         )
 
 
-PHOTON_GF_Y_ERA_Z_MAX = 5.0e4
-PHOTON_GF_MU_ERA_Z_MIN = 2.0e5
+PHOTON_GF_Y_ERA_Z_MAX = 1.0e4  # ADR 0005
+PHOTON_GF_MU_ERA_Z_MIN = 3.0e5  # ADR 0005
 
 
 def validate_photon_gf_regime(z_h: float | None) -> None:
     """Reject photon-GF injection redshifts in the μ–y transition.
 
     The simple ``μ + y`` decomposition is not valid for
-    ``5 × 10⁴ < z_h < 2 × 10⁵`` — residual r-type contributions become
+    ``10⁴ < z_h < 3 × 10⁵`` — residual r-type contributions become
     important and you must run the PDE solver there.
 
     Parameters
