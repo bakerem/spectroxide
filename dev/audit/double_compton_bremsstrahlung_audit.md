@@ -16,7 +16,9 @@ code numeric output; numerical spot-checks only afterward. Source files NOT edit
   & Sunyaev (2007) A&A 468, 785 [arXiv:0705.3033] (θ_e relativistic corrections);
   Chluba & Sunyaev (2012) MNRAS 419, 1294, Eqs. 8, 10–13.
 - **BR:** Brussaard & van de Hulst (1962) Rev.Mod.Phys. 34, 507 (Born-approx Gaunt);
-  Chluba & Sunyaev (2012) Eq. 14; Chluba, Ravenni & Bolliet (2020) MNRAS 492, 177 (BRpack).
+  Chluba & Sunyaev (2012) Eq. 14; Draine (2011), *Physics of the Interstellar and
+  Intergalactic Medium*, Ch. 10 (source of the softplus Gaunt interpolation, see F4);
+  Chluba, Ravenni & Bolliet (2020) MNRAS 492, 177 (BRpack, exact Gaunt factors).
 - **Near-cancellation:** CLAUDE.md pitfall #5; Planck identity dn_pl/dx = −n_pl(1+n_pl).
 
 ---
@@ -70,7 +72,7 @@ g_dc(x→0) → I4_pl = ∫₀^∞ x⁴ n_pl(1+n_pl) dx. Integrate by parts with
 | temp_factor θ_e^{−7/2} e^{−xφ}/φ³ | CS2012/Burigana | L137 | ✓ |
 | Species sum Z²={1,4,1} for {H⁺,He²⁺,He⁺} | — | L170 | ✓ |
 | He⁺ = (y_he_i − y_he_ii) | Saha layers | L168 | ✓ |
-| Gaunt 1+softplus((√3/π)(ln(2.25/(xZ))+½lnθ_e)+1.425) | BRpack/CosmoTherm | L64 | see F4 |
+| Gaunt 1+softplus((√3/π)(ln(2.25/(xZ))+½lnθ_e)+1.425) | Draine (2011) Ch. 10 | L64 | F4 resolved |
 | Gaunt Z linear in log, Z² in sum | Coulomb η_Z | L44,170 | ✓ |
 | Low-x limit g_ff ≈ (√3/π)ln(2.25θ_e^{1/2}/x) | Born (BvdH62) | L64 | ✓ diverges log |
 | High-x floor g_ff→1 | softplus→0 | L64,90 | ✓ |
@@ -108,11 +110,17 @@ here; accepted as literature input. Not a bug.
 integral rather than ∫x⁴ n(1+n)dx over the *distorted* spectrum. Correction is O(Δρ/ρ)
 ~ 1e-8 for ΛCDM; entirely negligible. Standard CS2012 soft-photon approximation.
 
-**F4 (unverifiable vs primary — WARNING).** The softplus Gaunt form with offset **1.425**
-and the 0.5·ln(θ_e) Born↔classical interpolation are a CosmoTherm private-communication
-fit, NOT printed in CRB2020. Limits are correct (low-x → Born log, high-x → 1) but the
-transition-region coefficient cannot be checked against a published equation. Only
-validated by hand-calc magnitude tests. Carried forward from 2026-05-28 audit.
+**F4 (RESOLVED 2026-09-23).** The softplus Gaunt form with offset **1.425** and the
+0.5·ln(θ_e) Born↔classical interpolation are not a CosmoTherm private-communication fit
+and are not from CRB2020. The source is Draine (2011), *Physics of the Interstellar and
+Intergalactic Medium*, Ch. 10 interpolation formula
+g_ff ≈ ln{exp[5.960 − (√3/π) ln(Z ν₉ T₄^{−3/2})] + e} (ν₉ = ν/1 GHz, T₄ = T_e/1e4 K),
+rewritten in (x_e, θ_e) via ln(e^a + e) = 1 + softplus(a − 1). Numerically confirmed to
+4.6e-5 relative agreement over ν = 1e6–1e15 Hz, T_e = 3e3–1e7 K, Z = 1, 2 (see
+`tests/greens_function_checks.rs`, `gaunt_ff_nr_matches_draine_ch10_physical_units`). The
+equation number is believed to be 10.8 but is not confirmed against the printed page.
+CRB2020's BRpack tabulations remain the accurate reference for exact Gaunt factors but
+were never the source of this fit. Originally carried forward from the 2026-05-28 audit.
 
 ---
 

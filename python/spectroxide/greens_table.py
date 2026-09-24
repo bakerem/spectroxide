@@ -366,47 +366,20 @@ class GreensTable:
         tuple of (float, float)
             ``(μ, y)`` parameters (dimensionless).
         """
-        log_z_grid = np.log(
-            np.clip(
-                np.logspace(np.log10(z_min), np.log10(z_max), n_z),
-                self.z_h[0],
-                self.z_h[-1],
-            )
-        )
+        # One z array, uniform in ln(1+z), for both the tabulated μ(z), y(z)
+        # and the heating rate. Uniform in ln(1+z) also keeps z_min = 0 finite.
+        ln_z = np.linspace(np.log1p(z_min), np.log1p(z_max), n_z)
+        z_arr = np.expm1(ln_z)
+        log_z_query = np.log(np.clip(z_arr, self.z_h[0], self.z_h[-1]))
         log_z_h = np.log(self.z_h)
-        mu_interp = np.interp(log_z_grid, log_z_h, self.mu)
-        mu = self._integrate_scalar(mu_interp, dq_dz, z_min, z_max, n_z)
-        y = self._y_from_heating(dq_dz, z_min, z_max, n_z)
-        return mu, y
-
-    def _y_from_heating(self, dq_dz, z_min, z_max, n_z=5000):
-        y_interp = np.interp(
-            np.log(
-                np.clip(
-                    np.logspace(np.log10(z_min), np.log10(z_max), n_z),
-                    self.z_h[0],
-                    self.z_h[-1],
-                )
-            ),
-            np.log(self.z_h),
-            self.y_param,
-        )
-        return self._integrate_scalar(y_interp, dq_dz, z_min, z_max, n_z)
-
-    @staticmethod
-    def _integrate_scalar(param_arr, dq_dz, z_min, z_max, n_z):
-        """Integrate param(z) * dq_dz(z) * (1+z) dln(1+z)."""
-        ln_min = np.log(1.0 + z_min)
-        ln_max = np.log(1.0 + z_max)
-        ln_z = np.linspace(ln_min, ln_max, n_z)
-        z_arr = np.exp(ln_z) - 1.0
-        dln = ln_z[1] - ln_z[0]
-
-        rates = np.array([dq_dz(z) for z in z_arr])
-        integrand = param_arr * rates * (1.0 + z_arr)
+        mu_interp = np.interp(log_z_query, log_z_h, self.mu)
+        y_interp = np.interp(log_z_query, log_z_h, self.y_param)
+        rates = np.array([dq_dz(z) for z in z_arr], dtype=np.float64)
+        weight = rates * (1.0 + z_arr)
         _trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
-
-        return float(_trapz(integrand, dx=dln))
+        mu = float(_trapz(mu_interp * weight, x=ln_z))
+        y = float(_trapz(y_interp * weight, x=ln_z))
+        return mu, y
 
     def save(self, path: str | Path | None = None) -> None:
         """Save the table to a compressed ``.npz`` file.

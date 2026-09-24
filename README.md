@@ -258,8 +258,9 @@ Pass arbitrary sources as callables instead of an `injection` dict.
 | `TabulatedPhotonSource` | `photon_source=` callable | photon source $S(x, z)$ |
 | `Custom` | — (Rust API only) | user-defined closure |
 
-Units: $f_X$ [eV] is the energy released per baryon ($\Gamma_X$ [1/s] the
-decay rate); $f_{\rm ann}$ [eV/s] is energy per baryon per second;
+Units: $f_X$ [eV] is the energy released per hydrogen nucleus ($\Gamma_X$
+[1/s] the decay rate); $f_{\rm ann}$ [eV/s] is energy per hydrogen nucleus
+per second (both rates multiply $n_{\rm H}$, not the baryon number density);
 $\Delta N/N$ is the fractional photon-number injection.
 
 To recover the scalar $(\mu, y, \Delta T/T)$ decomposition from any

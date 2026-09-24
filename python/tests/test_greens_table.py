@@ -302,6 +302,50 @@ class TestGreensTableConvolution:
         assert isinstance(mu, float)
         assert isinstance(y, float)
 
+    def test_mu_y_from_heating_matches_quadrature(self):
+        """μ and y equal ∫ param(z) dq/dz dz on one z grid (review P-10).
+
+        The old code sampled μ(z) on a log10(z) grid and the heating rate on
+        a ln(1+z) grid, which put them 0.09% apart at z_h = 3e4.
+        """
+        from scipy.integrate import quad
+
+        table = _make_heating_table(n_x=50, n_z=50)
+        log_z_h = np.log(table.z_h)
+        z_c, width, drho = 3e4, 1.2e3, 1e-5
+
+        def burst(z):
+            return (
+                drho
+                * np.exp(-0.5 * ((z - z_c) / width) ** 2)
+                / (width * np.sqrt(2 * np.pi))
+            )
+
+        mu, y = table.mu_y_from_heating(burst, z_min=1e3, z_max=3e6, n_z=5000)
+        lo, hi = z_c - 8 * width, z_c + 8 * width
+        mu_ref = quad(
+            lambda z: np.interp(np.log(z), log_z_h, table.mu) * burst(z),
+            lo,
+            hi,
+            limit=200,
+        )[0]
+        y_ref = quad(
+            lambda z: np.interp(np.log(z), log_z_h, table.y_param) * burst(z),
+            lo,
+            hi,
+            limit=200,
+        )[0]
+        np.testing.assert_allclose(mu, mu_ref, rtol=1e-4)
+        np.testing.assert_allclose(y, y_ref, rtol=1e-4)
+
+    def test_mu_y_from_heating_z_min_zero(self):
+        """z_min = 0 gives finite (μ, y); log10(0) used to make both NaN."""
+        table = _make_heating_table()
+        mu0, y0 = table.mu_y_from_heating(lambda z: 1e-10, z_min=0.0, z_max=1e6)
+        assert np.isfinite(mu0) and np.isfinite(y0)
+        mu1, y1 = table.mu_y_from_heating(lambda z: 1e-10, z_min=1e-9, z_max=1e6)
+        np.testing.assert_allclose([mu0, y0], [mu1, y1], rtol=1e-8)
+
 
 # =========================================================================
 # Section 4: PhotonGreensTable — construction and interpolation

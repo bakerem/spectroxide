@@ -841,8 +841,12 @@ def _gaunt_ff_nr(x_e, theta_e, z_charge):
     """Non-relativistic free-free Gaunt factor (softplus interpolation).
 
     ``x_e`` is h nu / (k T_e) = x / rho_e, not the grid variable x = h nu / (k T_z).
-    The low-frequency limit is the classical Gaunt factor of Draine (2011),
-    Eq. 10.9. Mirrors ``gaunt_ff_nr`` in ``src/bremsstrahlung.rs``.
+    This is Draine (2011), *Physics of the Interstellar and Intergalactic
+    Medium*, Ch. 10 interpolation formula (equation number believed to be
+    10.8, not confirmed), rewritten in (x_e, theta_e); the low-frequency limit
+    is the classical Gaunt factor, Draine Eq. 10.9. Chluba, Ravenni & Bolliet
+    (2020) remains the accurate reference for exact Gaunt factors but is not
+    the source of this fit. Mirrors ``gaunt_ff_nr`` in ``src/bremsstrahlung.rs``.
     """
     if theta_e < 1e-30 or x_e < 1e-30:
         return 1.0
@@ -1124,8 +1128,15 @@ def greens_function_photon(
     quadrature); otherwise a Gaussian of width ``sigma_x``, falling back
     to a narrow ``0.005 x_inj`` Gaussian when ``sigma_x = 0``.
 
-    When ``P_s = 0``, reduces to
-    ``α_ρ x_inj · greens_function(x, z_h)``.
+    When ``P_s = 0``, this does not reduce to
+    ``α_ρ x_inj · greens_function(x, z_h)``, because the two combine the
+    visibilities differently::
+
+        G_ph / (α_ρ x_inj) = G_th − (1 − J_μ)(1 − J_bb*) G_bb/4
+                             + (1 − J_μ − J_y) Y_SZ/4.
+
+    At ``P_s = 0`` the photon form closes energy exactly, while ``G_th``
+    does not (see ``dev/audit/greens_audit.md``, M-3 and M-5).
 
     Reference: Chluba (2015), arXiv:1506.06582.
 
@@ -1140,7 +1151,12 @@ def greens_function_photon(
         ``(5e4, 2e5)``; otherwise a :class:`ValueError` is raised.
     sigma_x : float, optional
         Intrinsic Gaussian width of the surviving photon line (default 0;
-        the line is still drawn with a width of ``0.005 x_inj``).
+        the line is still drawn with a width of ``0.005 x_inj``).  When
+        ``y_γ ≥ 1e-6`` it widens the log-normal but leaves ``f_int``
+        unchanged, so the result over-counts energy by
+        ``P_s (1 − J_μ) [exp((σ_x/x_inj)²/2) − 1]`` of the injected
+        ``α_ρ x_inj ΔN/N``: measured +0.50% (``σ_x = 0.5``) and +2.00%
+        (``σ_x = 1``) at ``x_inj = 5``, ``z_h = 5e3``.
     number_conserving : bool, optional
         If True, drop the temperature-shift component so the result
         satisfies ``∫ x² G dx ≈ 0`` (CosmoTherm convention for stored

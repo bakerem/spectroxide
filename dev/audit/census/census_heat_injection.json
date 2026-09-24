@@ -654,7 +654,7 @@
   "test": "test_thermalization_era_pure_temperature_shift",
   "provenance": "literature",
   "target": "mu/drho = (3/kappa_c) J_bb*(3e6) J_mu(3e6) ~ 0.08 to 10%; energy to 3%",
-  "source": "Chluba 2013 MNRAS 436, 2232 Eq. 5 (docstring gives oracle+uncertainty); #[ignore]d production-grid test",
+  "source": "Chluba 2013 MNRAS 434, 352 Eq. 5 (docstring gives oracle+uncertainty); #[ignore]d production-grid test",
   "flag": false
  },
  {
@@ -1324,7 +1324,7 @@
   "test": "golden_mu_era_spectral_shape",
   "provenance": "literature",
   "target": "PDE mu = (3/kappa_c) J_bb* J_mu drho (~1.36e-5) to 10%; y/mu<8%; energy to 2%; M(x) sign structure",
-  "source": "Chluba 2013 MNRAS 436, 2232 Eq. 5 (docstring gives oracle+uncertainty; production grid)",
+  "source": "Chluba 2013 MNRAS 434, 352 Eq. 5 (docstring gives oracle+uncertainty; production grid)",
   "flag": false
  },
  {
@@ -1577,7 +1577,7 @@
   "test": "test_visibility_functions_literature_limits",
   "provenance": "literature",
   "target": "J_bb*, J_mu, J_y limits and z~5e4 crossover; visibility sum within 25% of 1",
-  "source": "Chluba 2013 MNRAS 436, 2232 Fig. 2 regime boundaries",
+  "source": "Chluba 2013 MNRAS 434, 352 Fig. 2 regime boundaries",
   "flag": false
  },
  {

@@ -43,7 +43,7 @@ fn energy_conservation_decaying_particle() {
     // Decaying particle: total injected energy depends on lifetime vs cosmic time.
     // Use a short-lived particle (z_X ~ 1e5) so most energy is deposited.
     let cosmo = Cosmology::default();
-    // f_x = 1e5 eV per baryon gives integrated Δρ/ρ ~ 5×10⁻⁷, well above the
+    // f_x = 1e5 eV per hydrogen nucleus gives integrated Δρ/ρ ~ 5×10⁻⁷, well above the
     // adiabatic-cooling floor ~3×10⁻⁹ so the PDE signal isn't swamped by noise.
     let f_x = 1e5;
     let t_at_z = cosmo.cosmic_time(1e5);

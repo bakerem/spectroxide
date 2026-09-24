@@ -767,7 +767,7 @@ fn test_greens_function_energy_accounting() {
 fn test_decaying_particle_time_dependence() {
     let cosmo = Cosmology::default();
     let gamma_x = 1e-13; // Γ_X = 10⁻¹³ s⁻¹, lifetime ~ 10¹³ s ≈ 300,000 yr
-    let f_x = 1e6; // 1 MeV per baryon
+    let f_x = 1e6; // 1 MeV per hydrogen nucleus
 
     let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
 
@@ -7515,7 +7515,7 @@ fn test_heat_decay_total_energy_deposited() {
     // Short-lived particle that decays entirely in the y-era.
     // f_x must be large enough that Δρ/ρ >> adiabatic cooling floor (~3e-9).
     // GF gives μ ~ 6e-12 × (f_x/1e-6), so need f_x ~ 1e3 to get μ ~ 6e-6.
-    let f_x = 1e3; // eV per baryon
+    let f_x = 1e3; // eV per hydrogen nucleus
     let gamma_x = 1e-11; // fast decay, lifetime ~ 1e11 s ≈ 3000 yr, well before y-era ends
 
     let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
@@ -8143,7 +8143,7 @@ fn test_heat_decay_lifetime_controls_mu_y() {
         ..GridConfig::default()
     };
     // Must be large enough that injection signal dominates adiabatic cooling floor (μ ~ -3e-9)
-    let f_x = 1e4; // eV per baryon
+    let f_x = 1e4; // eV per hydrogen nucleus
 
     // "Early" decay: short lifetime, decays at high z (μ-era)
     // cosmic_time(z=1e5) ≈ 2.4e9 s, so Γ=1e-9 gives τ=1e9 s → peaks near z~1e5
@@ -9296,7 +9296,8 @@ fn test_gaunt_ff_cross_validation() {
         "Gaunt factor(Z=2) should be < Gaunt(Z=1): g(Z=2)={g_z2:.3}, g(Z=1)={g_z1:.3}"
     );
 
-    // Case 4: Known asymptotic — the CRB20 formula is:
+    // Case 4: Known asymptotic — the code's fit is the Draine (2011), Ch. 10
+    // interpolation, rewritten in (x_e, theta_e):
     //   g_ff = 1 + softplus((√3/π)·ln(2.25·θ_e^{1/2}/(x·Z)) + 1.425)
     // For large argument (classical limit): softplus(a) → a, so
     //   g_ff → 1 + (√3/π)·ln(2.25·θ_e^{1/2}/(x·Z)) + 1.425
@@ -9304,11 +9305,12 @@ fn test_gaunt_ff_cross_validation() {
     //   arg_inner = ln(2.25 × 0.1 / 1e-5) = ln(22500) ≈ 10.02
     //   g_ff ≈ 1 + (√3/π)×10.02 + 1.425 ≈ 1 + 5.52 + 1.425 ≈ 7.95
     let g_asymptotic = gaunt_ff_nr(1e-5, 1e-2, 1.0);
-    let g_crb20 = 1.0 + sqrt3_over_pi * (2.25_f64 * (1e-2_f64).sqrt() / 1e-5).ln() + 1.425;
-    let rel_err = (g_asymptotic - g_crb20).abs() / g_crb20;
+    let g_draine_asymptotic =
+        1.0 + sqrt3_over_pi * (2.25_f64 * (1e-2_f64).sqrt() / 1e-5).ln() + 1.425;
+    let rel_err = (g_asymptotic - g_draine_asymptotic).abs() / g_draine_asymptotic;
     assert!(
         rel_err < 0.01,
-        "Gaunt factor at asymptotic limit: code={g_asymptotic:.3}, CRB20={g_crb20:.3}, err={:.1}%",
+        "Gaunt factor at asymptotic limit: code={g_asymptotic:.3}, Draine={g_draine_asymptotic:.3}, err={:.1}%",
         rel_err * 100.0
     );
 }

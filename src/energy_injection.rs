@@ -43,7 +43,10 @@ pub enum InjectionScenario {
 
     /// Decaying particle with lifetime 1/Γ_X.
     DecayingParticle {
-        /// f*_X: energy per baryon released, in eV.
+        /// f*_X: energy released per hydrogen nucleus, in eV. The rate is
+        /// multiplied by n_H = (1 − Y_p) ρ_b / m_p, not by the baryon number
+        /// density ρ_b / m_p, so at fixed f_X this injects (1 − Y_p) = 0.76
+        /// times the energy of a per-baryon convention (Y_p = 0.24).
         f_x: f64,
         /// Γ_X: decay rate, in 1/s.
         gamma_x: f64,
@@ -58,10 +61,13 @@ pub enum InjectionScenario {
         f_ann: f64,
     },
 
-    /// Annihilating dark matter (p-wave, <σv> ∝ v² ∝ T ∝ (1+z))
+    /// Annihilating dark matter (p-wave, <σv> ∝ (1+z)).
     ///
     /// Rate: dE/(dt dV) = f_ann × n_H(z) × (1+z)⁴, an extra (1+z) relative to
-    /// s-wave capturing the velocity-dependent cross section <σv> ∝ v² ∝ T ∝ (1+z).
+    /// s-wave. This is the Chluba (2013, arXiv:1304.6120, Sec. 3.2) convention,
+    /// <σv> ≃ T/m ∝ (1+z), which holds when the dark-matter temperature tracks
+    /// the photons (T_χ = T_γ). A cold, non-relativistic relic has v² ∝ (1+z)²
+    /// and so <σv> ∝ (1+z)², which this scenario does not model.
     AnnihilatingDMPWave {
         /// f_ann: energy injection rate parameter [eV/s].
         /// Same definition as AnnihilatingDM but includes the present-day value
@@ -78,10 +84,9 @@ pub enum InjectionScenario {
     ///
     /// Key physics: injection at x < x₀ ≈ 3.60 produces negative μ.
     ///
-    /// The heating rate method returns the energy injection rate from the
-    /// photon injection: d(Δρ/ρ)/dt = (α_ρ × x_inj) × d(ΔN/N)/dt.
-    /// The frequency-dependent source is applied separately through
-    /// `photon_source_rate`.
+    /// `heating_rate` returns 0 for this scenario: the photons carry the
+    /// energy, d(Δρ/ρ)/dt = (α_ρ × x_inj) × d(ΔN/N)/dt, and it enters Δn
+    /// only through `photon_source_rate`, never as direct electron heating.
     ///
     /// References:
     ///   Chluba (2015), arXiv:1506.06582
@@ -96,6 +101,12 @@ pub enum InjectionScenario {
         /// Gaussian width in redshift.
         sigma_z: f64,
         /// Gaussian width in frequency (should match grid resolution).
+        /// The source is G₂/x² times a Gaussian in x, so its energy
+        /// ∫x³ S dx is proportional to the Gaussian's mean, x_inj, for any
+        /// σ_x ≪ x_inj: widening the line does not change the injected
+        /// energy. Measured PDE closure at x_inj = 5, ΔN/N = 10⁻⁵
+        /// (final Δρ/ρ over α_ρ x_inj ΔN/N): 0.99993–0.99998 at z_h = 5×10³
+        /// and 0.99988–0.99993 at z_h = 2×10⁴ for σ_x = 0.05, 0.25, 0.5, 1.
         sigma_x: f64,
     },
 
@@ -831,7 +842,8 @@ impl InjectionScenario {
             }
 
             InjectionScenario::AnnihilatingDMPWave { f_ann } => {
-                // p-wave DM annihilation: ⟨σv⟩ ∝ v² ∝ T ∝ (1+z), adding one (1+z).
+                // p-wave DM annihilation: ⟨σv⟩ ∝ (1+z), adding one (1+z). Chluba (2013)
+                // convention, valid for T_χ = T_γ; cold relics give (1+z)².
                 // dE/(dt dV) = f_ann × n_H(z) × (1+z)⁴
                 // d(Δρ/ρ)/dt = f_ann × n_H(z) × (1+z)⁴ / ρ_γ(z)
                 //            ∝ (1+z)⁷ / (1+z)⁴ = (1+z)³
