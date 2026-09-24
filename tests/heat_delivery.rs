@@ -41,14 +41,18 @@ fn photon_drho(scenario: InjectionScenario, z_start: f64, z_end: f64) -> f64 {
 }
 
 /// A Gaussian burst of Δρ/ρ = 1e-8 at z_h = 1000 (σ_z = 100, the CLI's
-/// default max(0.04 z_h, 100)) delivers 0.99986 of its heat to the photons by z = 200.
+/// default max(0.04 z_h, 100)) delivers 0.999862 of its heat to the photons by z = 200.
 /// The rest goes to adiabatic cooling of the gas excess.
 ///
 /// Before ADR 0004 this run delivered 0.938 at Δτ_max = 10, 3, and 1 alike.
 #[test]
 fn burst_at_recombination_delivers_independent_fraction() {
     const DRHO: f64 = 1e-8;
-    const EXPECTED: f64 = 0.99986; // independent integration
+    const EXPECTED: f64 = 0.999862; // independent integration
+    // The whole physical loss is 1 − EXPECTED = 1.38e-4, so the tolerance must
+    // sit well below it or a run that delivered every joule (1.0) would pass.
+    // 3e-5 is a fifth of the loss and four times the measured offset (7e-6).
+    const TOL: f64 = 3e-5;
     let burst = |amp: f64| InjectionScenario::SingleBurst {
         z_h: 1000.0,
         delta_rho_over_rho: amp,
@@ -59,8 +63,8 @@ fn burst_at_recombination_delivers_independent_fraction() {
     let delivered = (with - base) / DRHO;
     eprintln!("burst z_h=1000: with={with:e} base={base:e} delivered={delivered:.6}");
     assert!(
-        (delivered - EXPECTED).abs() < 2e-4,
-        "delivered fraction {delivered:.6}, expected {EXPECTED} ± 2e-4"
+        (delivered - EXPECTED).abs() < TOL,
+        "delivered fraction {delivered:.6}, expected {EXPECTED} ± {TOL:e}"
     );
 }
 
