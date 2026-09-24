@@ -290,9 +290,9 @@ class TestGfFitRecovery:
     """``method="gf_fit"`` must recover known visibility amplitudes.
 
     The synthetic spectrum is the method's own ansatz built from a μ
-    visibility P = J_μ J_bb* that is offset from the analytic Chluba (2013)
-    value. A fit that returns its analytic start point misses P by the
-    offset (10%). The grid spans x ∈ [1e-4, 80] so that the measured
+    visibility P = J_μ J_bb* and a y visibility J_y, both offset from the
+    analytic Chluba (2013) values. A fit that returns the analytic values,
+    or holds J_y at the formula, misses them by the offset (10%). The grid spans x ∈ [1e-4, 80] so that the measured
     Δρ/ρ equals the injected value to 3e-7; on a truncated band the
     energy normalization alone would bias P at the percent level.
     """
@@ -300,8 +300,8 @@ class TestGfFitRecovery:
     X = np.geomspace(1e-4, 80.0, 40000)
 
     @staticmethod
-    def _spectrum(x, z_h, p_true, drho):
-        jy = greens.j_y(z_h)
+    def _spectrum(x, z_h, p_true, drho, jy=None):
+        jy = greens.j_y(z_h) if jy is None else jy
         return drho * (
             (3.0 / greens.KAPPA_C) * p_true * greens.mu_shape(x)
             + 0.25 * jy * greens.y_shape(x)
@@ -322,6 +322,20 @@ class TestGfFitRecovery:
         mu_true = (3.0 / greens.KAPPA_C) * p_true * drho
         assert abs(res["mu"] - mu_true) / mu_true < 1e-6
         assert abs(res["y"] - 0.25 * greens.j_y(z_h) * drho) < 1e-6 * drho
+
+    @pytest.mark.parametrize("z_h", [5e3, 3e4, 7e4, 1.5e5])
+    @pytest.mark.parametrize("offset", [0.9, 1.1])
+    def test_recovers_y_visibility(self, z_h, offset):
+        """J_y is fitted, not held at the formula: an offset J_y comes back."""
+        drho = 1e-5
+        p_true = greens.j_mu(z_h) * greens.j_bb_star(z_h) / offset
+        jy_true = offset * greens.j_y(z_h)
+        dn = self._spectrum(self.X, z_h, p_true, drho, jy=jy_true)
+        res = greens.decompose_distortion(self.X, dn, z_h=z_h, method="gf_fit")
+        assert abs(res["j_y"] - jy_true) / jy_true < 1e-6
+        assert abs(res["y"] - 0.25 * jy_true * drho) / (0.25 * jy_true * drho) < 1e-6
+        p_fit = res["j_mu_fit"] * res["j_bb_star_fit"]
+        assert abs(p_fit - p_true) / p_true < 1e-6
 
     def test_fit_does_not_return_start_point(self):
         """The fitted product moves with the data, not with the start."""

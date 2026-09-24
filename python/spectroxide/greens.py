@@ -1594,6 +1594,11 @@ def strip_gbb(x: ArrayLike, delta_n: ArrayLike) -> Tuple[NDArray[np.float64], fl
 DEFAULT_DECOMP_X_MIN = 0.5
 DEFAULT_DECOMP_X_MAX = 18.0
 
+# Fit band of method="gf_fit"; the same band as the paper's Table 1
+# visibility fit (dev/scripts/fit_visibility_conservation.py).
+GF_FIT_X_MIN = 0.5
+GF_FIT_X_MAX = 20.0
+
 
 @_val.renamed_kwargs(x_grid="x")
 def decompose_distortion(
@@ -1601,6 +1606,7 @@ def decompose_distortion(
     delta_n: ArrayLike,
     z_h: float | None = None,
     method: str = "bf",
+    x_range: Tuple[float, float] | None = None,
 ) -> dict:
     """Decompose ``Δn(x)`` into ``(μ, y, ΔT/T)`` components.
 
@@ -1617,14 +1623,20 @@ def decompose_distortion(
     Agrees with ``bf`` on μ and y to numerical precision at realistic
     injection amplitudes; see :func:`_decompose_gram_schmidt`.
 
-    **``method="gf_fit"`` (requires z_h):** Three-component Green's-function
-    spectral fit for visibility-function calibration against PDE spectra.
-    NC-strips the spectrum, fixes J_y from Chluba (2013) Eq. 5, then fits
-    the product J_μ·J_bb* by minimizing the x³-weighted residual. The
-    ansatz depends on J_μ and J_bb* only through this product, which is
-    the μ visibility; the fit solves for it in closed form (linear least
-    squares, no bounds). The returned ``j_mu_fit`` is the analytic J_μ(z_h)
-    and ``j_bb_star_fit`` carries the fitted product divided by it.
+    **``method="gf_fit"`` (requires z_h):** Green's-function spectral fit
+    for visibility-function calibration, the estimator that defines J_μ
+    and J_y in Chluba (2013, arXiv:1304.6120, Eqs. 5–6). Per unit Δρ/ρ
+    (measured from ``delta_n``) the ansatz is
+    ``(3/κ_c) P M + (J_y/4) Y_SZ + ((1 − P − J_y)/4) G_bb`` with
+    ``P = J_μ J_bb*``. The number-conserving strip (:func:`strip_gbb`,
+    over the whole grid) removes the G_bb term, leaving two linear
+    amplitudes, P and J_y, both fitted in closed form by minimizing
+    ``∫ [x³ (model − Δn_nc)]² dx`` (trapezoid rule) on ``x_range``,
+    default ``[0.5, 20]``. Range, weight and quadrature match the paper's
+    Table 1 fit (``dev/scripts/fit_visibility_conservation.py``). The
+    ansatz depends on J_μ and J_bb* only through P, so ``j_mu_fit`` is the
+    analytic J_μ(z_h) and ``j_bb_star_fit`` is P divided by it; ``j_y`` is
+    the fitted J_y.
 
     **Caution:** use this method for visibility calibration, not for
     production μ/y extraction.
@@ -1640,6 +1652,10 @@ def decompose_distortion(
         (with a warning) for the other methods.
     method : {"bf", "gs", "gf_fit"}, optional
         Decomposition method (default ``"bf"``).
+    x_range : (float, float), optional
+        Fit band for ``method="gf_fit"`` (default
+        ``(GF_FIT_X_MIN, GF_FIT_X_MAX)``). The other methods raise if it
+        is given.
 
     Returns
     -------
@@ -1653,9 +1669,14 @@ def decompose_distortion(
     Raises
     ------
     ValueError
-        If ``method`` is unknown, or if ``method="gf_fit"`` is selected
-        without supplying ``z_h``.
+        If ``method`` is unknown, if ``method="gf_fit"`` is selected
+        without supplying ``z_h``, or if ``x_range`` is given for another
+        method.
     """
+    if x_range is not None and method != "gf_fit":
+        raise ValueError(
+            "decompose_distortion: x_range is only used by method='gf_fit'."
+        )
     if method == "bf":
         if z_h is not None:
             import warnings
@@ -1702,46 +1723,61 @@ def decompose_distortion(
     drho_over_rho = drho / G3_PLANCK
     dn_over_n = dn_n / G2_PLANCK
 
-    # NC-strip the PDE spectrum
-    dn_nc, _alpha = strip_gbb(x, delta_n)
-
-    # J_y from Chluba's independent fitting formula (fixed)
-    j_y_val = j_y(z_h)
-
-    # The GF ansatz per unit Δρ/ρ is
-    #   (3/κ_c) P M + (J_y/4) Y_SZ + ((1 − P − J_y)/4) G_bb,  P ≡ J_μ J_bb*.
-    # It depends on J_μ and J_bb* only through P, and strip_gbb is linear,
-    # so the NC-stripped model is A·P + c with fixed vectors A and c.
-    # Minimizing Σ [x³ (A P + c − Δn_nc)]² over P is a one-parameter linear
-    # least-squares problem with a closed-form solution. (An iterative
-    # optimizer on this objective, whose absolute size is ~(Δρ/ρ)², stops
-    # at its start point because the gradient is already below tolerance.)
-    m_nc, _ = strip_gbb(x, mu_shape(x))
-    y_nc, _ = strip_gbb(x, y_shape(x))
-    g_nc, _ = strip_gbb(x, g_bb(x))  # zero up to rounding
-    a_vec = drho_over_rho * (mu_to_energy * m_nc - 0.25 * g_nc)
-    c_vec = drho_over_rho * (0.25 * j_y_val * y_nc + 0.25 * (1.0 - j_y_val) * g_nc)
-    if not np.all(np.isfinite(dn_nc)):
+    # NC-strip the spectrum over the whole grid (number conservation is a
+    # property of the whole spectrum), then fit on the band.
+    if not np.all(np.isfinite(delta_n)):
         raise ValueError(
             "decompose_distortion: delta_n must be finite for method='gf_fit'."
         )
-    w = x**6
-    denom = float(np.sum(w * a_vec * a_vec))
-    if not (np.isfinite(denom) and denom > 0.0):
+    dn_nc, _alpha = strip_gbb(x, delta_n)
+
+    # The ansatz per unit Δρ/ρ is
+    #   (3/κ_c) P M + (J_y/4) Y_SZ + ((1 − P − J_y)/4) G_bb,  P ≡ J_μ J_bb*.
+    # strip_gbb is linear and removes G_bb exactly, so the stripped model is
+    # P a + J_y b with fixed vectors a, b: a two-parameter linear
+    # least-squares problem with a closed-form solution.
+    x_lo, x_hi = (GF_FIT_X_MIN, GF_FIT_X_MAX) if x_range is None else x_range
+    band = np.flatnonzero((x >= x_lo) & (x <= x_hi))
+    if band.size < 3:
+        raise ValueError(
+            f"decompose_distortion: fewer than 3 grid points in [{x_lo}, {x_hi}]."
+        )
+    m_nc, _ = strip_gbb(x, mu_shape(x))
+    y_nc, _ = strip_gbb(x, y_shape(x))
+    a_vec = drho_over_rho * mu_to_energy * m_nc[band]
+    b_vec = drho_over_rho * 0.25 * y_nc[band]
+    # ∫ [x³ r]² dx by the trapezoid rule on the band: weights x⁶ Δx_trap.
+    xb = x[band]
+    dxb = np.diff(xb)
+    w_trap = np.zeros(band.size)
+    w_trap[:-1] += 0.5 * dxb
+    w_trap[1:] += 0.5 * dxb
+    w = xb**6 * w_trap
+    gram = np.array(
+        [
+            [np.sum(w * a_vec * a_vec), np.sum(w * a_vec * b_vec)],
+            [np.sum(w * a_vec * b_vec), np.sum(w * b_vec * b_vec)],
+        ]
+    )
+    det = gram[0, 0] * gram[1, 1] - gram[0, 1] ** 2
+    if not (np.isfinite(det) and det > 0.0):
         raise ValueError(
             "decompose_distortion: method='gf_fit' needs a spectrum with nonzero "
             f"energy (got Δρ/ρ = {drho_over_rho:.3e})."
         )
-    p_fit = float(np.sum(w * a_vec * (dn_nc - c_vec)) / denom)
-    fit_residual = float(np.sum(w * (a_vec * p_fit + c_vec - dn_nc) ** 2))
-    fit_success = bool(np.isfinite(p_fit))
+    rhs = np.array([np.sum(w * a_vec * dn_nc[band]), np.sum(w * b_vec * dn_nc[band])])
+    p_fit, j_y_val = (float(v) for v in np.linalg.solve(gram, rhs))
+    fit_residual = float(
+        np.sum(w * (a_vec * p_fit + b_vec * j_y_val - dn_nc[band]) ** 2)
+    )
+    fit_success = bool(np.isfinite(p_fit) and np.isfinite(j_y_val))
 
     # Only the product P is constrained. Hold J_μ at its Chluba (2013)
-    # value, as J_y is held, and assign the fitted product to J_bb*.
+    # value and assign the fitted product to J_bb*.
     j_mu_fit = float(j_mu(z_h))
     j_bb_star_fit = p_fit / j_mu_fit
 
-    # Extract μ, y from fitted visibility functions
+    # Extract μ, y from the fitted visibility functions
     mu = mu_to_energy * p_fit * drho_over_rho
     y_val = 0.25 * j_y_val * drho_over_rho
 
