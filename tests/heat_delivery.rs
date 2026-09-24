@@ -5,10 +5,12 @@
 //! to adiabatic cooling of the gas, is a real physical number close to but
 //! below 1. The targets here come from an independent integration of the
 //! gas-temperature excess with Compton exchange and adiabatic cooling
-//! (`dev/scripts/heatloss/heat_delivery_expectation.py` and its decay variant),
-//! which types its CODATA constants and takes only X_e(z) from the solver.
-//! They are not read off from solver output (CLAUDE.md pitfall #9). Provenance:
-//! `dev/audit/fix_a_cn_old_half_ab.md`.
+//! (`dev/scripts/heatloss/heat_delivery_expectation.py` for the burst,
+//! `decay_delivery_expectation.py` for the decay, `baseline_expectation.py` for
+//! the no-injection cooling). The scripts type their CODATA constants and take
+//! only X_e(z) from spectroxide, by default from the Python
+//! `ionization_fraction`. They are not read off from solver output (CLAUDE.md
+//! pitfall #9). Provenance: `dev/audit/fix_a_cn_old_half_ab.md`.
 //!
 //! Before ADR 0004 the old Crank-Nicolson half of the coupled step used the
 //! step-start ρ_e while the gas row used the backward-Euler ρ_e, which lost
@@ -42,7 +44,8 @@ fn photon_drho(scenario: InjectionScenario, z_start: f64, z_end: f64) -> f64 {
 
 /// A Gaussian burst of Δρ/ρ = 1e-8 at z_h = 1000 (σ_z = 100, the CLI's
 /// default max(0.04 z_h, 100)) delivers 0.999862 of its heat to the photons by z = 200.
-/// The rest goes to adiabatic cooling of the gas excess.
+/// The rest goes to adiabatic cooling of the gas excess. Target:
+/// `python dev/scripts/heatloss/heat_delivery_expectation.py 1000`.
 ///
 /// Before ADR 0004 this run delivered 0.938 at Δτ_max = 10, 3, and 1 alike.
 #[test]
@@ -136,7 +139,8 @@ fn injected_decay_drho(f_x_ev: f64, gamma: f64, z_lo: f64, z_hi: f64) -> f64 {
 /// 7.1838e-14 s⁻¹, f_X = 10 eV), run from z = 5e4 to 200, delivers 0.99417 of
 /// its injected energy to the photons. The independent integration puts 0.53%
 /// into adiabatic cooling of the gas excess and leaves 0.05% in the gas at
-/// z = 200. This is finding N-4 of `dev/REVIEW_2026-09-22.md`.
+/// z = 200. This is finding N-4 of `dev/REVIEW_2026-09-22.md`. Target:
+/// `python dev/scripts/heatloss/decay_delivery_expectation.py 10 7.1838e-14 5e4 200`.
 ///
 /// Before ADR 0004 this run delivered 0.849 at default steps and 0.908 at a
 /// hundredfold smaller Δτ_max.
