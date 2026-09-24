@@ -1076,3 +1076,19 @@ class TestBremsstrahlungGaunt:
                         f"code={g_code:.6f}, Draine={g_draine:.6f}, rel_err={rel_err:.2e}"
                     )
         assert max_rel_err < 2e-4
+
+
+class TestGfFitRejectsBadInput:
+    """``gf_fit`` raises on inputs where the amplitude is undefined."""
+
+    def test_nan_raises(self):
+        x = np.geomspace(0.01, 30.0, 400)
+        dn = 1e-5 * greens.y_shape(x)
+        dn[10] = np.nan
+        with pytest.raises(ValueError):
+            greens.decompose_distortion(x, dn, method="gf_fit", z_h=1e4)
+
+    def test_zero_spectrum_raises(self):
+        x = np.geomspace(0.01, 30.0, 400)
+        with pytest.raises(ValueError):
+            greens.decompose_distortion(x, np.zeros_like(x), method="gf_fit", z_h=1e4)

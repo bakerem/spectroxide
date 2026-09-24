@@ -2,8 +2,9 @@
 """Build a high-resolution PDE reference table for visibility function fitting.
 
 Runs single-burst PDE at ~120 injection redshifts with n_points=4000,
-NC-strips each spectrum, and extracts per-spectrum (J_μ, J_bb*) by fitting
-the three-component GF ansatz. Saves everything as an npz file so that
+NC-strips each spectrum, and fits the μ-visibility product P = J_μ J_bb* of the
+three-component GF ansatz (decompose_distortion(method="gf_fit"); only the
+product is constrained). Saves everything as an npz file so that
 the visibility function fitting can be done separately without re-running
 the PDE.
 
@@ -16,8 +17,9 @@ Outputs:
     drho         (N_z,)        recovered Δρ/ρ (should be ≈ 1.0)
     pde_mu       (N_z,)        μ from PDE decomposition
     pde_y        (N_z,)        y from PDE decomposition
-    j_mu_fit     (N_z,)        per-spectrum fitted J_μ
-    j_bb_fit     (N_z,)        per-spectrum fitted J_bb*
+    j_mu_fit     (N_z,)        analytic J_μ(z_h), held fixed (not fitted)
+    j_bb_fit     (N_z,)        fitted P / J_μ(z_h); unbounded, and not a J_bb*
+                               estimate where the spectrum is mostly y
     j_y_fixed    (N_z,)        J_y from Chluba formula (fixed per z_h)
     n_points     scalar         grid resolution used
 """

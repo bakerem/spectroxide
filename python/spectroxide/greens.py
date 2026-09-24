@@ -1721,8 +1721,18 @@ def decompose_distortion(
     g_nc, _ = strip_gbb(x, g_bb(x))  # zero up to rounding
     a_vec = drho_over_rho * (mu_to_energy * m_nc - 0.25 * g_nc)
     c_vec = drho_over_rho * (0.25 * j_y_val * y_nc + 0.25 * (1.0 - j_y_val) * g_nc)
+    if not np.all(np.isfinite(dn_nc)):
+        raise ValueError(
+            "decompose_distortion: delta_n must be finite for method='gf_fit'."
+        )
     w = x**6
-    p_fit = float(np.sum(w * a_vec * (dn_nc - c_vec)) / np.sum(w * a_vec * a_vec))
+    denom = float(np.sum(w * a_vec * a_vec))
+    if not (np.isfinite(denom) and denom > 0.0):
+        raise ValueError(
+            "decompose_distortion: method='gf_fit' needs a spectrum with nonzero "
+            f"energy (got Δρ/ρ = {drho_over_rho:.3e})."
+        )
+    p_fit = float(np.sum(w * a_vec * (dn_nc - c_vec)) / denom)
     fit_residual = float(np.sum(w * (a_vec * p_fit + c_vec - dn_nc) ** 2))
     fit_success = bool(np.isfinite(p_fit))
 
