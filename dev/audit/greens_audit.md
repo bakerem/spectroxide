@@ -123,6 +123,28 @@ mirror divergences, all already fixed.
   `greens.rs` and `greens.py` used to claim that it was. Not fixed: `G_th`
   follows the published fits, and callers needing strict closure use the PDE.
 
+- **M-6 (photon GF `sigma_x` energy bias, measured 2026-09-23, review
+  finding P-10):** in `greens_function_photon`, when y_γ ≥ 10⁻⁶, `sigma_x`
+  adds (σ_x/x_inj)² to the log-normal variance without updating `f_int`. A
+  log-normal's mean grows by exp(σ²/2), so the GF over-counts energy by
+  P_s (1 − J_μ)[exp((σ_x/x_inj)²/2) − 1] of the injected α_ρ x_inj ΔN/N.
+  Measured with the Python GF (`∫x³ G_ph dx / G₃`, scipy `quad`), x_inj = 5:
+
+  | z_h | y_γ    | J_μ    | σ_x | excess vs σ_x = 0 | P_s(1−J_μ)[e^{(σ/x)²/2}−1] |
+  |-----|--------|--------|-----|-------------------|----------------------------|
+  | 5e3 | 7.4e-4 | 0.0099 | 0.5 | +0.496%           | 0.496%                     |
+  | 5e3 | 7.4e-4 | 0.0099 | 1.0 | +1.998%           | 2.000%                     |
+  | 2e4 | 0.0168 | 0.1264 | 0.5 | +0.429%           | 0.438%                     |
+  | 2e4 | 0.0168 | 0.1264 | 1.0 | +1.731%           | 1.765%                     |
+
+  P_s = 1.0000 at both redshifts; at σ_x = 0 the GF closes to 1.000000. The
+  PDE has no such bias: its source is G₂/x² times a Gaussian in x, whose
+  energy is set by the Gaussian's mean. `solve monochromatic-photon
+  --x-inj 5 --delta-n-over-n 1e-5` (default grid, z_end = 500) gives final
+  Δρ/ρ over α_ρ x_inj ΔN/N of 0.99993, 0.99995, 0.99996, 0.99998 at
+  z_h = 5×10³ and 0.99990, 0.99988, 0.99991, 0.99993 at z_h = 2×10⁴ for
+  σ_x = 0.05, 0.25, 0.5, 1.0. Documented in the `sigma_x` docs; not fixed.
+
 ### Warnings (regime-dependent)
 
 - **W-1 (P_s branch stitch):** `photon_survival_probability_numerical` uses the

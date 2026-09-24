@@ -596,7 +596,15 @@ fn in_photon_gf_transition_band(z_h: f64) -> bool {
 /// * `x_obs` - observation frequency
 /// * `x_inj` - injection frequency
 /// * `z_h` - injection redshift
-/// * `sigma_x` - extra Gaussian width for the surviving bump (0 for pure Compton)
+/// * `sigma_x` - extra Gaussian width for the surviving bump (0 for pure Compton).
+///   When y_γ ≥ 10⁻⁶ it adds (σ_x/x_inj)² to the log-normal variance, but
+///   `f_int` (the bump's mean energy in the y-era energy balance) is not
+///   updated. The result then over-counts energy by
+///   P_s (1 − J_μ) [exp((σ_x/x_inj)²/2) − 1] ≈ P_s (1 − J_μ) (σ_x/x_inj)²/2
+///   in units of the injected α_ρ x_inj ΔN/N. Measured with the Python port for
+///   x_inj = 5, P_s = 1: +0.50% (σ_x = 0.5) and +2.00% (σ_x = 1) at
+///   z_h = 5×10³; +0.43% and +1.73% at z_h = 2×10⁴. The PDE source has no
+///   such bias (see `InjectionScenario::MonochromaticPhotonInjection`).
 /// * `cosmo` - cosmological parameters (for Compton y_γ)
 ///
 /// # Panics

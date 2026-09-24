@@ -101,6 +101,12 @@ pub enum InjectionScenario {
         /// Gaussian width in redshift.
         sigma_z: f64,
         /// Gaussian width in frequency (should match grid resolution).
+        /// The source is G₂/x² times a Gaussian in x, so its energy
+        /// ∫x³ S dx is proportional to the Gaussian's mean, x_inj, for any
+        /// σ_x ≪ x_inj: widening the line does not change the injected
+        /// energy. Measured PDE closure at x_inj = 5, ΔN/N = 10⁻⁵
+        /// (final Δρ/ρ over α_ρ x_inj ΔN/N): 0.99993–0.99998 at z_h = 5×10³
+        /// and 0.99988–0.99993 at z_h = 2×10⁴ for σ_x = 0.05, 0.25, 0.5, 1.
         sigma_x: f64,
     },
 

@@ -1147,7 +1147,12 @@ def greens_function_photon(
         ``(5e4, 2e5)``; otherwise a :class:`ValueError` is raised.
     sigma_x : float, optional
         Intrinsic Gaussian width of the surviving photon line (default 0;
-        the line is still drawn with a width of ``0.005 x_inj``).
+        the line is still drawn with a width of ``0.005 x_inj``).  When
+        ``y_γ ≥ 1e-6`` it widens the log-normal but leaves ``f_int``
+        unchanged, so the result over-counts energy by
+        ``P_s (1 − J_μ) [exp((σ_x/x_inj)²/2) − 1]`` of the injected
+        ``α_ρ x_inj ΔN/N``: measured +0.50% (``σ_x = 0.5``) and +2.00%
+        (``σ_x = 1``) at ``x_inj = 5``, ``z_h = 5e3``.
     number_conserving : bool, optional
         If True, drop the temperature-shift component so the result
         satisfies ``∫ x² G dx ≈ 0`` (CosmoTherm convention for stored
