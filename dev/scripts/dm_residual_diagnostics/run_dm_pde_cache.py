@@ -51,6 +51,9 @@ def cache_key(n_points: int, dy_max: float, dtau_max: float) -> str:
         "dy_max": dy_max,
         "dtau_max": dtau_max,
         "inj": {k: v for k, v in sorted(DM_INJECTIONS.items())},
+        "cosmo": DEFAULT_COSMO,
+        "number_conserving": True,
+        "production_grid": False,
     }
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True, default=str).encode()
