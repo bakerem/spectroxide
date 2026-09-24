@@ -114,3 +114,9 @@ Stopped by an out-of-memory kill, resume one at a time:
    Table 1 range and weighting, CosmoTherm overlay. Resumed first.
 2. Item 10 (R1-A′ recheck and the low-z y floor): partial results in the session scratchpad `r1a/`.
 3. Fig. 8 PDE limits rerun (`review/fig8-dp-pde-rerun` not created yet): nothing done.
+
+## 2026-09-24 update
+- Fig. 2: CosmoTherm overlay dropped at EB's request (80c025b). PDE vs Chluba formulas only; max |4y/Δρ − J_y| = 0.005.
+- Review follow-ups on 190390d done (928346d): x_range tests, j_y_fit column name, wrapped line.
+- Still open, each waits for EB's go-ahead (one heavy job at a time): Fig. 8 PDE limits rerun; item 10 (R1-A′ recheck).
+- Paper text for Fig. 2 (line 666, \rtodo, caption, appendix estimator rationale) is EB's.
