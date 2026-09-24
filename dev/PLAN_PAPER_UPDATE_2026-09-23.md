@@ -40,7 +40,7 @@ for EB to review.
 
 | Step | Status |
 |---|---|
-| 1 | Running (agent, branch `review/gaunt-draine`) |
+| 1 | Done and merged 2026-09-23 (`c3c176c`): code, docs, CLAUDE.md cite Draine (2011) Ch. 10; new Rust and Python tests against his formula (max deviation 4.6e-5); F4 resolved |
 | 2 | Done 2026-09-23, uncommitted in `cosmoxide` for EB review (Eq. kbr x_e; Draine citation with `\rtodo`; grid defaults; z_end; X_e accuracy with `\rtodo`; `dq_dz` amplitude 1e-25; ref1 line 124 LaTeX comment). Draine2011 bib entry pending: Zotero was not running |
 | 3 | Implementation agent running on `review/adr4-fix-a` |
 | 4–6 | Not started |
