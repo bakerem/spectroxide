@@ -101,3 +101,16 @@ Code and physics (not blocking the paper):
 10. Recheck R1-A′ with identical decompositions; the 0.6–0.8% y floor at z_h ≤ 4e3 is unexplained.
 11. Table 1 generator scripts live only in `~/cosmoxide/dev/scripts`.
 12. Nothing is pushed.
+
+## 2026-09-24 session (after EB's go-ahead)
+
+Done: figures committed (`799f5a2`, Fig. 3 `c896e73`); Fig. 4 and convergence branches merged;
+dev notebooks no longer overwrite paper figures (`a108960`); Table 1 scripts and input tables
+merged (`0650af8`, JSON reproduces byte for byte). cosmoxide notebooks are dead (EB); paper edits
+are EB's.
+
+Stopped by an out-of-memory kill, resume one at a time:
+1. Fig. 2 (`review/gf-fit-optimizer`, uncommitted edits in its worktree): free J_y in `gf_fit`,
+   Table 1 range and weighting, CosmoTherm overlay. Resumed first.
+2. Item 10 (R1-A′ recheck and the low-z y floor): partial results in the session scratchpad `r1a/`.
+3. Fig. 8 PDE limits rerun (`review/fig8-dp-pde-rerun` not created yet): nothing done.
