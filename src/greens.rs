@@ -1273,7 +1273,7 @@ mod tests {
     ///   d⟨x⟩/dy = x′[4 − x′coth(x′/2)],    zero at x′ = 3.8300,
     ///
     /// That is, the drift vanishes exactly at the Y_SZ zero crossing (same
-    /// transcendental equation as `test_y_sz_zero_crossing_from_transcendental_equation`).
+    /// transcendental equation as `spectrum::tests::test_y_shape_zero_crossing`).
     /// Matching this requires f(x′) = x′/(e^{x′}−1); Arsenadze et al. use
     /// e^{−x′}(1+x′²/2), which is exact only at x′ → 0 and x′ → ∞.
     ///

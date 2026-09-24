@@ -374,43 +374,7 @@ fn extract_y_matches_joint() {
 }
 
 // ============================================================================
-// Section 4: heating_rate_per_redshift sign convention
-// (characteristic_redshift and suggested_x_min tests removed in 2026-04 triage:
-// D-grade API-contract tests that assert `metadata_query() == input_field` —
-// they test the struct pattern-match, not physics.)
-// ============================================================================
-
-#[test]
-fn heating_rate_per_redshift_sign_convention() {
-    // For positive energy injection, heating_rate > 0 but dq/dz < 0
-    // because energy enters as z decreases.
-    let cosmo = Cosmology::default();
-    let burst = InjectionScenario::SingleBurst {
-        z_h: 1e5,
-        delta_rho_over_rho: 1e-5,
-        sigma_z: 1e3,
-    };
-    let rate = burst.heating_rate(1e5, &cosmo);
-    let rate_per_z = burst.heating_rate_per_redshift(1e5, &cosmo);
-    assert!(rate > 0.0, "heating_rate should be positive at z_h");
-    assert!(
-        rate_per_z < 0.0,
-        "heating_rate_per_redshift should be negative (energy enters as z decreases)"
-    );
-    // |dq/dz| = rate / (H(1+z))
-    let expected_abs = rate / (cosmo.hubble(1e5) * (1.0 + 1e5));
-    assert!(
-        (rate_per_z.abs() / expected_abs - 1.0).abs() < 1e-10,
-        "Magnitude should match: got {:.6e}, expected {expected_abs:.6e}",
-        rate_per_z.abs()
-    );
-}
-
-// ============================================================================
 // Section 5: Grid find_index
-// (builder/overlap/log_fraction tests removed in 2026-04 triage: D/F-grade
-// tests that asserted monotonicity or `n > n_base` — properties that cannot
-// detect any real bug in the refinement logic.)
 // ============================================================================
 
 #[test]

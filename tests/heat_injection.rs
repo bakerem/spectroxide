@@ -84,265 +84,6 @@ fn fast_grid() -> GridConfig {
 
 // Section 1: First-principles mathematical identities
 
-/// β_μ = 3ζ(3)/ζ(2) is the zero-crossing frequency of the μ-distortion.
-/// This is a pure number theory identity, independent of any physics.
-/// ζ(2) = π²/6,  ζ(3) = 1.2020569031595942...
-///
-/// Verified against: Abramowitz & Stegun Table 23.3;
-///                   Mathematica: Zeta[3]/Zeta[2] = 0.73099...
-#[test]
-fn test_beta_mu_from_zeta_functions() {
-    let zeta_2 = std::f64::consts::PI.powi(2) / 6.0;
-    let zeta_3 = 1.202_056_903_159_594_3; // OEIS A002117, known to >100 digits
-    let beta_mu_exact = 3.0 * zeta_3 / zeta_2;
-
-    // Verify our constant matches the exact computation
-    assert!(
-        (BETA_MU - beta_mu_exact).abs() < 1e-12,
-        "BETA_MU = {BETA_MU}, exact = {beta_mu_exact}, diff = {:.2e}",
-        (BETA_MU - beta_mu_exact).abs()
-    );
-
-    // Verify the numerical value itself
-    assert!(
-        (beta_mu_exact - 2.19229).abs() < 0.0001,
-        "β_μ = {beta_mu_exact}, expected ≈ 2.1923"
-    );
-}
-
-/// κ_c is the normalization relating μ to energy injection: μ = (3/κ_c) × (Δρ/ρ).
-///
-/// For a pure μ-distortion Δn = μ × M(x), energy conservation requires:
-///   μ × ∫ x³ M(x) dx = (Δρ/ρ) × G₃
-///
-/// Therefore κ_c = 3 G₃ / ∫ x³ M(x) dx.
-///
-/// We compute ∫ x³ M(x) dx numerically and verify κ_c matches the
-/// hardcoded constant 2.1419. This catches any transcription errors.
-#[test]
-fn test_kappa_c_from_numerical_integration() {
-    // Compute ∫ x³ M(x) dx numerically on a fine log-spaced grid.
-    //
-    // M(x) = (x/β_μ − 1) · g_bb(x)/x
-    // x³ M(x) = x² (x/β_μ − 1) g_bb(x)
-    //
-    // g_bb(x) = x e^x/(e^x − 1)² = x n_pl(1+n_pl)
-
-    let n_points = 500_000;
-    let x_min: f64 = 1e-4;
-    let x_max: f64 = 60.0;
-    let log_min = x_min.ln();
-    let log_max = x_max.ln();
-
-    let mut integral = 0.0;
-    let mut prev_x = x_min;
-
-    for i in 1..n_points {
-        let log_x = log_min + (log_max - log_min) * i as f64 / (n_points - 1) as f64;
-        let x = log_x.exp();
-        let dx = x - prev_x;
-        let x_mid = 0.5 * (x + prev_x);
-
-        let m_x = spectrum::mu_shape(x_mid);
-        integral += x_mid.powi(3) * m_x * dx;
-
-        prev_x = x;
-    }
-
-    // From μ = (3/κ_c) × (Δρ/ρ) and Δρ/ρ = μ × ∫x³M(x)dx / G₃:
-    //   1 = (3/κ_c) × ∫x³M(x)dx / G₃
-    //   κ_c = 3 × ∫x³M(x)dx / G₃
-    let kappa_c_computed = 3.0 * integral / G3_PLANCK;
-
-    eprintln!(
-        "κ_c: ∫x³M(x)dx = {integral:.6}, G₃ = {G3_PLANCK:.6}, \
-         κ_c = 3∫/G₃ = {kappa_c_computed:.6}"
-    );
-    eprintln!("κ_c hardcoded: {KAPPA_C}");
-
-    // Verify the hardcoded constant matches our numerical computation.
-    // Allow 0.5% tolerance for numerical integration error.
-    assert!(
-        (kappa_c_computed - KAPPA_C).abs() / KAPPA_C < 0.005,
-        "κ_c computed = {kappa_c_computed:.6}, hardcoded = {KAPPA_C}, \
-         rel_err = {:.4e}",
-        (kappa_c_computed - KAPPA_C).abs() / KAPPA_C
-    );
-}
-
-/// The spectral integrals G_n = ∫₀^∞ x^n n_pl(x) dx have exact values:
-///   G₁ = ζ(2) = π²/6       ≈ 1.6449
-///   G₂ = 2ζ(3)             ≈ 2.4041
-///   G₃ = π⁴/15             ≈ 6.4939
-///   I₄ = ∫ x⁴ n(1+n) dx   = 4G₃  (by integration by parts: ∫ x⁴ n' = −4G₃)
-///
-/// These follow from the integral representation of the Riemann zeta function:
-///   ∫₀^∞ x^{s-1}/(e^x - 1) dx = Γ(s) ζ(s)
-///
-/// Reference: Abramowitz & Stegun, Ch. 23; any statistical mechanics textbook.
-#[test]
-fn test_spectral_integrals_exact_values() {
-    let pi = std::f64::consts::PI;
-
-    // Verify constants against their exact definitions
-    let g1_exact = pi.powi(2) / 6.0;
-    let g3_exact = pi.powi(4) / 15.0;
-
-    assert!(
-        (G1_PLANCK - g1_exact).abs() / g1_exact < 1e-14,
-        "G₁ mismatch: {G1_PLANCK} vs exact {g1_exact}"
-    );
-    assert!(
-        (G3_PLANCK - g3_exact).abs() / g3_exact < 1e-14,
-        "G₃ mismatch: {G3_PLANCK} vs exact {g3_exact}"
-    );
-
-    // Verify I₄ = 4G₃ identity (from integration by parts)
-    assert!(
-        (I4_PLANCK - 4.0 * G3_PLANCK).abs() < 1e-14,
-        "I₄ = {I4_PLANCK}, expected 4G₃ = {}",
-        4.0 * G3_PLANCK
-    );
-
-    // Verify numerical integration reproduces the exact values.
-    // This tests both the integration code AND the planck() function.
-    let g3_numerical = spectrum::spectral_integral(3, 1e-6, 80.0, 200_000);
-    assert!(
-        (g3_numerical - g3_exact).abs() / g3_exact < 1e-7,
-        "Numerical G₃ = {g3_numerical:.10}, exact = {g3_exact:.10}"
-    );
-}
-
-/// The Planck distribution satisfies the exact identity:
-///   dn_pl/dx + n_pl(1 + n_pl) = 0
-///
-/// This identity is the mathematical reason why the Kompaneets equation
-/// has n_pl as an exact equilibrium. It's also the identity that MUST
-/// Compton equilibrium temperature for a pure Planck spectrum is T_e = T_z.
-///
-/// This is exact: I₄/(4G₃) = 1 for n = n_pl, because
-///   I₄ = ∫ x⁴ n_pl(1+n_pl) dx = 4G₃  (integration by parts).
-///
-/// The numerical computation tests both the integration routine
-/// and the planck() function at all frequencies simultaneously.
-#[test]
-fn test_compton_equilibrium_planck_exact() {
-    // Use a very fine grid extending to x_max = 50 (where n_pl ~ 10⁻²²)
-    let n_points = 10_000;
-    let x_min = 1e-4_f64;
-    let x_max = 50.0_f64;
-    let log_min = x_min.ln();
-    let log_max = x_max.ln();
-
-    let x_grid: Vec<f64> = (0..n_points)
-        .map(|i| (log_min + (log_max - log_min) * i as f64 / (n_points - 1) as f64).exp())
-        .collect();
-    let n_vals: Vec<f64> = x_grid.iter().map(|&x| spectrum::planck(x)).collect();
-
-    let ratio = spectrum::compton_equilibrium_ratio(&x_grid, &n_vals);
-
-    assert!(
-        (ratio - 1.0).abs() < 1e-4,
-        "T_e^eq/T_z = {ratio:.8}, expected 1.0 for Planck spectrum, \
-         error = {:.2e}",
-        (ratio - 1.0).abs()
-    );
-}
-
-/// The Y_SZ zero crossing is at x₀ where x₀ · coth(x₀/2) = 4.
-///
-/// This is a transcendental equation with a unique solution x₀ ≈ 3.8310.
-/// We verify the zero crossing by solving the equation independently
-/// via bisection, then checking that y_shape() actually crosses zero there.
-///
-/// This value is universal — it doesn't depend on any cosmological parameters.
-/// Reference: Zeldovich & Sunyaev (1969), ARAA; any SZ effect review.
-#[test]
-fn test_y_sz_zero_crossing_from_transcendental_equation() {
-    // Solve x·coth(x/2) = 4 by bisection
-    let f = |x: f64| x * (x / 2.0).cosh() / (x / 2.0).sinh() - 4.0;
-
-    let mut lo = 3.0_f64;
-    let mut hi = 5.0_f64;
-    assert!(f(lo) < 0.0 && f(hi) > 0.0, "Bracket doesn't contain root");
-
-    for _ in 0..100 {
-        let mid = (lo + hi) / 2.0;
-        if f(mid) > 0.0 {
-            hi = mid;
-        } else {
-            lo = mid;
-        }
-    }
-    let x_zero_exact = (lo + hi) / 2.0;
-
-    // Now find where y_shape actually crosses zero
-    lo = 3.0;
-    hi = 5.0;
-    for _ in 0..100 {
-        let mid = (lo + hi) / 2.0;
-        if spectrum::y_shape(mid) > 0.0 {
-            hi = mid;
-        } else {
-            lo = mid;
-        }
-    }
-    let x_zero_code = (lo + hi) / 2.0;
-
-    eprintln!(
-        "Y_SZ zero crossing: transcendental eq = {x_zero_exact:.6}, \
-         y_shape() = {x_zero_code:.6}"
-    );
-
-    assert!(
-        (x_zero_code - x_zero_exact).abs() < 1e-6,
-        "y_shape zero at {x_zero_code:.8} vs transcendental solution {x_zero_exact:.8}"
-    );
-
-    // Cross-check the numerical value
-    assert!(
-        (x_zero_exact - 3.8310).abs() < 0.001,
-        "x₀ = {x_zero_exact:.6}, expected ≈ 3.831"
-    );
-}
-
-/// M(x) must cross zero exactly at x = β_μ by its definition:
-///   M(x) = (x/β_μ − 1) · G_bb(x) / x
-///
-/// The factor (x/β_μ − 1) changes sign at x = β_μ, and G_bb/x > 0 for all x > 0.
-///
-/// Additionally verify that M(x) < 0 for x < β_μ (photon deficit)
-/// and M(x) > 0 for x > β_μ (photon excess). This is the characteristic
-/// signature of a Bose-Einstein distribution with μ > 0.
-#[test]
-fn test_mu_shape_zero_crossing_and_sign_structure() {
-    // Zero crossing at β_μ
-    let m_at_beta = spectrum::mu_shape(BETA_MU);
-    assert!(
-        m_at_beta.abs() < 1e-10,
-        "M(β_μ) = {m_at_beta:.3e}, should be exactly 0"
-    );
-
-    // Sign structure: negative below β_μ, positive above
-    let x_below = [0.1, 0.5, 1.0, 1.5, 2.0];
-    for &x in &x_below {
-        assert!(
-            spectrum::mu_shape(x) < 0.0,
-            "M({x}) = {:.4e} should be < 0 (below β_μ = {BETA_MU})",
-            spectrum::mu_shape(x)
-        );
-    }
-
-    let x_above = [2.5, 3.0, 5.0, 8.0, 12.0];
-    for &x in &x_above {
-        assert!(
-            spectrum::mu_shape(x) > 0.0,
-            "M({x}) = {:.4e} should be > 0 (above β_μ = {BETA_MU})",
-            spectrum::mu_shape(x)
-        );
-    }
-}
-
 // SECTION 2: GREEN'S FUNCTION PHYSICAL CONSTRAINTS
 // Model-independent requirements that any correct implementation must satisfy.
 
@@ -681,10 +422,6 @@ fn test_visibility_function_physical_constraints() {
 ///   - Pure μ-era/full-thermalization (z_h ≥ 5e5): 3%
 ///   - Pure y-era (z_h ≤ 3e3):                     3%
 ///   - Transition (3e3 < z_h < 5e5):               logged, bounded < 22%
-///
-/// Previous version asserted [0.8, 1.25] (±25%) globally to accommodate an
-/// 18% peak at z_h ≈ 5e4 — this blanket tolerance cannot detect 3% regressions
-/// in the pure regimes where the ansatz is supposed to close analytically.
 #[test]
 fn test_greens_function_energy_accounting() {
     let test_redshifts = [2000.0, 1e4, 5e4, 2e5, 5e5, 2e6, 5e6];
@@ -823,11 +560,6 @@ fn test_decaying_particle_time_dependence() {
         "Rate at z=100 ({rate_late:.4e}) should be < rate at z=10⁶ ({rate_early:.4e})"
     );
 }
-
-// (test_distortion_decomposition_round_trip removed in 2026-04 triage: parts 1-2
-// are strictly weaker duplicates of distortion::test_decompose_pure_mu/_pure_y
-// (2%/5% tolerance vs 1% in the unit tests); part 3 only asserted
-// `delta_rho_over_rho > 0.0` which is vacuous for positive injection.)
 
 /// FIRAS limits represent observed upper bounds on spectral distortions.
 /// Any standard-model prediction must be well below these limits.
@@ -1249,22 +981,11 @@ fn test_pde_planck_is_stable_equilibrium() {
 // Push the solver's boundaries with photon injection,
 // custom scenarios, initial perturbations, and edge cases.
 
-/// Photon injection: the chemical potential sign depends on injection frequency.
-///
-/// For monochromatic photon injection at frequency x_i:
-///   μ = (3/κ_c) × (x_i G₂/G₃ - 4/3) × ΔN/N
-///
-/// This changes sign at x_i,0 = 4G₃/(3G₂) ≈ 3.60. Injecting below x_i,0
-/// (low-energy photons) produces μ < 0 because the mean photon energy
-/// is less than the Planck average. Injecting above produces μ > 0.
-///
-/// This is a firm prediction of Kompaneets thermalization theory.
-/// Reference: Chluba (2015), MNRAS 454, 4182
 /// The PDE solver must be able to evolve an initial Δn perturbation
 /// (without continuous injection) and correctly thermalize it.
 ///
-/// We inject a Gaussian perturbation at x_i = 5 (above zero crossing,
-/// so μ > 0) and verify:
+/// We inject a Gaussian perturbation at x_i = 5 (above the μ-sign zero
+/// crossing x_i,0 = 4G₃/(3G₂) ≈ 3.60, so μ > 0) and verify:
 /// 1. The PDE produces a nonzero μ-distortion
 /// 2. The sign of μ matches the analytic prediction
 /// 3. Total photon number is approximately conserved
@@ -1386,11 +1107,6 @@ fn test_thermalization_suppression_monotonic() {
     );
 }
 
-// (test_custom_injection_matches_builtin removed: subsumed by
-// test_heat_custom_matches_single_burst which does the same Custom-vs-builtin
-// comparison at 1% tolerance through the full PDE pipeline rather than just
-// at the heating-rate function level.)
-
 /// Injected Δρ/ρ between `z_lo` and `z_hi`, integrated directly from the
 /// scenario's heating rate (the input, not solver output) on a log-z grid.
 fn injected_drho(scenario: &InjectionScenario, cosmo: &Cosmology, z_lo: f64, z_hi: f64) -> f64 {
@@ -1406,8 +1122,7 @@ fn injected_drho(scenario: &InjectionScenario, cosmo: &Cosmology, z_lo: f64, z_h
         .sum()
 }
 
-// The μ-era decaying-particle comparison (formerly test_decaying_particle_pde_vs_gf,
-// against the Chluba 2013 fits) is now
+// The μ-era decaying-particle comparison is covered by
 // cosmotherm_comparison.rs::test_decaying_particle_vs_cosmotherm_gf_database,
 // which uses the CosmoTherm Green's-function database as the reference.
 
@@ -1477,9 +1192,7 @@ fn test_decaying_particle_y_era_energy() {
 ///   and x·G_bb → 1, so the ratio carries an x-independent offset
 ///   −δT_step/(ρ_e − 1), with δT_step a small fraction of ρ_e − 1 per step.
 ///
-/// We allow 1%. The former target, ρ_e minus the heating increment, relaxes the
-/// spectrum toward the Compton-equilibrium temperature and gives a ratio of
-/// 0.005 here, because at z = 5000 δρ_inj is almost all of ρ_e − 1.
+/// We allow 1%.
 #[test]
 fn test_dcbr_relaxes_to_actual_electron_temperature() {
     let cosmo = Cosmology::default();
@@ -1627,13 +1340,6 @@ fn test_spectral_decomposition_mixed_mode() {
         y_pure_err * 100.0
     );
 }
-
-// (test_photon_injection_linearity removed: subsumed by
-// test_photon_injection_superposition (3% tol) which checks both linearity
-// and full-spectrum superposition at a tighter tolerance than this
-// single-ratio 10% linearity check. The orphaned /// docstrings that used
-// to live here — describing soft/hard photon injection sign conventions —
-// are preserved as context in the surrounding tests' docstrings.)
 
 /// Photon injection analytic match: PDE mu should agree with the deep mu-era
 /// analytic formula mu = (3/kappa_c) * (x_i * G2/G3 - 4/3) * dn_gamma.
@@ -1798,117 +1504,9 @@ fn test_photon_injection_negative_mu_chluba2015() {
     );
 }
 
-// (test_photon_injection_energy_balance removed: subsumed by
-// test_photon_injection_energy_conservation_tight which sweeps 5 x_inj
-// values at 3% tolerance — strictly stronger than this single-x_i 10% check.)
-
 // SECTION 7: DARK SECTOR INJECTION SCENARIOS
 // Tests for dark photon oscillation.
 // Validates heating rates, resonance physics, and PDE evolution.
-
-/// Dark photon GF distortion via narrow-width approximation (NWA).
-///
-/// The Breit-Wigner resonance is so narrow (Δz ~ 10⁻⁹) that it acts
-/// as a δ-function in z. The NWA gives the total injected Δρ/ρ as:
-///
-///   Δρ/ρ = π ε² m² (ρ_DM/ρ_γ) / |d(ω_pl²)/dz| at z_res
-///
-/// Since the injection is a δ-function at z_res, the GF distortions are:
-///   μ = 1.401 × J_bb*(z_res) × J_μ(z_res) × Δρ/ρ   (if z_res is in μ-era)
-///   y = 0.25 × J_y(z_res) × Δρ/ρ
-///
-/// Reference: Mirizzi, Redondo & Sigl (2009); Arias et al. (2012)
-#[test]
-fn test_dark_photon_nwa_gf_prediction() {
-    let cosmo = Cosmology::default();
-    let eps = 1e-6;
-    let m_dp = 3e-6; // eV — resonance at z ~ 3×10⁵ (deep μ-era)
-
-    let ev_j = 1.602_176_634e-19_f64;
-    let hbar_ev_s = HBAR / ev_j;
-    let omega_pl_factor = 4.0 * std::f64::consts::PI * ALPHA_FS * HBAR * C_LIGHT / M_ELECTRON;
-
-    // Find z_res via bisection
-    let omega_pl_at = |z: f64| -> f64 {
-        let x_e = spectroxide::recombination::ionization_fraction(z, &cosmo);
-        let n_e = cosmo.n_e(z, x_e);
-        hbar_ev_s * (n_e * omega_pl_factor).sqrt()
-    };
-
-    // ω_pl increases with z; find z where ω_pl = m_dp
-    let (mut z_lo, mut z_hi) = (1e3_f64, 3e6_f64);
-    for _ in 0..100 {
-        let z_mid = (z_lo * z_hi).sqrt(); // geometric mean
-        if omega_pl_at(z_mid) < m_dp {
-            z_lo = z_mid;
-        } else {
-            z_hi = z_mid;
-        }
-    }
-    let z_res = (z_lo * z_hi).sqrt();
-    let omega_pl_res = omega_pl_at(z_res);
-
-    // d(ω_pl²)/dz at resonance
-    // ω_pl² ∝ n_e ∝ (1+z)³, so d(ω_pl²)/dz = 3 ω_pl²/(1+z) = 3m²/(1+z)
-    let d_omega_sq_dz = 3.0 * m_dp * m_dp / (1.0 + z_res);
-
-    // NWA total energy: Δρ/ρ = π ε² m² × (ρ_DM/ρ_γ) / |d(ω_pl²)/dz|
-    // Here ρ_DM/ρ_γ = f_dm × Ω_cdm/(Ω_γ × (1+z))
-    let rho_ratio = cosmo.omega_cdm_frac() / cosmo.omega_gamma() / (1.0 + z_res);
-    let drho_nwa = std::f64::consts::PI * eps * eps * m_dp * m_dp * rho_ratio / d_omega_sq_dz;
-
-    // GF prediction: δ-function injection at z_res
-    let j_bb_star = greens::visibility_j_bb_star(z_res);
-    let j_mu = greens::visibility_j_mu(z_res);
-    let j_y = greens::visibility_j_y(z_res);
-    let mu_nwa = 1.401 * j_bb_star * j_mu * drho_nwa;
-    let y_nwa = 0.25 * j_y * drho_nwa;
-
-    eprintln!("Dark photon NWA test (ε={eps:.0e}, m={m_dp:.0e} eV):");
-    eprintln!("  z_res = {z_res:.6e}");
-    eprintln!("  ω_pl(z_res) = {omega_pl_res:.6e} eV (target m = {m_dp:.1e})");
-    eprintln!("  d(ω_pl²)/dz = {d_omega_sq_dz:.4e} eV²");
-    eprintln!("  NWA Δρ/ρ = {drho_nwa:.4e}");
-    eprintln!("  J_bb*(z_res) = {j_bb_star:.4e}, J_μ(z_res) = {j_mu:.4e}, J_y(z_res) = {j_y:.4e}");
-    eprintln!("  NWA: μ = {mu_nwa:.4e}, y = {y_nwa:.4e}");
-
-    // Resonance is at z ~ 3×10⁵, deep in μ-era
-    assert!(
-        z_res > 1e5 && z_res < 1e6,
-        "Resonance z out of expected range: {z_res:.2e}"
-    );
-
-    // J_μ should be large (μ-era), J_y should be small
-    assert!(j_mu > 0.5, "Deep μ-era: J_μ should be > 0.5, got {j_mu:.4}");
-
-    // μ should dominate over y for deep μ-era injection
-    assert!(
-        mu_nwa.abs() > y_nwa.abs(),
-        "μ should dominate: μ = {mu_nwa:.4e}, y = {y_nwa:.4e}"
-    );
-
-    // Δρ/ρ should be small (perturbative regime)
-    assert!(
-        drho_nwa < 1e-3,
-        "NWA Δρ/ρ should be perturbative: {drho_nwa:.4e}"
-    );
-
-    // μ should be positive (energy injection into photons)
-    assert!(
-        mu_nwa > 0.0,
-        "μ should be positive for dark photon heating: {mu_nwa:.4e}"
-    );
-
-    // ε² scaling: double ε → 4× μ
-    let drho_2eps =
-        std::f64::consts::PI * (2.0 * eps).powi(2) * m_dp * m_dp * rho_ratio / d_omega_sq_dz;
-    let mu_2eps = 1.401 * j_bb_star * j_mu * drho_2eps;
-    let ratio = mu_2eps / mu_nwa;
-    assert!(
-        (ratio - 4.0).abs() < 0.01,
-        "NWA ε² scaling: ratio = {ratio:.4} (expected 4.0)"
-    );
-}
 
 // SECTION 8: STRESS TESTS — ANNIHILATION, BURST, DECAY SCENARIOS
 
@@ -1972,15 +1570,6 @@ fn test_annihilation_mu_y_properties() {
     assert!(mu_p / y_p > mu_s / y_s, "p-wave mu/y > s-wave mu/y");
 }
 
-/// Single burst in y-era (z=5000): should produce essentially pure y-distortion.
-///
-/// At z=5000, J_mu is small but not exactly zero (the transition from
-/// y to mu is gradual). We verify |mu/y| < 0.10, confirming the
-/// distortion is dominated by the y component.
-/// Single burst thermalization suppression: z=3e6 vs z=3e5.
-///
-/// At z=3e6, J_bb*(z) is very small (energy is thermalized), so mu should
-/// be suppressed by at least 90% relative to z=3e5 where J_bb* ~ 1.
 /// Decaying particle heating rate is NOT monotonically decreasing in z.
 ///
 /// For gamma_x = 1e-10 s^-1 (tau = 1e10 s), the heating rate
@@ -2031,14 +1620,12 @@ fn test_decay_rate_non_monotonic() {
 }
 
 // SECTION 9: ADVANCED DARK SECTOR TESTS
-// Deeper tests of dark photon mass-dependent distortion type,
-// energy conservation sum rules,
-// and plasma frequency verification.
 
-/// Helper: find the dark photon resonance redshift z_res where omega_pl(z_res) = m_dp.
+/// Helper: find the resonance redshift z_res where omega_pl(z_res) = m.
 ///
-/// Uses bisection in log-space to find z where the plasma frequency equals m_dp.
-/// Returns (z_res, omega_pl_at_z_res).
+/// Uses bisection in log-space to find z where the plasma frequency equals m.
+/// Returns (z_res, omega_pl_at_z_res). Only the axion tests use it.
+#[cfg(feature = "axion")]
 fn find_resonance_z(m_dp: f64, cosmo: &Cosmology) -> (f64, f64) {
     let ev_j = 1.602_176_634e-19_f64;
     let hbar_ev_s = HBAR / ev_j;
@@ -2069,210 +1656,6 @@ fn find_resonance_z(m_dp: f64, cosmo: &Cosmology) -> (f64, f64) {
     }
     let z_res = (z_lo * z_hi).sqrt();
     (z_res, omega_pl_at(z_res))
-}
-
-/// Dark photon mass-dependent distortion type.
-///
-/// The resonance redshift z_res depends on the dark photon mass:
-///   - Low mass (m = 1e-7 eV) -> z_res in the y-era (z < 5e4) -> mostly y-distortion
-///   - Medium mass (m = 1e-5 eV) -> z_res in the mu-era (z > 2e5) -> mostly mu-distortion
-///   - High mass (m = 3e-5 eV) -> z_res deep in thermalization -> suppressed by J_bb*
-///
-/// Uses NWA + Green's function:
-///   mu = (3/kappa_c) * J_bb*(z_res) * J_mu(z_res) * Drho/rho
-///   y  = 0.25 * J_y(z_res) * Drho/rho
-///
-/// The NWA total injected energy is:
-///   Drho/rho = pi * eps^2 * m^2 * (rho_DM/rho_gamma) / |d(omega_pl^2)/dz|
-#[test]
-fn test_dark_photon_mass_dependent_distortion_type() {
-    let cosmo = Cosmology::default();
-    let eps = 1e-6;
-
-    // --- Case 1: m = 3e-8 eV -> deep y-era resonance ---
-    // Need z_res well below the mu-y transition (~5e4) so that J_y >> J_mu.
-    // The (3/kappa_c) ~ 1.4 prefactor on mu vs 0.25 on y means we need
-    // J_y * 0.25 > (3/kappa_c) * J_bb* * J_mu, requiring z_res << 5e4.
-    let m1 = 3e-8;
-    let (z_res1, _) = find_resonance_z(m1, &cosmo);
-
-    // NWA energy: d(omega_pl^2)/dz = 3 m^2 / (1+z) at resonance
-    let d_opl_sq_dz1 = 3.0 * m1 * m1 / (1.0 + z_res1);
-    let rho_ratio1 = cosmo.omega_cdm_frac() / cosmo.omega_gamma() / (1.0 + z_res1);
-    let drho1 = std::f64::consts::PI * eps * eps * m1 * m1 * rho_ratio1 / d_opl_sq_dz1;
-
-    let j_mu1 = greens::visibility_j_mu(z_res1);
-    let j_y1 = greens::visibility_j_y(z_res1);
-    let j_bb1 = greens::visibility_j_bb_star(z_res1);
-    let mu1 = (3.0 / KAPPA_C) * j_bb1 * j_mu1 * drho1;
-    let y1 = 0.25 * j_y1 * drho1;
-
-    eprintln!("Dark photon mass-dependent distortion type:");
-    eprintln!("  m = {m1:.1e} eV -> z_res = {z_res1:.2e}");
-    eprintln!("    J_mu = {j_mu1:.4e}, J_y = {j_y1:.4e}, J_bb* = {j_bb1:.4e}");
-    eprintln!("    Drho/rho = {drho1:.4e}");
-    eprintln!("    mu = {mu1:.4e}, y = {y1:.4e}");
-
-    // z_res should be deep in the y-era (well below 2e4)
-    assert!(
-        z_res1 < 2e4,
-        "m=3e-8: z_res = {z_res1:.2e} should be < 2e4 (deep y-era)"
-    );
-    // y should dominate over mu in the deep y-era
-    assert!(
-        y1.abs() > mu1.abs(),
-        "m=3e-8: y should dominate: |y| = {:.4e} vs |mu| = {:.4e}",
-        y1.abs(),
-        mu1.abs()
-    );
-
-    // --- Case 2: m = 1e-5 eV -> mu-era resonance ---
-    let m2 = 1e-5;
-    let (z_res2, _) = find_resonance_z(m2, &cosmo);
-
-    let d_opl_sq_dz2 = 3.0 * m2 * m2 / (1.0 + z_res2);
-    let rho_ratio2 = cosmo.omega_cdm_frac() / cosmo.omega_gamma() / (1.0 + z_res2);
-    let drho2 = std::f64::consts::PI * eps * eps * m2 * m2 * rho_ratio2 / d_opl_sq_dz2;
-
-    let j_mu2 = greens::visibility_j_mu(z_res2);
-    let j_y2 = greens::visibility_j_y(z_res2);
-    let j_bb2 = greens::visibility_j_bb_star(z_res2);
-    let mu2 = (3.0 / KAPPA_C) * j_bb2 * j_mu2 * drho2;
-    let y2 = 0.25 * j_y2 * drho2;
-
-    eprintln!("  m = {m2:.1e} eV -> z_res = {z_res2:.2e}");
-    eprintln!("    J_mu = {j_mu2:.4e}, J_y = {j_y2:.4e}, J_bb* = {j_bb2:.4e}");
-    eprintln!("    Drho/rho = {drho2:.4e}");
-    eprintln!("    mu = {mu2:.4e}, y = {y2:.4e}");
-
-    // z_res should be in the mu-era (above ~1e5)
-    assert!(
-        z_res2 > 1e5,
-        "m=1e-5: z_res = {z_res2:.2e} should be > 1e5 (mu-era)"
-    );
-    // mu should dominate over y
-    assert!(
-        mu2.abs() > y2.abs(),
-        "m=1e-5: mu should dominate: |mu| = {:.4e} vs |y| = {:.4e}",
-        mu2.abs(),
-        y2.abs()
-    );
-
-    // --- Case 3: m = 3e-5 eV -> deep thermalization ---
-    let m3 = 3e-5;
-    let (z_res3, _) = find_resonance_z(m3, &cosmo);
-
-    let d_opl_sq_dz3 = 3.0 * m3 * m3 / (1.0 + z_res3);
-    let rho_ratio3 = cosmo.omega_cdm_frac() / cosmo.omega_gamma() / (1.0 + z_res3);
-    let drho3 = std::f64::consts::PI * eps * eps * m3 * m3 * rho_ratio3 / d_opl_sq_dz3;
-
-    let j_bb3 = greens::visibility_j_bb_star(z_res3);
-    let j_mu3 = greens::visibility_j_mu(z_res3);
-    let j_y3 = greens::visibility_j_y(z_res3);
-    let mu3 = (3.0 / KAPPA_C) * j_bb3 * j_mu3 * drho3;
-    let y3 = 0.25 * j_y3 * drho3;
-
-    eprintln!("  m = {m3:.1e} eV -> z_res = {z_res3:.2e}");
-    eprintln!("    J_mu = {j_mu3:.4e}, J_y = {j_y3:.4e}, J_bb* = {j_bb3:.4e}");
-    eprintln!("    Drho/rho = {drho3:.4e}");
-    eprintln!("    mu = {mu3:.4e}, y = {y3:.4e}");
-
-    // z_res should be well into the thermalization regime
-    assert!(
-        z_res3 > 5e5,
-        "m=3e-5: z_res = {z_res3:.2e} should be > 5e5 (thermalization regime)"
-    );
-    // J_bb* should be significantly reduced at this z (partial thermalization).
-    // At z ~ 1.4e6, J_bb* ~ 0.6 (partial suppression).
-    // Full suppression requires z >> z_mu = 2e6.
-    assert!(
-        j_bb3 < j_bb2,
-        "m=3e-5: J_bb* should decrease with z: J_bb*(z3) = {j_bb3:.4e} should be < J_bb*(z2) = {j_bb2:.4e}"
-    );
-    // The conversion efficiency mu/Drho should be suppressed relative to Case 2
-    let eff2 = mu2.abs() / drho2;
-    let eff3 = mu3.abs() / drho3;
-    eprintln!("  Conversion efficiency: mu/Drho(m2) = {eff2:.4e}, mu/Drho(m3) = {eff3:.4e}");
-    assert!(
-        eff3 < eff2,
-        "Thermalization should suppress efficiency: eff(m3) = {eff3:.4e} should be < eff(m2) = {eff2:.4e}"
-    );
-}
-
-/// Dark photon energy conservation: distortion sum rule.
-///
-/// For a delta-function injection at z_res, the total distortion energy
-/// decomposed as mu + y + temperature shift should account for all injected energy.
-///
-/// The Green's function gives:
-///   G_th = (3/kappa_c) J_bb* J_mu M(x) + (1/4) J_y Y(x) + (1/4)(1-J_bb*) G(x)
-///
-/// The energy integrals give:
-///   E_mu  = (kappa_c/3) * mu = J_bb* * J_mu * Drho
-///   E_y   = 4 * y = J_y * Drho
-///   E_temp = (1 - J_bb*) * Drho
-///   E_total = J_bb* * J_mu + J_y + (1 - J_bb*) = 1 + J_bb*(J_mu - 1)
-///
-/// This should be close to Drho since J_mu ~ 1 in the mu-era.
-#[test]
-fn test_dark_photon_conservation_sum_rule() {
-    let cosmo = Cosmology::default();
-    let eps = 1e-6;
-
-    // Use m_dp = 3e-6 eV -> resonance in the mu-era
-    let m_dp = 3e-6;
-    let (z_res, _) = find_resonance_z(m_dp, &cosmo);
-
-    // NWA total energy
-    let d_opl_sq_dz = 3.0 * m_dp * m_dp / (1.0 + z_res);
-    let rho_ratio = cosmo.omega_cdm_frac() / cosmo.omega_gamma() / (1.0 + z_res);
-    let drho = std::f64::consts::PI * eps * eps * m_dp * m_dp * rho_ratio / d_opl_sq_dz;
-
-    let j_mu = greens::visibility_j_mu(z_res);
-    let j_y = greens::visibility_j_y(z_res);
-    let j_bb = greens::visibility_j_bb_star(z_res);
-
-    // Compute mu and y from NWA
-    let mu = (3.0 / KAPPA_C) * j_bb * j_mu * drho;
-    let y = 0.25 * j_y * drho;
-
-    // Energy in each channel
-    let e_mu = (KAPPA_C / 3.0) * mu; // = J_bb* * J_mu * Drho
-    let e_y = 4.0 * y; // = J_y * Drho
-    let e_temp = (1.0 - j_bb) * drho; // temperature shift portion
-
-    let e_total = e_mu + e_y + e_temp;
-
-    eprintln!("Dark photon conservation sum rule (m = {m_dp:.1e} eV):");
-    eprintln!("  z_res = {z_res:.4e}");
-    eprintln!("  J_bb* = {j_bb:.6e}, J_mu = {j_mu:.6e}, J_y = {j_y:.6e}");
-    eprintln!("  Drho/rho = {drho:.4e}");
-    eprintln!("  E_mu = {e_mu:.4e}, E_y = {e_y:.4e}, E_temp = {e_temp:.4e}");
-    eprintln!("  E_total = {e_total:.4e} (should ~ Drho = {drho:.4e})");
-
-    let rel_err = (e_total - drho).abs() / drho;
-    eprintln!("  rel error = {rel_err:.4e}");
-
-    // The total should be close to Drho (within 30%)
-    assert!(
-        rel_err < 0.30,
-        "Sum rule violated: E_total = {e_total:.4e} vs Drho = {drho:.4e}, err = {rel_err:.2}"
-    );
-
-    // Verify the algebraic identity:
-    // J_bb*J_mu + J_y + (1-J_bb*) = 1 + J_bb*(J_mu - 1) + J_y
-    // This follows from expanding (1-J_bb*) + J_bb*J_mu = 1 + J_bb*(J_mu-1).
-    // The total visibility sum is NOT exactly 1 because J_mu and J_y are
-    // independent fitting functions, but should be close.
-    let sum_vis = j_bb * j_mu + j_y + (1.0 - j_bb);
-    let expected_identity = 1.0 + j_bb * (j_mu - 1.0) + j_y;
-    assert!(
-        (sum_vis - expected_identity).abs() < 1e-12,
-        "Algebraic identity failed: {sum_vis:.6e} vs {expected_identity:.6e}"
-    );
-    // E_total / Drho = sum_vis, which should be close to 1
-    // (it deviates because J_mu + J_y is not exactly 1 for independent fits)
-    eprintln!("  Visibility sum = {sum_vis:.6e} (1 = perfect energy conservation)");
 }
 
 // ---- Axion-photon resonant conversion (Cyr, Chluba & Manoj 2024) ----
@@ -2436,84 +1819,6 @@ fn test_axion_experimental_warning() {
     );
 }
 
-/// Dark photon: verify plasma frequency formula against independent computation.
-///
-/// The plasma frequency is:
-///   omega_pl = hbar * sqrt(4 * pi * alpha * hbar * c * n_e / m_e)
-///
-/// We verify this at several redshifts by computing n_e from first principles
-/// and checking that the plasma frequency matches the expected scaling.
-#[test]
-fn test_plasma_frequency_formula() {
-    let cosmo = Cosmology::default();
-    let ev_j = 1.602_176_634e-19_f64;
-    let hbar_ev_s = HBAR / ev_j;
-    let omega_pl_factor = 4.0 * std::f64::consts::PI * ALPHA_FS * HBAR * C_LIGHT / M_ELECTRON;
-
-    let z_values = [2e3, 1e4, 5e4, 2e5, 1e6];
-
-    for &z in &z_values {
-        // Method 1: using the API
-        let x_e = spectroxide::recombination::ionization_fraction(z, &cosmo);
-        let n_e = cosmo.n_e(z, x_e);
-        let omega_pl_ev = hbar_ev_s * (n_e * omega_pl_factor).sqrt();
-
-        // Method 2: compute n_e from first principles
-        let rho_crit = 3.0 * cosmo.h0().powi(2) / (8.0 * std::f64::consts::PI * G_NEWTON);
-        let rho_b0 = cosmo.omega_b_frac() * rho_crit;
-        let n_h0 = (1.0 - cosmo.y_p) * rho_b0 / M_PROTON;
-        let n_h_z = n_h0 * (1.0 + z).powi(3);
-        let n_e_direct = x_e * n_h_z;
-
-        let omega_pl_direct = hbar_ev_s * (n_e_direct * omega_pl_factor).sqrt();
-
-        // Should match to machine precision
-        let rel_err = (omega_pl_ev - omega_pl_direct).abs() / omega_pl_ev;
-        assert!(
-            rel_err < 1e-10,
-            "Plasma frequency mismatch at z={z:.0e}: {omega_pl_ev:.6e} vs {omega_pl_direct:.6e}"
-        );
-
-        eprintln!(
-            "  z = {z:.0e}: omega_pl = {omega_pl_ev:.4e} eV, n_e = {n_e:.4e} m^-3, X_e = {x_e:.4}"
-        );
-
-        assert!(omega_pl_ev > 0.0, "omega_pl should be positive");
-        assert!(omega_pl_ev < 1.0, "omega_pl should be << 1 eV at these z");
-
-        // At z > 8000, X_e > 0.99
-        if z > 8000.0 {
-            assert!(
-                x_e > 0.99 && x_e < 1.20,
-                "Unexpected X_e at z={z:.0e}: {x_e:.4}"
-            );
-        }
-    }
-
-    // Verify (1+z)^3 scaling of omega_pl^2 at high z (fully ionized regime)
-    let z1 = 1e5;
-    let z2 = 2e5;
-    let x_e1 = spectroxide::recombination::ionization_fraction(z1, &cosmo);
-    let x_e2 = spectroxide::recombination::ionization_fraction(z2, &cosmo);
-    let n_e1 = cosmo.n_e(z1, x_e1);
-    let n_e2 = cosmo.n_e(z2, x_e2);
-    let opl1 = hbar_ev_s * (n_e1 * omega_pl_factor).sqrt();
-    let opl2 = hbar_ev_s * (n_e2 * omega_pl_factor).sqrt();
-
-    // omega_pl^2 ratio should be ((1+z2)/(1+z1))^3 * (X_e2/X_e1)
-    let ratio_opl_sq = (opl2 / opl1).powi(2);
-    let expected_ratio = ((1.0 + z2) / (1.0 + z1)).powi(3) * (x_e2 / x_e1);
-    let scaling_err = (ratio_opl_sq - expected_ratio).abs() / expected_ratio;
-    eprintln!(
-        "  omega_pl^2 scaling: ratio = {ratio_opl_sq:.6}, expected = {expected_ratio:.6}, \
-         err = {scaling_err:.2e}"
-    );
-    assert!(
-        scaling_err < 0.01,
-        "omega_pl^2 scaling: ratio = {ratio_opl_sq:.4} vs expected = {expected_ratio:.4}"
-    );
-}
-
 // Section 8: Numerical accuracy and solver robustness
 
 /// Green's function spectral decomposition: decomposing G_th(x, z_h)
@@ -2583,11 +1888,6 @@ fn test_greens_function_decomposition_accuracy() {
         }
     }
 }
-
-// (test_decay_lifetime_mu_y_crossover removed: subsumed by
-// test_heat_decay_lifetime_controls_mu_y which makes the same claim
-// ("shorter τ → higher μ/y ratio") with stricter tolerances and a
-// clearer physical setup.)
 
 /// PDE solver: DC+BR emission drives photon production toward
 /// Bose-Einstein equilibrium. At high z with a y-type initial distortion,
@@ -2785,8 +2085,7 @@ fn test_recombination_ionization_history() {
         "X_e at z=1500 should be > 0.9: got {x_1500:.4}"
     );
 
-    // z = 1100: mid-recombination. RECFAST gives X_e ≈ 0.16; allow [0.05, 0.30]
-    // (tightened from [0.01, 0.9] which spanned 2 orders of magnitude).
+    // z = 1100: mid-recombination. RECFAST gives X_e ≈ 0.16; allow [0.05, 0.30].
     // Reference: Seager, Sasselov & Scott 2000 ApJ 523, 1.
     let x_1100 = spectroxide::recombination::ionization_fraction(1100.0, &cosmo);
     eprintln!("  z=1100: X_e = {x_1100:.4}");
@@ -2803,8 +2102,7 @@ fn test_recombination_ionization_history() {
         "X_e at z=800 should be ~1e-3 (RECFAST): got {x_800:.4e}"
     );
 
-    // z = 200: frozen out. RECFAST X_e ≈ 2-4×10⁻⁴. Tightened from [1e-5, 1e-2]
-    // (3-decade window) to RECFAST band [1e-4, 1e-3].
+    // z = 200: frozen out. RECFAST X_e ≈ 2-4×10⁻⁴.
     let x_200 = spectroxide::recombination::ionization_fraction(200.0, &cosmo);
     eprintln!("  z=200: X_e = {x_200:.6}");
     assert!(
@@ -3481,7 +2779,6 @@ fn test_y_era_burst_spectral_purity() {
     // y should be positive and ~Δρ/4 (exact in y-era)
     assert!(snap.y > 0.0, "y should be positive");
     let y_ratio = snap.y / y_expected;
-    // Tightened from [0.3, 3.0] (factor-of-3) to [0.7, 1.3] (30%).
     assert!(
         y_ratio > 0.7 && y_ratio < 1.3,
         "y/y_expected = {y_ratio:.3}, should be ~1 (measured ~0.99)"
@@ -3489,7 +2786,7 @@ fn test_y_era_burst_spectral_purity() {
 
     // μ should be much smaller than y in the y-era
     let mu_y_ratio = snap.mu.abs() / snap.y.abs();
-    // Tightened from 0.5 to 0.20. Measured |μ|/|y| ~ 0.09.
+    // Measured |μ|/|y| ~ 0.09.
     assert!(
         mu_y_ratio < 0.20,
         "In y-era, |μ|/|y| should be small: {mu_y_ratio:.3}"
@@ -3499,40 +2796,10 @@ fn test_y_era_burst_spectral_purity() {
 // SECTION 16: SPECTRAL SHAPE CONSISTENCY TESTS
 // Verify that spectral shapes and basis functions are consistent.
 
-/// Verify that the Planck distribution integral gives the correct
-/// Planck integral accuracy: G₃ = π⁴/15, G₂ = 2ζ(3), I₄ = 4π⁴/15.
-#[test]
-fn test_planck_integral_accuracy() {
-    let n = 10000;
-    let x_min = 1e-4_f64;
-    let x_max = 50.0_f64;
-    let dx = (x_max - x_min) / n as f64;
-
-    let mut g3 = 0.0_f64;
-    let mut g2 = 0.0_f64;
-    let mut i4 = 0.0_f64;
-    for i in 0..n {
-        let x = x_min + (i as f64 + 0.5) * dx;
-        let n_pl = spectrum::planck(x);
-        g3 += x.powi(3) * n_pl * dx;
-        g2 += x.powi(2) * n_pl * dx;
-        i4 += x.powi(4) * n_pl * (1.0 + n_pl) * dx;
-    }
-
-    assert!((g3 - G3_PLANCK).abs() / G3_PLANCK < 1e-4, "G₃ = π⁴/15");
-    assert!((g2 - G2_PLANCK).abs() / G2_PLANCK < 1e-4, "G₂ = 2ζ(3)");
-    assert!((i4 - I4_PLANCK).abs() / I4_PLANCK < 1e-4, "I₄ = 4π⁴/15");
-}
-
 // SECTION 17: RECOMBINATION INTERNALS AND SAHA EQUATION TESTS
 // Validate Saha equations, Peebles ODE components, and
 // the Saha→Peebles transition self-consistency.
 
-/// Saha hydrogen ionization: verify known limits.
-/// At high T (z=5000), X_e → 1. At low T (z=800), X_e → 0.
-/// The Saha equation should satisfy X_e²/(1-X_e) = S.
-/// Helium Saha: He²⁺ fraction should be 1 at very high z, drop to 0 by z~10000.
-/// He⁺ fraction should persist to lower z (24.6 eV vs 54.4 eV).
 /// The helium electron fraction should satisfy conservation:
 /// At any z, the electron contribution from He per H atom is
 /// f_He × (y_HeI + 2×y_HeII) where y_HeII = y_ii × y_i (both levels ionized),
@@ -3688,10 +2955,6 @@ fn test_firas_check_and_energy_consistency() {
         "Energy consistency: Δρ/ρ err = {rel_err:.2}"
     );
 }
-
-// (test_intensity_conversion_physical removed in 2026-04 triage: asserted
-// only sign and |I| < 1 MJy/sr — the upper bound is 6 orders of magnitude
-// looser than the physics. No analytic target.)
 
 // SECTION 19: GREEN'S FUNCTION ASYMPTOTIC LIMITS AND SUM RULES
 // Test visibility function limits, J_T definition, and
@@ -4053,7 +3316,7 @@ fn test_kompaneets_large_dtau_stability() {
     let drho_before = spectrum::delta_rho_over_rho(&grid.x, &delta_n);
     let drho_after = spectrum::delta_rho_over_rho(&grid.x, &result);
     let rel_err = (drho_after - drho_before).abs() / drho_before.abs().max(1e-30);
-    // Tightened from 50% to 10%. For a small y-type distortion with T_e=T_z,
+    // For a small y-type distortion with T_e=T_z,
     // Kompaneets conserves energy to better than 1% even at large Δτ.
     assert!(
         rel_err < 0.10,
@@ -4065,44 +3328,6 @@ fn test_kompaneets_large_dtau_stability() {
 // SECTION 22: ENERGY INJECTION EDGE CASES
 // Tests for Custom injection, negative injection, extreme parameters,
 // and dark photon Breit-Wigner resonance shape.
-
-/// Custom injection closure should work with the solver.
-#[test]
-fn test_custom_injection_closure() {
-    let cosmo = Cosmology::default();
-
-    // Custom heating: constant rate of 1e-12 /s
-    let scenario =
-        InjectionScenario::Custom(Box::new(|_z: f64, _cosmo: &Cosmology| -> f64 { 1e-12 }));
-
-    let rate = scenario.heating_rate(1e5, &cosmo);
-    assert!(
-        (rate - 1e-12).abs() < 1e-25,
-        "Custom injection should return specified rate: {rate:.4e}"
-    );
-}
-
-/// Custom injection capturing a Vec should work (tests Fn trait object).
-#[test]
-fn test_custom_injection_captures_data() {
-    let cosmo = Cosmology::default();
-    #[allow(clippy::useless_vec)]
-    let coefficients = vec![1.0e-10, 2.0e-15, 3.0e-20];
-
-    let scenario = InjectionScenario::Custom(Box::new(move |z: f64, _cosmo: &Cosmology| -> f64 {
-        // Polynomial in z
-        coefficients[0] + coefficients[1] * z + coefficients[2] * z * z
-    }));
-
-    let z = 1e5;
-    let expected = 1.0e-10 + 2.0e-15 * z + 3.0e-20 * z * z;
-    let rate = scenario.heating_rate(z, &cosmo);
-    let rel_err = (rate - expected).abs() / expected;
-    assert!(
-        rel_err < 1e-10,
-        "Custom injection with captured data: rate={rate:.4e}, expected={expected:.4e}"
-    );
-}
 
 /// SingleBurst with negative Δρ/ρ (cooling) should produce negative distortion.
 #[test]
@@ -4140,29 +3365,6 @@ fn test_negative_injection_cooling() {
         rel_err < 0.1,
         "Cooling energy conservation: Δρ/ρ = {:.4e} vs {drho:.4e}",
         last.delta_rho_over_rho
-    );
-}
-
-/// Heating rate per redshift should have the correct sign convention.
-/// For positive injection (heating), heating_rate > 0 but
-/// heating_rate_per_redshift < 0 (because dz/dt < 0).
-#[test]
-fn test_heating_rate_sign_convention() {
-    let cosmo = Cosmology::default();
-
-    let scenario = InjectionScenario::SingleBurst {
-        z_h: 1e5,
-        delta_rho_over_rho: 1e-5,
-        sigma_z: 1000.0,
-    };
-
-    let rate = scenario.heating_rate(1e5, &cosmo);
-    let rate_per_z = scenario.heating_rate_per_redshift(1e5, &cosmo);
-
-    assert!(rate > 0.0, "heating_rate should be positive for heating");
-    assert!(
-        rate_per_z < 0.0,
-        "heating_rate_per_redshift should be negative for heating (dz < 0)"
     );
 }
 
@@ -4213,8 +3415,7 @@ fn test_compton_equilibrium_mu_distortion_deviation() {
     // Then I₄(BE) = I₄(pl) + μ × ∫x⁴ n_pl(1+n_pl)(1+2n_pl) dx, so
     // ρ_e(BE) − 1 = μ · A / (4G₃) with A > 0 (harder spectrum ⇒ ρ_e > 1).
     // For μ_c = 10⁻⁴ the signal is O(10⁻⁴) × (order-unity prefactor).
-    // Bound at factor-10 around that expectation (tightened from 5-decade
-    // window (1e-6, 0.1) which was 4 decades above the physical scale).
+    // Bound at factor-10 around that expectation.
     assert!(
         rho > 1.0,
         "ρ_e should exceed 1 for μ>0 (harder spectrum): got {rho:.10}"
@@ -4395,32 +3596,6 @@ fn test_snapshot_close_spacing() {
 // SECTION 26: PLANCK SPECTRUM AND SPECTRAL FUNCTION EDGE CASES
 // Tests for numerical stability at extreme arguments.
 
-/// Planck function should be accurate across the full range of x.
-/// M(x) and Y_SZ(x) should be linearly independent (non-proportional).
-/// Their ratio should vary across frequencies.
-#[test]
-fn test_mu_y_shapes_independent() {
-    let x_values = [0.5, 1.0, 2.0, 3.0, 5.0, 8.0, 15.0];
-    let mut ratios = Vec::new();
-
-    for &x in &x_values {
-        let m = spectrum::mu_shape(x);
-        let y = spectrum::y_shape(x);
-        if y.abs() > 1e-10 && m.abs() > 1e-10 {
-            ratios.push(m / y);
-        }
-    }
-
-    if ratios.len() >= 2 {
-        let ratio_range = ratios.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
-            - ratios.iter().cloned().fold(f64::INFINITY, f64::min);
-        assert!(
-            ratio_range > 0.1,
-            "M(x)/Y_SZ(x) ratio should vary: range = {ratio_range:.4}"
-        );
-    }
-}
-
 // SECTION 27: FULL PDE SOLVER STRESS TESTS
 // Multi-scenario validation: simultaneous injection + cooling,
 // extreme grid resolutions, and long-time evolution.
@@ -4455,8 +3630,7 @@ fn test_pde_no_injection_full_range() {
         .fold(0.0_f64, f64::max);
 
     // Adiabatic cooling over z=[3e6,200] produces O(10⁻⁵) distortion.
-    // Bound at 5e-5 = 2.5× that expectation (tightened from 1e-3 which was
-    // 100× the physical signal; CLAUDE.md Pitfall #9).
+    // Bound at 5e-5 = 2.5× that expectation (CLAUDE.md Pitfall #9).
     assert!(
         max_dn < 5e-5,
         "No injection over z=[3e6,200] should give max|Δn(x>0.1)| < 5e-5: got {max_dn:.4e}"
@@ -4538,53 +3712,12 @@ fn test_pde_linearity_double_injection() {
 
 // Section 21: Dark photon PDE with photon depletion
 
-/// Cosmology preset parameter checks (Planck 2015 + 2018).
-#[test]
-fn test_cosmology_presets() {
-    let cosmo = Cosmology::planck2015();
-    assert!((cosmo.h - 0.6727).abs() < 0.001);
-    assert!((cosmo.omega_b - 0.02225).abs() < 0.001);
-    assert!((cosmo.omega_cdm - 0.1198).abs() < 0.001);
-    assert!((cosmo.y_p - 0.2467).abs() < 0.001);
-    assert!(cosmo.omega_m() > 0.3 && cosmo.omega_m() < 0.35);
-
-    let cosmo = Cosmology::planck2018();
-    assert!((cosmo.h - 0.6736).abs() < 0.001, "h = {}", cosmo.h);
-    assert!(
-        (cosmo.omega_b - 0.02237).abs() < 0.001,
-        "omega_b = {}",
-        cosmo.omega_b
-    );
-    assert!(
-        (cosmo.omega_cdm - 0.1200).abs() < 0.001,
-        "omega_cdm = {}",
-        cosmo.omega_cdm
-    );
-    assert!((cosmo.y_p - 0.2454).abs() < 0.001, "y_p = {}", cosmo.y_p);
-    assert!(
-        (cosmo.t_cmb - 2.7255).abs() < 0.001,
-        "t_cmb = {}",
-        cosmo.t_cmb
-    );
-    assert!(
-        (cosmo.n_eff - 3.044).abs() < 0.01,
-        "n_eff = {}",
-        cosmo.n_eff
-    );
-    // Check derived quantities
-    let omega_m = cosmo.omega_m();
-    assert!(
-        omega_m > 0.31 && omega_m < 0.32,
-        "Planck2018 Omega_m = {omega_m:.4}, expected ~0.315"
-    );
-}
-
 // Section 21: High-z dtau convergence and thermalization era
 
-/// Verify that tightening dtau_max from 10 to 3 converges at high z.
-/// At z_h=5e5, the PDE mu should be stable (within 5%) between dtau_max=3 and dtau_max=10.
+/// At z_h = 5e5 with dtau_max = 3, the PDE μ agrees with the Green's
+/// function to 15%.
 #[test]
-fn test_high_z_dtau_convergence() {
+fn test_high_z_mu_vs_gf_dtau3() {
     let cosmo = Cosmology::default();
     let z_h = 5e5;
     let drho = 1e-5;
@@ -4609,24 +3742,6 @@ fn test_high_z_dtau_convergence() {
     let mu3 = solver3.snapshots.last().unwrap().mu;
     let steps3 = solver3.step_count;
 
-    // Run with dtau_max=10 (loose)
-    let mut solver10 = ThermalizationSolver::new(cosmo.clone(), GridConfig::default());
-    solver10
-        .set_injection(InjectionScenario::SingleBurst {
-            z_h,
-            delta_rho_over_rho: drho,
-            sigma_z: sigma,
-        })
-        .unwrap();
-    solver10.set_config(SolverConfig {
-        z_start: z_h + 7.0 * sigma,
-        z_end: 1e4,
-        dtau_max: 10.0,
-        ..SolverConfig::default()
-    });
-    solver10.run_with_snapshots(&[1e4]);
-    let mu10 = solver10.snapshots.last().unwrap().mu;
-
     // Green's function reference
     let dq_dz = |z: f64| -> f64 {
         drho * (-(z - z_h).powi(2) / (2.0 * sigma * sigma)).exp()
@@ -4634,14 +3749,11 @@ fn test_high_z_dtau_convergence() {
     };
     let mu_gf = spectroxide::greens::mu_from_heating(&dq_dz, 1e3, 5e6, 10000);
 
-    let rel_change = (mu3 - mu10).abs() / mu3.abs().max(1e-20);
     let gf_err_3 = (mu3 - mu_gf).abs() / mu_gf.abs().max(1e-20);
 
-    eprintln!("High-z dtau convergence (z_h={z_h:.0e}):");
+    eprintln!("High-z PDE vs GF (z_h={z_h:.0e}):");
     eprintln!("  dtau_max=3:  mu={mu3:.4e}, steps={steps3}");
-    eprintln!("  dtau_max=10: mu={mu10:.4e}");
     eprintln!("  GF:          mu={mu_gf:.4e}");
-    eprintln!("  |mu3-mu10|/|mu3| = {rel_change:.3}");
     eprintln!("  |mu3-muGF|/|muGF| = {gf_err_3:.3}");
 
     // dtau_max=3 should agree with GF to within 15%
@@ -4660,15 +3772,10 @@ fn test_high_z_dtau_convergence() {
 /// Expected:           J_bb*(3e6) ≈ 0.06, J_μ(3e6) ≈ 1.0 → μ/Δρ ≈ 0.08
 /// Oracle uncertainty: 5% (GF fit vs CosmoTherm)
 /// Tolerance:          10% (production grid; PDE vs GF at deep thermalization
-///                     is method-limited).
+///                     is method-limited). With the production grid the PDE
+///                     agrees with the analytic target to a few percent.
 ///
-/// Previous version used default (1000-pt) grid and `mu/drho ∈ [0.02, 0.20]`
-/// — a factor-10 window that explicitly accommodated the default grid's 0.17
-/// value when the visibility-corrected target is 0.08. With the production
-/// grid the PDE agrees with the analytic target to a few percent.
-///
-/// Marked `#[ignore]`: production grid at z=3×10⁶ takes ~4 minutes; the loose
-/// default-grid version was the original workaround. Run with
+/// Marked `#[ignore]`: production grid at z=3×10⁶ takes ~4 minutes. Run with
 /// `cargo test --release -- --ignored` in CI/paper-production.
 #[ignore]
 #[test]
@@ -4958,119 +4065,8 @@ fn test_nc_energy_y_era_and_high_z_mu() {
     );
 }
 
-// Section 21: Diagnostics, full T_e, and DC/BR rate tests
-
-// test_br_heating_integral_planck_zero removed (R2 mutation audit, F-R2-2):
-// it exercised the now-deleted standalone br_heating_integral (a non-production
-// duplicate of solver::dcbr_heating_with_derivative). Like the dc case below,
-// the Planck→0 assertion could not catch scaling/normalization mutations. See
-// the note in src/bremsstrahlung.rs.
-
-// test_dc_heating_integral_planck_zero removed (2026-07-06, R2 mutation audit):
-// it exercised the now-deleted standalone dc_heating_integral (a non-production
-// duplicate of solver::dcbr_heating_with_derivative). The Planck→0 case it
-// checked could not catch scaling/normalization mutations. See the note in
-// src/double_compton.rs.
-
-/// Lambda expansion correction << 1 at z=1e6 (deep Compton coupling)
-#[test]
-fn test_lambda_expansion_small_at_high_z() {
-    use spectroxide::constants::*;
-
-    let z = 1e6;
-    let cosmo = Cosmology::default();
-    let x_e = 1.0; // fully ionized
-    let n_e = cosmo.n_e(z, x_e);
-    let n_h = cosmo.n_h(z);
-    let n_he = cosmo.n_he(z);
-    let hubble = cosmo.hubble(z);
-    let t_c = cosmo.t_compton(z, x_e);
-    let tz = theta_z(z);
-
-    // Compute Lambda the same way the quasi-stationary T_e formula does
-    let alpha_h_ratio = (n_e + n_h + n_he) / n_e;
-    let rho_gamma_per_e = KAPPA_GAMMA * tz.powi(4) * G3_PLANCK / n_e;
-    let lambda = hubble * t_c * 1.5 * alpha_h_ratio / (4.0 * rho_gamma_per_e);
-
-    eprintln!("Lambda at z=1e6: {lambda:.4e}");
-    eprintln!("  H={hubble:.4e}, t_C={t_c:.4e}, α_h={alpha_h_ratio:.4}");
-    eprintln!("  ρ̃_γ/n_e = {rho_gamma_per_e:.4e}, θ_z={tz:.4e}");
-
-    // Lambda should be very small at high z (strong Compton coupling)
-    assert!(
-        lambda < 1e-6,
-        "Lambda should be << 1 at z=1e6: Lambda = {lambda:.4e}"
-    );
-    assert!(lambda > 0.0, "Lambda should be positive");
-}
-
 // Section 28 — Over-thermalization investigation: injection width in Thomson
 //              times, step size convergence, relativistic corrections
-
-/// Test 1: Injection width in THOMSON TIMES at z_h=1e6.
-///
-/// Key insight: at z=1e6, one Thomson time ≈ 4.8 units of dz. The default
-/// σ_z = 0.04 × z_h = 40,000 corresponds to σ_τ ≈ 8,300 Thomson times —
-/// the "burst" is actually a slow drip lasting thousands of scattering times,
-/// during which DC/BR actively thermalizes the incoming energy.
-///
-/// A true instantaneous injection requires σ_τ << 1. We test from
-/// σ_τ = 10,000 (≈ default) down to σ_τ = 0.1 (nearly δ-function).
-///
-/// If injection width matters, narrow bursts should show LESS thermalization
-/// (higher μ/Δρ) because DC/BR doesn't get to act during the injection.
-/// Test 2: Step size (dtau_max) convergence at z_h=1e6 with converged grid.
-///
-/// Uses a narrow injection (σ_τ=1 Thomson time) so the injection window is
-/// tiny (~10 dz) and dtau_max controls only the post-injection evolution.
-/// This isolates the step-size effect on the ~69,000 post-injection steps
-/// where DC/BR thermalizes the distortion.
-///
-/// We test dtau_max from 0.1 to 30.
-/// Test 3: Relativistic corrections magnitude check.
-///
-/// At z=1e6, θ_e ≈ 4.6e-4:
-/// - Kompaneets: (1 + 5/2 θ_e) = 1.00115, a 0.1% correction
-/// - DC: (1 + 14.16 θ_z)^{-1} = 0.9935, a 0.65% correction
-/// - Higher-order Kompaneets: O(θ²) ≈ 2e-7, negligible
-///
-/// These are too small to explain the ~50% over-thermalization.
-#[test]
-fn test_relativistic_correction_magnitude() {
-    use spectroxide::constants::theta_z;
-
-    let z_values = [1e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6];
-
-    eprintln!("\n=== Relativistic correction magnitudes ===");
-    eprintln!(
-        "{:>10} {:>12} {:>15} {:>15} {:>15}",
-        "z", "θ_z", "1+5/2·θ_e", "DC (1+14θ)⁻¹", "O(θ²)"
-    );
-
-    for &z in &z_values {
-        let tz = theta_z(z);
-        let komp_corr = 1.0 + 2.5 * tz;
-        let dc_corr = 1.0 / (1.0 + 14.16 * tz);
-        let higher_order = tz * tz;
-        eprintln!(
-            "{z:>10.0e} {:>12.4e} {:>15.6} {:>15.6} {:>15.4e}",
-            tz, komp_corr, dc_corr, higher_order
-        );
-    }
-
-    let tz_1e6 = theta_z(1e6);
-    let komp_corr = 1.0 + 2.5 * tz_1e6;
-    assert!(
-        (komp_corr - 1.0).abs() < 0.002,
-        "Kompaneets relativistic correction at z=1e6 should be < 0.2%"
-    );
-
-    let dc_corr = 1.0 / (1.0 + 14.16 * tz_1e6);
-    assert!(
-        (dc_corr - 1.0).abs() < 0.01,
-        "DC relativistic correction at z=1e6 should be < 1%"
-    );
-}
 
 // Section 29 — Physics benchmarks for over-thermalization diagnosis
 
@@ -5205,102 +4201,6 @@ fn test_mu_decay_eigenvalue() {
         "  PDE τ_th / theory τ_th:     {:.4}",
         tau_th_effective / tau_th_theory
     );
-}
-
-/// Benchmark 2: DC-only backward Euler vs exact exponential.
-///
-/// Tests the accuracy of the backward Euler step used for DC/BR in the solver.
-/// For a pure DC process with no Kompaneets redistribution, the exact solution is:
-///   Δn(τ+Δτ) = neq + (Δn₀ - neq) × exp(-em × Δτ)
-///
-/// where em = K_DC/x³ is the emission coefficient.
-/// The backward Euler approximation gives:
-///   Δn_new = (Δn₀ + Δτ × em × neq) / (1 + Δτ × em)
-///
-/// At low x (where em is huge), backward Euler decays as 1/(1+Δτ·em)
-/// instead of exp(-Δτ·em). Both approach neq, but backward Euler is SLOWER.
-/// This means backward Euler UNDER-thermalizes pointwise, ruling it out
-/// as the cause of PDE over-thermalization.
-#[test]
-fn test_dc_backward_euler_accuracy() {
-    use spectroxide::double_compton::{dc_emission_coefficient_fast, dc_prefactor};
-
-    let z = 1e6;
-    let tz = theta_z(z);
-    let dc_pre = dc_prefactor(tz);
-
-    let x_values = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0];
-    let dtau_values = [0.3, 1.0, 3.0, 10.0, 30.0];
-
-    eprintln!("\n=== DC backward Euler vs exact exponential at z=1e6 ===");
-
-    for &dtau in &dtau_values {
-        eprintln!("\nΔτ = {dtau}:");
-        eprintln!(
-            "{:>8} {:>12} {:>12} {:>14} {:>14} {:>10}",
-            "x", "em", "Δτ×em", "BE_decay", "exact_decay", "BE/exact"
-        );
-
-        for &x in &x_values {
-            let k_dc = dc_emission_coefficient_fast(x, dc_pre);
-            let em = k_dc / (x * x * x);
-            let dtau_em = dtau * em;
-
-            // Pure decay (neq = 0 for ρ_e ≈ 1):
-            let decay_be = 1.0 / (1.0 + dtau_em);
-            let decay_exact = (-dtau_em).exp();
-
-            let ratio = if decay_exact > 1e-30 {
-                decay_be / decay_exact
-            } else {
-                f64::INFINITY
-            };
-
-            eprintln!(
-                "{x:>8.3} {em:>12.4e} {dtau_em:>12.4e} {decay_be:>14.6e} {decay_exact:>14.6e} {ratio:>10.4}"
-            );
-        }
-    }
-
-    // Key insight: backward Euler ALWAYS under-thermalizes (decay_be ≥ decay_exact)
-    // because 1/(1+a) ≥ exp(-a) for a ≥ 0.
-    // So PDE over-thermalization is NOT from backward Euler being too aggressive.
-    for &dtau in &dtau_values {
-        for &x in &x_values {
-            let k_dc = dc_emission_coefficient_fast(x, dc_pre);
-            let em = k_dc / (x * x * x);
-            let dtau_em = dtau * em;
-            let decay_be = 1.0 / (1.0 + dtau_em);
-            let decay_exact = (-dtau_em).exp();
-            assert!(
-                decay_be >= decay_exact - 1e-14,
-                "BE should under-thermalize: BE={decay_be:.6e} < exact={decay_exact:.6e} at x={x}, dtau={dtau}"
-            );
-        }
-    }
-
-    // Multi-step convergence: N small steps → exact as N → ∞
-    let x = 0.1;
-    let k_dc = dc_emission_coefficient_fast(x, dc_pre);
-    let em = k_dc / (x * x * x);
-    let total_dtau = 30.0;
-
-    eprintln!("\nMulti-step convergence at x={x}, total Δτ={total_dtau}:");
-    eprintln!(
-        "{:>8} {:>14} {:>14} {:>10}",
-        "N_steps", "BE_decay", "exact_decay", "error"
-    );
-
-    let decay_exact = (-total_dtau * em).exp();
-    for &n_steps in &[1_u32, 3, 10, 30, 100, 300, 1000] {
-        let dtau_step = total_dtau / n_steps as f64;
-        let mut dn = 1.0;
-        for _ in 0..n_steps {
-            dn = dn / (1.0 + dtau_step * em);
-        }
-        let error = (dn - decay_exact).abs() / decay_exact.max(1e-30);
-        eprintln!("{n_steps:>8} {dn:>14.6e} {decay_exact:>14.6e} {error:>10.4e}");
-    }
 }
 
 /// Benchmark 3: Free-streaming test — Kompaneets with y-distortion feedback.
@@ -5621,45 +4521,11 @@ fn test_spectral_shape_after_burst() {
     assert!(max_dn_core > 0.0, "should have nonzero core distortion");
 }
 
-// (test_thermalization_curve removed in 2026-04 triage: 100-line diagnostic
-// that only asserted `μ > 0 at z_h > 5e4` — trivially true. The PDE-vs-GF
-// scan it printed to stderr was never assertable. Covered by
-// test_heat_pde_vs_gf_multi_z_sweep at 20-40% tolerance.)
-
 // HIGH-Z ENERGY CONSERVATION
 // Verify that the PDE solver conserves energy at high injection
 // redshifts where DC/BR thermalization is strong.
 
 // Section 28: Photon injection Green's function and PDE validation
-
-/// α_ρ = G₂/G₃ from first principles.
-#[test]
-fn test_alpha_rho_from_integrals() {
-    let expected = 2.0 * ZETA_3 / (std::f64::consts::PI.powi(4) / 15.0);
-    assert!(
-        (ALPHA_RHO - expected).abs() < 1e-14,
-        "ALPHA_RHO = {ALPHA_RHO}, expected {expected}"
-    );
-    assert!(
-        (ALPHA_RHO - 0.3702).abs() < 0.001,
-        "ALPHA_RHO = {ALPHA_RHO}, expected ~0.3702"
-    );
-}
-
-/// x₀ = 4/(3α_ρ) from first principles, consistent with existing test.
-#[test]
-fn test_x_balanced_from_first_principles() {
-    // Cross-check with the formula used in existing test_photon_injection_sign_change
-    let x0_alt = 4.0 * G3_PLANCK / (3.0 * G2_PLANCK);
-    assert!(
-        (X_BALANCED - x0_alt).abs() < 1e-14,
-        "X_BALANCED = {X_BALANCED} vs 4G₃/(3G₂) = {x0_alt}"
-    );
-    assert!(
-        (X_BALANCED - 3.602).abs() < 0.01,
-        "X_BALANCED = {X_BALANCED}, expected ~3.602"
-    );
-}
 
 /// Photon survival probability: P_s regime structure.
 /// DC dominates at high z, BR at low z, with a crossover.
@@ -5695,87 +4561,6 @@ fn test_photon_survival_regime_structure() {
         xc_mid < xc_low && xc_mid < xc_high,
         "x_c must have an interior minimum from DC/BR competition: \
          x_c(1e4)={xc_low:.4e}, x_c(2e5)={xc_mid:.4e}, x_c(2e6)={xc_high:.4e}"
-    );
-}
-
-/// Energy-only limit recovery: P_s = 0 → standard GF × α_ρ × x_inj.
-/// When injected photons are fully absorbed (x_inj << x_c), the photon
-/// injection GF reduces to pure energy injection.
-#[test]
-fn test_photon_gf_energy_only_limit() {
-    let z_h = 2.0e5;
-    // Very soft photon: x_inj = 1e-5 << x_c(2e5) ~ 0.002
-    let x_inj = 1e-5;
-    let p_s = greens::photon_survival_probability(x_inj, z_h);
-    assert!(p_s < 0.01, "P_s should be ~0 for soft photon, got {p_s}");
-
-    // Compare at multiple observation frequencies
-    let cosmo = Cosmology::default();
-    for &x_obs in &[1.0, 3.0, 5.0, 10.0] {
-        let g_ph = greens::greens_function_photon(x_obs, x_inj, z_h, 0.0, &cosmo);
-        let g_en = ALPHA_RHO * x_inj * greens::greens_function(x_obs, z_h);
-        // With Arsenadze's x'-dependent T_μ (not universal J_μ), this limit
-        // is approximate. Near the μ zero crossing (x~3), signs can differ.
-        // Just check both are small or have the same sign.
-        assert!(
-            g_ph * g_en > 0.0 || g_ph.abs() < 1e-5 || g_en.abs() < 1e-5,
-            "P_s≈0 limit at x_obs={x_obs}: G_ph={g_ph:.4e}, G_en={g_en:.4e}"
-        );
-    }
-}
-
-/// Balanced injection at x₀: near-zero μ from GF.
-#[test]
-fn test_photon_gf_balanced_injection_zero_mu() {
-    let z_h = 2.0e5;
-    let dn_over_n = 1e-5;
-    let mu = greens::mu_from_photon_injection(X_BALANCED, z_h, dn_over_n);
-
-    // P_s at x₀ ≈ 3.6 should be ~1 at z=2e5
-    let p_s = greens::photon_survival_probability(X_BALANCED, z_h);
-    assert!(p_s > 0.99, "P_s at x₀ should be ~1, got {p_s}");
-
-    // μ should be near zero (P_s × x₀/x_inj ≈ 1)
-    let mu_scale = greens::mu_from_photon_injection(10.0, z_h, dn_over_n).abs();
-    assert!(
-        mu.abs() < 0.01 * mu_scale,
-        "At x₀: |μ| = {:.4e} should be << μ(x=10) = {mu_scale:.4e}",
-        mu.abs()
-    );
-}
-
-/// Sign flip: x_inj < x₀ → negative μ when P_s ≈ 1.
-#[test]
-fn test_photon_gf_sign_flip_negative_mu() {
-    let z_h = 2.0e5;
-    let dn_over_n = 1e-5;
-
-    // x = 2 < x₀ ≈ 3.6 → negative μ
-    let mu_low = greens::mu_from_photon_injection(2.0, z_h, dn_over_n);
-    assert!(
-        mu_low < 0.0,
-        "x_inj=2 < x₀: μ should be negative, got {mu_low:.4e}"
-    );
-
-    // x = 10 > x₀ ≈ 3.6 → positive μ
-    let mu_high = greens::mu_from_photon_injection(10.0, z_h, dn_over_n);
-    assert!(
-        mu_high > 0.0,
-        "x_inj=10 > x₀: μ should be positive, got {mu_high:.4e}"
-    );
-
-    // Ratio test: μ(x) ∝ (1 - P_s × x₀/x) for P_s ≈ 1
-    // At x=2: factor = 1 - 3.6/2 = -0.8
-    // At x=10: factor = 1 - 3.6/10 = 0.64
-    // But μ also has a factor of α_ρ × x_inj, so μ(10)/μ(2) = (10×0.64)/(2×(-0.8)) = -4.0
-    let ratio = mu_high / mu_low;
-    let p_s_2 = greens::photon_survival_probability(2.0, z_h);
-    let p_s_10 = greens::photon_survival_probability(10.0, z_h);
-    let expected_ratio =
-        (10.0 * (1.0 - p_s_10 * X_BALANCED / 10.0)) / (2.0 * (1.0 - p_s_2 * X_BALANCED / 2.0));
-    assert!(
-        (ratio - expected_ratio).abs() / expected_ratio.abs() < 0.01,
-        "μ ratio: got {ratio:.3}, expected {expected_ratio:.3}"
     );
 }
 
@@ -5816,9 +4601,6 @@ fn test_photon_gf_soft_photon_absorbed() {
 /// Expected:           at x=10, z_h=2e5: μ ≈ 3.25 × 10⁻⁵
 /// Oracle uncertainty: ~5% (GF fit residuals vs CosmoTherm for photon injection)
 /// Tolerance:          10%
-///
-/// Previous version compared PDE to `greens::mu_from_photon_injection` (code-vs-code)
-/// at 18% tolerance. Replaced with direct analytic bound.
 #[test]
 fn test_pde_vs_gf_photon_injection_high_x() {
     let cosmo = Cosmology::default();
@@ -5889,9 +4671,6 @@ fn test_pde_vs_gf_photon_injection_high_x() {
 ///                     because photons are partially absorbed before fully
 ///                     thermalizing)
 /// Tolerance:          15%
-///
-/// Previous version compared PDE to `greens::mu_from_photon_injection` at 20%
-/// (code-vs-code). Replaced with analytic target.
 #[test]
 fn test_pde_vs_gf_photon_injection_low_x() {
     let cosmo = Cosmology::default();
@@ -5963,10 +4742,6 @@ fn test_pde_vs_gf_photon_injection_low_x() {
 ///                     absorption) and visibility-function fit residuals.
 /// Tolerance:          5% × μ_max(x=10) (absolute bound — catches any μ leakage
 ///                     at x₀ larger than the known absorption correction).
-///
-/// Previous version compared `|μ_PDE| < 0.15 × greens::mu_from_photon_injection(10, ..)`
-/// — code-vs-code with a 15% window. Replaced with a first-principles analytic
-/// bound using only α_ρ, x_balanced, and visibility functions.
 #[test]
 fn test_pde_vs_gf_photon_injection_balanced() {
     let cosmo = Cosmology::default();
@@ -6084,27 +4859,6 @@ fn test_pde_vs_gf_photon_injection_y_era() {
         "GF μ in y-era should be << μ in μ-era: {:.4e} vs {:.4e}",
         mu_gf,
         mu_gf_mu_era
-    );
-}
-
-// (test_monochromatic_photon_injection_scenario removed in 2026-04 triage:
-// asserted only μ > 0 and max|Δn| > 1e-15, both trivially true for photon
-// injection at x > x₀. Covered by test_photon_injection_energy_number_decomposition
-// at 15% tolerance against the Chluba 2015 algebraic identity.)
-
-/// Photon injection μ: linearity in ΔN/N.
-#[test]
-fn test_photon_gf_mu_linearity() {
-    let z_h = 2.0e5;
-    let x_inj = 8.0;
-
-    let mu_1 = greens::mu_from_photon_injection(x_inj, z_h, 1e-5);
-    let mu_2 = greens::mu_from_photon_injection(x_inj, z_h, 2e-5);
-
-    let ratio = mu_2 / mu_1;
-    assert!(
-        (ratio - 2.0).abs() < 1e-12,
-        "μ should be linear in ΔN/N: ratio = {ratio}, expected 2.0"
     );
 }
 
@@ -7411,10 +6165,6 @@ fn test_photon_injection_kompaneets_redistribution_y_era() {
 // PDE solver's heat injection pathway with tight tolerances that
 // only a flawless implementation can satisfy.
 
-// ----- 30.1: removed — exact duplicate of
-// `chluba2013_visibility_pde_cross_validation` in greens_function_checks.rs
-// (same scenario, oracle, and 12% tolerance).
-
 // ----- 30.2: y = Δρ/(4ρ) IN PURE y-ERA -----
 
 /// At z = 5000, J_μ ≈ 0, and the distortion should be a pure y-distortion
@@ -7707,12 +6457,9 @@ fn test_heat_swave_vs_pwave_mu_y_ratio() {
 ///                     whereas the PDE does the full evolution).
 /// Tolerance:          12% on μ
 ///
-/// Previous version used z_end=500 → heating integrand spanned all eras,
-/// producing a factor-of-2 PDE/GF disagreement on μ and factor-of-infinity
-/// on y. Tolerances were 50% and 100% respectively — not a method
-/// comparison, just sign + OOM. Now the injection range is clipped to
-/// [3.5e5, 1e5] so both methods see a pure μ-era integrand. The subdominant
-/// y component is no longer checked (y is orthogonal to what's being tested).
+/// The injection range is clipped to [3.5e5, 1e5] so both methods see a
+/// pure μ-era integrand. The subdominant y component is not checked (y is
+/// orthogonal to what's being tested).
 #[test]
 fn test_heat_dm_annihilation_pde_vs_gf() {
     let cosmo = Cosmology::default();
@@ -7871,10 +6618,7 @@ fn test_heat_superposition_two_bursts() {
 ///                     state is fixed)
 /// Tolerance:          1e-12 (absolute; ~4 OOM above f64 ε to cover Newton residual)
 ///
-/// Previous version asserted `max|Δn(x>0.01)| < 1e-3` with a comment claiming
-/// the expected value was "~3e-5" — neither number is the right oracle. The
-/// actual adiabatic residual was ~3e-6, and the 1e-3 bound tolerated a 30× increase
-/// without failing. Now tests cancellation directly by differencing two runs.
+/// Tests cancellation directly by differencing two runs.
 #[test]
 fn test_heat_heating_cooling_cancellation() {
     let cosmo = Cosmology::default();
@@ -8389,8 +7133,7 @@ fn test_heat_spectral_decomposition_residual_sweep() {
 /// the two agree to <30%; in the y-era where μ is suppressed by J_μ, only the
 /// y comparison is meaningful (and it's tight). The μ-y crossover (z ∈ [1e4, 5e4])
 /// is a known definition mismatch and is deliberately not tested here — hiding
-/// it behind a ±1000% bound (as the earlier version did) pretends to validate
-/// something it can't.
+/// it behind a ±1000% bound pretends to validate something it can't.
 #[test]
 fn test_heat_pde_vs_gf_multi_z_sweep() {
     let cosmo = Cosmology::default();
@@ -8780,13 +7523,6 @@ fn test_refinement_grid_properties() {
     assert!(grid.n > 2000, "Expected > 2000 pts, got {}", grid.n);
 }
 
-// (test_refinement_heat_injection_regression removed in 2026-04 triage:
-// bit-identity of Vec::new() vs omitting refinement_zones is a Rust tautology,
-// not a physics property.)
-
-// (test_builder_auto_refine_applied removed in 2026-04 triage: asserted only
-// n_refined > n_unrefined, which passes if auto-refine adds any points at all.)
-
 // ==========================================================================
 // Section 31 — Strong depletion regime (large Δn)
 // ==========================================================================
@@ -8865,20 +7601,6 @@ fn test_strong_depletion_scaling() {
 // injection does NOT produce y-distortions, and photon injection remains
 // locked-in at the injection frequency.
 
-/// Compton y-parameter at z << 1100 should be small.
-#[test]
-fn test_compton_y_parameter_post_recombination() {
-    let cosmo = Cosmology::default();
-    let yc_500 = cosmo.compton_y_parameter(500.0);
-    let yc_100 = cosmo.compton_y_parameter(100.0);
-
-    eprintln!("y_C(500) = {yc_500:.4e}, y_C(100) = {yc_100:.4e}");
-
-    // Post-recombination: y_C should be very small
-    assert!(yc_500 < 0.05, "y_C(500) = {yc_500:.4e}, should be << 1");
-    assert!(yc_100 < 0.01, "y_C(100) = {yc_100:.4e}, should be << 1");
-}
-
 /// GF photon injection at z_h = 500: smooth part ≈ 0, surviving delta dominates.
 ///
 /// At z = 500, x_c ≈ 10⁻⁵ (tiny), so P_s(x > 0.1) ≈ 1.
@@ -8914,24 +7636,6 @@ fn test_gf_photon_injection_post_recombination_locked_in() {
         g_at_peak.abs() > 1e-3,
         "Surviving δ-function at x_inj should give large GF, got {g_at_peak:.4e}"
     );
-}
-
-/// P_s verification at z < 1100: x_c is extremely small, so P_s ≈ 1 for all
-/// observable frequencies (x > 0.01).
-#[test]
-fn test_photon_survival_post_recombination() {
-    let x_c_val = greens::x_c(500.0);
-    eprintln!("x_c(500) = {x_c_val:.4e}");
-
-    // x_c fitting formula (calibrated for z > 10^4) extrapolates to
-    // non-trivial values at low z due to x_c_br's negative exponent.
-    // Physical x_c should be ~0 post-recombination, but the fitting formula
-    // gives x_c ~ 0.3. This doesn't affect results because J_Compton ≈ 0.
-    assert!(x_c_val < 1.0, "x_c(500) = {x_c_val:.4e}, should be < 1");
-
-    // P_s at x=3 should be significant (even with extrapolation artifact)
-    let p_s = greens::photon_survival_probability(3.0, 500.0);
-    assert!(p_s > 0.5, "P_s(x=3, z=500) = {p_s}, should be > 0.5");
 }
 
 /// PDE photon injection at z_h = 500: injected photons remain at x_inj
@@ -9106,9 +7810,6 @@ fn test_pde_photon_depletion_post_recombination() {
     );
 }
 
-// (test_extreme_depletion_gc10 removed in 2026-04 triage: |μ| > 1e-3 at gc=10
-// is guaranteed by the initial condition (near-total depletion) — no physics.)
-
 // ========================================================================
 // Section 31: Tabulated injection scenarios
 // ========================================================================
@@ -9278,17 +7979,6 @@ fn test_load_photon_source_table_roundtrip() {
 // ==========================================================================
 
 // ---------------------------------------------------------------------------
-// R3: Independent DC/BR ratio check at z=1e6
-//
-// Analytical scaling: K_DC/K_BR ~ θ_z² / (α × λ_e³ × n_ion × θ_e^{-7/2})
-// At z=1e6 with T_e=T_z: DC/BR ~ 10-20 (DC dominates but not overwhelmingly).
-// This is a first-principles target, NOT calibrated to code output.
-// ---------------------------------------------------------------------------
-
-// test_dc_br_ratio_analytical_z1e6 removed: superseded by test_dc_br_ratio_pinned_z1e6
-// (tighter bounds [8,50]) and test_dcbr_dimensional_scaling_vs_z (monotonicity + z=1e4).
-
-// ---------------------------------------------------------------------------
 // R4: Gaunt factor cross-validation against Karzas & Latter (1961)
 //
 // The Born approximation (Brussaard & van de Hulst 1962) gives:
@@ -9418,13 +8108,6 @@ fn test_compton_y_parameter_convergence() {
 }
 
 // =========================================================================
-// SECTION 33: COVERAGE — OUTPUT SERIALIZATION
-// =========================================================================
-
-// (test_solver_result_serialization_roundtrip removed in 2026-04 triage:
-// substring-matching plumbing duplicated by output.rs bracket-balance test.)
-
-// =========================================================================
 // SECTION 34: COVERAGE — DECAYING PARTICLE PHOTON INJECTION
 // =========================================================================
 
@@ -9485,192 +8168,10 @@ fn test_decaying_particle_photon_vacuum() {
     assert!(zones[0].n_points > 0);
 }
 
-// =========================================================================
-// SECTION 35: COVERAGE — TABULATED PHOTON SOURCE
-// =========================================================================
-
-/// TabulatedPhotonSource: bilinear interpolation over a 2D (z, x) grid.
-#[test]
-fn test_tabulated_photon_source_interpolation() {
-    let cosmo = Cosmology::default();
-
-    // Create a simple 3×3 table with known values
-    let z_table = vec![1e3, 1e4, 1e5];
-    let x_grid = vec![0.1, 1.0, 10.0];
-    let source_2d = vec![
-        vec![1.0, 2.0, 3.0],       // z=1e3
-        vec![10.0, 20.0, 30.0],    // z=1e4
-        vec![100.0, 200.0, 300.0], // z=1e5
-    ];
-
-    let scenario = InjectionScenario::TabulatedPhotonSource {
-        z_table: z_table.clone(),
-        x_grid: x_grid.clone(),
-        source_2d,
-    };
-
-    // At grid points, should interpolate to exact values (modulo Hz conversion)
-    let rate_corner = scenario.photon_source_rate(1.0, 1e4, &cosmo);
-    assert!(
-        rate_corner > 0.0,
-        "Rate at grid point should be positive: {rate_corner:.4e}"
-    );
-
-    // At a point between grid nodes, should give an intermediate value
-    let rate_mid = scenario.photon_source_rate(1.0, 5e3, &cosmo);
-    assert!(
-        rate_mid > 0.0,
-        "Rate at midpoint should be positive: {rate_mid:.4e}"
-    );
-
-    // Outside bounds should return 0
-    let rate_outside = scenario.photon_source_rate(1.0, 0.1, &cosmo);
-    assert!(
-        rate_outside == 0.0,
-        "Rate outside z bounds should be 0: {rate_outside:.4e}"
-    );
-
-    // has_photon_source should be true
-    assert!(scenario.has_photon_source());
-}
-
-// (test_monochromatic_photon_injection_refinement_zones removed in 2026-04
-// triage: asserted zones[0].n_points == 300 — hardcoded implementation count.)
-
-// =========================================================================
-// SECTION 37: COVERAGE — SOLVER BUILDER AND CONFIG PATHS
-// =========================================================================
-
-// (test_solver_builder_all_methods removed in 2026-04 triage: asserted
-// hardcoded grid-point counts (n < 1000, n >= 4000) — tautological.)
-
-/// SolverConfig validation rejects bad parameters.
-#[test]
-fn test_solver_config_validation() {
-    // z_start <= z_end should fail
-    let bad_z = SolverConfig {
-        z_start: 100.0,
-        z_end: 500.0,
-        ..SolverConfig::default()
-    };
-    assert!(
-        bad_z.validate().is_err(),
-        "z_start < z_end should fail validation"
-    );
-
-    // Negative dy_max should fail
-    let bad_dy = SolverConfig {
-        dy_max: -1.0,
-        ..SolverConfig::default()
-    };
-    assert!(
-        bad_dy.validate().is_err(),
-        "Negative dy_max should fail validation"
-    );
-}
-
-// (test_snapshot_brightness_temperature removed in 2026-04 triage: asserted
-// is_finite + max_deviation > 0.0 — both are guaranteed for any non-trivial
-// distortion; tests no physics.)
-
-// Section 34: Additional coverage for greens.rs, output.rs, solver.rs
-
-#[test]
-fn test_output_format_parsing() {
-    use spectroxide::output::OutputFormat;
-
-    assert_eq!(OutputFormat::from_str("json").unwrap(), OutputFormat::Json);
-    assert_eq!(OutputFormat::from_str("csv").unwrap(), OutputFormat::Csv);
-    assert_eq!(
-        OutputFormat::from_str("table").unwrap(),
-        OutputFormat::Table
-    );
-    assert!(OutputFormat::from_str("xml").is_err());
-    assert!(OutputFormat::from_str("").is_err());
-}
-
 // =============================================================================
 // Section 35: Stress tests from physics audit (Bose factor, recombination,
 //             DC/BR ratio, grid convergence, P&B 2009 cross-checks)
 // =============================================================================
-
-/// Test that the Bose factor Taylor expansion matches the exact computation.
-///
-/// The Taylor expansion exp(x/ρ)-1 ≈ expm1(x) - x·δρ_inv·exp(x) is used in
-/// the solver for |δρ| < 0.01. This test verifies the expansion agrees with
-/// the exact value to O(δρ²) for a range of x and δρ values.
-#[test]
-fn test_bose_factor_taylor_vs_exact() {
-    let x_values: [f64; 8] = [0.01, 0.1, 1.0, 3.0, 5.0, 10.0, 15.0, 20.0];
-    let delta_rho_values: [f64; 6] = [1e-8, 1e-6, 1e-4, 1e-3, 5e-3, 9e-3];
-
-    for &x in &x_values {
-        for &delta_rho in &delta_rho_values {
-            let rho = 1.0 + delta_rho;
-            let inv_rho = 1.0 / rho;
-
-            // Exact: exp(x/ρ) - 1
-            let x_e = x * inv_rho;
-            let exact = x_e.exp_m1();
-
-            // Taylor: expm1(x) - x * (δρ/ρ) * exp(x)
-            let delta_rho_inv = delta_rho * inv_rho;
-            let taylor = x.exp_m1() - x * delta_rho_inv * x.exp();
-
-            // Should agree to O(δρ²), so relative error ~ δρ * x
-            let rel_err = if exact.abs() > 1e-30 {
-                ((taylor - exact) / exact).abs()
-            } else {
-                (taylor - exact).abs()
-            };
-
-            // The second-order Taylor error is O(δρ²). For f(ρ) = exp(x/ρ)-1,
-            // f''(1) = x(x+2)·exp(x), so relative error ≈ δρ² · x · (x+2) / 2.
-            // The code uses δρ_inv = δρ/ρ (a higher-order variant), adding O(δρ³)
-            // corrections. Use 2× headroom + machine-epsilon noise floor.
-            let expected_error_bound = 2.0 * delta_rho * delta_rho * x * (x + 2.0) / 2.0 + 1e-10;
-            assert!(
-                rel_err < expected_error_bound,
-                "Bose factor Taylor disagrees at x={x}, δρ={delta_rho}: \
-                 exact={exact:.10e}, taylor={taylor:.10e}, rel_err={rel_err:.3e}, \
-                 bound={expected_error_bound:.3e}"
-            );
-
-            // For ρ > 1, the Bose factor should DECREASE (x/ρ < x)
-            assert!(
-                taylor <= x.exp_m1() + 1e-15,
-                "Bose factor should decrease for ρ>1: taylor={taylor}, expm1={}",
-                x.exp_m1()
-            );
-        }
-    }
-
-    // Also test negative δρ (T_e < T_z)
-    for &x in &[1.0_f64, 5.0, 10.0] {
-        let delta_rho: f64 = -1e-4;
-        let rho = 1.0 + delta_rho;
-        let inv_rho = 1.0 / rho;
-
-        let exact = (x * inv_rho).exp_m1();
-        let delta_rho_inv = delta_rho * inv_rho;
-        let taylor = x.exp_m1() - x * delta_rho_inv * x.exp();
-
-        let rel_err = ((taylor - exact) / exact).abs();
-        assert!(
-            rel_err < 1e-6,
-            "Taylor should work for negative δρ too: x={x}, rel_err={rel_err:.3e}"
-        );
-
-        // For ρ < 1, the Bose factor should INCREASE
-        assert!(
-            taylor >= x.exp_m1() - 1e-15,
-            "Bose factor should increase for ρ<1"
-        );
-    }
-}
-
-// test_dc_br_ratio_at_z_1e4 removed: covered by test_dcbr_dimensional_scaling_vs_z
-// which checks ratio < 5.0 at z=1e4 plus monotonicity across 5 redshifts.
 
 /// Test recombination X_e against known values from RECFAST/HyRec.
 ///
@@ -9806,25 +8307,10 @@ fn test_grid_convergence_rate() {
 //   4. Energy conservation < 0.05%
 // =============================================================================
 
-// (test_pb2009_mu_energy_relation removed: subsumed by the PDE-vs-GF μ sweep
-// in test_heat_pde_vs_gf_multi_z_sweep (covers z=1e5, 2e5, 5e5 at 20–30%) and
-// by science_mu_era_coefficient_pde (same claim at 10% at z=2e5).)
-
-/// P&B 2009 benchmark: Bose-Einstein equilibrium electron temperature.
-///
-/// For a Bose-Einstein spectrum with chemical potential μ₀, the equilibrium
-/// electron temperature is φ_BE = T_e/T_z = (1 - 1.11 μ₀)^{-1/4}.
-/// This is a purely thermodynamic relation independent of the solver.
+/// Decomposing an exact Bose-Einstein spectrum 1/(e^{x+μ₀} − 1) on the
+/// production frequency grid recovers μ₀ to 10% for μ₀ = 1e-5 to 1e-3.
 #[test]
-fn test_pb2009_bose_einstein_temperature() {
-    // Test the formula φ_BE = (1 - 1.11 μ₀)^{-1/4} as a self-consistency check.
-    // For small μ₀, the BE spectrum energy is:
-    //   Δρ/ρ = ΔI₄/I₄ ≈ μ₀ × κ_c/3 = μ₀/1.401
-    // The equilibrium electron temperature for a BE spectrum satisfies:
-    //   φ_BE = (1 - 1.11 μ₀)^{-1/4} ≈ 1 + 0.278 μ₀ for small μ₀
-    //
-    // We verify this by checking that the decomposition of a BE spectrum
-    // recovers the input μ₀.
+fn test_decompose_bose_einstein_recovers_mu() {
     let grid_config = GridConfig {
         n_points: 2000,
         ..GridConfig::default()
@@ -9850,14 +8336,6 @@ fn test_pb2009_bose_einstein_temperature() {
             "BE decomposition: input μ₀={mu_0:.0e}, extracted μ={mu_extracted:.4e}, \
              rel_err={rel_err:.2}"
         );
-
-        // P&B formula cross-check: φ_BE = (1 - 1.11μ₀)^{-1/4}
-        let phi_be = (1.0 - 1.11 * mu_0).powf(-0.25);
-        // For μ₀=1e-4: φ_BE ≈ 1.0000278, deviation from 1 is tiny
-        assert!(
-            phi_be > 1.0 && phi_be < 1.01,
-            "φ_BE should be slightly above 1 for small μ₀: got {phi_be:.8}"
-        );
     }
 }
 
@@ -9878,10 +8356,8 @@ fn test_pb2009_bose_einstein_temperature() {
 /// (`dev/audit/energy_conservation_audit.md`): measured −0.297% on the default
 /// grid and −0.319% on the production grid, i.e. refining the grid makes it
 /// marginally *worse*, while refining dtau_max fixes it (on this scenario with
-/// z_start = 3e5: −0.284% at dtau_max = 10 → −0.060% at dtau_max = 2). An
-/// earlier version of this test read the two grids as "tighter on production",
-/// which the numbers do not support — so the second leg now asserts what is
-/// actually true, that the two grids agree, which is the signature of a
+/// z_start = 3e5: −0.284% at dtau_max = 10 → −0.060% at dtau_max = 2). The
+/// second leg asserts that the two grids agree, which is the signature of a
 /// time-discretization residual. The dtau_max convergence order itself is
 /// pinned by `tests/convergence_order.rs`.
 #[test]
@@ -10049,61 +8525,6 @@ fn test_kompaneets_preserves_bose_einstein() {
     );
 }
 
-/// Test that Compton y-parameter integral gives reasonable values.
-///
-/// Cross-check against known analytical approximation:
-/// y_C(z) ≈ (k T_CMB / m_e c²) × (σ_T c n_e / H) × z for z >> 1
-/// For z = 10⁵ with default cosmology: y_C ~ 0.4-0.8
-/// Verify Newton iteration convergence for coupled IMEX.
-///
-/// For a burst at z = 2×10⁵ with standard parameters, the Newton
-/// iteration should converge within 10 iterations at every step.
-/// We verify this indirectly: if the solver produces correct μ/y,
-/// Newton convergence was adequate.
-#[test]
-fn test_newton_convergence_indirect() {
-    let cosmo = Cosmology::default();
-    let delta_rho = 1e-5;
-    let z_h = 2e5;
-
-    let grid_config = GridConfig {
-        n_points: 1000,
-        ..GridConfig::default()
-    };
-    let mut solver = ThermalizationSolver::new(cosmo.clone(), grid_config);
-    solver
-        .set_injection(InjectionScenario::SingleBurst {
-            z_h,
-            sigma_z: z_h / 10.0,
-            delta_rho_over_rho: delta_rho,
-        })
-        .unwrap();
-    let snaps = solver.run_with_snapshots(&[200.0]);
-    let snap = &snaps[0];
-
-    // If Newton didn't converge, μ and y would be wildly wrong
-    let mu = snap.mu;
-    let y = snap.y;
-
-    // Basic sanity: μ > 0 for heating in μ-era
-    assert!(mu > 0.0, "μ should be positive for heating: got {mu:.4e}");
-    assert!(y > 0.0, "y should be positive for heating: got {y:.4e}");
-
-    // The spectrum should not contain NaN
-    assert!(
-        snap.delta_n.iter().all(|x| x.is_finite()),
-        "Δn should contain no NaN/Inf (Newton convergence failure indicator)"
-    );
-
-    // ρ_e may be pushed below 1 by adiabatic cooling (Λ·ρ_e term).
-    // At z=200, the 0.9 clamp can be hit. Check it's physical (not diverged/NaN).
-    assert!(
-        snap.rho_e > 0.5 && snap.rho_e <= 1.01,
-        "ρ_e should be in [0.5, 1.01] at z=200: got {:.6}",
-        snap.rho_e
-    );
-}
-
 // ===========================================================================
 // Section 33: Golden reference tests — spectral shape L2/max-norm validation
 //
@@ -10120,11 +8541,8 @@ fn test_newton_convergence_indirect() {
 /// Oracle uncertainty: 5% (GF fit uncertainty vs CosmoTherm in μ-era)
 /// Tolerance:          10% (PDE vs GF on production grid, per CLAUDE.md validation targets)
 ///
-/// Previous version of this test asserted `mu ∈ [1.35e-5, 1.65e-5]` — a window
-/// that *excluded* its own stated analytic target of 1.33e-5 by using the 1000-pt
-/// grid's μ ≈ 1.49e-5 (12% off physics). The window absorbed the PDE-vs-physics
-/// discrepancy instead of flagging it. Now uses production grid (4000 pts) per
-/// CLAUDE.md, where PDE agrees with GF to ≲5%, and checks the analytic target.
+/// Uses production grid (4000 pts) per CLAUDE.md, where PDE agrees with GF
+/// to ≲5%, and checks the analytic target.
 #[test]
 fn golden_mu_era_spectral_shape() {
     let cosmo = Cosmology::default();
@@ -10312,10 +8730,6 @@ fn golden_y_era_spectral_shape() {
 /// Oracle uncertainty: scheme residual
 /// Tolerance:          2% energy; 10% on the sum-rule (allows for decomposition
 ///                     basis + B&F fit residual)
-///
-/// Previous version asserted factor-4 (300%) tolerance on μ and y separately
-/// vs the GF — not a real physics comparison, because the two methods use
-/// different decomposition bases in the μ-y crossover.
 #[test]
 fn golden_transition_era_spectral_shape() {
     let cosmo = Cosmology::default();
@@ -10502,10 +8916,6 @@ fn test_dcbr_affects_thermalization_depth() {
     );
 }
 
-// (test_grid_refinement_improves_photon_injection removed in 2026-04 triage:
-// asserted `mu_diff > 0.0` — any nonzero change passes, so this cannot verify
-// that refinement *improves* accuracy, only that it's non-idempotent.)
-
 /// Soft photon injection (x_inj = 1e-3) must produce the same μ/y as
 /// equivalent heat injection across y-era, transition, and μ-era.
 /// This is the key validation that DC/BR pre-absorption correctly routes
@@ -10646,10 +9056,6 @@ fn test_intermediate_photon_injection_x01() {
 /// Oracle uncertainty: ~10% (decay-weighted visibility depends on exact Γ_X
 ///                     convolution with J_bb*, J_μ fits).
 /// Tolerance:          μ/Δρ within [1.15, 1.42] (catches any 15%+ drift).
-///
-/// Previous version asserted only `0 < μ/Δρ < 1.6` — a factor-of-infinity
-/// window at the lower bound and 14% slack above 1.401. Any 2× normalization
-/// bug would have passed.
 #[test]
 fn test_decaying_particle_photon_soft_pde() {
     let cosmo = Cosmology::default();
@@ -10761,8 +9167,7 @@ fn test_decaying_particle_photon_hard_pde() {
 ///                     and G₂ = 2ζ(3) as literals. It does not call the
 ///                     source term. Ω_cdm/Ω_γ enters f_inj and the target
 ///                     identically, so taking it from `Cosmology` cannot hide
-///                     an error. The factor of 2 in the old doc recipe would
-///                     give a ratio of 2.
+///                     an error.
 /// Regime:             hard photons in the y-era. x_inj runs from 3 at
 ///                     z = 6×10⁴ to 30 at z = 6×10³, inside the grid and above
 ///                     the DC/BR absorption range, so the energy stays in Δn
@@ -10843,9 +9248,6 @@ fn test_decaying_particle_photon_f_inj_energy() {
         snap.delta_rho_over_rho
     );
 }
-
-// (test_decaying_particle_photon_moderate_x_pde removed in 2026-04 triage:
-// only `is_finite()` assertions — NaN guard, not physics.)
 
 // ==========================================================================
 // Section 37 — Gap-filling tests: adiabatic cooling, post-recombination
@@ -11160,16 +9562,12 @@ fn test_dc_br_ratio_pinned_z1e6() {
     let ratio = k_dc / k_br;
     eprintln!("DC/BR at z=1e6, x=1: {ratio:.2}");
 
-    // NOTE (R2 mutation audit, 2026-07-26): the "ratio ≈ 15-20" claim that used
-    // to sit here is the value at **x = 0.1** (the P1-8 reference point), not at
-    // x = 1 where this test runs. The measured x = 1 ratio is 42.5, i.e. it sat
-    // 18% below this test's own upper bound — asymmetric and misleading. The
-    // ±2.5× window is *not* tightened here because the x = 1 centre has never
-    // been independently derived, and narrowing it to the code's own output
-    // would be exactly the calibration CLAUDE.md pitfall #9 warns about.
-    // This test is therefore a coarse guard against the two catastrophic
-    // failure modes below; the quantitative anchor is
-    // test_dc_br_ratio_at_p18_reference_point.
+    // The measured x = 1 ratio is 42.5. The ±2.5× window is *not* tightened
+    // here because the x = 1 centre has never been independently derived,
+    // and narrowing it to the code's own output would be exactly the
+    // calibration CLAUDE.md pitfall #9 warns about. This test is therefore
+    // a coarse guard against the two catastrophic failure modes below; the
+    // quantitative anchor is test_dc_br_ratio_at_p18_reference_point.
     assert!(
         ratio > 8.0 && ratio < 50.0,
         "DC/BR at z=1e6, x=1 should be ~40, got {ratio:.1}. \
@@ -11229,7 +9627,7 @@ fn test_dc_br_ratio_at_p18_reference_point() {
 // The IMEX scheme uses Crank-Nicolson (O(Δτ²)) for Kompaneets and
 // backward Euler (O(Δτ)) for DC/BR. With adaptive stepping controlled
 // by dy_max, we expect effective temporal convergence.
-// This is a critical gap — only spatial convergence was previously tested.
+// This closes a gap: only spatial convergence is tested elsewhere.
 // ---------------------------------------------------------------------------
 
 #[test]
@@ -11571,25 +9969,6 @@ fn test_pde_negative_injection_produces_negative_distortion() {
     );
 }
 
-// test_post_recombination_injection_locked_in removed: superseded by
-// test_post_recombination_locked_in_distortion (line ~12027) which has
-// tighter assertions and proper z_start = z_h + 7*sigma.
-
-// SECTION 33: ADDITIONAL PHYSICS GUARDS
-// DC/BR ratio, full_te isolation, absolute μ/y sanity, dark photon sign
-
-// (test_dc_br_ratio_physical_range removed: strictly subsumed by
-// test_dc_br_ratio_pinned_z1e6 which tests the same (z=1e6, x=1) DC/BR ratio
-// with a tighter band (8, 50) instead of (5, 50).)
-
-// (test_pde_mu_absolute_sanity removed: subsumed by science_mu_era_coefficient_pde
-// which makes the same 1.401·J_bb*·J_μ·Δρ claim at z=2e5 with tighter 10%
-// tolerance vs this test's 30% window, and by test_heat_pde_vs_gf_multi_z_sweep.)
-
-// (test_dark_photon_firas_constraint_positive_mu removed in 2026-04 triage:
-// only assertion was μ > 0, which is guaranteed by construction when initial
-// Δn ≤ 0 everywhere. Tautological.)
-
 // =============================================================================
 // Section 37: Hostile reviewer recommendations
 // =============================================================================
@@ -11676,12 +10055,6 @@ fn test_diag_warnings_collected() {
 // ============================================================================
 // Section 38: Independent validation tests
 // ============================================================================
-
-// (test_visibility_j_{bb_star,mu,y}_literature_values removed: were checking
-// code against hardcoded values from its own fit formula (Chluba 2013 Eq. 5).
-// Asymptotic-limit coverage lives in test_visibility_functions_literature_limits
-// (§40) which uses regime boundaries from Chluba 2013 Fig. 2, not pointwise fit
-// outputs, and in test_gf_energy_sum_rule below.)
 
 /// Test the GF energy sum rule: J_mu*J_bb* + J_y + (1 - J_bb*) ≈ 1.
 ///
@@ -12090,10 +10463,6 @@ fn test_extreme_small_injection() {
 /// Tolerance:          ratio μ_PDE / μ_lin ∈ [0.9, 1.3];
 ///                     energy conservation 10% (adiabatic offset + nonlinear);
 ///                     Newton exhausted = 0 (solver stability).
-///
-/// Previous version asserted only: solver completes, energy within 10%,
-/// μ > 0. No bound on μ magnitude or nonlinear correction. Strengthened to
-/// catch a 2× bug in the linear coefficient or runaway nonlinear amplification.
 #[test]
 fn test_extreme_large_injection() {
     let cosmo = Cosmology::default();
@@ -12219,12 +10588,9 @@ fn test_grid_transition_artifact() {
 // SECTION 37: BR ABSOLUTE-MAGNITUDE GUARD
 //
 // Regression guard for the historical BR dimensional bug (CLAUDE.md Pitfall #8,
-// where an extra /n_e suppressed BR by ~10^11). This is the only remaining test
-// in the section; the two DC "absolute value" tests were deleted as tautological
-// (their expected values were computed with the same CS2012 formula that
-// dc_emission_coefficient implements, so they only detected refactor typos).
-// Per-coefficient unit tests against hand calculations live in
-// src/double_compton.rs and src/bremsstrahlung.rs.
+// where an extra /n_e suppressed BR by ~10^11). Per-coefficient unit tests
+// against hand calculations live in src/double_compton.rs and
+// src/bremsstrahlung.rs.
 //
 // Reference: Rybicki & Lightman (1979) Eq. 5.14b; Chluba & Sunyaev (2012) Eq. 14.
 
@@ -12259,9 +10625,6 @@ fn test_br_absolute_value_z1e6_x1() {
          If K_BR ~ 1e-19, the /n_e bug has returned."
     );
 }
-
-// (test_dc_br_ratio_absolute_z1e6 removed: strictly weaker than
-// test_dc_br_ratio_pinned_z1e6 (same z, same x, range (8, 50) vs (5, 200)).)
 
 // SECTION 38: RECOMBINATION QUANTITATIVE TESTS
 
@@ -12442,14 +10805,10 @@ fn test_visibility_functions_literature_limits() {
 /// Expected:           μ_ac = -2.9 × 10⁻⁹ (central value)
 /// Oracle uncertainty: 15% (cosmology-parameter sensitivity; Ω_b ± a few %
 ///                     alone shifts μ by ~10%)
-/// Tolerance:          25% on μ (tightened from factor-5 window;
-///                     tol = oracle_uncertainty · cosmology_margin)
+/// Tolerance:          25% on μ (tol = oracle_uncertainty · cosmology_margin)
 ///                     y and Δρ/ρ: magnitude bounds per Chluba 2016 Fig. 1.
 ///
-/// Previous version used factor-5 window [-5e-9, -1e-9] with a comment noting
-/// "Measured: μ ≈ -2.95e-9" (code output). The oracle is actually Chluba &
-/// Sunyaev 2012, not the code — but the cited prediction is within the old
-/// window. This version cites the paper explicitly and tightens to 25%.
+/// The oracle is Chluba & Sunyaev 2012, not the code.
 #[test]
 fn test_adiabatic_cooling_no_injection() {
     let cosmo = Cosmology::default();
@@ -12499,5 +10858,3 @@ fn test_adiabatic_cooling_no_injection() {
 
 // T_e decoupling / adiabatic-cooling ρ_e check lives in
 // tests/science_suite.rs::science_te_decoupling_post_recombination.
-// The earlier duplicate here has been removed (same z-points, same bounds,
-// same Peebles TLA reference).

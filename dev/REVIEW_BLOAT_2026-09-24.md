@@ -21,7 +21,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 |---|---|---|---|
 | 0 | D-1 to D-4, D-6, H-4, H-5 | Done 2026-09-24; D-5 moved to phase 2 | see `git log` |
 | 1 | X-1 | Done 2026-09-24 (see note under X-1) | see `git log` |
-| 2 | T-1, T-3, T-11, T-12, T-15 | Not started | |
+| 2 | T-1, T-3, T-11, T-12, T-15, D-5 | Done 2026-09-24 (see phase 2 notes) | see `git log` |
 | 3 | T-2, T-6 to T-10, T-13 | Not started | |
 | 4 | T-4, T-5, T-14, T-16 | Not started | |
 | 5 | C-1 | Not started | |
@@ -129,6 +129,16 @@ Rules for every phase:
 **Phase 1: axion.** X-1. Code change (warnings) plus docs; run both configurations.
 
 **Phase 2: test cleanup, duplicates and tautologies.** T-1 (move the two stronger checks into `src/` first), T-3, T-11, T-12, T-15, and the D-5 docstrings.
+
+Phase 2 notes (2026-09-24). A fresh claim-verifier checked 39 deletions: 29 confirmed, 8 partial, 2 refuted. Outcome:
+
+- Deleted 32 tests from `heat_injection.rs` and `heating_rate_per_redshift_sign_convention` from `coverage_gaps.rs`.
+- Refuted: `test_compton_equilibrium_planck_exact` was tighter than `spectrum::test_compton_equilibrium_planck` (1e-4 on 10k points against 1e-3 on 5k), so the src test was tightened to match before deleting. `test_alpha_rho_from_integrals` was *not* moved: the src `test_alpha_rho` (0.37020884 ± 1e-6) is 1000× tighter on the literal, and the 1e-14 identity uses the code's own constants. It was deleted.
+- Partial rows, assertions moved into src first: the Y_SZ transcendental root (1e-6) into `spectrum::test_y_shape_zero_crossing`; G₃ quadrature at 200k points and 1e-7 into `test_spectral_integral_g3`; Planck 2015 ω_cdm and both presets' Ω_m bands into the cosmology preset tests; y_C(500) < 0.05 and y_C(100) < 0.01 into `test_compton_y_parameter_low_z`; n_e against a retyped n_H formula at 1e-10 into the new `cosmology::test_n_e_from_first_principles`.
+- Partial rows kept and trimmed instead: `test_pb2009_bose_einstein_temperature` lost its φ_BE tautology and became `test_decompose_bose_einstein_recovers_mu`; `test_high_z_dtau_convergence` lost its never-asserted dtau = 10 run and became `test_high_z_mu_vs_gf_dtau3` (one PDE run instead of two).
+- Deferred to phase 4: merging the five find-index tests into one table (T-11), since `coverage_gaps.rs` also carries unrelated uncommitted work.
+- T-15 and D-5: a comments-only pass removed 238 lines (30 removal notes, about 24 history notes, 7 empty section banners) and fixed 4 misplaced docstrings; the comment-stripped code was verified token-identical.
+- Term-matrix rows 5, 8, and 14 repointed to surviving tests.
 
 **Phase 3: test cleanup, weaker copies.** T-2, T-6 to T-10, T-13. Repoint term-matrix rows 4, 8, 10, and 14.
 

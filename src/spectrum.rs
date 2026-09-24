@@ -244,35 +244,44 @@ mod tests {
         );
     }
 
+    /// Checks that Y_SZ crosses zero at the root of x·coth(x/2) = 4
+    /// (x₀ ≈ 3.8310; Zeldovich & Sunyaev 1969), solved here independently
+    /// of `y_shape`.
     #[test]
     fn test_y_shape_zero_crossing() {
-        // Y_SZ crosses zero at x ≈ 3.83
-        // Find it by bisection
-        let mut x_lo = 3.5_f64;
-        let mut x_hi = 4.2_f64;
-        for _ in 0..100 {
-            let x_mid = (x_lo + x_hi) / 2.0;
-            if y_shape(x_mid) > 0.0 {
-                x_hi = x_mid;
-            } else {
-                x_lo = x_mid;
+        let bisect = |f: &dyn Fn(f64) -> f64| {
+            let (mut lo, mut hi) = (3.0_f64, 5.0_f64);
+            assert!(f(lo) < 0.0 && f(hi) > 0.0, "bracket does not contain root");
+            for _ in 0..100 {
+                let mid = 0.5 * (lo + hi);
+                if f(mid) > 0.0 {
+                    hi = mid;
+                } else {
+                    lo = mid;
+                }
             }
-        }
-        let x_zero = (x_lo + x_hi) / 2.0;
+            0.5 * (lo + hi)
+        };
+        let x_exact = bisect(&|x: f64| x / (x / 2.0).tanh() - 4.0);
+        let x_code = bisect(&|x: f64| y_shape(x));
         assert!(
-            (x_zero - 3.83).abs() < 0.01,
-            "Y_SZ zero at x = {x_zero}, expected ~3.83"
+            (x_code - x_exact).abs() < 1e-6,
+            "y_shape zero at {x_code:.8}, transcendental root {x_exact:.8}"
+        );
+        assert!(
+            (x_exact - 3.8310).abs() < 0.001,
+            "x₀ = {x_exact:.6}, expected ≈ 3.831"
         );
     }
 
     #[test]
     fn test_spectral_integral_g3() {
         // ∫x³ n_pl dx = π⁴/15
-        let g3 = spectral_integral(3, 1e-6, 80.0, 100_000);
+        let g3 = spectral_integral(3, 1e-6, 80.0, 200_000);
         let expected = std::f64::consts::PI.powi(4) / 15.0;
         let rel_err = (g3 - expected).abs() / expected;
         assert!(
-            rel_err < 1e-6,
+            rel_err < 1e-7,
             "G₃ = {g3}, expected {expected}, rel_err = {rel_err}"
         );
     }
@@ -374,8 +383,9 @@ mod tests {
 
     #[test]
     fn test_compton_equilibrium_planck() {
-        // For Planck spectrum, T_e^eq / T_z = 1
-        let n_points = 5000;
+        // For Planck spectrum, T_e^eq / T_z = 1 exactly, since
+        // I₄ = ∫ x⁴ n_pl(1+n_pl) dx = 4G₃ by integration by parts.
+        let n_points = 10_000;
         let x_min = 1e-4_f64;
         let x_max = 50.0_f64;
         let log_min = x_min.ln();
@@ -387,7 +397,7 @@ mod tests {
 
         let ratio = compton_equilibrium_ratio(&x_grid, &n_vals);
         assert!(
-            (ratio - 1.0).abs() < 1e-3,
+            (ratio - 1.0).abs() < 1e-4,
             "T_e^eq/T_z = {ratio}, expected 1.0 for Planck"
         );
     }

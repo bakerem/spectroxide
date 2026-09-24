@@ -558,9 +558,11 @@ mod tests {
         // At z << 1100, y_C should be small (inefficient Comptonization)
         let yc = cosmo.compton_y_parameter(500.0);
         assert!(
-            yc < 0.1,
+            yc < 0.05,
             "y_C(500) = {yc:.3e}, should be << 1 (post-recombination)"
         );
+        let yc_100 = cosmo.compton_y_parameter(100.0);
+        assert!(yc_100 < 0.01, "y_C(100) = {yc_100:.3e}, should be << 1");
     }
 
     #[test]
@@ -629,12 +631,38 @@ mod tests {
         );
     }
 
+    /// Checks n_e = X_e n_H with n_H = (1 − Y_p) Ω_b ρ_crit (1+z)³ / m_p,
+    /// ρ_crit = 3H₀²/(8πG), typed out here independently of `n_h`.
+    #[test]
+    fn test_n_e_from_first_principles() {
+        let cosmo = Cosmology::default();
+        for &z in &[2e3, 1e4, 5e4, 2e5, 1e6] {
+            let x_e = crate::recombination::ionization_fraction(z, &cosmo);
+            let rho_crit = 3.0 * cosmo.h0().powi(2) / (8.0 * std::f64::consts::PI * G_NEWTON);
+            let n_h =
+                (1.0 - cosmo.y_p) * cosmo.omega_b_frac() * rho_crit / M_PROTON * (1.0 + z).powi(3);
+            let n_e = cosmo.n_e(z, x_e);
+            let rel_err = (n_e - x_e * n_h).abs() / n_e;
+            assert!(
+                rel_err < 1e-10,
+                "n_e mismatch at z={z:.0e}: {n_e:.6e} vs {:.6e}",
+                x_e * n_h
+            );
+        }
+    }
+
     #[test]
     fn test_planck2015_preset() {
         let cosmo = Cosmology::planck2015();
         assert!((cosmo.h - 0.6727).abs() < 0.001);
         assert!((cosmo.omega_b - 0.02225).abs() < 1e-5);
+        assert!((cosmo.omega_cdm - 0.1198).abs() < 0.001);
         assert!((cosmo.y_p - 0.2467).abs() < 1e-4);
+        let omega_m = cosmo.omega_m();
+        assert!(
+            omega_m > 0.3 && omega_m < 0.35,
+            "Planck2015 Omega_m = {omega_m:.4}"
+        );
     }
 
     #[test]
@@ -673,6 +701,11 @@ mod tests {
         // Derived quantities should be valid
         assert!(cosmo.hubble(0.0) > 0.0);
         assert!(cosmo.n_h(0.0) > 0.0);
+        let omega_m = cosmo.omega_m();
+        assert!(
+            omega_m > 0.31 && omega_m < 0.32,
+            "Planck2018 Omega_m = {omega_m:.4}, expected ~0.315"
+        );
     }
 
     #[test]

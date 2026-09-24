@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test --release           # Run all tests (190 unit + 323 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release           # Run all tests (191 unit + 290 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
 cargo test --release test_name # Run a single test by name
 CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -82,9 +82,9 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 ### Integration tests (tests/)
 
-- `heat_injection.rs` — 204 integration tests (199 in the default build; 5 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 9 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
+- `heat_injection.rs` — 172 integration tests (167 in the default build; 5 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 9 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
-- `coverage_gaps.rs` — 25 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1). `GridConfig::validate` rejects `n_points < 100` (review decision 2026-09-23; a sanity floor, not an accuracy bound). A 50-point run — built directly via `ThermalizationSolver::new` + `set_injection`, bypassing `validate`, since the builder can no longer construct it — must stop with the NaN error, never panic; a run on the 100-point validation floor must be finite and warn, or fail cleanly, never return silently.
+- `coverage_gaps.rs` — 24 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1). `GridConfig::validate` rejects `n_points < 100` (review decision 2026-09-23; a sanity floor, not an accuracy bound). A 50-point run — built directly via `ThermalizationSolver::new` + `set_injection`, bypassing `validate`, since the builder can no longer construct it — must stop with the NaN error, never panic; a run on the 100-point validation floor must be finite and warn, or fail cleanly, never return silently.
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 10 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift), energy conservation, and PDE cross-validation, plus four anchors of the BR Gaunt factor and coefficient against Draine (2011).
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.

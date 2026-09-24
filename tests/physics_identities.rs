@@ -180,8 +180,7 @@ fn test_thomson_optical_depth_and_last_scattering() {
 /// ∫₀^∞ xⁿ e^x/(e^x−1)² dx = n! ζ(n) (integrate by parts; boundary term
 /// vanishes for n ≥ 2).
 ///
-/// Before this test only the *constants* β_μ and κ_c were anchored
-/// (`test_beta_mu_from_zeta_functions`, `test_kappa_c_from_numerical_integration`);
+/// Before this test only the *constants* β_μ and κ_c were anchored;
 /// the moments of the shape functions as actually coded were never checked, so
 /// nothing tied the constants to the functions that use them.
 #[test]
