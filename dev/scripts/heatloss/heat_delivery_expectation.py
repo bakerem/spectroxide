@@ -10,7 +10,9 @@ gas, and the injected heat, and integrates the Compton power into the photons:
 
 Everything here comes from CODATA constants typed below and the default
 spectroxide cosmology parameters (Omega_b = 0.044, Omega_m = 0.26, h = 0.71,
-Y_p = 0.24, T_0 = 2.7255 K, N_eff = 3.046). The only input taken from the
+Y_p = 0.24, N_eff = 3.046), except T_0 = 2.7255 K where the solver uses
+2.726 K. A delivered fraction does not depend on that choice, but an absolute
+injected energy does. The only input taken from the
 solver is its ionization history X_e(z), read from the per-step ledger lines
 ("LEDGER z dz dtau x_e ...") printed by an instrumented build. Nothing else is
 imported from spectroxide.

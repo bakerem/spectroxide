@@ -71,3 +71,9 @@ The start redshift moves μ by 1.0e-4 relative and y by 1e-5. At the same grid, 
 now agree to every printed digit. At their own defaults they still differ by 1.1% in y and
 3.2e-4 in μ, because this record keeps the grid defaults. So the first consequence above holds for
 z_start and for run time, not for the full result.
+
+One Python path relied on the old default. `solve(dn_planck=...)` with no injection calls CLI
+`solve single-burst` with zero amplitude and no `--z-start`. Under this record the CLI would have
+started it at 1.07e5, not 5e6, and μ would have changed by a factor of about 1500 without a
+warning. Python now passes `--z-start` explicitly for that path (the caller's value, else 5e6),
+in `4b24bca`.
