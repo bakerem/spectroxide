@@ -28,6 +28,7 @@ use crate::output::{
     SweepResult, SweepRow,
 };
 use crate::prelude::*;
+use crate::solver::preflight_checks;
 
 /// Top-level command parsed from CLI args.
 #[derive(Debug)]
@@ -1252,7 +1253,7 @@ pub fn build_injection_scenario(
         }
         "single-burst" => {
             let z_h = get_required("--z-h")?;
-            let sigma_z = get_optional("--sigma-z", (z_h * 0.04_f64).max(100.0))?;
+            let sigma_z = get_optional("--sigma-z", InjectionScenario::default_sigma_z(z_h))?;
             Ok(InjectionScenario::SingleBurst {
                 z_h,
                 delta_rho_over_rho: delta_rho,
@@ -1263,7 +1264,7 @@ pub fn build_injection_scenario(
             let x_inj = get_required("--x-inj")?;
             let delta_n_over_n = get_required("--delta-n-over-n")?;
             let z_h = get_required("--z-h")?;
-            let sigma_z = get_optional("--sigma-z", (z_h * 0.04_f64).max(100.0))?;
+            let sigma_z = get_optional("--sigma-z", InjectionScenario::default_sigma_z(z_h))?;
             let sigma_x = get_optional("--sigma-x", x_inj * 0.05)?;
             Ok(InjectionScenario::MonochromaticPhotonInjection {
                 x_inj,
@@ -1342,7 +1343,7 @@ pub fn build_injection_scenario(
 pub fn execute_greens(opts: &GreensOpts) -> Result<GreensResult, String> {
     let z_h = opts.z_h;
     let delta_rho = opts.delta_rho;
-    let sigma = (z_h * 0.04_f64).max(100.0);
+    let sigma = InjectionScenario::default_sigma_z(z_h);
 
     let x_grid: Vec<f64> = {
         let gc = GridConfig::default();
@@ -1435,6 +1436,16 @@ fn build_solver_config(solver_opts: &SolverOpts, z_start: f64, z_end: f64) -> So
     }
 }
 
+/// Returns the sweep thread count: `--threads` if given, else the available
+/// parallelism, else 4.
+fn default_n_threads(requested: Option<usize>) -> usize {
+    requested.unwrap_or_else(|| {
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4)
+    })
+}
+
 /// Extracts a human-readable message from a thread panic payload.
 fn extract_panic_message(payload: &(dyn std::any::Any + Send)) -> String {
     payload
@@ -1510,52 +1521,6 @@ fn apply_solver_flags(solver: &mut ThermalizationSolver, solver_opts: &SolverOpt
     }
 }
 
-/// Validates a (config, grid, injection) combination the same way
-/// `SolverBuilder::build` does, returning the soft warnings that should
-/// surface to the caller. Hard errors are propagated as `Err`.
-fn validate_and_collect_warnings(
-    config: &SolverConfig,
-    grid_config: &GridConfig,
-    injection: &InjectionScenario,
-    cosmo: &Cosmology,
-) -> Result<Vec<String>, String> {
-    cosmo.validate()?;
-    grid_config.validate()?;
-    config.validate()?;
-    injection.validate()?;
-
-    if let Some((_z_center, z_upper)) = injection.characteristic_redshift() {
-        if config.z_start < z_upper {
-            return Err(format!(
-                "z_start={:.3e} is below the injection window upper bound z={:.3e}. \
-                 The solver would miss part or all of the injection. Set z_start >= {:.3e}.",
-                config.z_start, z_upper, z_upper
-            ));
-        }
-        // Symmetric check for z_end above the injection window: the injection
-        // never fires in any step (z_end > z_h + 5σ_z). User gets a finite
-        // run with only adiabatic-cooling signal — flag as Err.
-        if config.z_end > z_upper {
-            return Err(format!(
-                "z_end={:.3e} is above the injection window upper bound z={:.3e}. \
-                 The solver would terminate before the injection epoch is reached. \
-                 Set z_end < {:.3e}.",
-                config.z_end, z_upper, z_upper
-            ));
-        }
-    }
-
-    // `warn_stimulated_emission` is intentionally omitted: `set_injection`
-    // pushes those into the solver's `diag.warnings` directly, so emitting
-    // them here would double-count.
-    let mut warnings = config.soft_warnings();
-    warnings.extend(injection.warn_strong_distortion());
-    warnings.extend(injection.warn_tabulated_coverage(config.z_start, config.z_end));
-    warnings.extend(injection.warn_dark_photon_range(cosmo));
-    warnings.extend(injection.warn_axion_range(cosmo));
-    Ok(warnings)
-}
-
 /// Returns the `z_start` that CLI `solve` uses when the user passes no `--z-start`.
 ///
 /// - Resonant conversion (dark photon, axion): z_res, where the solver installs the
@@ -1621,19 +1586,11 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     let mut grid_config = build_grid_config(n_grid, opts.solver.production_grid);
 
     if !opts.solver.no_auto_refine {
-        for zone in injection.refinement_zones() {
-            grid_config.refinement_zones.push(zone);
-        }
-        if let Some(x_min) = injection.suggested_x_min() {
-            if x_min < grid_config.x_min {
-                grid_config.x_min = x_min;
-            }
-        }
+        injection.refine_grid(&mut grid_config);
     }
 
     let config = build_solver_config(&opts.solver, z_start, z_end);
-    let preflight_warnings =
-        validate_and_collect_warnings(&config, &grid_config, &injection, &cosmo)?;
+    let preflight_warnings = preflight_checks(&cosmo, &grid_config, &config, Some(&injection))?;
 
     let mut solver = ThermalizationSolver::new(cosmo, grid_config);
     apply_solver_flags(&mut solver, &opts.solver);
@@ -1758,11 +1715,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
         ]
     });
 
-    let n_threads = opts.solver.n_threads.unwrap_or_else(|| {
-        std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(4)
-    });
+    let n_threads = default_n_threads(opts.solver.n_threads);
     let mut rows_all: Vec<SweepRow> = Vec::with_capacity(injection_redshifts.len());
     let mut warnings_all: Vec<String> = Vec::new();
     let all_rows = run_work_queue(
@@ -1773,7 +1726,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
         |&z_h| -> Result<(SweepRow, Vec<String>), String> {
             let cosmo = cosmo.clone();
             let solver_opts = &opts.solver;
-            let sigma: f64 = (z_h * 0.04_f64).max(100.0);
+            let sigma: f64 = InjectionScenario::default_sigma_z(z_h);
             let z_start: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma);
 
             let grid_config = build_grid_config(n_grid, solver_opts.production_grid);
@@ -1784,7 +1737,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
             };
             let probe_config = build_solver_config(solver_opts, z_start, z_end);
             let preflight =
-                validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
+                preflight_checks(&cosmo, &grid_config, &probe_config, Some(&injection))?;
 
             let mut solver = ThermalizationSolver::new(cosmo, grid_config);
             apply_solver_flags(&mut solver, solver_opts);
@@ -1863,9 +1816,6 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
             "--delta-n-over-n must be finite, got {delta_n_over_n}"
         ));
     }
-    let sigma_x = opts.sigma_x.unwrap_or(x_inj * 0.05);
-    let z_end = opts.solver.z_end;
-    let n_grid = opts.solver.n_points;
 
     let injection_redshifts: Vec<f64> = opts
         .z_injections
@@ -1877,91 +1827,16 @@ pub fn execute_photon_sweep(opts: &PhotonSweepOpts) -> Result<PhotonSweepResult,
         injection_redshifts.len()
     );
 
-    let n_threads = opts.solver.n_threads.unwrap_or_else(|| {
-        std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(4)
-    });
-    let mut rows_all: Vec<PhotonSweepRow> = Vec::with_capacity(injection_redshifts.len());
-    let mut warnings_all: Vec<String> = Vec::new();
-    let all_rows = run_work_queue(
-        "Photon sweep",
-        &injection_redshifts,
-        n_threads,
-        |&z_h| z_h,
-        |&z_h| -> Result<(PhotonSweepRow, Vec<String>), String> {
-            let cosmo = cosmo.clone();
-            let solver_opts = &opts.solver;
-            let sigma_z: f64 = (z_h * 0.04_f64).max(100.0);
-            let z_start_val: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
-
-            let mut grid_config = build_grid_config(n_grid, solver_opts.production_grid);
-
-            let injection = InjectionScenario::MonochromaticPhotonInjection {
-                x_inj,
-                delta_n_over_n,
-                z_h,
-                sigma_z,
-                sigma_x,
-            };
-
-            if !solver_opts.no_auto_refine {
-                for zone in injection.refinement_zones() {
-                    grid_config.refinement_zones.push(zone);
-                }
-                if let Some(x_min) = injection.suggested_x_min() {
-                    if x_min < grid_config.x_min {
-                        grid_config.x_min = x_min;
-                    }
-                }
-            }
-
-            let probe_config = build_solver_config(solver_opts, z_start_val, z_end);
-            let preflight =
-                validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
-
-            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
-            apply_solver_flags(&mut solver, solver_opts);
-            solver.set_injection(injection)?;
-            solver.set_config(probe_config);
-            solver.diag.warnings.extend(preflight);
-
-            solver
-                .try_run_with_snapshots(&[z_end])
-                .map_err(|e| format!("photon sweep z_h={z_h:.3e}: {e}"))?;
-            let step_count = solver.step_count;
-            let x_grid = solver.grid.x.clone();
-            let row_warnings = solver.diag.warnings.clone();
-            let snapshot = solver
-                .snapshots
-                .last()
-                .ok_or_else(|| format!("photon sweep z_h={z_h:.3e}: no snapshots produced"))?
-                .clone();
-
-            Ok((
-                PhotonSweepRow {
-                    z_h,
-                    snapshot,
-                    x_grid,
-                    step_count,
-                },
-                row_warnings,
-            ))
-        },
-    )?;
-    for (row, ws) in all_rows {
-        rows_all.push(row);
-        warnings_all.extend(ws);
-    }
-    let rows = rows_all;
-
-    Ok(PhotonSweepResult {
-        x_inj,
+    let mut results = run_photon_sweeps(
+        &cosmo,
+        &[x_inj],
         delta_n_over_n,
-        rows,
-        warnings: dedup_keep_order(warnings_all),
-        t_cmb: cosmo.t_cmb,
-    })
+        opts.sigma_x,
+        &injection_redshifts,
+        &opts.solver,
+        false,
+    )?;
+    Ok(results.remove(0))
 }
 
 /// Executes a batch photon injection sweep over multiple x_inj values.
@@ -1972,9 +1847,6 @@ pub fn execute_photon_sweep_batch(
     opts: &PhotonSweepBatchOpts,
 ) -> Result<PhotonSweepBatchResult, String> {
     let cosmo = build_cosmology(&opts.cosmo)?;
-    let delta_n_over_n = opts.delta_n_over_n;
-    let z_end = opts.solver.z_end;
-    let n_grid = opts.solver.n_points;
 
     let injection_redshifts: Vec<f64> = opts
         .z_injections
@@ -1983,130 +1855,22 @@ pub fn execute_photon_sweep_batch(
 
     let n_xinj = opts.x_inj_values.len();
     let n_zh = injection_redshifts.len();
-    let total = n_xinj * n_zh;
-
     eprintln!(
         "Photon sweep batch: {} x_inj × {} z_h = {} PDE runs",
-        n_xinj, n_zh, total
+        n_xinj,
+        n_zh,
+        n_xinj * n_zh
     );
 
-    // Build flat list of (x_inj_index, z_h_index) tasks
-    let mut tasks: Vec<(usize, usize)> = Vec::with_capacity(total);
-    for xi_idx in 0..n_xinj {
-        for zh_idx in 0..n_zh {
-            tasks.push((xi_idx, zh_idx));
-        }
-    }
-
-    // Run tasks in chunks bounded by available parallelism
-    let n_threads = opts.solver.n_threads.unwrap_or_else(|| {
-        std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(4)
-    });
-    let rows_all: Vec<(usize, usize, PhotonSweepRow, Vec<String>)> = run_work_queue(
-        "Photon sweep batch",
-        &tasks,
-        n_threads,
-        |&(_, zh_idx)| injection_redshifts[zh_idx],
-        |&(xi_idx, zh_idx)| -> Result<(usize, usize, PhotonSweepRow, Vec<String>), String> {
-            let cosmo = cosmo.clone();
-            let solver_opts = &opts.solver;
-            let x_inj = opts.x_inj_values[xi_idx];
-            let sigma_x = opts.sigma_x.unwrap_or(x_inj * 0.05);
-            let z_h = injection_redshifts[zh_idx];
-            let sigma_z: f64 = (z_h * 0.04_f64).max(100.0);
-            let z_start_val: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
-
-            let mut grid_config = build_grid_config(n_grid, solver_opts.production_grid);
-
-            let injection = InjectionScenario::MonochromaticPhotonInjection {
-                x_inj,
-                delta_n_over_n,
-                z_h,
-                sigma_z,
-                sigma_x,
-            };
-
-            if !solver_opts.no_auto_refine {
-                for zone in injection.refinement_zones() {
-                    grid_config.refinement_zones.push(zone);
-                }
-                if let Some(x_min) = injection.suggested_x_min() {
-                    if x_min < grid_config.x_min {
-                        grid_config.x_min = x_min;
-                    }
-                }
-            }
-
-            let probe_config = build_solver_config(solver_opts, z_start_val, z_end);
-            let preflight =
-                validate_and_collect_warnings(&probe_config, &grid_config, &injection, &cosmo)?;
-
-            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
-            apply_solver_flags(&mut solver, solver_opts);
-            solver.set_injection(injection)?;
-            solver.set_config(probe_config);
-            solver.diag.warnings.extend(preflight);
-
-            solver.try_run_with_snapshots(&[z_end]).map_err(|e| {
-                format!("photon sweep batch (x_inj={x_inj:.3e}, z_h={z_h:.3e}): {e}")
-            })?;
-            let step_count = solver.step_count;
-            let x_grid = solver.grid.x.clone();
-            let row_warnings = solver.diag.warnings.clone();
-            let snapshot = solver
-                .snapshots
-                .last()
-                .ok_or_else(|| {
-                    format!(
-                        "photon sweep batch (x_inj={x_inj:.3e}, z_h={z_h:.3e}): \
-                                         no snapshots produced"
-                    )
-                })?
-                .clone();
-
-            Ok((
-                xi_idx,
-                zh_idx,
-                PhotonSweepRow {
-                    z_h,
-                    snapshot,
-                    x_grid,
-                    step_count,
-                },
-                row_warnings,
-            ))
-        },
+    let results = run_photon_sweeps(
+        &cosmo,
+        &opts.x_inj_values,
+        opts.delta_n_over_n,
+        opts.sigma_x,
+        &injection_redshifts,
+        &opts.solver,
+        true,
     )?;
-    let rows = rows_all;
-
-    // Group results by x_inj index
-    let mut per_xinj: Vec<Vec<PhotonSweepRow>> =
-        (0..n_xinj).map(|_| Vec::with_capacity(n_zh)).collect();
-    let mut per_xinj_warnings: Vec<Vec<String>> = (0..n_xinj).map(|_| Vec::new()).collect();
-    for (xi_idx, _zh_idx, row, ws) in rows {
-        per_xinj[xi_idx].push(row);
-        per_xinj_warnings[xi_idx].extend(ws);
-    }
-
-    // Sort each group by z_h for consistent output
-    for group in &mut per_xinj {
-        group.sort_by(|a, b| a.z_h.total_cmp(&b.z_h));
-    }
-
-    let results: Vec<PhotonSweepResult> = per_xinj
-        .into_iter()
-        .zip(per_xinj_warnings)
-        .enumerate()
-        .map(|(i, (rows, ws))| PhotonSweepResult {
-            x_inj: opts.x_inj_values[i],
-            delta_n_over_n,
-            rows,
-            warnings: dedup_keep_order(ws),
-            t_cmb: cosmo.t_cmb,
-        })
-        .collect();
 
     let aggregated_warnings: Vec<String> = results
         .iter()
@@ -2118,6 +1882,136 @@ pub fn execute_photon_sweep_batch(
         warnings: dedup_keep_order(aggregated_warnings),
         t_cmb: cosmo.t_cmb,
     })
+}
+
+/// Runs one photon-injection PDE solve per `(x_inj, z_h)` pair on a shared
+/// thread pool and returns one [`PhotonSweepResult`] per `x_inj`, in the
+/// order of `x_inj_values`.
+///
+/// `batch` selects the `photon-sweep-batch` behavior: its labels in error
+/// messages, and rows sorted by z_h within each result. Otherwise rows keep
+/// the order of `injection_redshifts`, as `photon-sweep` always has.
+fn run_photon_sweeps(
+    cosmo: &Cosmology,
+    x_inj_values: &[f64],
+    delta_n_over_n: f64,
+    sigma_x: Option<f64>,
+    injection_redshifts: &[f64],
+    solver_opts: &SolverOpts,
+    batch: bool,
+) -> Result<Vec<PhotonSweepResult>, String> {
+    let z_end = solver_opts.z_end;
+    let n_grid = solver_opts.n_points;
+    let n_xinj = x_inj_values.len();
+    let n_zh = injection_redshifts.len();
+
+    // Build flat list of (x_inj_index, z_h_index) tasks
+    let mut tasks: Vec<(usize, usize)> = Vec::with_capacity(n_xinj * n_zh);
+    for xi_idx in 0..n_xinj {
+        for zh_idx in 0..n_zh {
+            tasks.push((xi_idx, zh_idx));
+        }
+    }
+
+    let n_threads = default_n_threads(solver_opts.n_threads);
+    let rows = run_work_queue(
+        if batch {
+            "Photon sweep batch"
+        } else {
+            "Photon sweep"
+        },
+        &tasks,
+        n_threads,
+        |&(_, zh_idx)| injection_redshifts[zh_idx],
+        |&(xi_idx, zh_idx)| -> Result<(usize, PhotonSweepRow, Vec<String>), String> {
+            let cosmo = cosmo.clone();
+            let x_inj = x_inj_values[xi_idx];
+            let sigma_x = sigma_x.unwrap_or(x_inj * 0.05);
+            let z_h = injection_redshifts[zh_idx];
+            let context = if batch {
+                format!("photon sweep batch (x_inj={x_inj:.3e}, z_h={z_h:.3e})")
+            } else {
+                format!("photon sweep z_h={z_h:.3e}")
+            };
+            let sigma_z: f64 = InjectionScenario::default_sigma_z(z_h);
+            let z_start_val: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
+
+            let mut grid_config = build_grid_config(n_grid, solver_opts.production_grid);
+
+            let injection = InjectionScenario::MonochromaticPhotonInjection {
+                x_inj,
+                delta_n_over_n,
+                z_h,
+                sigma_z,
+                sigma_x,
+            };
+
+            if !solver_opts.no_auto_refine {
+                injection.refine_grid(&mut grid_config);
+            }
+
+            let probe_config = build_solver_config(solver_opts, z_start_val, z_end);
+            let preflight =
+                preflight_checks(&cosmo, &grid_config, &probe_config, Some(&injection))?;
+
+            let mut solver = ThermalizationSolver::new(cosmo, grid_config);
+            apply_solver_flags(&mut solver, solver_opts);
+            solver.set_injection(injection)?;
+            solver.set_config(probe_config);
+            solver.diag.warnings.extend(preflight);
+
+            solver
+                .try_run_with_snapshots(&[z_end])
+                .map_err(|e| format!("{context}: {e}"))?;
+            let step_count = solver.step_count;
+            let x_grid = solver.grid.x.clone();
+            let row_warnings = solver.diag.warnings.clone();
+            let snapshot = solver
+                .snapshots
+                .last()
+                .ok_or_else(|| format!("{context}: no snapshots produced"))?
+                .clone();
+
+            Ok((
+                xi_idx,
+                PhotonSweepRow {
+                    z_h,
+                    snapshot,
+                    x_grid,
+                    step_count,
+                },
+                row_warnings,
+            ))
+        },
+    )?;
+
+    // Group results by x_inj index
+    let mut per_xinj: Vec<Vec<PhotonSweepRow>> =
+        (0..n_xinj).map(|_| Vec::with_capacity(n_zh)).collect();
+    let mut per_xinj_warnings: Vec<Vec<String>> = (0..n_xinj).map(|_| Vec::new()).collect();
+    for (xi_idx, row, ws) in rows {
+        per_xinj[xi_idx].push(row);
+        per_xinj_warnings[xi_idx].extend(ws);
+    }
+
+    if batch {
+        for group in &mut per_xinj {
+            group.sort_by(|a, b| a.z_h.total_cmp(&b.z_h));
+        }
+    }
+
+    Ok(per_xinj
+        .into_iter()
+        .zip(per_xinj_warnings)
+        .enumerate()
+        .map(|(i, (rows, ws))| PhotonSweepResult {
+            x_inj: x_inj_values[i],
+            delta_n_over_n,
+            rows,
+            warnings: dedup_keep_order(ws),
+            t_cmb: cosmo.t_cmb,
+        })
+        .collect())
 }
 
 #[cfg(test)]

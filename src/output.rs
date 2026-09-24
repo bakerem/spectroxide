@@ -128,9 +128,7 @@ impl SolverResult {
             "# mu={:.6e} y={:.6e} delta_rho_over_rho={:.6e} z={:.1} steps={} newton_exhausted={}",
             s.mu, s.y, s.delta_rho_over_rho, s.z, self.step_count, self.diag_newton_exhausted
         )?;
-        for warning in &self.warnings {
-            writeln!(w, "# WARNING: {warning}")?;
-        }
+        write_csv_warnings(w, &self.warnings)?;
         writeln!(w, "x,delta_n")?;
         for (i, &x) in self.x_grid.iter().enumerate() {
             writeln!(w, "{:.8e},{:.8e}", x, s.delta_n[i])?;
@@ -243,9 +241,7 @@ impl SweepResult {
 
     /// Writes CSV summary to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
-        for warning in &self.warnings {
-            writeln!(w, "# WARNING: {warning}")?;
-        }
+        write_csv_warnings(w, &self.warnings)?;
         writeln!(w, "z_h,pde_mu,gf_mu,pde_y,gf_y,drho,steps")?;
         for row in &self.rows {
             writeln!(
@@ -284,12 +280,7 @@ impl SweepResult {
                 row.step_count,
             )?;
         }
-        if !self.warnings.is_empty() {
-            writeln!(w, "Warnings ({}):", self.warnings.len())?;
-            for warning in &self.warnings {
-                writeln!(w, "  - {warning}")?;
-            }
-        }
+        write_table_warnings(w, "Warnings", &self.warnings)?;
         Ok(())
     }
 }
@@ -365,9 +356,7 @@ impl PhotonSweepResult {
 
     /// Writes CSV summary to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
-        for warning in &self.warnings {
-            writeln!(w, "# WARNING: {warning}")?;
-        }
+        write_csv_warnings(w, &self.warnings)?;
         writeln!(w, "z_h,pde_mu,pde_y,drho,steps")?;
         for row in &self.rows {
             writeln!(
@@ -407,12 +396,7 @@ impl PhotonSweepResult {
                 row.step_count,
             )?;
         }
-        if !self.warnings.is_empty() {
-            writeln!(w, "Warnings ({}):", self.warnings.len())?;
-            for warning in &self.warnings {
-                writeln!(w, "  - {warning}")?;
-            }
-        }
+        write_table_warnings(w, "Warnings", &self.warnings)?;
         Ok(())
     }
 }
@@ -457,9 +441,7 @@ impl PhotonSweepBatchResult {
 
     /// Writes combined CSV summary to a writer.
     pub fn write_csv<W: std::io::Write + ?Sized>(&self, w: &mut W) -> std::io::Result<()> {
-        for warning in &self.warnings {
-            writeln!(w, "# WARNING: {warning}")?;
-        }
+        write_csv_warnings(w, &self.warnings)?;
         writeln!(w, "x_inj,z_h,pde_mu,pde_y,drho,steps")?;
         for r in &self.results {
             for row in &r.rows {
@@ -485,12 +467,7 @@ impl PhotonSweepBatchResult {
             r.write_table(w)?;
             writeln!(w)?;
         }
-        if !self.warnings.is_empty() {
-            writeln!(w, "Aggregated warnings ({}):", self.warnings.len())?;
-            for warning in &self.warnings {
-                writeln!(w, "  - {warning}")?;
-            }
-        }
+        write_table_warnings(w, "Aggregated warnings", &self.warnings)?;
         Ok(())
     }
 }
@@ -543,9 +520,7 @@ impl GreensResult {
             "# mu={:.6e} y={:.6e} z_h={:.2e}",
             self.mu, self.y, self.z_h
         )?;
-        for warning in &self.warnings {
-            writeln!(w, "# WARNING: {warning}")?;
-        }
+        write_csv_warnings(w, &self.warnings)?;
         writeln!(w, "x,delta_n")?;
         for (i, &x) in self.x_grid.iter().enumerate() {
             writeln!(w, "{:.8e},{:.8e}", x, self.delta_n[i])?;
@@ -558,76 +533,64 @@ impl GreensResult {
         writeln!(w, "Green's function result at z_h = {:.2e}:", self.z_h)?;
         writeln!(w, "  mu = {:.6e}", self.mu)?;
         writeln!(w, "  y  = {:.6e}", self.y)?;
-        if !self.warnings.is_empty() {
-            writeln!(w, "Warnings ({}):", self.warnings.len())?;
-            for warning in &self.warnings {
-                writeln!(w, "  - {warning}")?;
-            }
-        }
+        write_table_warnings(w, "Warnings", &self.warnings)?;
         Ok(())
     }
 }
 
 // --- Serializable trait implementations ---
 
-impl Serializable for SolverResult {
-    fn to_json(&self) -> String {
-        self.to_json()
-    }
-    fn write_csv_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_csv(w)
-    }
-    fn write_table_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_table(w)
-    }
+/// Implements [`Serializable`] by forwarding to the type's inherent
+/// `to_json`, `write_csv`, and `write_table`.
+macro_rules! impl_serializable {
+    ($($t:ty),* $(,)?) => {$(
+        impl Serializable for $t {
+            fn to_json(&self) -> String {
+                self.to_json()
+            }
+            fn write_csv_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
+                self.write_csv(w)
+            }
+            fn write_table_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
+                self.write_table(w)
+            }
+        }
+    )*};
 }
 
-impl Serializable for SweepResult {
-    fn to_json(&self) -> String {
-        self.to_json()
+impl_serializable!(
+    SolverResult,
+    SweepResult,
+    PhotonSweepResult,
+    PhotonSweepBatchResult,
+    GreensResult,
+);
+
+/// Writes each warning as a `# WARNING:` comment line, for the CSV header.
+fn write_csv_warnings<W: std::io::Write + ?Sized>(
+    w: &mut W,
+    warnings: &[String],
+) -> std::io::Result<()> {
+    for warning in warnings {
+        writeln!(w, "# WARNING: {warning}")?;
     }
-    fn write_csv_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_csv(w)
-    }
-    fn write_table_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_table(w)
-    }
+    Ok(())
 }
 
-impl Serializable for PhotonSweepResult {
-    fn to_json(&self) -> String {
-        self.to_json()
+/// Writes `{heading} (N):` and one `  - ` line per warning, or nothing when
+/// there are none, for the table footer.
+fn write_table_warnings<W: std::io::Write + ?Sized>(
+    w: &mut W,
+    heading: &str,
+    warnings: &[String],
+) -> std::io::Result<()> {
+    if !warnings.is_empty() {
+        writeln!(w, "{heading} ({}):", warnings.len())?;
+        for warning in warnings {
+            writeln!(w, "  - {warning}")?;
+        }
     }
-    fn write_csv_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_csv(w)
-    }
-    fn write_table_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_table(w)
-    }
-}
-
-impl Serializable for PhotonSweepBatchResult {
-    fn to_json(&self) -> String {
-        self.to_json()
-    }
-    fn write_csv_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_csv(w)
-    }
-    fn write_table_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_table(w)
-    }
-}
-
-impl Serializable for GreensResult {
-    fn to_json(&self) -> String {
-        self.to_json()
-    }
-    fn write_csv_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_csv(w)
-    }
-    fn write_table_dyn(&self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.write_table(w)
-    }
+    Ok(())
 }
 
 /// Writes a JSON-safe float: NaN and Inf become null (valid JSON).

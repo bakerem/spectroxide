@@ -26,7 +26,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | 4 | T-4, T-5, T-14, T-16 | Done 2026-09-24 (see phase 4 notes); T-11 find-index merge not done | see `git log` |
 | 5 | C-1 | Done 2026-09-24 (see phase 5 notes); premise corrected | see `git log` |
 | 6 | P-3, P-5, P-6, P-10, P-11 | Done 2026-09-24 (see phase 6 notes); P-10 Gaussian dq/dz not merged | see `git log` |
-| 7 | P-1, P-2, P-4, P-7, P-8, P-9 | Not started | |
+| 7 | P-1, P-2, P-4, P-7, P-8, P-9 | Done 2026-09-24 (see phase 7 notes); P-7 flags and P-8 row writers not done | see `git log` |
 | 8 | Y-1, Y-2 | Not started | |
 
 ## Decisions from your review (2026-09-24)
@@ -188,6 +188,17 @@ Phase 6 notes (2026-09-24).
 - Suite after phase 6: 450 pass and 4 ignored in the default build, 459 and 4 with `--features axion`, unchanged; the `debug_assertions` release lib run passes (192).
 
 **Phase 7: production refactors.** P-1, P-2, P-8, P-9, then P-4 (warning text changes), then P-7 (struct literals across tests and examples).
+
+Phase 7 notes (2026-09-24).
+
+- P-9: `InjectionScenario::validate` calls `require_pos` (17 sites), `require_finite`, `require_all_finite`, and `require_ascending`; every message is unchanged.
+- P-8: the five forwarding `Serializable` impls became one macro, and the CSV warning header and table warning footer became `write_csv_warnings` and `write_table_warnings` (the heading is a parameter, since the batch says "Aggregated warnings" and `SolverResult` has its own layout). Not done: merging the `SweepResult` and `PhotonSweepResult` row writers. The Green's-function columns sit between the PDE columns, so a shared writer needs a branch per column, and it would save little.
+- P-2: `InjectionScenario::default_sigma_z` (5 sites), `InjectionScenario::refine_grid` (4 sites, including `SolverBuilder::build`), and `default_n_threads` (3 sites). No `run_one_solve`: after P-1 two solve loops remain, and they differ in the Green's-function step.
+- P-1: `photon-sweep` and `photon-sweep-batch` share `run_photon_sweeps`. `photon-sweep` keeps rows in `--z-injections` order and its own labels; the batch still sorts each group by z_h. `PhotonSweepOpts` stays, so the CLI parser is unchanged.
+- P-4: `validate_and_collect_warnings` moved to `solver::preflight_checks`, which the CLI and `SolverBuilder::build` both call. The CLI output is unchanged. The builder changes in three ways: it now rejects `z_end` above the injection window (new test `test_builder_rejects_z_end_above_injection_window`), its z_start error prints `.3e` instead of `.1e`, and it no longer pushes its own resonance z_start warning, which duplicated the run-time warning in `try_run_with_snapshots`. That run-time warning told users to "prefer SolverBuilder", which was wrong advice for builder users; it now says to leave z_start unset. This is the one CLI output change in phase 7 (resonant scenarios with `--z-start` only). `execute_solve` still calls `injection.validate()` once before the resonance check, so a bad injection fails before the resonance error.
+- P-7, partly: `SolverBuilder` holds one `SolverConfig` plus `z_start_explicit` instead of an `Option` per field. The three flags (`disable_dcbr`, `coupled_dcbr`, `number_conserving`) stay on the solver. Moving them into `SolverConfig` would make `set_config` reset them, and the CLI and about 25 test sites set a flag before calling `set_config`, so the move would silently drop flags instead of failing to compile.
+- Bit-identity: 33 CLI cases (the phase 6 set plus CSV and table output for every result type, unsorted `--z-injections` for both photon sweeps, two invalid inputs, and a resonance run with `--z-start`) give byte-identical stdout and stderr, apart from `physics_hash` and the intended warning text in the resonance case. A production-code-reviewer found no byte-identity break and confirmed the builder gives the same config for every setter order.
+- Suite after phase 7: 451 pass and 4 ignored in the default build, 460 and 4 with `--features axion` (one new test).
 
 **Phase 8: Python.** Y-1, Y-2.
 

@@ -18,7 +18,7 @@
 
 use crate::constants::*;
 use crate::cosmology::Cosmology;
-use crate::grid::RefinementZone;
+use crate::grid::{GridConfig, RefinementZone};
 use crate::spectrum::planck;
 
 /// Computes vacuum survival fraction for decaying particle photon injection.
@@ -478,6 +478,51 @@ pub fn load_photon_source_table(path: &str) -> Result<InjectionScenario, String>
     })
 }
 
+/// Returns `Err("{name} must be positive and finite, got {v}")` unless `v` is
+/// finite and positive.
+fn require_pos(name: &str, v: f64) -> Result<(), String> {
+    if !v.is_finite() || v <= 0.0 {
+        return Err(format!("{name} must be positive and finite, got {v}"));
+    }
+    Ok(())
+}
+
+/// Returns `Err("{name} must be finite, got {v}")` unless `v` is finite.
+fn require_finite(name: &str, v: f64) -> Result<(), String> {
+    if !v.is_finite() {
+        return Err(format!("{name} must be finite, got {v}"));
+    }
+    Ok(())
+}
+
+/// Returns an error naming the first non-finite entry of `values`.
+fn require_all_finite(name: &str, values: &[f64]) -> Result<(), String> {
+    for (i, &v) in values.iter().enumerate() {
+        if !v.is_finite() {
+            return Err(format!("{name}[{i}]={v} is not finite"));
+        }
+    }
+    Ok(())
+}
+
+/// Returns an error naming the first entry of `values` that is not strictly
+/// greater than the one before it. `sym` is the short symbol the message
+/// indexes (`z` for `z_table`).
+fn require_ascending(name: &str, sym: &str, values: &[f64]) -> Result<(), String> {
+    for i in 1..values.len() {
+        if values[i] <= values[i - 1] {
+            return Err(format!(
+                "{name} must be strictly ascending: {sym}[{}]={} not > {sym}[{}]={}",
+                i,
+                values[i],
+                i - 1,
+                values[i - 1]
+            ));
+        }
+    }
+    Ok(())
+}
+
 impl InjectionScenario {
     /// Returns the CLI-friendly name for this injection scenario.
     pub fn name(&self) -> &str {
@@ -506,14 +551,8 @@ impl InjectionScenario {
                 sigma_z,
                 delta_rho_over_rho,
             } => {
-                if !z_h.is_finite() || *z_h <= 0.0 {
-                    return Err(format!("z_h must be positive and finite, got {z_h}"));
-                }
-                if !sigma_z.is_finite() || *sigma_z <= 0.0 {
-                    return Err(format!(
-                        "sigma_z must be positive and finite, got {sigma_z}"
-                    ));
-                }
+                require_pos("z_h", *z_h)?;
+                require_pos("sigma_z", *sigma_z)?;
                 if *sigma_z > 0.3 * *z_h {
                     return Err(format!(
                         "sigma_z must be ≲ 0.3 × z_h for the narrow-Gaussian approximation \
@@ -522,29 +561,17 @@ impl InjectionScenario {
                         sigma_z / z_h
                     ));
                 }
-                if !delta_rho_over_rho.is_finite() {
-                    return Err(format!(
-                        "delta_rho_over_rho must be finite, got {delta_rho_over_rho}"
-                    ));
-                }
+                require_finite("delta_rho_over_rho", *delta_rho_over_rho)?;
                 Ok(())
             }
             InjectionScenario::DecayingParticle { f_x, gamma_x } => {
-                if !f_x.is_finite() || *f_x <= 0.0 {
-                    return Err(format!("f_x must be positive and finite, got {f_x}"));
-                }
-                if !gamma_x.is_finite() || *gamma_x <= 0.0 {
-                    return Err(format!(
-                        "gamma_x must be positive and finite, got {gamma_x}"
-                    ));
-                }
+                require_pos("f_x", *f_x)?;
+                require_pos("gamma_x", *gamma_x)?;
                 Ok(())
             }
             InjectionScenario::AnnihilatingDM { f_ann }
             | InjectionScenario::AnnihilatingDMPWave { f_ann } => {
-                if !f_ann.is_finite() || *f_ann <= 0.0 {
-                    return Err(format!("f_ann must be positive and finite, got {f_ann}"));
-                }
+                require_pos("f_ann", *f_ann)?;
                 Ok(())
             }
             InjectionScenario::MonochromaticPhotonInjection {
@@ -554,22 +581,10 @@ impl InjectionScenario {
                 sigma_z,
                 sigma_x,
             } => {
-                if !x_inj.is_finite() || *x_inj <= 0.0 {
-                    return Err(format!("x_inj must be positive and finite, got {x_inj}"));
-                }
-                if !delta_n_over_n.is_finite() {
-                    return Err(format!(
-                        "delta_n_over_n must be finite, got {delta_n_over_n}"
-                    ));
-                }
-                if !z_h.is_finite() || *z_h <= 0.0 {
-                    return Err(format!("z_h must be positive and finite, got {z_h}"));
-                }
-                if !sigma_z.is_finite() || *sigma_z <= 0.0 {
-                    return Err(format!(
-                        "sigma_z must be positive and finite, got {sigma_z}"
-                    ));
-                }
+                require_pos("x_inj", *x_inj)?;
+                require_finite("delta_n_over_n", *delta_n_over_n)?;
+                require_pos("z_h", *z_h)?;
+                require_pos("sigma_z", *sigma_z)?;
                 if *sigma_z > 0.3 * *z_h {
                     return Err(format!(
                         "sigma_z must be ≲ 0.3 × z_h for the narrow-Gaussian approximation \
@@ -577,11 +592,7 @@ impl InjectionScenario {
                         sigma_z / z_h
                     ));
                 }
-                if !sigma_x.is_finite() || *sigma_x <= 0.0 {
-                    return Err(format!(
-                        "sigma_x must be positive and finite, got {sigma_x}"
-                    ));
-                }
+                require_pos("sigma_x", *sigma_x)?;
                 // The Gaussian-in-x source normalisation ∫ x² · profile(x) dx
                 // = G₂ uses the factor 1/x² evaluated at the local x, not x_inj.
                 // This is accurate when σ_x ≪ x_inj so that x ≈ x_inj over the
@@ -605,30 +616,14 @@ impl InjectionScenario {
                 gamma_x,
                 ..
             } => {
-                if !x_inj_0.is_finite() || *x_inj_0 <= 0.0 {
-                    return Err(format!(
-                        "x_inj_0 must be positive and finite, got {x_inj_0}"
-                    ));
-                }
-                if !f_inj.is_finite() || *f_inj <= 0.0 {
-                    return Err(format!("f_inj must be positive and finite, got {f_inj}"));
-                }
-                if !gamma_x.is_finite() || *gamma_x <= 0.0 {
-                    return Err(format!(
-                        "gamma_x must be positive and finite, got {gamma_x}"
-                    ));
-                }
+                require_pos("x_inj_0", *x_inj_0)?;
+                require_pos("f_inj", *f_inj)?;
+                require_pos("gamma_x", *gamma_x)?;
                 Ok(())
             }
             InjectionScenario::DarkPhotonResonance { epsilon, m_ev } => {
-                if !epsilon.is_finite() || *epsilon <= 0.0 {
-                    return Err(format!(
-                        "epsilon must be positive and finite, got {epsilon}"
-                    ));
-                }
-                if !m_ev.is_finite() || *m_ev <= 0.0 {
-                    return Err(format!("m_ev must be positive and finite, got {m_ev}"));
-                }
+                require_pos("epsilon", *epsilon)?;
+                require_pos("m_ev", *m_ev)?;
                 Ok(())
             }
             #[cfg(feature = "axion")]
@@ -637,17 +632,9 @@ impl InjectionScenario {
                 b_rms,
                 m_ev,
             } => {
-                if !g_agamma.is_finite() || *g_agamma <= 0.0 {
-                    return Err(format!(
-                        "g_agamma must be positive and finite, got {g_agamma}"
-                    ));
-                }
-                if !b_rms.is_finite() || *b_rms <= 0.0 {
-                    return Err(format!("b_rms must be positive and finite, got {b_rms}"));
-                }
-                if !m_ev.is_finite() || *m_ev <= 0.0 {
-                    return Err(format!("m_ev must be positive and finite, got {m_ev}"));
-                }
+                require_pos("g_agamma", *g_agamma)?;
+                require_pos("b_rms", *b_rms)?;
+                require_pos("m_ev", *m_ev)?;
                 Ok(())
             }
             InjectionScenario::TabulatedHeating {
@@ -666,16 +653,8 @@ impl InjectionScenario {
                 }
                 // Finiteness first so the monotonicity check below can rely on
                 // a total order (NaN slips past `<=` silently).
-                for (i, &z) in z_table.iter().enumerate() {
-                    if !z.is_finite() {
-                        return Err(format!("z_table[{i}]={z} is not finite"));
-                    }
-                }
-                for (i, &r) in rate_table.iter().enumerate() {
-                    if !r.is_finite() {
-                        return Err(format!("rate_table[{i}]={r} is not finite"));
-                    }
-                }
+                require_all_finite("z_table", z_table)?;
+                require_all_finite("rate_table", rate_table)?;
                 if z_table[0] <= 0.0 {
                     return Err(format!(
                         "z_table[0]={} must be positive (interpolation uses log z)",
@@ -686,17 +665,7 @@ impl InjectionScenario {
                 // ascending order. A non-monotone table silently produces
                 // garbage rates with no error — CLAUDE.md calls this out as
                 // a silent-failure mode. Reject at validate() time.
-                for i in 1..z_table.len() {
-                    if z_table[i] <= z_table[i - 1] {
-                        return Err(format!(
-                            "z_table must be strictly ascending: z[{}]={} not > z[{}]={}",
-                            i,
-                            z_table[i],
-                            i - 1,
-                            z_table[i - 1]
-                        ));
-                    }
-                }
+                require_ascending("z_table", "z", z_table)?;
                 Ok(())
             }
             InjectionScenario::TabulatedPhotonSource {
@@ -717,44 +686,16 @@ impl InjectionScenario {
                         source_2d.len()
                     ));
                 }
-                for (i, &z) in z_table.iter().enumerate() {
-                    if !z.is_finite() {
-                        return Err(format!("z_table[{i}]={z} is not finite"));
-                    }
-                }
-                for (i, &x) in x_grid.iter().enumerate() {
-                    if !x.is_finite() {
-                        return Err(format!("x_grid[{i}]={x} is not finite"));
-                    }
-                }
+                require_all_finite("z_table", z_table)?;
+                require_all_finite("x_grid", x_grid)?;
                 if z_table[0] <= 0.0 {
                     return Err(format!("z_table[0]={} must be positive", z_table[0]));
                 }
                 if x_grid[0] <= 0.0 {
                     return Err(format!("x_grid[0]={} must be positive", x_grid[0]));
                 }
-                for i in 1..z_table.len() {
-                    if z_table[i] <= z_table[i - 1] {
-                        return Err(format!(
-                            "z_table must be strictly ascending: z[{}]={} not > z[{}]={}",
-                            i,
-                            z_table[i],
-                            i - 1,
-                            z_table[i - 1]
-                        ));
-                    }
-                }
-                for i in 1..x_grid.len() {
-                    if x_grid[i] <= x_grid[i - 1] {
-                        return Err(format!(
-                            "x_grid must be strictly ascending: x[{}]={} not > x[{}]={}",
-                            i,
-                            x_grid[i],
-                            i - 1,
-                            x_grid[i - 1]
-                        ));
-                    }
-                }
+                require_ascending("z_table", "z", z_table)?;
+                require_ascending("x_grid", "x", x_grid)?;
                 for (iz, row) in source_2d.iter().enumerate() {
                     if row.len() != x_grid.len() {
                         return Err(format!(
@@ -1074,6 +1015,25 @@ impl InjectionScenario {
             }
             _ => Vec::new(),
         }
+    }
+
+    /// Adds this scenario's [`Self::refinement_zones`] to `grid` and lowers
+    /// `grid.x_min` to [`Self::suggested_x_min`] when that is smaller. The
+    /// lower x_min keeps low-frequency photon injection away from the
+    /// Dirichlet boundary, which would otherwise absorb the photons.
+    pub fn refine_grid(&self, grid: &mut GridConfig) {
+        grid.refinement_zones.extend(self.refinement_zones());
+        if let Some(x_min) = self.suggested_x_min() {
+            if x_min < grid.x_min {
+                grid.x_min = x_min;
+            }
+        }
+    }
+
+    /// Returns the default Gaussian width σ_z = max(0.04 z_h, 100) of a burst
+    /// or photon line at `z_h`, used when the caller gives no width.
+    pub fn default_sigma_z(z_h: f64) -> f64 {
+        (z_h * 0.04_f64).max(100.0)
     }
 
     /// Returns the characteristic injection redshifts for this scenario.

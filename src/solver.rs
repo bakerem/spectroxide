@@ -1777,8 +1777,8 @@ impl ThermalizationSolver {
             if (self.config.z_start - z_res).abs() > 1e-6 * z_res {
                 self.diag.warnings.push(format!(
                     "Resonant conversion: z_start={:.3e} ≠ NWA resonance z_res={:.3e}; the \
-                     depletion IC is installed at z_start, not z_res. Prefer SolverBuilder, \
-                     which sets z_start = z_res automatically.",
+                     depletion IC is installed at z_start, not z_res. Leave z_start unset \
+                     (no --z-start, or SolverBuilder without z_range) to start at z_res.",
                     self.config.z_start, z_res
                 ));
             }
@@ -2119,6 +2119,58 @@ impl ThermalizationSolver {
     }
 }
 
+/// Validates a solver setup and returns the soft warnings to attach to it.
+///
+/// Shared by [`SolverBuilder::build`] and the CLI so that both apply the same
+/// checks. Hard errors: an invalid cosmology, grid, config, or injection, and
+/// an injection window that `z_start` cuts off or that `z_end` never reaches.
+/// Soft warnings: [`SolverConfig::soft_warnings`] and the injection's range
+/// warnings. Two warnings are left to the solver, which pushes them itself:
+/// stimulated emission in [`ThermalizationSolver::set_injection`], and a
+/// `z_start` away from a resonance redshift at the start of each run.
+pub(crate) fn preflight_checks(
+    cosmo: &Cosmology,
+    grid_config: &GridConfig,
+    config: &SolverConfig,
+    injection: Option<&InjectionScenario>,
+) -> Result<Vec<String>, String> {
+    cosmo.validate()?;
+    grid_config.validate()?;
+    config.validate()?;
+
+    let mut warnings = config.soft_warnings();
+    let Some(inj) = injection else {
+        return Ok(warnings);
+    };
+    inj.validate()?;
+
+    if let Some((_z_center, z_upper)) = inj.characteristic_redshift() {
+        if config.z_start < z_upper {
+            return Err(format!(
+                "z_start={:.3e} is below the injection window upper bound z={:.3e}. \
+                 The solver would miss part or all of the injection. Set z_start >= {:.3e}.",
+                config.z_start, z_upper, z_upper
+            ));
+        }
+        // With z_end above the window the injection never fires, and the run
+        // returns only the adiabatic-cooling signal.
+        if config.z_end > z_upper {
+            return Err(format!(
+                "z_end={:.3e} is above the injection window upper bound z={:.3e}. \
+                 The solver would terminate before the injection epoch is reached. \
+                 Set z_end < {:.3e}.",
+                config.z_end, z_upper, z_upper
+            ));
+        }
+    }
+
+    warnings.extend(inj.warn_strong_distortion());
+    warnings.extend(inj.warn_tabulated_coverage(config.z_start, config.z_end));
+    warnings.extend(inj.warn_dark_photon_range(cosmo));
+    warnings.extend(inj.warn_axion_range(cosmo));
+    Ok(warnings)
+}
+
 /// Fluent builder for [`ThermalizationSolver`].
 ///
 /// Groups all configuration into a chainable API. The existing
@@ -2128,17 +2180,13 @@ pub struct SolverBuilder {
     cosmo: Cosmology,
     grid_config: GridConfig,
     injection: Option<InjectionScenario>,
-    z_start: Option<f64>,
-    z_end: Option<f64>,
-    dy_max: Option<f64>,
-    dz_min: Option<f64>,
-    dtau_max: Option<f64>,
-    nc_z_min: Option<f64>,
+    config: SolverConfig,
+    /// Whether the caller set `z_start`. If not, `build` uses the resonance
+    /// redshift for resonant scenarios and `config.z_start` otherwise.
+    z_start_explicit: bool,
     disable_dcbr: bool,
     coupled_dcbr: bool,
     number_conserving: bool,
-    max_newton_iter: Option<usize>,
-    dtau_max_photon_source: Option<f64>,
 }
 
 impl SolverBuilder {
@@ -2147,17 +2195,11 @@ impl SolverBuilder {
             cosmo,
             grid_config: GridConfig::default(),
             injection: None,
-            z_start: None,
-            z_end: None,
-            dy_max: None,
-            dz_min: None,
-            dtau_max: None,
-            nc_z_min: None,
+            config: SolverConfig::default(),
+            z_start_explicit: false,
             disable_dcbr: false,
             coupled_dcbr: true,
             number_conserving: true,
-            max_newton_iter: None,
-            dtau_max_photon_source: None,
         }
     }
 
@@ -2181,34 +2223,29 @@ impl SolverBuilder {
 
     /// Sets the redshift range (z_start, z_end).
     pub fn z_range(mut self, z_start: f64, z_end: f64) -> Self {
-        self.z_start = Some(z_start);
-        self.z_end = Some(z_end);
+        self.config.z_start = z_start;
+        self.config.z_end = z_end;
+        self.z_start_explicit = true;
         self
     }
 
     /// Sets a complete solver config, overriding individual z/dy/dtau settings.
     pub fn solver_config(mut self, config: SolverConfig) -> Self {
-        self.z_start = Some(config.z_start);
-        self.z_end = Some(config.z_end);
-        self.dy_max = Some(config.dy_max);
-        self.dz_min = Some(config.dz_min);
-        self.dtau_max = Some(config.dtau_max);
-        self.nc_z_min = Some(config.nc_z_min);
-        self.max_newton_iter = Some(config.max_newton_iter);
-        self.dtau_max_photon_source = Some(config.dtau_max_photon_source);
+        self.config = config;
+        self.z_start_explicit = true;
         self
     }
 
     /// Sets the maximum Compton y-parameter increment per step, Δy_C = θ_e Δτ (the
     /// Kompaneets-accuracy limiter is `dtau_max`, not this).
     pub fn dy_max(mut self, val: f64) -> Self {
-        self.dy_max = Some(val);
+        self.config.dy_max = val;
         self
     }
 
     /// Sets the maximum Compton optical depth per step.
     pub fn dtau_max(mut self, val: f64) -> Self {
-        self.dtau_max = Some(val);
+        self.config.dtau_max = val;
         self
     }
 
@@ -2232,21 +2269,21 @@ impl SolverBuilder {
 
     /// Sets the maximum number of Newton iterations per Kompaneets step.
     pub fn max_newton_iter(mut self, val: usize) -> Self {
-        self.max_newton_iter = Some(val);
+        self.config.max_newton_iter = val;
         self
     }
 
     /// Sets the maximum Compton optical depth per step while a photon source is
     /// active ([`SolverConfig::dtau_max_photon_source`], default 1.0).
     pub fn dtau_max_photon_source(mut self, val: f64) -> Self {
-        self.dtau_max_photon_source = Some(val);
+        self.config.dtau_max_photon_source = val;
         self
     }
 
     /// Sets the redshift below which the number-conserving T-shift subtraction
     /// is off ([`SolverConfig::nc_z_min`], default 5e4; 0 applies it at all z).
     pub fn nc_z_min(mut self, val: f64) -> Self {
-        self.nc_z_min = Some(val);
+        self.config.nc_z_min = val;
         self
     }
 
@@ -2256,103 +2293,32 @@ impl SolverBuilder {
     /// before constructing the solver. Returns `Err` with a descriptive message
     /// if any parameter is invalid.
     pub fn build(self) -> Result<ThermalizationSolver, String> {
-        // Validate all configuration
+        // Before `resonance_params` below, which reads the cosmology.
         self.cosmo.validate()?;
-
         let mut grid_config = self.grid_config;
 
         // Auto-apply refinement zones and x_min adjustment from injection scenario
         if let Some(ref inj) = self.injection {
-            for zone in inj.refinement_zones() {
-                grid_config.refinement_zones.push(zone);
-            }
-            // Lower x_min for low-frequency photon injection to prevent
-            // boundary absorption (Dirichlet BC eats photons at x_min).
-            if let Some(x_min) = inj.suggested_x_min() {
-                if x_min < grid_config.x_min {
-                    grid_config.x_min = x_min;
-                }
-            }
+            inj.refine_grid(&mut grid_config);
         }
-
-        grid_config.validate()?;
-
-        let defaults = SolverConfig::default();
 
         // For resonant conversion scenarios (dark photon, axion) the impulsive
         // Δn depletion happens at the NWA resonance z_res; evolving from a
         // higher z_start is unphysical (the conversion hasn't occurred yet) and
         // evolving from lower misses it entirely. Default z_start to z_res when
         // the user didn't supply an explicit value.
-        let res_z_res = self
-            .injection
-            .as_ref()
-            .and_then(|inj| inj.resonance_params(&self.cosmo))
-            .map(|(_gamma, z_res)| z_res);
-        let resolved_z_start = match (self.z_start, res_z_res) {
-            (Some(z), _) => z,
-            (None, Some(z_res)) => z_res,
-            (None, None) => defaults.z_start,
-        };
-
-        let config = SolverConfig {
-            z_start: resolved_z_start,
-            z_end: self.z_end.unwrap_or(defaults.z_end),
-            dy_max: self.dy_max.unwrap_or(defaults.dy_max),
-            dz_min: self.dz_min.unwrap_or(defaults.dz_min),
-            dtau_max: self.dtau_max.unwrap_or(defaults.dtau_max),
-            nc_z_min: self.nc_z_min.unwrap_or(defaults.nc_z_min),
-            dtau_max_photon_source: self
-                .dtau_max_photon_source
-                .unwrap_or(defaults.dtau_max_photon_source),
-            max_newton_iter: self.max_newton_iter.unwrap_or(defaults.max_newton_iter),
-        };
-        config.validate()?;
-
-        let mut deferred_warnings: Vec<String> = config.soft_warnings();
-
-        if let Some(ref inj) = self.injection {
-            inj.validate()?;
-
-            // Check z_start is high enough to capture the injection
-            if let Some((_z_center, z_upper)) = inj.characteristic_redshift() {
-                if config.z_start < z_upper {
-                    return Err(format!(
-                        "z_start={:.1e} is below the injection window upper bound z={:.1e}. \
-                         The solver would miss part or all of the injection. \
-                         Set z_start >= {:.1e}.",
-                        config.z_start, z_upper, z_upper
-                    ));
-                }
-            }
-
-            // Warn if the caller explicitly asked for a z_start that doesn't
-            // coincide with the resonance (dark photon / axion): the NWA IC is
-            // installed there, so mismatched z_start accumulates spurious
-            // pre-resonance thermalisation (or skips the resonance entirely).
-            if let (Some(z_user), Some(z_res)) = (self.z_start, res_z_res) {
-                if (z_user - z_res).abs() > 1e-6 * z_res {
-                    deferred_warnings.push(format!(
-                        "Resonant conversion: z_start={z_user:.3e} differs from NWA resonance \
-                         redshift z_res={z_res:.3e}; μ/y will include spurious evolution between \
-                         these redshifts. Omit z_start to auto-set it to z_res."
-                    ));
-                }
-            }
-
-            for warning in inj.warn_strong_distortion() {
-                deferred_warnings.push(warning);
-            }
-            for warning in inj.warn_tabulated_coverage(config.z_start, config.z_end) {
-                deferred_warnings.push(warning);
-            }
-            for warning in inj.warn_dark_photon_range(&self.cosmo) {
-                deferred_warnings.push(warning);
-            }
-            for warning in inj.warn_axion_range(&self.cosmo) {
-                deferred_warnings.push(warning);
+        let mut config = self.config;
+        if !self.z_start_explicit {
+            if let Some((_gamma, z_res)) = self
+                .injection
+                .as_ref()
+                .and_then(|inj| inj.resonance_params(&self.cosmo))
+            {
+                config.z_start = z_res;
             }
         }
+        let deferred_warnings =
+            preflight_checks(&self.cosmo, &grid_config, &config, self.injection.as_ref())?;
 
         let mut solver = ThermalizationSolver::new(self.cosmo, grid_config);
         solver.set_config(config);
@@ -3169,6 +3135,24 @@ mod tests {
         let json = result.to_json();
         assert!(json.contains("\"pde_mu\":"));
         assert!(json.contains("\"diag_newton_exhausted\":"));
+    }
+
+    /// The builder and the CLI share `preflight_checks`, so the builder, like
+    /// the CLI, rejects a run that ends before the injection window opens.
+    #[test]
+    fn test_builder_rejects_z_end_above_injection_window() {
+        let err = ThermalizationSolver::builder(Cosmology::default())
+            .grid_fast()
+            .injection(InjectionScenario::SingleBurst {
+                z_h: 2e5,
+                delta_rho_over_rho: 1e-5,
+                sigma_z: 100.0,
+            })
+            .z_range(3e5, 2.5e5)
+            .build()
+            .err()
+            .expect("z_end above the burst window must be rejected");
+        assert!(err.contains("z_end=2.500e5"), "{err}");
     }
 
     /// A-7: the builder sets `dtau_max_photon_source` and `nc_z_min`,
