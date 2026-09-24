@@ -2403,6 +2403,39 @@ fn test_axion_gamma_con_coupling_scaling() {
     assert!((g_b / g0 - 4.0).abs() < 1e-9, "B scaling: {}", g_b / g0);
 }
 
+/// Axion support is experimental: attaching an `AxionResonance` scenario must
+/// push the experimental warning exactly once, and no other scenario may.
+#[cfg(feature = "axion")]
+#[test]
+fn test_axion_experimental_warning() {
+    let cosmo = Cosmology::default();
+    let count = |scenario: InjectionScenario| {
+        let mut solver = ThermalizationSolver::new(cosmo.clone(), GridConfig::default());
+        solver.set_injection(scenario).expect("valid scenario");
+        solver
+            .diag
+            .warnings
+            .iter()
+            .filter(|w| w.as_str() == spectroxide::axion::EXPERIMENTAL_WARNING)
+            .count()
+    };
+    let axion = InjectionScenario::AxionResonance {
+        g_agamma: 1e-10,
+        b_rms: 1.0,
+        m_ev: 1e-6,
+    };
+    let dark = InjectionScenario::DarkPhotonResonance {
+        epsilon: 1e-6,
+        m_ev: 1e-6,
+    };
+    assert_eq!(count(axion), 1, "axion run must warn exactly once");
+    assert_eq!(
+        count(dark),
+        0,
+        "dark-photon run must not carry the axion warning"
+    );
+}
+
 /// Dark photon: verify plasma frequency formula against independent computation.
 ///
 /// The plasma frequency is:

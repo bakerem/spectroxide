@@ -1089,11 +1089,12 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!("                        x_inj = x_inj_0 / (1+z), with T_0 = T_CMB today");
             println!("  dark-photon-resonance --epsilon <kinetic mixing>, --m-ev <mass in eV>");
             #[cfg(feature = "axion")]
-            println!(
-                "  axion-resonance       --g-agamma <1/GeV>, --b-rms <nG>, --m-ev <mass in eV>"
-            );
-            #[cfg(not(feature = "axion"))]
-            println!("  axion-resonance       (requires a build with --features axion)");
+            {
+                println!(
+                    "  axion-resonance       --g-agamma <1/GeV>, --b-rms <nG>, --m-ev <mass in eV>"
+                );
+                println!("                        (experimental, not thoroughly tested)");
+            }
             println!("  tabulated-heating     --heating-table <PATH> (CSV: z, dQ/dz)");
             println!("  tabulated-photon      --photon-table <PATH> (CSV: z, x1..xN)");
             println!();

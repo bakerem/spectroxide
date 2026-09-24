@@ -90,15 +90,6 @@ secondary; the PDE solver computes the science targets.
       (ω_pl, z_res, γ_con) for resonant γ↔A' conversion; the route to
       reproduce the dark-photon constraint numbers.
 
-   .. grid-item-card:: Axion helpers (experimental)
-      :link: axion
-      :link-type: doc
-
-      ``spectroxide.axion`` — narrow-width-approximation helpers for
-      resonant γ↔a conversion.
-      Experimental; the PDE path needs a binary built with
-      ``--features axion``.
-
    .. grid-item-card:: Plotting
       :link: style
       :link-type: doc
@@ -125,5 +116,4 @@ with a deprecation warning.
    firas
    cosmology
    dark_photon
-   axion
    style

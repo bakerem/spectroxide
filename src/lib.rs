@@ -57,8 +57,10 @@
 pub const PHYSICS_HASH: &str = env!("PHYSICS_HASH");
 
 /// Resonant axion–photon conversion. Behind the off-by-default `axion` feature
-/// (see `Cargo.toml`): the physics is implemented and tested, but it is not part
-/// of the released feature set. Enable with `--features axion`.
+/// (see `Cargo.toml`): experimental, not thoroughly tested, and not part of the
+/// released feature set or the user-facing docs. `set_injection` pushes
+/// [`axion::EXPERIMENTAL_WARNING`] for every axion run. Enable with
+/// `--features axion`.
 #[cfg(feature = "axion")]
 pub mod axion;
 pub mod bremsstrahlung;

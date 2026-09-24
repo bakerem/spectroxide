@@ -20,7 +20,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | Phase | Items | Status | Branch or commit |
 |---|---|---|---|
 | 0 | D-1 to D-4, D-6, H-4, H-5 | Done 2026-09-24; D-5 moved to phase 2 | see `git log` |
-| 1 | X-1 | Not started | |
+| 1 | X-1 | Done 2026-09-24 (see note under X-1) | see `git log` |
 | 2 | T-1, T-3, T-11, T-12, T-15 | Not started | |
 | 3 | T-2, T-6 to T-10, T-13 | Not started | |
 | 4 | T-4, T-5, T-14, T-16 | Not started | |
@@ -86,6 +86,7 @@ All line numbers are in `tests/heat_injection.rs` unless another file is named. 
   - Python: `warnings.warn(...)` when `solve()` receives `"axion_resonance"`, and on the first call into `spectroxide.axion` helpers.
   - Add one test per language that asserts the warning appears.
   - Check that notebooks under `notebooks/tutorials/` and `docs/` do not mention axion (the current mentions are in `notebooks/observational/` and `paper_figures/`, which are analysis notebooks, not docs; leave them).
+  - Done (phase 1), with one change: `solve()` has no Python-side warning of its own. The Rust warning reaches Python through `_emit_solver_warnings`, which re-emits every warning in the binary's JSON, so a second Python warning would duplicate it. The Rust test is `test_axion_experimental_warning` (feature build); the Python test is `TestAxionExperimentalWarning` in `python/tests/test_solver.py`. In the default build, `spectroxide help` no longer mentions axion; the feature build lists `axion-resonance` marked experimental.
 
 ### Rust production code (P)
 

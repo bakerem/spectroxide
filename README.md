@@ -303,7 +303,6 @@ python/spectroxide/
 ├── solver.py              # Rust binary wrapper + run_single()
 ├── firas.py               # FIRAS data and constraint utilities
 ├── dark_photon.py         # Narrow-width-approximation helpers (γ_con, z_res) — Python port
-├── axion.py               # γ↔a narrow-width-approximation helpers (experimental; PDE path needs --features axion)
 ├── cosmotherm.py          # CosmoTherm data loaders (submodule import)
 ├── plot_params.py         # Plot constants (submodule import)
 ├── style.py               # Matplotlib style helpers

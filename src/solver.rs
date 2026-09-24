@@ -785,6 +785,12 @@ impl ThermalizationSolver {
         for warning in scenario.warn_stimulated_emission() {
             self.diag.warnings.push(warning);
         }
+        #[cfg(feature = "axion")]
+        if matches!(scenario, InjectionScenario::AxionResonance { .. }) {
+            self.diag
+                .warnings
+                .push(crate::axion::EXPERIMENTAL_WARNING.to_string());
+        }
 
         // Surface the case where the caller built a grid that doesn't span
         // the injection frequency. The refinement zone is silently clipped

@@ -40,6 +40,13 @@ use crate::constants::*;
 use crate::cosmology::Cosmology;
 use crate::dark_photon::{dln_omega_pl_sq_dlna, resonance_redshift};
 
+/// Run-time warning that `ThermalizationSolver::set_injection` pushes, once
+/// per run, for `InjectionScenario::AxionResonance`. The user-facing docs
+/// omit axion support, so this warning is the only notice a user gets.
+pub const EXPERIMENTAL_WARNING: &str = "AxionResonance: axion–photon conversion support is \
+     experimental and not thoroughly tested; do not rely on its results without an \
+     independent check.";
+
 /// Normalization of the axion mixing coupling `κ = g_aγγ B_rms` in eV,
 /// per unit of the dimensionless combination `ε = (g_aγγ/10⁻¹⁰GeV⁻¹)(B_rms/nG)`.
 ///

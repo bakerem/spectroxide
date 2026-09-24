@@ -35,6 +35,7 @@ References
 
 from __future__ import annotations
 
+import warnings
 from typing import Tuple
 
 import numpy as np
@@ -49,6 +50,25 @@ from .dark_photon import (
 )
 from .greens import _K_BOLTZMANN, _cosmo_hubble
 from . import DEFAULT_COSMO
+
+#: Warning issued, once per process, on the first call to :func:`kappa_ev` or
+#: :func:`gamma_con_axion`. Mirrors ``EXPERIMENTAL_WARNING`` in ``src/axion.rs``.
+EXPERIMENTAL_WARNING = (
+    "spectroxide.axion: axion-photon conversion support is experimental and "
+    "not thoroughly tested; do not rely on its results without an independent "
+    "check."
+)
+_experimental_warned = False
+
+
+def _warn_experimental() -> None:
+    """Issues :data:`EXPERIMENTAL_WARNING` on the first call in this process."""
+    global _experimental_warned
+    if _experimental_warned:
+        return
+    _experimental_warned = True
+    warnings.warn(EXPERIMENTAL_WARNING, UserWarning, stacklevel=3)
+
 
 #: Normalization of κ = g_aγγ B_rms in eV per unit ε = (g/10⁻¹⁰GeV⁻¹)(B/nG).
 #: Cyr, Chluba & Manoj (2024), Eq. 3b.
@@ -82,6 +102,7 @@ def kappa_ev(g_agamma: float, b_rms: float) -> float:
         ``κ`` in eV, using Eq. 3b/3c:
         ``κ = 1.95×10⁻³⁰ eV × (g_aγγ/10⁻¹⁰GeV⁻¹)(B_rms/nG)``.
     """
+    _warn_experimental()
     return KAPPA_PER_EPSILON_EV * (g_agamma / 1.0e-10) * b_rms
 
 
@@ -119,6 +140,7 @@ def gamma_con_axion(
         ``(γ_con, z_res)`` if a resonance exists in the search bracket,
         otherwise ``(None, None)``.
     """
+    _warn_experimental()
     if cosmo is None:
         cosmo = DEFAULT_COSMO
     z_res = resonance_redshift(m_ev, cosmo)

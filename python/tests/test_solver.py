@@ -941,3 +941,17 @@ class TestPdeKwargsScopedToSource:
                 no_dcbr=True,
                 **extra,
             )
+
+
+class TestAxionExperimentalWarning:
+    """The axion helpers warn once per process that support is experimental."""
+
+    def test_first_call_warns_once(self, monkeypatch):
+        from spectroxide import axion
+
+        monkeypatch.setattr(axion, "_experimental_warned", False)
+        with pytest.warns(UserWarning, match="experimental") as record:
+            axion.gamma_con_axion(1e-10, 1.0, 1e-6)
+            axion.kappa_ev(1e-10, 1.0)
+        hits = [r for r in record if str(r.message) == axion.EXPERIMENTAL_WARNING]
+        assert len(hits) == 1
