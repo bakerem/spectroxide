@@ -9,8 +9,7 @@
 //! (`spectrum::compton_equilibrium_ratio`, called by
 //! `electron_temp::ElectronTemperature::update_equilibrium`). Linearized about
 //! Planck, for dn = y·Y_SZ(x) and dn = mu·M(x) the response is
-//! `d rho_eq = COEFF · amplitude`. `test_compton_equilibrium_mu_distortion`
-//! only checks the sign/order of magnitude; this file pins the **amplitude**
+//! `d rho_eq = COEFF · amplitude`. This file pins the **amplitude**
 //! against coefficients computed independently by mpmath quadrature from the
 //! analytic shapes (dev/scripts/compton_equilibrium_coefficients.py).
 //!

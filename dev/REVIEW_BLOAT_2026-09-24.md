@@ -22,7 +22,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | 0 | D-1 to D-4, D-6, H-4, H-5 | Done 2026-09-24; D-5 moved to phase 2 | see `git log` |
 | 1 | X-1 | Done 2026-09-24 (see note under X-1) | see `git log` |
 | 2 | T-1, T-3, T-11, T-12, T-15, D-5 | Done 2026-09-24 (see phase 2 notes) | see `git log` |
-| 3 | T-2, T-6 to T-10, T-13 | Not started | |
+| 3 | T-2, T-6 to T-10, T-13 | Done 2026-09-24 (see phase 3 notes) | see `git log` |
 | 4 | T-4, T-5, T-14, T-16 | Not started | |
 | 5 | C-1 | Not started | |
 | 6 | P-3, P-5, P-6, P-10, P-11 | Not started | |
@@ -141,6 +141,16 @@ Phase 2 notes (2026-09-24). A fresh claim-verifier checked 39 deletions: 29 conf
 - Term-matrix rows 5, 8, and 14 repointed to surviving tests.
 
 **Phase 3: test cleanup, weaker copies.** T-2, T-6 to T-10, T-13. Repoint term-matrix rows 4, 8, 10, and 14.
+
+Phase 3 notes (2026-09-24). Two fresh claim-verifiers checked 45 deletions: 26 confirmed, 19 partial, none refuted outright. Outcome:
+
+- Deleted 35 tests from `heat_injection.rs` (1,757 lines, including 27 section banners left empty): 14 from the Green's-function, era, linearity, and near-duplicate groups (T-2, T-6, T-7, T-13), and all 21 from the recombination, DC/BR/Gaunt, and Compton-equilibrium groups (T-8 to T-10).
+- Kept, because the verifier found an assertion the replacement lacks: `golden_mu_era_spectral_shape` and `golden_y_era_spectral_shape` (with the transition golden test, the only `diag_newton_exhausted == 0` checks in the suite), `test_y_era_burst_spectral_purity` (z_h = 1e4), `test_thermalization_era_pure_temperature_shift` (the only energy check above z = 5e5), `test_pde_linearity_double_injection` (Δρ ratio, z = 5e4), `test_extreme_small_injection` (100× amplitude range), `coverage_gaps::coupled_vs_split_dcbr_consistency` (5% Δρ agreement at z_h = 2e5), `test_photon_injection_number_conservation_pure_kompaneets` (the only number check with DC/BR on), `test_mu_decay_eigenvalue` (not sign-only: μ/μ₀ > 0.85 under Kompaneets alone), and `test_dcbr_thermalizes_mu_distortion`. Phase 4 can fold some into the T-5 table.
+- Merged into `src/recombination.rs` before deleting: the three helium and Saha tests into `test_helium_saha_transitions`; X_e(1e4) = 1.16 ± 0.10, X_e(3000) in (1.0, 1.2), X_e(1500) > 0.9, X_e(1400) in (0.60, 1.05), and monotonicity over 2000 to 1500 into the new `test_xe_bounds_between_anchors`; the cache test's extra points (1% at z = 50, 1e4, 5e5; 2% across the Saha to Peebles switch) into `test_recombination_history_matches_uncached`. One deleted test had X_e(1e4) centered at 1 + f_He = 1.079; the right value is 1 + 2f_He ≈ 1.16, because helium is still doubly ionized at z = 1e4.
+- Physics fix. `test_full_te_rho_e_for_mu_distortion` asserted ρ_eq > 1 for a Bose–Einstein spectrum. Every BE spectrum obeys n(1 + n) = −dn/dx, so I₄ = 4G₃ and ρ_eq = 1 exactly. The assertion passed only because of the 2.2e-6 quadrature error (pitfall #9). It now asserts ρ_eq(BE) − ρ_eq(Planck) < 1e-8 on one grid (measured: 2e-14). The deleted `test_compton_equilibrium_mu_distortion_deviation` pinned that same quadrature error inside (1e-5, 1e-3).
+- Removed the now-unused `assert_rel` helper. Term-matrix rows 5, 6, 7, 8, and 10 repointed; row 4 needed no change, because its test was kept.
+- Suite after phase 3: 450 pass and 4 ignored in the default build, 459 and 4 with `--features axion`. The CLAUDE.md counts are updated in phase 4.
+- Dated audit records (`TEST_PROVENANCE.md`, `test_assertions.json`, `test_redundancy_audit.md`, `R2_WRAPUP_TODO.md`, the 2026-07 plan files) still name deleted tests. They are records of their dates and were left as written.
 
 **Phase 4: test structure.** T-14 shared helpers, then the T-4 and T-5 tables (each row keeps its original tolerance), then the T-16 split. Update the test counts in CLAUDE.md.
 

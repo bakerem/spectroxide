@@ -566,29 +566,104 @@ mod tests {
     #[test]
     fn test_helium_saha_transitions() {
         let cosmo = Cosmology::default();
+        let f_he = cosmo.y_p / (4.0 * (1.0 - cosmo.y_p));
 
-        // At z=50000 (T ~ 136,000 K): He should be fully doubly ionized
-        let y_ii = saha_he_ii(50000.0, &cosmo);
-        assert!(y_ii > 0.99, "He²⁺ fraction at z=50000 should be ~1: {y_ii}");
+        // Hydrogen Saha: fully ionized at z = 3000, neutral by z = 500, monotonic between
+        assert!((saha_hydrogen(3000.0, &cosmo) - 1.0).abs() < 1e-3);
+        assert!(saha_hydrogen(500.0, &cosmo) < 1e-5);
+        let mut prev = 0.0;
+        for z in (1000..2500).step_by(50) {
+            let x = saha_hydrogen(z as f64, &cosmo);
+            assert!(x >= prev - 1e-10, "Saha not monotonic at z={z}");
+            prev = x;
+        }
+        // Peebles lags Saha: recombination is slower than equilibrium
+        for z in [1000.0, 800.0, 600.0] {
+            assert!(
+                ionization_fraction(z, &cosmo) > saha_hydrogen(z, &cosmo),
+                "Peebles > Saha at z={z}"
+            );
+        }
 
-        // At z=10000 (T ~ 27,000 K): He II recombining
-        let y_ii_mid = saha_he_ii(10000.0, &cosmo);
-        eprintln!("He²⁺ at z=10000: {y_ii_mid:.3}");
-
-        // At z=3000 (T ~ 8,200 K): He I should be mostly ionized
-        let y_i = saha_he_i(3000.0, &cosmo);
-        assert!(y_i > 0.5, "He⁺ fraction at z=3000 should be >0.5: {y_i}");
-
-        // (High-z X_e = 1 + 2f_He tested in test_fully_ionized_high_z)
-
-        // X_e should decrease smoothly through He recombination
-        let x_e_8k = ionization_fraction(8000.0, &cosmo);
-        let x_e_5k = ionization_fraction(5000.0, &cosmo);
-        eprintln!("X_e(z=8000)={x_e_8k:.4}, X_e(z=5000)={x_e_5k:.4}");
+        // He²⁺ at z ≥ 1e4, He⁺ dominant at z = 4000, He⁰ growing by z = 1500
+        assert!(saha_he_ii(50000.0, &cosmo) > 0.99);
+        assert!(saha_he_ii(2e4, &cosmo) > 0.99 && saha_he_i(2e4, &cosmo) > 0.99);
+        assert!(saha_he_ii(1e4, &cosmo) > 0.95);
+        let (y_ii_4k, y_i_4k) = (saha_he_ii(4000.0, &cosmo), saha_he_i(4000.0, &cosmo));
         assert!(
-            x_e_8k >= x_e_5k,
-            "X_e should decrease from z=8000 to z=5000"
+            y_ii_4k < 0.1 && y_i_4k > 0.9,
+            "z=4000 should be dominantly He⁺: y_ii={y_ii_4k:.4}, y_i={y_i_4k:.4}"
         );
+        assert!(saha_he_ii(3000.0, &cosmo) < 0.5);
+        assert!(saha_he_i(3000.0, &cosmo) > 0.5);
+        assert!(saha_he_i(1500.0, &cosmo) < 0.6);
+
+        let zs = [1e4, 8000.0, 7000.0, 6000.0, 5000.0, 4000.0];
+        for w in zs.windows(2) {
+            assert!(
+                saha_he_ii(w[1], &cosmo) <= saha_he_ii(w[0], &cosmo) + 1e-10,
+                "y_he_ii should decrease from z={} to z={}",
+                w[0],
+                w[1]
+            );
+        }
+        for z in [1e4, 8000.0, 6000.0, 4000.0, 2000.0, 1500.0] {
+            let (y_ii, y_i) = (saha_he_ii(z, &cosmo), saha_he_i(z, &cosmo));
+            assert!((0.0..=1.0).contains(&y_ii), "y_he_ii={y_ii} at z={z}");
+            assert!((0.0..=1.0).contains(&y_i), "y_he_i={y_i} at z={z}");
+            assert!(y_ii <= y_i + 1e-10, "y_he_ii > y_he_i at z={z}");
+        }
+
+        // Helium electron fraction: in [0, 2f_He], 2f_He at z = 1e6, zero at z = 100
+        for z in [100.0, 1000.0, 3000.0, 5000.0, 10000.0, 50000.0, 1e6] {
+            let x_he = helium_electron_fraction(z, &cosmo);
+            assert!(
+                (-1e-10..=2.0 * f_he + 1e-10).contains(&x_he),
+                "He e- fraction {x_he} outside [0, 2f_He] at z={z:.0e}"
+            );
+        }
+        assert!((helium_electron_fraction(1e6, &cosmo) - 2.0 * f_he).abs() < 0.01 * f_he);
+        assert!(helium_electron_fraction(100.0, &cosmo) < 0.01 * f_he);
+        assert!(
+            helium_electron_fraction(5000.0, &cosmo) >= helium_electron_fraction(2000.0, &cosmo)
+        );
+
+        // X_e decreases through He recombination and is continuous across the
+        // Saha→Peebles switch
+        assert!(ionization_fraction(8000.0, &cosmo) >= ionization_fraction(5000.0, &cosmo));
+        let xs: Vec<f64> = (1500..=1600)
+            .map(|z| ionization_fraction(z as f64, &cosmo))
+            .collect();
+        for (i, w) in xs.windows(2).enumerate() {
+            let frac = (w[1] - w[0]).abs() / w[0].max(w[1]).max(0.01);
+            assert!(frac < 0.05, "X_e jump at z={}", 1500 + i);
+        }
+    }
+
+    /// Bounds X_e at the redshifts the HyRec-2 anchors below do not reach:
+    /// the He²⁺ plateau (z = 1e4, where X_e = 1 + 2f_He ≈ 1.16), the He⁺ epoch
+    /// (z = 3000), and both sides of the Saha→Peebles switch (z = 1500, 1400).
+    #[test]
+    fn test_xe_bounds_between_anchors() {
+        let cosmo = Cosmology::default();
+
+        let xe_1e4 = ionization_fraction(1e4, &cosmo);
+        assert!((xe_1e4 - 1.16).abs() < 0.10, "X_e(1e4) = {xe_1e4}");
+        let xe_3000 = ionization_fraction(3000.0, &cosmo);
+        assert!(xe_3000 > 1.0 && xe_3000 < 1.2, "X_e(3000) = {xe_3000}");
+        let xe_1500 = ionization_fraction(1500.0, &cosmo);
+        assert!(xe_1500 > 0.9, "X_e(1500) = {xe_1500}");
+        let xe_1400 = ionization_fraction(1400.0, &cosmo);
+        assert!(xe_1400 > 0.60 && xe_1400 < 1.05, "X_e(1400) = {xe_1400}");
+
+        let xs: Vec<f64> = (1500..=2000)
+            .rev()
+            .step_by(10)
+            .map(|z| ionization_fraction(z as f64, &cosmo))
+            .collect();
+        for w in xs.windows(2) {
+            assert!(w[1] <= w[0] + 1e-10, "X_e not monotonic over 2000→1500");
+        }
     }
 
     #[test]
@@ -597,8 +672,8 @@ mod tests {
         let history = RecombinationHistory::new(&cosmo);
 
         let test_zs = [
-            1e6, 5e4, 8000.0, 5000.0, 1500.0, 1400.0, 1200.0, 1100.0, 1000.0, 800.0, 500.0, 200.0,
-            100.0, 10.0,
+            1e6, 5e5, 5e4, 1e4, 8000.0, 5000.0, 1500.0, 1400.0, 1200.0, 1100.0, 1000.0, 800.0,
+            500.0, 200.0, 100.0, 50.0, 10.0,
         ];
         for &z in &test_zs {
             let cached = history.x_e(z);
@@ -612,6 +687,20 @@ mod tests {
                 rel_err < 0.01,
                 "Cached vs uncached mismatch at z={z}: cached={cached:.6e}, \
                  uncached={uncached:.6e}, rel_err={rel_err:.3e}"
+            );
+        }
+
+        // Dense sampling across the Saha→Peebles switch, where the cache
+        // interpolates a kink, at 2%
+        let mut switch_zs: Vec<f64> = (1550..=1600).step_by(5).map(|z| z as f64).collect();
+        switch_zs.extend_from_slice(&[2000.0, 1e5]);
+        for z in switch_zs {
+            let cached = history.x_e(z);
+            let uncached = ionization_fraction(z, &cosmo);
+            let rel_err = (cached - uncached).abs() / uncached.abs().max(1e-10);
+            assert!(
+                rel_err < 0.02,
+                "Cached vs uncached mismatch at z={z}: rel_err={rel_err:.3e}"
             );
         }
     }
