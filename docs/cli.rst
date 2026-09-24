@@ -136,6 +136,7 @@ supply:
      - 2000
      - Frequency-grid point count; 4000 by default with ``--production-grid``.
        Overrides the point count of either grid.
+       Rejected below 100 points (sanity floor, not an accuracy bound).
        Below 1000 points the solver warns that the result is untested.
    * - ``--production-grid``
      - off

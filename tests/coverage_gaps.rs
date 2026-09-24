@@ -932,22 +932,38 @@ fn energy_closure_tabulated_heating() {
 /// No input produces NaN deterministically (`set_initial_delta_n` rejects
 /// it), so this test relies on the 50-point instability. If a robustness fix
 /// removes it, find another trigger rather than deleting the test.
+///
+/// `GridConfig::validate` now rejects `n_points < 100` (review decision
+/// 2026-09-23: 100 is a sanity floor, not an accuracy bound — the coarse
+/// instability this test needs lives strictly below it), so `.builder()`
+/// can no longer construct this grid. Built directly via
+/// `ThermalizationSolver::new` + `set_injection` + `set_config`, which
+/// bypasses `GridConfig::validate` by design (see its doc comment); this is
+/// safe here because `SingleBurst` has no refinement zones or resonance
+/// handling that the builder would otherwise add.
 #[test]
 fn nan_run_returns_error_not_panic() {
     let build = || {
-        ThermalizationSolver::builder(Cosmology::default())
-            .grid(GridConfig {
+        let mut solver = ThermalizationSolver::new(
+            Cosmology::default(),
+            GridConfig {
                 n_points: 50,
                 ..GridConfig::default()
-            })
-            .injection(InjectionScenario::SingleBurst {
+            },
+        );
+        solver
+            .set_injection(InjectionScenario::SingleBurst {
                 z_h: 3000.0,
                 delta_rho_over_rho: 1e-5,
                 sigma_z: 120.0,
             })
-            .z_range(5e6, 500.0)
-            .build()
-            .unwrap()
+            .unwrap();
+        solver.set_config(SolverConfig {
+            z_start: 5e6,
+            z_end: 500.0,
+            ..SolverConfig::default()
+        });
+        solver
     };
     let mut solver = build();
     let err = match solver.try_run_to_result(500.0) {
@@ -979,37 +995,49 @@ fn nan_run_returns_error_not_panic() {
     assert!(msg.contains("NaN/Inf detected in delta_n"), "{msg}");
 }
 
-/// A coarse 50-point grid runs to completion without panicking and carries
+/// A coarse 100-point grid runs to completion without panicking and carries
 /// the small-grid warning.
 ///
 /// This was `smallest_accepted_grid_runs_and_warns` on the 10-point grid,
-/// the smallest that validation accepts. There the answer is garbage with or
-/// without ADR 0004: before it, Δρ/ρ = 15.9 with ρ_e at its cap; after it,
-/// NaN. At 50 points and above both versions are finite and agree to 0.3%
-/// (`dev/audit/fix_a_cn_old_half_ab.md`), so the test moved there
-/// (follows ADR 0004).
+/// then moved to 50 (the smallest grid that validation accepted at the
+/// time, following ADR 0004: before it, Δρ/ρ = 15.9 with ρ_e at its cap;
+/// after it, NaN). `GridConfig::validate` now rejects `n_points < 100`
+/// (review decision 2026-09-23: a sanity floor, not an accuracy bound), so
+/// the test moved to 100, the new smallest accepted grid. At 100 points and
+/// above the result is finite though inaccurate (μ ~16% off).
 #[test]
 fn coarse_grid_runs_and_warns() {
-    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 50);
+    let (drho, warnings, _) = burst_run(2e5, 1e-5, 2.6e5, 1e5, 100);
     assert!(drho.is_finite());
     assert!(
-        has_warning(&warnings, "Frequency grid has n_points=50"),
+        has_warning(&warnings, "Frequency grid has n_points=100"),
         "{warnings:?}"
     );
 }
 
-/// The smallest grid validation accepts (10 points, `GridConfig::validate`)
-/// never returns silently. Its answer is garbage either way, so the run must
-/// either stop with the NaN error, naming the coarse grid as the likely
-/// cause, or return with the small-grid warning. A panic fails the test.
-///
-/// Before ADR 0004 this run returned Δρ/ρ = 15.9 with ρ_e at its cap; after
-/// it, Δn goes to NaN. Both outcomes satisfy this test.
+/// `GridConfig::validate` rejects `n_points` below the 100-point floor
+/// (review decision 2026-09-23) with a clear error naming the minimum.
+#[test]
+fn grid_floor_rejects_below_100() {
+    let err = GridConfig {
+        n_points: 99,
+        ..GridConfig::default()
+    }
+    .validate()
+    .expect_err("99 points must be rejected below the 100-point floor");
+    assert!(err.contains("n_points"), "{err}");
+    assert!(err.contains("100"), "{err}");
+}
+
+/// The smallest grid `GridConfig::validate` accepts (100 points, since the
+/// review decision 2026-09-23 raised the floor from 10) must never return
+/// silently: it either runs and carries the small-grid warning, or fails
+/// cleanly with an `Err` that names the coarse grid as the cause.
 #[test]
 fn smallest_accepted_grid_never_returns_silently() {
     let mut solver = ThermalizationSolver::builder(Cosmology::default())
         .grid(GridConfig {
-            n_points: 10,
+            n_points: 100,
             ..GridConfig::default()
         })
         .injection(InjectionScenario::SingleBurst {
@@ -1022,18 +1050,18 @@ fn smallest_accepted_grid_never_returns_silently() {
         .unwrap();
     match solver.try_run_to_result(1e5) {
         Ok(r) => {
-            eprintln!("10 points: Ok, Δρ/ρ = {:e}", r.snapshot.delta_rho_over_rho);
+            eprintln!("100 points: Ok, Δρ/ρ = {:e}", r.snapshot.delta_rho_over_rho);
             assert!(
-                has_warning(&r.warnings, "Frequency grid has n_points=10"),
+                has_warning(&r.warnings, "Frequency grid has n_points=100"),
                 "returned Δρ/ρ = {:e} without the small-grid warning: {:?}",
                 r.snapshot.delta_rho_over_rho,
                 r.warnings
             );
         }
         Err(e) => {
-            eprintln!("10 points: Err, {e}");
+            eprintln!("100 points: Err, {e}");
             assert!(e.contains("NaN/Inf detected in delta_n"), "{e}");
-            assert!(e.contains("too coarse (n_points=10"), "{e}");
+            assert!(e.contains("too coarse (n_points=100"), "{e}");
         }
     }
 }
