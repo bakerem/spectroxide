@@ -20,26 +20,18 @@ jobs:
         run: cargo build --release
       # Every test step runs in release mode: the physics tests are too slow in
       # debug, and the project rule is release-only (CONTRIBUTING.md).
-      - name: Unit tests
-        run: cargo test --release --lib
-      - name: Science tests
-        run: cargo test --release --test science_suite
-      - name: Convergence tests
-        run: cargo test --release --test convergence_order
-      - name: Coverage-gap tests
-        run: cargo test --release --test coverage_gaps
-      - name: CLI integration tests
-        run: cargo test --release --test cli_integration
-      - name: Adversarial-input tests
-        run: cargo test --release --test adversarial_inputs
-      - name: Doc tests
-        run: cargo test --release --doc
-      # The axion feature's own tests are the unit tests in src/axion.rs and
-      # five tests in tests/dark_sector.rs. The integration suites above contain no
-      # axion tests, so rerunning them with the feature would double their
-      # build and run time for no coverage; only the library suite reruns.
-      - name: Unit tests (axion feature)
-        run: cargo test --release --features axion --lib
+      # One step for every test target (lib, bins, every tests/*.rs, doc
+      # tests), so a new suite runs without a CI edit. #[ignore] tests stay
+      # ignored (the alpha_th = 5/2 check alone takes about 7 minutes). The
+      # coverage job below also runs the whole suite, but only on Ubuntu and
+      # instrumented; this step gates both operating systems.
+      - name: Tests
+        run: cargo test --release
+      # The axion feature adds 4 unit tests (src/axion.rs) and 5 integration
+      # tests (tests/dark_sector.rs) and changes nothing else, so only those
+      # two targets rerun with it.
+      - name: Tests (axion feature)
+        run: cargo test --release --features axion --lib --test dark_sector
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Clippy (axion feature)

@@ -13,7 +13,7 @@ Each finding carries one of these status labels:
 
 The bloat sits in one place. `tests/heat_injection.rs` (12,470 lines, 203 tests) duplicates itself, the `src/` unit tests, and the newer anchor suites; about 100 of the 527 Rust tests can go, and the file can shrink to about 6,500 lines. Production Rust has about 900 removable lines out of 7,580 code lines, mostly in `cli.rs`, `output.rs`, and `energy_injection.rs`. The Python package is lean (about 40 lines). The repository carries 11.9 MB of raw mutation-testing output.
 
-The review found one gap larger than the bloat: CI runs neither `tests/heat_injection.rs` nor any of the anchor suites (`physics_identities`, `kompaneets_moments`, `rate_coefficients_first_principles`, `compton_equilibrium_analytic`, `mu_photosphere_profile`, `heat_delivery`, `mms_convergence`, `conservation_fuzz`, `greens_function_checks`, `cosmotherm_comparison`). Status: Checked (`.github/workflows/ci.yml`).
+The review found one gap larger than the bloat: CI runs neither `tests/heat_injection.rs` nor any of the anchor suites (`physics_identities`, `kompaneets_moments`, `rate_coefficients_first_principles`, `compton_equilibrium_analytic`, `mu_photosphere_profile`, `heat_delivery`, `mms_convergence`, `conservation_fuzz`, `greens_function_checks`, `cosmotherm_comparison`). Status: Checked (`.github/workflows/ci.yml`). **Correction (phase 5): wrong.** The Rust coverage job runs `cargo llvm-cov --release` with no filter, which runs every integration suite; the 2026-09-17 run (35272391160) ran `heat_injection` (195 passed, 1,310 s instrumented) and every anchor suite, and a failure there fails CI. The real gaps were that the suites ran only on Ubuntu, and that the axion integration tests never ran.
 
 ## Execution status (updated as phases land)
 
@@ -24,7 +24,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | 2 | T-1, T-3, T-11, T-12, T-15, D-5 | Done 2026-09-24 (see phase 2 notes) | see `git log` |
 | 3 | T-2, T-6 to T-10, T-13 | Done 2026-09-24 (see phase 3 notes) | see `git log` |
 | 4 | T-4, T-5, T-14, T-16 | Done 2026-09-24 (see phase 4 notes); T-11 find-index merge not done | see `git log` |
-| 5 | C-1 | Not started | |
+| 5 | C-1 | Done 2026-09-24 (see phase 5 notes); premise corrected | see `git log` |
 | 6 | P-3, P-5, P-6, P-10, P-11 | Not started | |
 | 7 | P-1, P-2, P-4, P-7, P-8, P-9 | Not started | |
 | 8 | Y-1, Y-2 | Not started | |
@@ -165,6 +165,13 @@ Phase 4 notes (2026-09-24).
 - Lines: 9,095 in `heat_injection.rs` became 8,254 across the seven files. Suite: 450 pass and 4 ignored in the default build, 459 and 4 with `--features axion`, unchanged from phase 3.
 
 **Phase 5: CI.** C-1, with a measured runtime.
+
+Phase 5 notes (2026-09-24).
+
+- C-1's premise was wrong (see the correction under the summary): the coverage job already ran every suite on Ubuntu. Phase 5 still closes two real gaps: macOS ran none of the heavy suites, and the five axion integration tests ran nowhere.
+- The Rust job's six per-suite steps became one `cargo test --release` step (lib, bins, every `tests/*.rs`, doc tests), so a new suite runs without a CI edit, plus `cargo test --release --features axion --lib --test dark_sector`. `#[ignore]` tests stay ignored.
+- `cosmotherm_comparison` needs no untracked data: its `DI_*.dat` inputs are tracked, and the one test that needs `Greens_data.dat` is ignored.
+- Measured locally (2 test threads, this machine): the full default suite takes about 9 minutes of test time, the axion step 100 s including its build. On GitHub the workflow's wall clock should not grow, since the 36-minute coverage job already dominates it. Not yet measured on GitHub; that needs a push.
 
 **Phase 6: production removals.** P-5 (with the ADR 0004 addendum), P-6, P-3, P-10, P-11. Rerun the `debug_assertions` release suite, since P-5 touches the unsafe Newton loop (pitfall #10).
 
