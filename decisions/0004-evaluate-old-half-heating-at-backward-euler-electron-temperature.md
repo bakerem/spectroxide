@@ -129,3 +129,13 @@ Known limitations, both on non-default paths that this record does not change:
   `update_temperatures` includes H_dcbr while the Newton ρ_e row does not
   (no `DcbrCoupling` is passed). The predictor differs from the Newton result
   by construction there, so the first term of M does not vanish.
+
+## Addendum 2026-09-24: energy-closure late rule
+
+The follow-up on `ENERGY_CHECK_Z_LATE` is done (`d40e349`, merged into local `main`). The cutoff
+is now z = 600, where burst heat loses 0.64% physically, and the late fraction that triggers the
+allowance is 3%. Above that, the check no longer skips: it widens the shortfall bound by the late
+heat and the excess bound by any late cooling. This is a worst-case bound, not the "real adiabatic
+loss" named above, because heat injected just above z_end can be lost almost entirely by an amount
+z_end sets. Loss table and reasoning: `dev/audit/heat_delivery_near_recombination.md`, section
+"Energy-closure late rule".

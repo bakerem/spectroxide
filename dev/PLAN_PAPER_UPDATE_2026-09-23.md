@@ -41,6 +41,31 @@ for EB to review.
 | Step | Status |
 |---|---|
 | 1 | Done and merged 2026-09-23 (`c3c176c`): code, docs, CLAUDE.md cite Draine (2011) Ch. 10; new Rust and Python tests against his formula (max deviation 4.6e-5); F4 resolved |
-| 2 | Done 2026-09-23, uncommitted in `cosmoxide` for EB review (Eq. kbr x_e; Draine citation with `\rtodo`; grid defaults; z_end; X_e accuracy with `\rtodo`; `dq_dz` amplitude 1e-25; ref1 line 124 LaTeX comment). Draine2011 bib entry pending: Zotero was not running |
-| 3 | Fix A merged 2026-09-23 (`69f1cba`); energy-check narrowing not started |
-| 4–6 | Not started |
+| 2 | Citation audit 2026-09-23: only `Draine2011` missing (already flagged); no other wrong citations. Done 2026-09-23, uncommitted in `cosmoxide` for EB review (Eq. kbr x_e; Draine citation with `\rtodo`; grid defaults; z_end; X_e accuracy with `\rtodo`; `dq_dz` amplitude 1e-25; ref1 line 124 LaTeX comment). Draine2011 bib entry pending: Zotero was not running |
+| 3 | Fix A merged 2026-09-23 (`69f1cba`); energy-check narrowing merged 2026-09-24 (`d40e349`) |
+| 4 | Done 2026-09-23 23:01 (uncommitted, in the main working tree; backups in the session scratchpad `refig_cache_backup/`). Fig. 3 not run (missing `solve` import; the fix was blocked by the permission system, left for EB). Fig. 4 regenerated but WRONG (notebook f_ann /n_H0 bug, under investigation on `review/fig4-dm-notebook`); do not commit its PDF. Fig. 2 PDE points are the analytic start values (stuck L-BFGS-B; fix on `review/gf-fit-optimizer`). Convergence notebook ran zero tests (fixed on `review/convergence-nb`, `9bc9feb`). Width study now 0.125% (ref2 "at most 0.2%" holds). MMS unchanged |
+| 5 | Applied (uncommitted): Crank–Nicolson sentence; energy paragraph (mechanism, heat 0.01% to 0.2%, photon x=0.5 0.5%/0.85%); Table 1 (α_y +1.9, α_μ +2.9, B 0.043 +12, β 2.29 +0.1). "Within 3%", "0.8% rms", "0.022" still hold. Pending: Fig. 3 and Fig. 4 numbers |
+| 6 | claim-verifier running on the step 5 numbers |
+
+## Branches waiting to merge (2026-09-23, night)
+
+- `review/grid-floor-100` (`7d318b8`): floor 10 to 100 points, reviewed. Held until the figure
+  queue finishes, so every figure comes from one binary. After merge: rebuild, run the full
+  release suite once, and confirm the integration-test count in `CLAUDE.md` (the branch adds one
+  test; the agent reported 322, the same as before).
+- `review/grid-floor-100` and `review/energy-check-late`: merged into local `main` 2026-09-24 (`3550406`, `f511c36`); post-merge suite running.
+- `review/convergence-nb` (`9bc9feb`): notebook-only fix. Merge after EB decides on the
+  regenerated notebook outputs in the main working tree (same file).
+- `review/gf-fit-optimizer` (`77f03b0`, `0d2fb73`): gf_fit now a linear least-squares solve for
+  P = J_mu*J_bb* (the old optimizer never moved); Fig. 2 notebook plots PDE mu and y. Code review
+  done, follow-ups in `2644a79` (114 greens tests pass, black clean). Held: it touches the Fig. 2
+  notebook, which the main working tree also has modified; its PDF waits for EB's y decision. Fig. 2 exposes a paper problem: 4y/drho = 1.031 at z_h = 9e3 and 1.84 at 4.8e4, so the
+  caption's "sub-percent for z_h <~ 1e4" and the text's "y-era (z_h <~ 5e4)" fail; physics-inquisitor
+  checking whether the excess is a decomposition artifact. Decision for EB: which y the figure shows.
+- `review/fig4-dm-notebook` (`370713a`): /n_H0 confirmed as a bug from the start (5.28x over-injection);
+  paper values restored (3.758e-20, 5.789e-26 eV/s, f_X = 7.757e5 eV); GF-table cache keyed on all
+  parameters; `_generate_notebooks.py` no longer regenerates it. The cosmoxide copy is the regressed
+  version and needs the same fix (EB). With the 4000-point table: RMS decay 0.07%, s-wave 0.16%,
+  p-wave 0.45% (worst −0.81%); paper "≲ 2%" holds, could tighten to "≲ 0.5% RMS". Building the
+  8000-point table overnight and regenerating the PDF on the branch. Held: same notebook is modified
+  in the main working tree.
