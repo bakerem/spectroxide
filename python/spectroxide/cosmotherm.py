@@ -641,7 +641,8 @@ def ct_heating_rate_decay(
     z : float or array_like
         Redshift.
     f_x_eV : float
-        Energy injection parameter ``f_X`` in **eV**.
+        Energy injection parameter ``f_X`` in **eV** per hydrogen nucleus
+        (the rate multiplies ``n_H``, not the baryon number density).
     gamma_x : float
         Decay rate ``Γ_X`` in **1/s**.
     cosmo : Mapping, optional

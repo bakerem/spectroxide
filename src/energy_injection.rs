@@ -43,7 +43,10 @@ pub enum InjectionScenario {
 
     /// Decaying particle with lifetime 1/Γ_X.
     DecayingParticle {
-        /// f*_X: energy per baryon released, in eV.
+        /// f*_X: energy released per hydrogen nucleus, in eV. The rate is
+        /// multiplied by n_H = (1 − Y_p) ρ_b / m_p, not by the baryon number
+        /// density ρ_b / m_p, so at fixed f_X this injects (1 − Y_p) = 0.76
+        /// times the energy of a per-baryon convention (Y_p = 0.24).
         f_x: f64,
         /// Γ_X: decay rate, in 1/s.
         gamma_x: f64,

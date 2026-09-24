@@ -767,7 +767,7 @@ fn test_greens_function_energy_accounting() {
 fn test_decaying_particle_time_dependence() {
     let cosmo = Cosmology::default();
     let gamma_x = 1e-13; // Γ_X = 10⁻¹³ s⁻¹, lifetime ~ 10¹³ s ≈ 300,000 yr
-    let f_x = 1e6; // 1 MeV per baryon
+    let f_x = 1e6; // 1 MeV per hydrogen nucleus
 
     let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
 
@@ -7515,7 +7515,7 @@ fn test_heat_decay_total_energy_deposited() {
     // Short-lived particle that decays entirely in the y-era.
     // f_x must be large enough that Δρ/ρ >> adiabatic cooling floor (~3e-9).
     // GF gives μ ~ 6e-12 × (f_x/1e-6), so need f_x ~ 1e3 to get μ ~ 6e-6.
-    let f_x = 1e3; // eV per baryon
+    let f_x = 1e3; // eV per hydrogen nucleus
     let gamma_x = 1e-11; // fast decay, lifetime ~ 1e11 s ≈ 3000 yr, well before y-era ends
 
     let scenario = InjectionScenario::DecayingParticle { f_x, gamma_x };
@@ -8143,7 +8143,7 @@ fn test_heat_decay_lifetime_controls_mu_y() {
         ..GridConfig::default()
     };
     // Must be large enough that injection signal dominates adiabatic cooling floor (μ ~ -3e-9)
-    let f_x = 1e4; // eV per baryon
+    let f_x = 1e4; // eV per hydrogen nucleus
 
     // "Early" decay: short lifetime, decays at high z (μ-era)
     // cosmic_time(z=1e5) ≈ 2.4e9 s, so Γ=1e-9 gives τ=1e9 s → peaks near z~1e5

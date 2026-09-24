@@ -81,7 +81,8 @@ For the physics behind each scenario and full derivations, see the
    * - ``"dark_photon_resonance"``
      - ``epsilon``, ``m_ev`` [eV]
 
-``f_x`` is the energy released per baryon; ``sigma_z``/``sigma_x`` are the
+``f_x`` is the energy released per hydrogen nucleus (the rate uses
+:math:`n_{\rm H}`, not the baryon number density); ``sigma_z``/``sigma_x`` are the
 Gaussian widths of the burst in redshift/frequency and default to
 narrow values when omitted.
 
