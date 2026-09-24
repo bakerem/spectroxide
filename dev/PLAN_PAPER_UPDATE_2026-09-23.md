@@ -66,6 +66,9 @@ for EB to review.
   paper values restored (3.758e-20, 5.789e-26 eV/s, f_X = 7.757e5 eV); GF-table cache keyed on all
   parameters; `_generate_notebooks.py` no longer regenerates it. The cosmoxide copy is the regressed
   version and needs the same fix (EB). With the 4000-point table: RMS decay 0.07%, s-wave 0.16%,
-  p-wave 0.45% (worst −0.81%); paper "≲ 2%" holds, could tighten to "≲ 0.5% RMS". Building the
-  8000-point table overnight and regenerating the PDF on the branch. Held: same notebook is modified
+  p-wave 0.45% (worst −0.81%); paper "≲ 2%" holds, could tighten to "≲ 0.5% RMS". 8000-point
+  table built (34 min); Fig. 4 PDF regenerated and committed on the branch (`36819b3`), same RMS
+  values; s-wave residual smaller than in the committed PDF. `dev/notebooks/pde_greens_function.ipynb`
+  fixed too (`9460243`), but it still saves to the paper figure path with its N = 2000 method, so
+  running it overwrites Fig. 4. Held: same notebook is modified
   in the main working tree.
