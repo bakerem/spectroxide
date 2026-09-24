@@ -42,3 +42,24 @@ CosmoTherm shows it too (1.0069 at z_h = 2514). Cause not pinned.
 Scripts: session scratchpad `yera/` (`sweep.pkl`, `ana.py`, `y2b.py`, `ygam.py`). The CosmoTherm
 column came from an inline script that was not saved; reproduce with `spectroxide.cosmotherm`
 loaders and the same fit before quoting it in the paper.
+
+## Update 2026-09-24: the two estimators side by side
+
+Scripts: `dev/scripts/y_estimator/compare.py` (both estimators on the 118 stored PDE spectra in
+`dev/data/visibility_table.npz` and on the CosmoTherm GF database) and `plot.py`
+(`dev/figures/mu_y_estimator_comparison.pdf`, git-ignored). No PDE runs.
+
+- **Visibility fit, per spectrum** (the Table 1 recipe with P = J_μJ_bb* and J_y free): the PDE's
+  J_y matches Chluba's formula to 0.005 at every z_h (0.544 vs 0.539 at 5.65e4, 0.302 vs 0.300 at
+  8.3e4), and CosmoTherm through the same fit agrees. This is the estimator J_y is defined by.
+- **Paper appendix fit (Bianchini–Fabbian)**: 4y/Δρ peaks near 2.0 at z_h ≈ 7e4 for both the PDE and
+  CosmoTherm, and its μ rises about a factor 2 later in z_h than J_μJ_bb*. Not a solver bug.
+- **Implementation check**: an independent linear fit on span{G/x, G, Y} (identical to span{M, G, Y})
+  reproduces the Rust nonlinear BF values to 0.5% (e.g. 1.871 vs 1.875 at 5e4). Keeping μ inside
+  the exponential changes nothing at μ ~ 1e-5, so the appendix's stated reason for preferring it
+  (breaking the μ–T degeneracy of the linear fit) does not hold for small distortions. Condition
+  number of the normalised basis on [0.5, 18]: 20.
+- `visibility_table.npz` columns `pde_mu`/`pde_y` are the old stuck `gf_fit` output: `pde_y` equals
+  the J_y formula exactly. They are not the Rust decomposition.
+- CosmoTherm entries above z_h ≈ 4e5 are stored without the exp(−(z/2e6)^{5/2}) factor, so they
+  are left off the plot.
