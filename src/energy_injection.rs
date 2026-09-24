@@ -81,10 +81,9 @@ pub enum InjectionScenario {
     ///
     /// Key physics: injection at x < x₀ ≈ 3.60 produces negative μ.
     ///
-    /// The heating rate method returns the energy injection rate from the
-    /// photon injection: d(Δρ/ρ)/dt = (α_ρ × x_inj) × d(ΔN/N)/dt.
-    /// The frequency-dependent source is applied separately through
-    /// `photon_source_rate`.
+    /// `heating_rate` returns 0 for this scenario: the photons carry the
+    /// energy, d(Δρ/ρ)/dt = (α_ρ × x_inj) × d(ΔN/N)/dt, and it enters Δn
+    /// only through `photon_source_rate`, never as direct electron heating.
     ///
     /// References:
     ///   Chluba (2015), arXiv:1506.06582
