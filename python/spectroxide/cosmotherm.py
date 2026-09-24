@@ -37,6 +37,14 @@ from typing import Any, Tuple
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .cosmology import (
+    COSMOTHERM_GF_COSMO,
+    _cosmo_hubble,
+    _cosmo_n_h,
+    cosmic_time,
+    rho_gamma,
+)
+
 _trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
 
 # Physical constants for unit conversion
@@ -535,9 +543,6 @@ def _get_cosmotherm_cosmo(cosmo):
     """Return cosmology dict, defaulting to COSMOTHERM_GF_COSMO."""
     if cosmo is not None:
         return cosmo
-    # Lazy import to avoid circular dependency
-    from .greens import COSMOTHERM_GF_COSMO
-
     return COSMOTHERM_GF_COSMO
 
 
@@ -570,7 +575,6 @@ def ct_heating_rate_swave(
         ``d(Δρ/ρ)/dz`` (positive for heating, dimensionless per unit
         redshift).
     """
-    from .greens import _cosmo_hubble, _cosmo_n_h, rho_gamma
 
     cosmo = _get_cosmotherm_cosmo(cosmo)
     n_h = _cosmo_n_h(z, cosmo)
@@ -614,7 +618,6 @@ def ct_heating_rate_pwave(
     float or ndarray of float64
         ``d(Δρ/ρ)/dz``.
     """
-    from .greens import _cosmo_hubble, _cosmo_n_h, rho_gamma
 
     cosmo = _get_cosmotherm_cosmo(cosmo)
     n_h = _cosmo_n_h(z, cosmo)
@@ -654,7 +657,6 @@ def ct_heating_rate_decay(
     float or ndarray of float64
         ``d(Δρ/ρ)/dz`` (positive for heating).
     """
-    from .greens import _cosmo_hubble, _cosmo_n_h, rho_gamma, cosmic_time
 
     cosmo = _get_cosmotherm_cosmo(cosmo)
     n_h = _cosmo_n_h(z, cosmo)

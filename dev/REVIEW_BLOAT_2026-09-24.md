@@ -27,7 +27,7 @@ The review found one gap larger than the bloat: CI runs neither `tests/heat_inje
 | 5 | C-1 | Done 2026-09-24 (see phase 5 notes); premise corrected | see `git log` |
 | 6 | P-3, P-5, P-6, P-10, P-11 | Done 2026-09-24 (see phase 6 notes); P-10 Gaussian dq/dz not merged | see `git log` |
 | 7 | P-1, P-2, P-4, P-7, P-8, P-9 | Done 2026-09-24 (see phase 7 notes); P-7 flags and P-8 row writers not done | see `git log` |
-| 8 | Y-1, Y-2 | Not started | |
+| 8 | Y-1, Y-2 | Done 2026-09-24 (see phase 8 notes) | see `git log` |
 
 ## Decisions from your review (2026-09-24)
 
@@ -201,6 +201,11 @@ Phase 7 notes (2026-09-24).
 - Suite after phase 7: 451 pass and 4 ignored in the default build, 460 and 4 with `--features axion` (one new test).
 
 **Phase 8: Python.** Y-1, Y-2.
+
+Phase 8 notes (2026-09-24).
+
+- Y-1: `GreensTable` and `PhotonGreensTable` save and load through `_save_npz` and `_load_npz` in `greens_table.py`, which keep the file-descriptor guard and the hash check. The `.npz` layout (array names, `metadata_json`) is unchanged, so existing cached tables still load.
+- Y-2: `cosmotherm.py`, `axion.py`, and `dark_photon.py` import cosmology names from `.cosmology`. `cosmotherm.py` now does it once at the top instead of in four function bodies; `cosmology.py` imports nothing from the package, so there is no cycle. The deprecated shim in `greens.py` stays, because the shim's own comment ties its removal to docs and notebooks, and another session is editing `greens.py`.
 
 ## Open items for you
 

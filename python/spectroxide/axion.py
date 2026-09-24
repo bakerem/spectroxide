@@ -48,8 +48,7 @@ from .dark_photon import (
     plasma_frequency_ev,
     resonance_redshift,
 )
-from .greens import _K_BOLTZMANN, _cosmo_hubble
-from . import DEFAULT_COSMO
+from .cosmology import DEFAULT_COSMO, _K_BOLTZMANN, _cosmo_hubble
 
 #: Warning issued, once per process, on the first call to :func:`kappa_ev` or
 #: :func:`gamma_con_axion`. Mirrors ``EXPERIMENTAL_WARNING`` in ``src/axion.rs``.

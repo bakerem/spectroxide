@@ -22,14 +22,15 @@ from typing import Mapping, Tuple
 import numpy as np
 from scipy.optimize import brentq
 
-from .greens import (
+from .cosmology import (
+    DEFAULT_COSMO,
     _C_LIGHT,
     _HBAR,
     _K_BOLTZMANN,
     _cosmo_hubble,
     _cosmo_n_e,
+    ionization_fraction,
 )
-from . import DEFAULT_COSMO, ionization_fraction
 
 #: Type alias for cosmology mappings accepted by these helpers.
 CosmoLike = Mapping[str, float]

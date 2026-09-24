@@ -104,6 +104,32 @@ def _check_table_hash(stored, path):
         )
 
 
+def _save_npz(path, metadata, **arrays):
+    """Write ``arrays`` and JSON ``metadata`` to a compressed ``.npz`` file,
+    creating the parent directory."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(path, **arrays, metadata_json=json.dumps(metadata))
+
+
+def _load_npz(path, names, verify_hash):
+    """Read the arrays ``names`` and the JSON metadata from a ``.npz`` file
+    written by :func:`_save_npz`, and check its physics hash if asked.
+
+    Returns ``(arrays, metadata)``, with ``arrays`` a dict keyed by name.
+    """
+    # Open the file ourselves rather than passing `path` straight to
+    # np.load: if the archive is corrupt, NpzFile's own constructor can
+    # raise (BadZipFile) before np.load returns anything to close, which
+    # would otherwise leak the underlying file descriptor.
+    with open(path, "rb") as fh, np.load(fh, allow_pickle=False) as data:
+        metadata = json.loads(str(data["metadata_json"]))
+        arrays = {name: data[name] for name in names}
+    if verify_hash:
+        _check_table_hash(metadata.get("physics_hash"), path)
+    return arrays, metadata
+
+
 def _get_interpolator_class():
     """Lazy import of scipy.interpolate.RegularGridInterpolator."""
     try:
@@ -394,19 +420,15 @@ class GreensTable:
         -------
         None
         """
-        if path is None:
-            path = _DEFAULT_HEATING_CACHE
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(
-            path,
+        _save_npz(
+            path if path is not None else _DEFAULT_HEATING_CACHE,
+            self.metadata,
             z_h=self.z_h,
             x=self.x,
             g_th=self.g_th,
             mu=self.mu,
             y_param=self.y_param,
             delta_rho_over_rho=self.delta_rho_over_rho,
-            metadata_json=json.dumps(self.metadata),
         )
 
     @classmethod
@@ -439,31 +461,12 @@ class GreensTable:
             If ``verify_hash=True`` and the cached hash differs from the
             currently installed binary.
         """
-        if path is None:
-            path = _DEFAULT_HEATING_CACHE
-        # Open the file ourselves rather than passing `path` straight to
-        # np.load: if the archive is corrupt, NpzFile's own constructor can
-        # raise (BadZipFile) before np.load returns anything to close, which
-        # would otherwise leak the underlying file descriptor.
-        with open(path, "rb") as fh, np.load(fh, allow_pickle=False) as data:
-            metadata = json.loads(str(data["metadata_json"]))
-            z_h = data["z_h"]
-            x = data["x"]
-            g_th = data["g_th"]
-            mu = data["mu"]
-            y_param = data["y_param"]
-            delta_rho_over_rho = data["delta_rho_over_rho"]
-        if verify_hash:
-            _check_table_hash(metadata.get("physics_hash"), path)
-        return cls(
-            z_h=z_h,
-            x=x,
-            g_th=g_th,
-            mu=mu,
-            y_param=y_param,
-            delta_rho_over_rho=delta_rho_over_rho,
-            metadata=metadata,
+        arrays, metadata = _load_npz(
+            path if path is not None else _DEFAULT_HEATING_CACHE,
+            ("z_h", "x", "g_th", "mu", "y_param", "delta_rho_over_rho"),
+            verify_hash,
         )
+        return cls(**arrays, metadata=metadata)
 
 
 # ---------------------------------------------------------------------------
@@ -633,17 +636,13 @@ class PhotonGreensTable:
         -------
         None
         """
-        if path is None:
-            path = _DEFAULT_PHOTON_CACHE
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(
-            path,
+        _save_npz(
+            path if path is not None else _DEFAULT_PHOTON_CACHE,
+            self.metadata,
             z_h=self.z_h,
             x=self.x,
             x_inj=self.x_inj,
             g_ph=self.g_ph,
-            metadata_json=json.dumps(self.metadata),
         )
 
     @classmethod
@@ -674,26 +673,12 @@ class PhotonGreensTable:
         GreensTableHashMismatch
             If ``verify_hash=True`` and the hashes differ.
         """
-        if path is None:
-            path = _DEFAULT_PHOTON_CACHE
-        # See GreensTable.load: open the file ourselves so a corrupt
-        # archive's BadZipFile (raised inside NpzFile's constructor) cannot
-        # leak the file descriptor before np.load returns anything to close.
-        with open(path, "rb") as fh, np.load(fh, allow_pickle=False) as data:
-            metadata = json.loads(str(data["metadata_json"]))
-            z_h = data["z_h"]
-            x = data["x"]
-            x_inj = data["x_inj"]
-            g_ph = data["g_ph"]
-        if verify_hash:
-            _check_table_hash(metadata.get("physics_hash"), path)
-        return cls(
-            z_h=z_h,
-            x=x,
-            x_inj=x_inj,
-            g_ph=g_ph,
-            metadata=metadata,
+        arrays, metadata = _load_npz(
+            path if path is not None else _DEFAULT_PHOTON_CACHE,
+            ("z_h", "x", "x_inj", "g_ph"),
+            verify_hash,
         )
+        return cls(**arrays, metadata=metadata)
 
 
 # ---------------------------------------------------------------------------
