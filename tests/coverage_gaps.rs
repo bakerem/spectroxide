@@ -997,3 +997,43 @@ fn coarse_grid_runs_and_warns() {
         "{warnings:?}"
     );
 }
+
+/// The smallest grid validation accepts (10 points, `GridConfig::validate`)
+/// never returns silently. Its answer is garbage either way, so the run must
+/// either stop with the NaN error, naming the coarse grid as the likely
+/// cause, or return with the small-grid warning. A panic fails the test.
+///
+/// Before ADR 0004 this run returned Δρ/ρ = 15.9 with ρ_e at its cap; after
+/// it, Δn goes to NaN. Both outcomes satisfy this test.
+#[test]
+fn smallest_accepted_grid_never_returns_silently() {
+    let mut solver = ThermalizationSolver::builder(Cosmology::default())
+        .grid(GridConfig {
+            n_points: 10,
+            ..GridConfig::default()
+        })
+        .injection(InjectionScenario::SingleBurst {
+            z_h: 2e5,
+            delta_rho_over_rho: 1e-5,
+            sigma_z: 8e3,
+        })
+        .z_range(2.6e5, 1e5)
+        .build()
+        .unwrap();
+    match solver.try_run_to_result(1e5) {
+        Ok(r) => {
+            eprintln!("10 points: Ok, Δρ/ρ = {:e}", r.snapshot.delta_rho_over_rho);
+            assert!(
+                has_warning(&r.warnings, "Frequency grid has n_points=10"),
+                "returned Δρ/ρ = {:e} without the small-grid warning: {:?}",
+                r.snapshot.delta_rho_over_rho,
+                r.warnings
+            );
+        }
+        Err(e) => {
+            eprintln!("10 points: Err, {e}");
+            assert!(e.contains("NaN/Inf detected in delta_n"), "{e}");
+            assert!(e.contains("too coarse (n_points=10"), "{e}");
+        }
+    }
+}

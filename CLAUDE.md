@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test --release           # Run all tests (189 unit + 320 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release           # Run all tests (189 unit + 322 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
 cargo test --release test_name # Run a single test by name
 CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -84,7 +84,7 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 - `heat_injection.rs` — 203 integration tests (199 in the default build; 4 axion tests behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 8 tests in total): mathematical identities, Green's function constraints, PDE vs GF cross-validation, physical scenarios, literature benchmarks, dark sector, advanced PDE, BR/DC regression, recombination, T_e coupling, decomposition, solver robustness, photon injection.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
-- `coverage_gaps.rs` — 23 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1; the small-grid test runs 50 points per ADR 0004).
+- `coverage_gaps.rs` — 24 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1). A 50-point run must be finite and warn (ADR 0004); a run on the 10-point validation floor must stop with the NaN error or warn, never return silently.
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 7 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift) and Gaunt-factor spot checks.
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
