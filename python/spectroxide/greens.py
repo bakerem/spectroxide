@@ -1620,7 +1620,11 @@ def decompose_distortion(
     **``method="gf_fit"`` (requires z_h):** Three-component Green's-function
     spectral fit for visibility-function calibration against PDE spectra.
     NC-strips the spectrum, fixes J_y from Chluba (2013) Eq. 5, then fits
-    J_μ and J_bb* by minimizing the x³-weighted residual.
+    the product J_μ·J_bb* by minimizing the x³-weighted residual. The
+    ansatz depends on J_μ and J_bb* only through this product, which is
+    the μ visibility; the fit solves for it in closed form (linear least
+    squares, no bounds). The returned ``j_mu_fit`` is the analytic J_μ(z_h)
+    and ``j_bb_star_fit`` carries the fitted product divided by it.
 
     **Caution:** use this method for visibility calibration, not for
     production μ/y extraction.
@@ -1651,8 +1655,6 @@ def decompose_distortion(
     ValueError
         If ``method`` is unknown, or if ``method="gf_fit"`` is selected
         without supplying ``z_h``.
-    RuntimeError
-        If the ``gf_fit`` L-BFGS-B optimization fails to converge.
     """
     if method == "bf":
         if z_h is not None:
@@ -1684,8 +1686,6 @@ def decompose_distortion(
     if z_h is None:
         raise ValueError("decompose_distortion: method='gf_fit' requires z_h.")
 
-    from scipy.optimize import minimize as sp_minimize
-
     _val.validate_x_positive(x)
     _val.validate_array_lengths(x, delta_n)
     _val.warn_x_grid_narrow(x)
@@ -1708,37 +1708,31 @@ def decompose_distortion(
     # J_y from Chluba's independent fitting formula (fixed)
     j_y_val = j_y(z_h)
 
-    def _gf_model(x, j_mu_val, j_bb_star_val, j_y_fixed):
-        """Three-component GF ansatz per unit Δρ/ρ."""
-        return (
-            (3.0 / KAPPA_C) * j_mu_val * j_bb_star_val * mu_shape(x)
-            + 0.25 * j_y_fixed * y_shape(x)
-            + 0.25 * (1.0 - j_mu_val * j_bb_star_val - j_y_fixed) * g_bb(x)
-        )
+    # The GF ansatz per unit Δρ/ρ is
+    #   (3/κ_c) P M + (J_y/4) Y_SZ + ((1 − P − J_y)/4) G_bb,  P ≡ J_μ J_bb*.
+    # It depends on J_μ and J_bb* only through P, and strip_gbb is linear,
+    # so the NC-stripped model is A·P + c with fixed vectors A and c.
+    # Minimizing Σ [x³ (A P + c − Δn_nc)]² over P is a one-parameter linear
+    # least-squares problem with a closed-form solution. (An iterative
+    # optimizer on this objective, whose absolute size is ~(Δρ/ρ)², stops
+    # at its start point because the gradient is already below tolerance.)
+    m_nc, _ = strip_gbb(x, mu_shape(x))
+    y_nc, _ = strip_gbb(x, y_shape(x))
+    g_nc, _ = strip_gbb(x, g_bb(x))  # zero up to rounding
+    a_vec = drho_over_rho * (mu_to_energy * m_nc - 0.25 * g_nc)
+    c_vec = drho_over_rho * (0.25 * j_y_val * y_nc + 0.25 * (1.0 - j_y_val) * g_nc)
+    w = x**6
+    p_fit = float(np.sum(w * a_vec * (dn_nc - c_vec)) / np.sum(w * a_vec * a_vec))
+    fit_residual = float(np.sum(w * (a_vec * p_fit + c_vec - dn_nc) ** 2))
+    fit_success = bool(np.isfinite(p_fit))
 
-    def _residual(params):
-        jm, jb = params
-        model = _gf_model(x, jm, jb, j_y_val) * drho_over_rho
-        model_nc, _ = strip_gbb(x, model)
-        return float(np.sum((x**3 * (model_nc - dn_nc)) ** 2))
-
-    # Initial guess from analytic GF
-    res = sp_minimize(
-        _residual,
-        [j_mu(z_h), j_bb_star(z_h)],
-        bounds=[(0, 1), (0, 1)],
-        method="L-BFGS-B",
-    )
-    if not res.success:
-        raise RuntimeError(
-            f"decompose_distortion: L-BFGS-B fit failed at z_h={z_h}: "
-            f"{res.message} (nit={res.nit}, fun={res.fun:.3e})"
-        )
-    j_mu_fit = float(res.x[0])
-    j_bb_star_fit = float(res.x[1])
+    # Only the product P is constrained. Hold J_μ at its Chluba (2013)
+    # value, as J_y is held, and assign the fitted product to J_bb*.
+    j_mu_fit = float(j_mu(z_h))
+    j_bb_star_fit = p_fit / j_mu_fit
 
     # Extract μ, y from fitted visibility functions
-    mu = mu_to_energy * j_mu_fit * j_bb_star_fit * drho_over_rho
+    mu = mu_to_energy * p_fit * drho_over_rho
     y_val = 0.25 * j_y_val * drho_over_rho
 
     # ΔT/T from energy conservation
@@ -1757,8 +1751,8 @@ def decompose_distortion(
         "j_mu_fit": j_mu_fit,
         "j_bb_star_fit": j_bb_star_fit,
         "j_y": j_y_val,
-        "fit_success": bool(res.success),
-        "fit_residual": float(res.fun),
+        "fit_success": fit_success,
+        "fit_residual": fit_residual,
     }
 
 
