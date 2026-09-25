@@ -73,6 +73,34 @@ pub const ENERGY_CHECK_Z_LATE: f64 = 600.0;
 /// late heat lost. 3% keeps a margin.
 pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.03;
 
+/// Upper guard on ρ_e = T_e/T_z in the predictor, the coupled Newton solve,
+/// and the DC/BR target temperature (ADR 0007).
+///
+/// This is a sanity guard, not physics. Heating q holds the electrons at
+/// ρ_e − 1 ≈ q t_C / (4 θ_z) above the photons, so a narrow burst can drive
+/// ρ_e far above 1: 5 at z_h = 5000 (Δρ/ρ = 3e-3) and 1600 at z_h = 1000
+/// (1e-3). The earlier caps (1.5, 3, and 2) deleted the heat the electrons
+/// could not hold, up to 99% of it; at this guard those runs close their
+/// energy budget. Nothing in the solver overflows at large ρ_e, so reaching
+/// the guard points to a failed solve. At the guard θ_e = 4.6e-3 at
+/// z = 1000, near the limit of the nonrelativistic Kompaneets equation.
+pub const RHO_E_GUARD_MAX: f64 = 1e4;
+
+/// ρ_e above which a run below [`HOT_GAS_Z_MAX`] warns that the gas is too
+/// hot for the fixed ionization history (ADR 0007).
+///
+/// The solver holds X_e on the standard recombination history. At z = 850,
+/// ρ_e = 10 means T_e ≈ 2.3e4 K: the case-B recombination coefficient has
+/// fallen by about 85%, and collisional ionization of hydrogen has set in.
+/// The threshold is a judgment call, not a derived bound.
+pub const HOT_GAS_RHO_E: f64 = 10.0;
+
+/// Redshift below which [`HOT_GAS_RHO_E`] applies. Above about z = 1500
+/// hydrogen stays ionized however hot the electrons are. Hot electrons would
+/// still slow He I recombination (z ≈ 1600 to 2500), which the solver takes
+/// from Saha at T_z; that changes n_e by at most about 8% and does not warn.
+pub const HOT_GAS_Z_MAX: f64 = 1500.0;
+
 /// Returns how far the final Δρ/ρ may fall below (first) and rise above
 /// (second) the expected energy before the energy-closure check warns (R-1).
 ///
@@ -83,9 +111,8 @@ pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.03;
 /// [`ENERGY_CHECK_MAX_LATE_FRACTION`] of `gross`, the late heating part,
 /// (late_abs + late_net)/2, widens the shortfall bound, since the gas may keep
 /// all of it from the photons, and the late cooling part,
-/// (late_abs − late_net)/2, widens the excess bound for the same reason. With
-/// `capped` (ρ_e hit its cap) any shortfall is allowed.
-fn energy_closure_allowance(gross: f64, late_abs: f64, late_net: f64, capped: bool) -> (f64, f64) {
+/// (late_abs − late_net)/2, widens the excess bound for the same reason.
+fn energy_closure_allowance(gross: f64, late_abs: f64, late_net: f64) -> (f64, f64) {
     let tol = ENERGY_CLOSURE_REL_TOL * gross + ENERGY_CLOSURE_ABS_FLOOR;
     let (late_heat, late_cool) = if late_abs > ENERGY_CHECK_MAX_LATE_FRACTION * gross {
         (
@@ -95,12 +122,7 @@ fn energy_closure_allowance(gross: f64, late_abs: f64, late_net: f64, capped: bo
     } else {
         (0.0, 0.0)
     };
-    let short = if capped {
-        f64::INFINITY
-    } else {
-        tol + late_heat
-    };
-    (short, tol + late_cool)
+    (tol + late_heat, tol + late_cool)
 }
 
 /// Tunable solver parameters.
@@ -334,11 +356,10 @@ struct RhoECache {
 /// physics state. Reset by `ThermalizationSolver::reset()`.
 #[derive(Debug, Clone, Default)]
 pub struct SolverDiagnostics {
-    /// Number of steps on which ρ_e hit a guard cap ([0, 1.5] in the
-    /// backward-Euler predictor, [0, 3] after the coupled Newton solve) or
-    /// came out non-finite. The first such step in a run pushes a warning
-    /// (see `ThermalizationSolver::guard_rho_e`); later ones only increment
-    /// this counter.
+    /// Number of steps on which ρ_e left the guard range
+    /// [0, [`RHO_E_GUARD_MAX`]] or came out non-finite. The first such step
+    /// in a run pushes a warning (see `ThermalizationSolver::guard_rho_e`);
+    /// later ones only increment this counter.
     pub rho_e_clamped: usize,
     /// Number of times Newton iteration exhausted max_newton_iter
     /// without converging. Non-zero values indicate the solver may need more
@@ -347,12 +368,16 @@ pub struct SolverDiagnostics {
     /// Whether any NaN emission rate was encountered.
     pub nan_emission_detected: bool,
     /// Number of steps on which the DC/BR target temperature ρ_e fell outside
-    /// the guard range [0.05, 2] and was clamped. The first such step pushes a
-    /// warning; later ones only increment this counter.
+    /// the guard range [0.05, [`RHO_E_GUARD_MAX`]] and was clamped. The
+    /// first such step pushes a warning; later ones only increment this
+    /// counter.
     pub dcbr_target_clamped: usize,
-    /// Whether the once-per-run warning for ρ_e reaching its upper cap
-    /// (heating strong enough to change the ionization history) has been pushed.
-    pub(crate) heating_cap_warned: bool,
+    /// Whether the once-per-run warning for ρ_e reaching
+    /// [`RHO_E_GUARD_MAX`] has been pushed.
+    pub(crate) rho_e_guard_warned: bool,
+    /// Whether the once-per-run warning for gas hotter than
+    /// [`HOT_GAS_RHO_E`] below [`HOT_GAS_Z_MAX`] has been pushed.
+    pub(crate) hot_gas_warned: bool,
     /// Whether the once-per-run warning for a negative or non-finite ρ_e has
     /// been pushed.
     pub(crate) rho_e_invalid_warned: bool,
@@ -958,37 +983,53 @@ impl ThermalizationSolver {
         dz.max(self.config.dz_min).min(self.z * 0.05)
     }
 
-    /// Applies the guard caps to a new electron temperature ρ_e and records
+    /// Applies the guard range to a new electron temperature ρ_e and records
     /// the event.
     ///
-    /// Returns the value to store, clamped to [0, `hi`], or `None` when
-    /// `raw` is non-finite (the caller keeps the prior ρ_e). Every clamp or
-    /// non-finite value increments `diag.rho_e_clamped`.
+    /// Returns the value to store, clamped to [0, [`RHO_E_GUARD_MAX`]], or
+    /// `None` when `raw` is non-finite (the caller keeps the prior ρ_e). Every
+    /// clamp or non-finite value increments `diag.rho_e_clamped`.
     ///
-    /// The upper cap is reached only when heating drives T_e far above the
-    /// photon temperature. Such heating would change the ionization history
-    /// (hotter electrons recombine more slowly), while the solver holds X_e on
-    /// its standard recombination history, so the first hit in a run pushes a
-    /// warning that results may be inaccurate. A
-    /// negative or non-finite ρ_e pushes its own once-per-run warning.
-    fn guard_rho_e(&mut self, raw: f64, hi: f64, z: f64) -> Option<f64> {
+    /// The upper guard only catches a failed solve (ADR 0007). Heating that drives
+    /// ρ_e past [`HOT_GAS_RHO_E`] below [`HOT_GAS_Z_MAX`] pushes a separate
+    /// once-per-run warning, because gas that hot would change the ionization
+    /// history, which the solver holds fixed. In coupled mode the predictor
+    /// passes through here before the Newton solve replaces it, so a
+    /// predictor above the threshold can warn when the final ρ_e stays just
+    /// below it. A negative or non-finite ρ_e pushes its own once-per-run
+    /// warning.
+    fn guard_rho_e(&mut self, raw: f64, z: f64) -> Option<f64> {
         let out = if raw.is_finite() {
-            Some(raw.clamp(0.0, hi))
+            Some(raw.clamp(0.0, RHO_E_GUARD_MAX))
         } else {
             None
         };
+        if let Some(rho) = out
+            && rho > HOT_GAS_RHO_E
+            && z < HOT_GAS_Z_MAX
+            && !self.diag.hot_gas_warned
+        {
+            self.diag.hot_gas_warned = true;
+            self.diag.warnings.push(format!(
+                "Hot gas: at z = {z:.4e} the electron temperature reached T_e/T_z = \
+                 {rho:.3e}, above {HOT_GAS_RHO_E}. Gas this hot would recombine more slowly \
+                 and start to ionize by collisions, which changes the ionization history; \
+                 the solver holds X_e on the standard history, so results may be \
+                 inaccurate."
+            ));
+        }
         if out == Some(raw) {
             return out;
         }
         self.diag.rho_e_clamped += 1;
-        if raw.is_finite() && raw > hi {
-            if !self.diag.heating_cap_warned {
-                self.diag.heating_cap_warned = true;
+        if raw.is_finite() && raw > RHO_E_GUARD_MAX {
+            if !self.diag.rho_e_guard_warned {
+                self.diag.rho_e_guard_warned = true;
                 self.diag.warnings.push(format!(
-                    "Substantial heating: at z = {z:.4e} the electron temperature reached \
-                     the cap T_e/T_z = {hi}. Heating this strong would change the ionization \
-                     history (hotter electrons recombine more slowly), so results may be \
-                     inaccurate. T_e is clamped at the cap on this and any later such step."
+                    "The electron temperature solve gave T_e/T_z = {raw:.4e} at z = {z:.4e}, \
+                     above the sanity guard {RHO_E_GUARD_MAX:e}. T_e is clamped at the \
+                     guard on this and any later such step, which loses heat. This points \
+                     to a numerical failure; do not trust μ and y from this run."
                 ));
             }
         } else {
@@ -1202,13 +1243,9 @@ impl ThermalizationSolver {
                 rho_e_old + dtau * r_compton * (rho_source - h_dc_br + dh_drho * rho_e_old);
             let denominator = 1.0 + dtau * (r_compton * (1.0 + dh_drho) + lambda_htc);
             let rho_e_raw = numerator / denominator;
-            // BE (non-coupled) path: tight clamp at 1.5. Post-recombination
-            // ρ_e can drop well below 1 (T_m ∝ (1+z)²); the upper bound
-            // prevents unphysical overshoot of the perturbative step in weak-
-            // Compton regimes. The bordered-Newton path (coupled mode) uses
-            // a looser [0, 3] bound because bursts at high z can legitimately
-            // push ρ_e above 1. Attempted M1 unification to a single range
-            // degrades post-recombination accuracy and is rejected.
+            // Post-recombination ρ_e can drop well below 1 (T_m ∝ (1+z)²),
+            // and narrow bursts can push it far above 1. The guard range is an
+            // sanity guard shared with the coupled solve (ADR 0007).
             //
             // NaN/∞ are rejected explicitly (audit H1): f64::NaN.clamp(a, b) ==
             // NaN and NaN comparisons return false, so a naïve clamp would
@@ -1216,7 +1253,7 @@ impl ThermalizationSolver {
             //
             // A clamp or a non-finite value is counted and warned about once
             // per run (`guard_rho_e`).
-            if let Some(rho_e_new) = self.guard_rho_e(rho_e_raw, 1.5, z_eval) {
+            if let Some(rho_e_new) = self.guard_rho_e(rho_e_raw, z_eval) {
                 self.electron_temp.rho_e = rho_e_new;
             }
             // `None`: keep the prior ρ_e rather than poisoning the solver state.
@@ -1373,18 +1410,16 @@ impl ThermalizationSolver {
             // energy the electrons lose, so using the full ρ_e, including the
             // heating excess δρ_inj, does not count injected energy twice.
             //
-            // The clamp to [0.05, 2] guards the Bose factor exp(x/ρ) − 1. The
-            // upper bound normally does not engage: the predictor ρ_e is capped
-            // at 1.5 (`guard_rho_e`). It can when the predictor comes out
-            // non-finite and the previous step's ρ_e, which the Newton cap
-            // allows up to 3, is kept. Adiabatic cooling takes ρ_e below 0.5
+            // The clamp to [0.05, RHO_E_GUARD_MAX] guards the Bose factor
+            // exp(x/ρ) − 1. The upper bound does not engage, since
+            // `guard_rho_e` already keeps ρ_e at or below it. Adiabatic cooling takes ρ_e below 0.5
             // near z ≈ 72 but not below 0.05 before DC/BR switch off at
             // θ_z = 1e-8 (z ≈ 21), so the lower bound only catches a broken
             // ρ_e. When the guard engages, the first occurrence in a run
             // pushes a warning, except on a step where `guard_rho_e` already
             // reported a negative or non-finite ρ_e; later ones only
             // increment the counter.
-            let rho_eq_dcbr = if (0.05..=2.0).contains(&rho_e) {
+            let rho_eq_dcbr = if (0.05..=RHO_E_GUARD_MAX).contains(&rho_e) {
                 rho_e
             } else {
                 self.diag.dcbr_target_clamped += 1;
@@ -1393,13 +1428,13 @@ impl ThermalizationSolver {
                     self.diag.dcbr_target_warned = true;
                     self.diag.warnings.push(format!(
                         "DC/BR target temperature ρ_e = {rho_e:.4} at z = {:.4e} is outside \
-                         the guard range [0.05, 2] and was clamped; DC/BR emission and \
-                         absorption use the clamped value on this and any later such step \
-                         (count in SolverDiagnostics::dcbr_target_clamped).",
+                         the guard range [0.05, {RHO_E_GUARD_MAX:e}] and was clamped; DC/BR \
+                         emission and absorption use the clamped value on this and any later \
+                         such step (count in SolverDiagnostics::dcbr_target_clamped).",
                         z_mid
                     ));
                 }
-                rho_e.clamp(0.05, 2.0)
+                rho_e.clamp(0.05, RHO_E_GUARD_MAX)
             };
             let delta_rho = rho_eq_dcbr - 1.0;
             let inv_rho_eq = 1.0 / rho_eq_dcbr;
@@ -1474,8 +1509,11 @@ impl ThermalizationSolver {
                     dneq_out[i] = if dneq_raw.is_finite() { dneq_raw } else { 0.0 };
                 }
             } else {
-                // Full (non-Taylor) path — post-recombination regime where
-                // ρ drifts to O(0.3). ρ-derivatives zeroed (see Taylor branch).
+                // Full (non-Taylor) path, for |ρ − 1| ≥ 0.01: post-recombination
+                // cooling (ρ ≈ 0.3 to 1) and strong heating (ρ up to
+                // RHO_E_GUARD_MAX, ADR 0007). ρ-derivatives zeroed (see Taylor
+                // branch), so the Newton Jacobian lags the ρ dependence of
+                // DC/BR here; energy still closes to 0.6% (ADR 0007 table).
                 let br_ref = br_pre.as_ref();
                 for i in 0..n {
                     let xi = xs[i];
@@ -1633,7 +1671,7 @@ impl ThermalizationSolver {
             // clamp would silently propagate into subsequent steps.
             if rho_coupling.is_some() {
                 // `None` (non-finite): keep the prior ρ_e.
-                if let Some(rho_clamped) = self.guard_rho_e(rho_e_out, 3.0, z_mid) {
+                if let Some(rho_clamped) = self.guard_rho_e(rho_e_out, z_mid) {
                     self.electron_temp.rho_e = rho_clamped;
                 }
             }
@@ -1918,11 +1956,7 @@ impl ThermalizationSolver {
     /// heating table); photon injection is excluded because its closure is
     /// known to be off by 7–45% for x_inj ≲ 0.03 (investigation I-1).
     ///
-    /// When ρ_e hit its cap (that run already warns "Substantial heating"),
-    /// a shortfall is expected and stays silent: the cap discards heat the
-    /// electrons could not hold. The cap cannot add energy, so an excess
-    /// beyond the tolerance still warns, with text that points to a numerical
-    /// error. When more than [`ENERGY_CHECK_MAX_LATE_FRACTION`] of the heat
+    /// When more than [`ENERGY_CHECK_MAX_LATE_FRACTION`] of the heat
     /// falls below z = [`ENERGY_CHECK_Z_LATE`], the tolerance also allows all
     /// of that late heat to be lost ([`energy_closure_allowance`]).
     fn energy_closure_warning(&self, z_run_start: f64, drho_initial: f64) -> Option<String> {
@@ -1949,9 +1983,7 @@ impl ThermalizationSolver {
         } else {
             (0.0, 0.0)
         };
-        let capped = self.diag.heating_cap_warned;
-        let (allow_short, allow_excess) =
-            energy_closure_allowance(gross, late_abs, late_net, capped);
+        let (allow_short, allow_excess) = energy_closure_allowance(gross, late_abs, late_net);
         let expected = drho_initial + injected;
         let measured = self.total_delta_rho_over_rho();
         let diff = measured - expected;
@@ -1968,22 +2000,6 @@ impl ThermalizationSolver {
         } else {
             String::new()
         };
-        if capped {
-            return Some(format!(
-                "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
-                 injection delivered only {expected:.4e} between z = {z_run_start:.3e} and \
-                 z = {z_final:.3e} ({:+.1}% of the injected heat; tolerance ±{:.0}%). The \
-                 electron temperature hit its cap in this run, but the cap only removes \
-                 heat, so it cannot cause an excess.{late_note} An excess points to a \
-                 numerical error, for example an under-resolved frequency grid (this one \
-                 has n_points={}; try more) or time steps that are too large (reduce \
-                 dtau_max). A large injection (|Δρ/ρ| near 1e-2 or more) or a \
-                 diagnostic flag can also cause it. Do not trust μ and y from this run.",
-                100.0 * diff / gross,
-                100.0 * ENERGY_CLOSURE_REL_TOL,
-                self.grid_n_points,
-            ));
-        }
         Some(format!(
             "Energy closure: the final spectrum holds Δρ/ρ = {measured:.4e}, but the \
              injection delivered {expected:.4e} between z = {z_run_start:.3e} and \
@@ -2343,12 +2359,11 @@ mod tests {
     /// R-1 exceptions, tested on the check itself so that each is exercised
     /// alone. The base run fails closure with a shortfall (a
     /// 100-point grid from z = 5e6 ends near Δρ/ρ = −1.5e-2 for an injected
-    /// 1e-5, with all heat above z = 600), so the check fires; the ρ_e-cap
-    /// flag must silence a shortfall. A second run adds a known initial Δn:
-    /// the check must count that energy as expected, or it would warn on a
-    /// well-resolved run. The same run, checked against a wrong expectation,
-    /// gives a clean excess and a clean shortfall of equal size: with the cap
-    /// flag set, the excess must still warn and the shortfall must not.
+    /// 1e-5, with all heat above z = 600), so the check fires. A second run
+    /// adds a known initial Δn: the check must count that energy as expected,
+    /// or it would warn on a well-resolved run. The same run, checked against
+    /// a wrong expectation, gives a clean excess and a clean shortfall of
+    /// equal size, and both must warn.
     #[test]
     fn test_energy_closure_skip_rules() {
         let burst = InjectionScenario::SingleBurst {
@@ -2370,10 +2385,8 @@ mod tests {
             ..SolverConfig::default()
         });
         solver.run_with_snapshots(&[500.0]);
-        assert!(!solver.diag.heating_cap_warned);
+        assert!(!solver.diag.rho_e_guard_warned);
         assert!(solver.energy_closure_warning(5e6, 0.0).is_some());
-        solver.diag.heating_cap_warned = true;
-        assert!(solver.energy_closure_warning(5e6, 0.0).is_none());
 
         // Initial Δn = a·n_pl holds Δρ/ρ = a exactly (∫x³ n_pl dx = G₃), here
         // twice the injected heat. Resolved burst, 1000 points.
@@ -2404,41 +2417,26 @@ mod tests {
         // Dropping the initial energy from the expectation must fire.
         assert!(solver.energy_closure_warning(2.6e5, 0.0).is_some());
 
-        // Cap rule, one-sided. Dropping the initial energy a = 2e-5 from the
-        // expectation leaves an excess of a (200% of the injected heat);
-        // counting it twice leaves a shortfall of a.
-        assert!(!solver.diag.heating_cap_warned);
+        // Counting the initial energy a = 2e-5 twice leaves a shortfall of a
+        // (200% of the injected heat), which must warn too.
         assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_some());
-        let uncapped = solver.energy_closure_warning(2.6e5, 0.0).unwrap();
-        assert!(!uncapped.contains("cannot cause an excess"), "{uncapped}");
-        solver.diag.heating_cap_warned = true;
-        let excess = solver.energy_closure_warning(2.6e5, 0.0);
-        assert!(
-            excess
-                .as_deref()
-                .is_some_and(|w| w.contains("cannot cause an excess")),
-            "{excess:?}"
-        );
-        assert!(solver.energy_closure_warning(2.6e5, 2.0 * a).is_none());
     }
 
     /// Late-heat rule after ADR 0004. A burst at z_h = 1000 (σ_z = 100) puts
     /// 3e-5 of its heat below z = [`ENERGY_CHECK_Z_LATE`] and physically
     /// loses 1.4e-4 of it by z = 200, so the check keeps its plain tolerance:
     /// the correct run is silent and a 30% error of either sign warns. The
-    /// old rule (cutoff z = 2000) skipped this run. Δρ/ρ = 2e-7 keeps ρ_e
-    /// below its cap (5e-7 reaches it) and makes the tolerance 10% of the
-    /// heat, half of it the 1e-8 absolute floor.
+    /// old rule (cutoff z = 2000) skipped this run. Δρ/ρ = 2e-7 makes the
+    /// tolerance 10% of the heat, half of it the 1e-8 absolute floor.
     ///
-    /// A burst at z_h = 600 puts half its heat below z = 600. Late heat reaches
-    /// the ρ_e cap at small amplitude (a burst at z_h = 500 caps at 1e-8), so
-    /// this run uses 1e-10. It is silent, and a shortfall of 5e-8, beyond the
+    /// A burst at z_h = 600 puts half its heat below z = 600. This run uses
+    /// Δρ/ρ = 1e-10. It is silent, and a shortfall of 5e-8, beyond the
     /// tolerance plus all the late heat, still warns; the old rule skipped it.
     ///
     /// The errors are made by shifting the expected energy, as in
     /// `test_energy_closure_skip_rules`. The widening itself is checked on
-    /// [`energy_closure_allowance`] for heating, cooling, mixed, and capped
-    /// cases, with bounds worked out by hand.
+    /// [`energy_closure_allowance`] for heating, cooling, and mixed cases,
+    /// with bounds worked out by hand.
     #[test]
     fn test_energy_closure_late_rule() {
         let run = |z_h: f64, amp: f64| {
@@ -2461,7 +2459,7 @@ mod tests {
                 ..SolverConfig::default()
             });
             solver.run_with_snapshots(&[200.0]);
-            assert!(!solver.diag.heating_cap_warned, "z_h = {z_h}: ρ_e capped");
+            assert!(!solver.diag.rho_e_guard_warned, "z_h = {z_h}: ρ_e guard");
             let closure: Vec<&String> = solver
                 .diag
                 .warnings
@@ -2481,9 +2479,7 @@ mod tests {
         assert!(short.is_some(), "30% shortfall at z_h = 1000 must warn");
         let excess = solver.energy_closure_warning(z0, -0.3 * amp);
         assert!(
-            excess
-                .as_deref()
-                .is_some_and(|w| !w.contains("cannot cause") && !w.contains("below z =")),
+            excess.as_deref().is_some_and(|w| !w.contains("below z =")),
             "{excess:?}"
         );
 
@@ -2509,31 +2505,58 @@ mod tests {
             );
         };
         // At most ENERGY_CHECK_MAX_LATE_FRACTION late: plain tolerance.
-        close(
-            energy_closure_allowance(g, 0.03 * g, 0.03 * g, false),
-            (tol, tol),
-        );
+        close(energy_closure_allowance(g, 0.03 * g, 0.03 * g), (tol, tol));
         // Late heating widens the shortfall side only.
         close(
-            energy_closure_allowance(g, 0.5 * g, 0.5 * g, false),
+            energy_closure_allowance(g, 0.5 * g, 0.5 * g),
             (tol + 0.5 * g, tol),
         );
         // Late cooling widens the excess side only.
         close(
-            energy_closure_allowance(g, 0.5 * g, -0.5 * g, false),
+            energy_closure_allowance(g, 0.5 * g, -0.5 * g),
             (tol, tol + 0.5 * g),
         );
         // 0.3 g of late heating and 0.1 g of late cooling.
         close(
-            energy_closure_allowance(g, 0.4 * g, 0.2 * g, false),
+            energy_closure_allowance(g, 0.4 * g, 0.2 * g),
             (tol + 0.3 * g, tol + 0.1 * g),
         );
-        // A capped run allows any shortfall.
-        let (s, e) = energy_closure_allowance(g, 0.5 * g, 0.5 * g, true);
+    }
+
+    /// `guard_rho_e` warns on hot gas only below [`HOT_GAS_Z_MAX`] and above
+    /// [`HOT_GAS_RHO_E`], clamps only above [`RHO_E_GUARD_MAX`], and pushes
+    /// each warning once per run (ADR 0007).
+    #[test]
+    fn test_guard_rho_e_thresholds() {
+        let mut solver = ThermalizationSolver::new(Cosmology::default(), GridConfig::fast());
+        let count = |s: &ThermalizationSolver, prefix: &str| {
+            s.diag
+                .warnings
+                .iter()
+                .filter(|w| w.starts_with(prefix))
+                .count()
+        };
+        // Hot but below the threshold, and above the threshold before
+        // recombination: stored unchanged, no warning.
+        assert_eq!(solver.guard_rho_e(5.0, 1000.0), Some(5.0));
+        assert_eq!(solver.guard_rho_e(20.0, 2000.0), Some(20.0));
         assert!(
-            s.is_infinite() && (e - tol).abs() < 1e-12 * g,
-            "({s:e}, {e:e})"
+            solver.diag.warnings.is_empty(),
+            "{:?}",
+            solver.diag.warnings
         );
+        assert_eq!(solver.diag.rho_e_clamped, 0);
+        // Above the threshold after recombination: warns, not clamped.
+        assert_eq!(solver.guard_rho_e(20.0, 1000.0), Some(20.0));
+        assert_eq!(count(&solver, "Hot gas"), 1);
+        assert_eq!(solver.diag.rho_e_clamped, 0);
+        // Past the sanity guard: clamped, counted, and warned once.
+        for _ in 0..2 {
+            assert_eq!(solver.guard_rho_e(2e4, 1000.0), Some(RHO_E_GUARD_MAX));
+        }
+        assert_eq!(solver.diag.rho_e_clamped, 2);
+        assert_eq!(count(&solver, "The electron temperature solve gave"), 1);
+        assert_eq!(count(&solver, "Hot gas"), 1);
     }
 
     /// Checks that the analytic dH/dρ_e in `dcbr_heating_with_derivative` matches a

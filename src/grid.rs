@@ -106,7 +106,7 @@ impl GridConfig {
             return Err(format!(
                 "n_points must be >= 100, got {}. This is a sanity floor, not an \
                  accuracy bound: below ~100 points the solver can return NaN or \
-                 garbage with T_e pinned at its cap. Use n_points >= 1000 for \
+                 garbage. Use n_points >= 1000 for \
                  accurate results (see MIN_TESTED_GRID_POINTS).",
                 self.n_points
             ));

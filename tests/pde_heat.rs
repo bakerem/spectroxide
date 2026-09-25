@@ -128,11 +128,11 @@ fn test_dcbr_relaxes_to_actual_electron_temperature() {
 }
 
 /// A decaying particle with Γ_X = 1e-13 s⁻¹ (lifetime near z ≈ 1000), run on to
-/// z = 500, heats the electrons below recombination until T_e hits
-/// the solver's cap. That regime would change the ionization history (hotter
-/// electrons recombine more slowly) while X_e is held on
-/// its recombination history, so the solver must say so with exactly one
-/// warning per run (decisions/0002-..., Addendum).
+/// z = 500, heats the electrons below recombination past ρ_e = 10. Gas that
+/// hot would change the ionization history (hotter electrons recombine more
+/// slowly and ionize by collisions) while X_e is held on its recombination
+/// history, so the solver must say so with exactly one warning per run. The
+/// sanity guard on ρ_e must not engage (ADR 0007).
 #[test]
 fn test_decaying_particle_late_heating_warns() {
     let mut solver = ThermalizationSolver::new(Cosmology::default(), fast_grid());
@@ -153,14 +153,14 @@ fn test_decaying_particle_late_heating_warns() {
         .diag
         .warnings
         .iter()
-        .filter(|w| w.contains("change the ionization history"))
+        .filter(|w| w.starts_with("Hot gas"))
         .count();
     assert_eq!(
         n_warn, 1,
-        "expected one heating/ionization warning, got {n_warn}: {:?}",
+        "expected one hot-gas warning, got {n_warn}: {:?}",
         solver.diag.warnings
     );
-    assert!(solver.diag.rho_e_clamped > 0);
+    assert_eq!(solver.diag.rho_e_clamped, 0, "{:?}", solver.diag.warnings);
 }
 
 /// DM annihilation PDE: s-wave and p-wave mu/y properties.
@@ -2316,62 +2316,6 @@ fn test_dcbr_thermalizes_mu_distortion() {
     assert!(
         mu_over_drho > 0.5 && mu_over_drho < 1.5,
         "μ/Δρ at z=2e5 should be O(1): got {mu_over_drho:.4e}"
-    );
-}
-
-/// Post-recombination injection (z_h = 800): distortion should be locked in
-/// at the injection frequency with NO μ/y redistribution.
-///
-/// Physical basis: at z < 1100, X_e ~ 10⁻⁴ and Compton scattering is
-/// inefficient. DC/BR should be disabled (θ_z < 1e-6). Injected energy
-/// stays as a spectral feature, not redistributed into μ or y.
-///
-/// Independent target: μ ≈ 0, y ≈ Δρ/(4ρ) × J_Compton(z_h) ≈ 0
-/// (since J_Compton → 0 post-recombination).
-#[test]
-fn test_post_recombination_locked_in_distortion() {
-    let z_h = 800.0;
-    let drho = 1e-5;
-    let sigma_z = 30.0;
-
-    let mut solver = burst_solver(
-        &GridConfig::default(),
-        z_h,
-        drho,
-        sigma_z,
-        z_h + 7.0 * sigma_z,
-        100.0,
-    );
-    solver.run_with_snapshots(&[100.0]);
-    let snap = solver.snapshots.last().unwrap();
-
-    eprintln!("Post-recombination (z_h=800):");
-    eprintln!(
-        "  μ={:.4e}, y={:.4e}, Δρ/ρ={:.4e}",
-        snap.mu, snap.y, snap.delta_rho_over_rho
-    );
-
-    // Post-recombination: Compton scattering is inefficient (X_e ~ 10⁻⁴).
-    // Heat injection goes into electron temperature but barely couples to photons.
-    // The photon spectrum distortion should be tiny compared to the injected energy.
-    assert!(
-        snap.delta_rho_over_rho.abs() < 0.1 * drho,
-        "Post-recombination: photon Δρ/ρ should be ≪ injected energy: {:.4e} vs {drho:.4e}",
-        snap.delta_rho_over_rho
-    );
-
-    // μ should be negligible (no Comptonization post-recombination)
-    assert!(
-        snap.mu.abs() < 0.01 * drho,
-        "Post-recombination μ should be negligible: |μ|={:.4e} vs Δρ/ρ={drho:.4e}",
-        snap.mu.abs()
-    );
-
-    // y should also be negligible (Compton y-parameter requires X_e ~ 1)
-    assert!(
-        snap.y.abs() < 0.01 * drho,
-        "Post-recombination y should be negligible: |y|={:.4e} vs Δρ/ρ={drho:.4e}",
-        snap.y.abs()
     );
 }
 

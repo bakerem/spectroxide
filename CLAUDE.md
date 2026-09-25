@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test --release           # Run all tests (192 unit + 255 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release           # Run all tests (198 unit + 251 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
 cargo test --release test_name # Run a single test by name
 CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -84,14 +84,14 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 Shared setup lives in `tests/common/mod.rs`: burst and photon-injection builders, the energy and number integrals, and `memo`, which runs each distinct PDE configuration once per test binary (keyed on every input; the solver is deterministic). Hand-written physics oracles stay in each test file.
 
-- `pde_heat.rs` — 44 tests + 1 ignored: heat-injection PDE runs (bursts, decaying particles, DM annihilation, custom and tabulated heating): energy conservation, μ and y against era targets and the Green's function, spectral shapes and golden references, linearity, the μ–y transition.
+- `pde_heat.rs` — 42 tests + 1 ignored: heat-injection PDE runs (bursts, decaying particles, DM annihilation, custom and tabulated heating): energy conservation, μ and y against era targets and the Green's function, spectral shapes and golden references, linearity, the μ–y transition.
 - `pde_photon.rs` — 26 tests: photon-injection PDE runs (Gaussian initial spectra, monochromatic and decaying-particle photon scenarios, post-recombination): μ(x_inj) against Chluba (2015), energy and number bookkeeping, Green's-function comparisons.
 - `solver_numerics.rs` — 15 tests: stability at large Δn and large steps, snapshot landing, adaptive stepping, number-conserving mode, free streaming, timestep convergence, null tests (no injection, adiabatic cooling).
 - `gf_visibility.rs` — 20 tests, no PDE runs: visibility functions and their limits, heat and photon Green's functions, the (μ, y, ΔT/T) decomposition, FIRAS helpers.
 - `components.rs` — 23 tests, no PDE runs: cosmology background, grid, DC/BR rates, Kompaneets kernel, injection-rate functions, table I/O, quasi-stationary T_e.
 - `dark_sector.rs` — 3 tests in the default build (photon depletion); 5 more behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 9 tests in total.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
-- `coverage_gaps.rs` — 24 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1). `GridConfig::validate` rejects `n_points < 100` (review decision 2026-09-23; a sanity floor, not an accuracy bound). A 50-point run — built directly via `ThermalizationSolver::new` + `set_injection`, bypassing `validate`, since the builder can no longer construct it — must stop with the NaN error, never panic; a run on the 100-point validation floor must be finite and warn, or fail cleanly, never return silently.
+- `coverage_gaps.rs` — 22 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1), and full heat delivery from narrow bursts that drive T_e far above T_z (ADR 0007). `GridConfig::validate` rejects `n_points < 100` (review decision 2026-09-23; a sanity floor, not an accuracy bound). A 50-point run — built directly via `ThermalizationSolver::new` + `set_injection`, bypassing `validate`, since the builder can no longer construct it — must stop with the NaN error, never panic; a run on the 100-point validation floor must be finite and warn, or fail cleanly, never return silently.
 - `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 10 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift), energy conservation, and PDE cross-validation, plus four anchors of the BR Gaunt factor and coefficient against Draine (2011).
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.

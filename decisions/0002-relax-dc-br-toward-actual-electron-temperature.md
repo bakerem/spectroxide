@@ -95,6 +95,8 @@ after the coupled Newton solve) now pushes one warning per run: "Heating this st
 the ionization history (hotter electrons recombine more slowly), so results may be inaccurate."
 The solver holds X_e on its standard recombination history. In that regime the old target went
 negative (ρ_dcbr = −3.2 at z ≈ 910 with the cap raised to 20) and was silently clamped to 0.5.
+[ADR 0007](0007-replace-electron-temperature-caps-with-a-sanity-guard.md) (2026-09-24) replaces
+these caps with a sanity guard at 1e4 and moves the warning to ρ_e > 10 below z = 1500.
 
 The implementation lowers the guard on the DC/BR target from [0.5, 2] to [0.05, 2], so that
 adiabatic cooling of ρ_e below 0.5 near z ≈ 72 does not warn. Runs that go below z ≈ 72 therefore
