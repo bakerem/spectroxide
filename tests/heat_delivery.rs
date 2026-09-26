@@ -5,18 +5,19 @@
 //! to adiabatic cooling of the gas, is a real physical number close to but
 //! below 1. The targets here come from an independent integration of the
 //! gas-temperature excess with Compton exchange and adiabatic cooling
-//! (`dev/scripts/heatloss/heat_delivery_expectation.py` for the burst,
+//! (`dev/scripts/heatloss/coupled_xe_expectation.py` for the burst,
 //! `decay_delivery_expectation.py` for the decay, `baseline_expectation.py` for
-//! the no-injection cooling). The scripts type their CODATA constants and take
-//! only X_e(z) from spectroxide, by default from the Python
-//! `ionization_fraction`. They are not read off from solver output (CLAUDE.md
-//! pitfall #9). Provenance: `dev/audit/fix_a_cn_old_half_ab.md`.
+//! the no-injection cooling). The scripts type their CODATA constants. The
+//! burst oracle evolves X_H with the gas temperature, as the solver does since
+//! ADR 0009, and imports nothing from spectroxide; the other two take only
+//! X_e(z) from the Python `ionization_fraction`. None is read off from solver
+//! output (CLAUDE.md pitfall #9). Provenance: `dev/audit/fix_a_cn_old_half_ab.md`.
 //!
 //! Before ADR 0004 the old Crank-Nicolson half of the coupled step used the
 //! step-start ρ_e while the gas row used the backward-Euler ρ_e, which lost
 //! about ½ Δln X_e of each step's heat. Both tests fail on that code: the
 //! burst delivered 0.938 and the decay 0.849. The burst tolerance, 3e-5, is a
-//! fifth of the physical loss (1.38e-4), so full delivery (1.0) also fails.
+//! fifth of the physical loss (1.44e-4), so full delivery (1.0) also fails.
 //!
 //! Delivered heat is the photon Δρ/ρ of a run with injection minus that of a
 //! run with zero amplitude and otherwise identical settings. The baseline
@@ -44,18 +45,23 @@ fn photon_drho(scenario: InjectionScenario, z_start: f64, z_end: f64) -> f64 {
 }
 
 /// A Gaussian burst of Δρ/ρ = 1e-8 at z_h = 1000 (σ_z = 100, the CLI's
-/// default max(0.04 z_h, 100)) delivers 0.999862 of its heat to the photons by z = 200.
+/// default max(0.04 z_h, 100)) delivers 0.999856 of its heat to the photons by z = 200.
 /// The rest goes to adiabatic cooling of the gas excess. Target:
-/// `python dev/scripts/heatloss/heat_delivery_expectation.py 1000`.
+/// `python dev/scripts/heatloss/coupled_xe_expectation.py 1000 --drho 1e-8`
+/// (0.9998562). With X_e held on the standard history the target was 0.999863
+/// (`heat_delivery_expectation.py 1000`); the coupling (ADR 0009) shifts it by
+/// −7e-6, an effect first order in Δρ/ρ that survives Δρ/ρ → 0.
+///
+/// Oracle values include RECFAST's escape-rate correction (ADR 0011).
 ///
 /// Before ADR 0004 this run delivered 0.938 at Δτ_max = 10, 3, and 1 alike.
 #[test]
 fn burst_at_recombination_delivers_independent_fraction() {
     const DRHO: f64 = 1e-8;
-    const EXPECTED: f64 = 0.999862; // independent integration
-    // The whole physical loss is 1 − EXPECTED = 1.38e-4, so the tolerance must
+    const EXPECTED: f64 = 0.999856; // independent integration
+    // The whole physical loss is 1 − EXPECTED = 1.44e-4, so the tolerance must
     // sit well below it or a run that delivered every joule (1.0) would pass.
-    // 3e-5 is a fifth of the loss and four times the measured offset (7e-6).
+    // 3e-5 is a fifth of the loss and twice the measured offset (−1.5e-5).
     const TOL: f64 = 3e-5;
     let burst = |amp: f64| InjectionScenario::SingleBurst {
         z_h: 1000.0,
@@ -137,7 +143,7 @@ fn injected_decay_drho(f_x_ev: f64, gamma: f64, z_lo: f64, z_hi: f64) -> f64 {
 }
 
 /// A decaying particle with lifetime at z = 1000 (Γ = 1/t(z = 1000) =
-/// 7.1838e-14 s⁻¹, f_X = 10 eV), run from z = 5e4 to 200, delivers 0.99417 of
+/// 7.1838e-14 s⁻¹, f_X = 10 eV), run from z = 5e4 to 200, delivers 0.99418 of
 /// its injected energy to the photons. The independent integration puts 0.53%
 /// into adiabatic cooling of the gas excess and leaves 0.05% in the gas at
 /// z = 200. This is finding N-4 of `dev/REVIEW_2026-09-22.md`. Target:
@@ -145,13 +151,18 @@ fn injected_decay_drho(f_x_ev: f64, gamma: f64, z_lo: f64, z_hi: f64) -> f64 {
 ///
 /// Before ADR 0004 this run delivered 0.849 at default steps and 0.908 at a
 /// hundredfold smaller Δτ_max.
+///
+/// The oracle holds X_e on the standard history. Evolving X_H with the gas
+/// temperature (ADR 0009), with its smaller steps below z ≈ 1575, moves the
+/// solver's fraction by +3.8e-5 (0.993914 with `--fixed-ionization`, 0.993952
+/// without), far inside the tolerance.
 #[test]
 fn decay_at_recombination_delivers_independent_fraction() {
     const GAMMA: f64 = 7.1838e-14; // 1/s
     const F_X: f64 = 10.0; // eV
     const Z_START: f64 = 5e4;
     const Z_END: f64 = 200.0;
-    const EXPECTED: f64 = 0.99417; // independent integration
+    const EXPECTED: f64 = 0.99418; // independent integration
 
     let injected = injected_decay_drho(F_X, GAMMA, Z_END, Z_START);
     // Guard on the helper itself: the A/B record quotes 6.5373e-9.

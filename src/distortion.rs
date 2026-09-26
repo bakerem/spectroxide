@@ -212,10 +212,12 @@ pub fn decompose_gram_schmidt(
 /// Reference: Bianchini & Fabbian (2022), arXiv:2206.02762, Eqs. (1)–(4).
 ///
 /// Model:
-///   Δn_model(x; μ, δ, y) = [n_pl(x/(1+δ)) − n_pl(x)]
+///   Δn_model(x; μ, δ, y) = δ · G_bb(x)
 ///                        + [n_BE(x+μ)    − n_pl(x)]
 ///                        + y · Y_SZ(x)
-/// with δ ≡ ΔT/T₀. Fits (μ, δ, y) by Levenberg-Marquardt on the band
+/// with δ ≡ ΔT/T₀, nonlinear in μ (inside the Bose-Einstein exponential) but
+/// linear in δ (first-order Taylor expansion of the blackbody, as in their
+/// Eq. 1). Fits (μ, δ, y) by Levenberg-Marquardt on the band
 /// [x_min, x_max] with the intensity inner product of
 /// `decompose_gram_schmidt`, i.e. it minimizes ∫ [x³(Δn − model)]² dx (ADR 0006).
 ///

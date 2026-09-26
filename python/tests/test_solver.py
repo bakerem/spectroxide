@@ -162,6 +162,16 @@ class TestBuildInjectionArgs:
         assert "--f-x" in args
         assert "--gamma-x" in args
 
+    def test_dark_photon_neutral_hydrogen(self):
+        """The neutral-hydrogen option is a bare flag, emitted only when true."""
+        base = {"type": "dark_photon_resonance", "epsilon": 1e-9, "m_ev": 1e-7}
+        on = _injection_param_args({**base, "neutral_hydrogen": True})
+        off = _injection_param_args({**base, "neutral_hydrogen": np.False_})
+        assert on[-1] == "--neutral-hydrogen"
+        assert on.count("--neutral-hydrogen") == 1
+        assert "--neutral-hydrogen" not in off
+        assert off == _injection_param_args(base)
+
     def test_unknown_param_raises(self):
         """Unknown injection parameter should raise ValueError."""
         with pytest.raises(ValueError, match="Unknown injection parameter"):

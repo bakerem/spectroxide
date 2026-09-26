@@ -7,6 +7,10 @@ Accepted, 2026-09-24 (EB).
 Amends the cap paragraph of the Addendum to
 [ADR 0002](0002-relax-dc-br-toward-actual-electron-temperature.md).
 
+The stated reason for the "Hot gas" warning is amended by
+[ADR 0009](0009-evolve-hydrogen-ionization-with-electron-temperature.md), which evolves X_H with
+T_e; the warning now names the missing collisional ionization.
+
 ## Context
 
 The solver clamps ρ_e = T_e/T_z in three places in `src/solver.rs`:

@@ -346,7 +346,7 @@ fn science_te_decoupling_post_recombination() {
     );
 
     // z=200: thermal decoupling underway.
-    // Peebles TLA with F=1.125 (Chluba & Thomas 2011, arXiv:1011.3758).
+    // Peebles TLA with RECFAST 1.5.2's F = 1.125 and escape-rate correction.
     // The T_m/T_CMB ratio at z=200 depends on X_e freeze-out and Compton
     // coupling efficiency. Bounds are ±5% of numerically converged value.
     // Cross-checked against DarkHistory (Liu+ 2020) TLA implementation.

@@ -29,6 +29,7 @@ from spectroxide.cosmology import (
     rho_gamma,
 )
 from spectroxide.dark_photon import (
+    conversion_probability,
     gamma_con,
     plasma_frequency_ev,
     resonance_redshift,
@@ -70,6 +71,14 @@ def _scalar(fn):
     return wrapper
 
 
+def _dp_conversion(m_ev, x, cosmo):
+    """(tau, highest crossing z) at epsilon = 1e-7, or None without a crossing."""
+    conv = conversion_probability(1.0e-7, m_ev, [x], cosmo)
+    if conv.crossings[0].size == 0:
+        return None
+    return (float(conv.tau[0]), float(conv.crossings[0][0]))
+
+
 # Group name -> callable(inputs_row, cosmo_dict_or_None) -> float | tuple | None
 _DISPATCH = {
     "visibility_j_bb": lambda i, c: _scalar(j_bb)(i[0]),
@@ -101,6 +110,7 @@ _DISPATCH = {
     "plasma_frequency_ev": lambda i, c: float(plasma_frequency_ev(i[0], c)),
     "resonance_redshift": lambda i, c: resonance_redshift(i[0], c),
     "gamma_con": lambda i, c: gamma_con(1.0e-7, i[0], c),
+    "dark_photon_conversion": lambda i, c: _dp_conversion(i[0], i[1], c),
     "greens_function_photon": lambda i, c: _scalar(greens_function_photon)(
         i[0], i[1], i[2], i[3], cosmo=c
     ),

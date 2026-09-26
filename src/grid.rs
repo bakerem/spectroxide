@@ -23,7 +23,7 @@ pub struct RefinementZone {
 #[derive(Debug, Clone)]
 pub struct GridConfig {
     /// Lower grid bound in dimensionless frequency `x = hν/(kT_z)`.
-    /// Must be positive (log spacing). Default 1e-4.
+    /// Must be positive (log spacing). Default 1e-5.
     pub x_min: f64,
     /// Upper grid bound. Must be ≥ 30 for accurate spectral integrals.
     pub x_max: f64,
@@ -37,16 +37,11 @@ pub struct GridConfig {
     pub refinement_zones: Vec<RefinementZone>,
 }
 
+/// The default is the production grid, [`GridConfig::production`], which the
+/// Python interface also uses (ADR 0010).
 impl Default for GridConfig {
     fn default() -> Self {
-        GridConfig {
-            x_min: 1e-4,
-            x_max: 50.0,
-            n_points: 2000,
-            x_transition: 0.1,
-            log_fraction: 0.3,
-            refinement_zones: Vec::new(),
-        }
+        Self::production()
     }
 }
 
@@ -60,6 +55,20 @@ impl GridConfig {
             n_points: 4000,
             x_transition: 0.5,
             log_fraction: 0.35,
+            refinement_zones: Vec::new(),
+        }
+    }
+
+    /// Builds the coarse grid that was the default before ADR 0010: 2000 points,
+    /// `x ∈ [1e-4, 50]`, 30% of points below `x_t = 0.1`. Several tests were
+    /// tuned on this range and pin it.
+    pub fn coarse() -> Self {
+        GridConfig {
+            x_min: 1e-4,
+            x_max: 50.0,
+            n_points: 2000,
+            x_transition: 0.1,
+            log_fraction: 0.3,
             refinement_zones: Vec::new(),
         }
     }

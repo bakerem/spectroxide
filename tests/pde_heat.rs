@@ -2264,13 +2264,7 @@ fn test_dcbr_thermalizes_mu_distortion() {
     let sigma = 5000.0;
 
     // Run from z_h down to z_end in the μ-era (z=2e5), then further to y-era (z=5e3)
-    let mut solver = ThermalizationSolver::new(
-        cosmo,
-        GridConfig {
-            n_points: 2000,
-            ..GridConfig::default()
-        },
-    );
+    let mut solver = ThermalizationSolver::new(cosmo, GridConfig::coarse());
     solver
         .set_injection(InjectionScenario::SingleBurst {
             z_h,

@@ -401,9 +401,10 @@ def greens_function(x: ArrayLike, z_h: float) -> NDArray[np.float64]:
     ----------------------------
     Compared with the PDE solver, the accuracy is:
 
-    - Deep μ-era (z_h > 2 × 10⁵): spectral shape accurate to <5%.
-    - y-era (z_h < 10⁴): spectral shape accurate to <1%.
-    - Transition era (z_h ~ 3 × 10⁴–10⁵): ~8–13% shape error.
+    - Deep μ-era (z_h > 3 × 10⁵): <17% per-point shape error; <5% on
+      integrated μ.
+    - y-era (z_h < 10⁴): <5% per-point shape error; <1% on integrated y.
+    - Transition era (z_h ~ 10⁴–3 × 10⁵): 8–17% per-point shape error.
 
     Parameters
     ----------

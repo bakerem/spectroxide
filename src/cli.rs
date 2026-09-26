@@ -152,7 +152,7 @@ pub struct InfoOpts {
 pub struct SolverOpts {
     /// Starting redshift `--z-start`. `None` lets each subcommand pick a default.
     pub z_start: Option<f64>,
-    /// Ending redshift `--z-end` (default 500.0).
+    /// Ending redshift `--z-end` (default 10.0).
     pub z_end: f64,
     /// Cap on adaptive y-step `--dy-max`.
     pub dy_max: Option<f64>,
@@ -166,14 +166,15 @@ pub struct SolverOpts {
     /// Solve DC/BR in a separate backward-Euler step after the Kompaneets
     /// Newton solve, instead of inside it (`--split-dcbr`). Diagnostic only.
     pub split_dcbr: bool,
+    /// Read X_e from the standard recombination history instead of evolving
+    /// it with T_e (`--fixed-ionization`, ADR 0009). Diagnostic only.
+    pub fixed_ionization: bool,
     /// Keep the photon-number-conserving Kompaneets correction enabled
     /// (default true; disabled with `--no-number-conserving`).
     pub number_conserving: bool,
     /// Lower-z cutoff `--nc-z-min` below which the number-conserving
     /// correction is suppressed.
     pub nc_z_min: Option<f64>,
-    /// Use the high-resolution `production` grid preset (`--production-grid`).
-    pub production_grid: bool,
     /// Override the initial-condition Δn at z_start (`--dn-planck`); used
     /// for adiabatic and baseline diagnostics.
     pub dn_planck: Option<f64>,
@@ -226,15 +227,15 @@ impl Default for SolverOpts {
     fn default() -> Self {
         SolverOpts {
             z_start: None,
-            z_end: 500.0,
+            z_end: 10.0,
             dy_max: None,
             dtau_max: None,
             n_points: None,
             disable_dcbr: false,
             split_dcbr: false,
+            fixed_ionization: false,
             number_conserving: true,
             nc_z_min: None,
-            production_grid: false,
             dn_planck: None,
             no_auto_refine: false,
             n_threads: None,
@@ -289,6 +290,7 @@ const SOLVER_KEYS: &[&str] = &[
     "--production-grid",
     "--no-dcbr",
     "--split-dcbr",
+    "--fixed-ionization",
     "--no-number-conserving",
     "--nc-z-min",
     "--no-auto-refine",
@@ -308,8 +310,10 @@ const BOOL_FLAGS: &[&str] = &[
     "--production-grid",
     "--no-dcbr",
     "--split-dcbr",
+    "--fixed-ionization",
     "--no-number-conserving",
     "--no-auto-refine",
+    "--neutral-hydrogen",
 ];
 
 /// Flags consumed by [`parse_cosmo_opts`]. `--omega-cdm` is listed so its
@@ -346,7 +350,7 @@ fn injection_param_keys(injection_type: &str) -> Option<&'static [&'static str]>
             "--sigma-x",
         ]),
         "decaying-particle-photon" => Some(&["--x-inj-0", "--f-inj", "--gamma-x"]),
-        "dark-photon-resonance" => Some(&["--epsilon", "--m-ev"]),
+        "dark-photon-resonance" => Some(&["--epsilon", "--m-ev", "--neutral-hydrogen"]),
         #[cfg(feature = "axion")]
         "axion-resonance" => Some(&["--g-agamma", "--b-rms", "--m-ev"]),
         "tabulated-heating" => Some(&["--heating-table"]),
@@ -787,7 +791,7 @@ fn parse_solver_opts(map: &HashMap<String, String>) -> Result<SolverOpts, String
             .get("--z-start")
             .map(|s| s.parse().map_err(|_| "Invalid --z-start"))
             .transpose()?,
-        z_end: parse_f64_or(map, "--z-end", 500.0)?,
+        z_end: parse_f64_or(map, "--z-end", 10.0)?,
         dy_max: map
             .get("--dy-max")
             .map(|s| s.parse().map_err(|_| "Invalid --dy-max"))
@@ -807,12 +811,12 @@ fn parse_solver_opts(map: &HashMap<String, String>) -> Result<SolverOpts, String
         },
         disable_dcbr: map.contains_key("--no-dcbr"),
         split_dcbr: map.contains_key("--split-dcbr"),
+        fixed_ionization: map.contains_key("--fixed-ionization"),
         number_conserving: !map.contains_key("--no-number-conserving"),
         nc_z_min: map
             .get("--nc-z-min")
             .map(|s| s.parse().map_err(|_| "Invalid --nc-z-min"))
             .transpose()?,
-        production_grid: map.contains_key("--production-grid"),
         dn_planck: map
             .get("--dn-planck")
             .map(|s| s.parse().map_err(|_| "Invalid --dn-planck"))
@@ -998,16 +1002,17 @@ fn print_solver_options_help(for_solve: bool) {
     println!("                        single-burst and monochromatic-photon, z_res for");
     println!("                        resonance scenarios, 5e6 otherwise. Sweeps use");
     println!("                        z_h + 7 sigma_z per point");
-    println!("  --z-end <z>           Final redshift, > 0 (default 500)");
+    println!("  --z-end <z>           Final redshift, > 0 (default 10)");
     println!("  --dy-max <val>        Max Compton-y step theta_e*dtau (default 0.02)");
     println!("  --dtau-max <val>      Max Compton optical depth per step (default 10;");
     println!("                        use 3 for <0.1% precision)");
     println!("  --dtau-max-photon-source <val>  Max dtau per step while a photon source is");
     println!("                        active (default 1.0; 10 for fast exploratory runs)");
-    println!("  --n-points <n>        Frequency-grid points (default 2000, or 4000 with");
-    println!("                        --production-grid; below 1000 the solver warns that");
-    println!("                        the result is untested)");
-    println!("  --production-grid     Use the 4000-point production grid");
+    println!("  --n-points <n>        Frequency-grid points on the production grid,");
+    println!("                        x in [1e-5, 60] (default 4000; below 1000 the solver");
+    println!("                        warns that the result is untested)");
+    println!("  --production-grid     No effect; the production grid is the default.");
+    println!("                        Accepted so that older scripts still run");
     println!("  --no-auto-refine      Disable automatic grid refinement near injection features");
     if !for_solve {
         println!("  --threads <n>         Threads for the parallel sweep (default: all cores)");
@@ -1016,6 +1021,7 @@ fn print_solver_options_help(for_solve: bool) {
     println!("DIAGNOSTIC FLAGS (sensitivity probes, not production runs):");
     println!("  --no-dcbr             Disable double-Compton + bremsstrahlung");
     println!("  --split-dcbr          Operator-split DC/BR instead of the coupled Newton solve");
+    println!("  --fixed-ionization    Take X_e from the standard history, not evolved with T_e");
     println!("  --no-number-conserving  Disable the number-conserving T-shift subtraction");
     println!("  --nc-z-min <z>        Minimum z for NC subtraction (default 5e4; 0 = all z)");
     if for_solve {
@@ -1068,7 +1074,9 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!("  decaying-particle-photon  --x-inj-0 <E_gamma / k T_0>, --f-inj <val>,");
             println!("                        --gamma-x <1/s>; photons appear at");
             println!("                        x_inj = x_inj_0 / (1+z), with T_0 = T_CMB today");
-            println!("  dark-photon-resonance --epsilon <kinetic mixing>, --m-ev <mass in eV>");
+            println!("  dark-photon-resonance --epsilon <kinetic mixing>, --m-ev <mass in eV>,");
+            println!("                        [--neutral-hydrogen] (include neutral hydrogen in");
+            println!("                        the photon mass; off by default)");
             #[cfg(feature = "axion")]
             {
                 println!(
@@ -1156,8 +1164,8 @@ pub fn print_subcommand_help(subcommand: &str) {
             println!("Analytic heat-injection Green's function (Chluba 2013 visibility fits):");
             println!("mu, y, and Delta n(x) for a Gaussian burst at z_h. Fast (no PDE).");
             println!();
-            println!("Accuracy vs the PDE: 2-5% for mu, ~5% for y; ~8-13% shape error in the");
-            println!("mu-y transition (3e4 < z < 2e5). Not cosmology-aware: cosmology and");
+            println!("Accuracy vs the PDE: 2-5% for mu, ~5% for y; ~8-17% shape error in the");
+            println!("mu-y transition (1e4 < z < 3e5). Not cosmology-aware: cosmology and");
             println!("solver flags are rejected, and z < 1100 results are qualitative only.");
             println!();
             println!("OPTIONS:");
@@ -1287,7 +1295,11 @@ pub fn build_injection_scenario(
         "dark-photon-resonance" => {
             let epsilon = get_required("--epsilon")?;
             let m_ev = get_required("--m-ev")?;
-            Ok(InjectionScenario::DarkPhotonResonance { epsilon, m_ev })
+            Ok(InjectionScenario::DarkPhotonResonance {
+                epsilon,
+                m_ev,
+                neutral_hydrogen: args.contains_key("--neutral-hydrogen"),
+            })
         }
         #[cfg(feature = "axion")]
         "axion-resonance" => {
@@ -1371,7 +1383,7 @@ pub fn execute_greens(opts: &GreensOpts) -> Result<GreensResult, String> {
 /// Returns the validity-range warnings for the analytic Green's function, keyed
 /// to the injection redshift. The three z-regime thresholds (5e6, 3e6, 1100) mirror
 /// `warn_z_h_regime` in the Python package's `_validation.py`; the μ–y
-/// transition band mirrors `warn_analytic_gf_heating` (3e4 < z < 2e5).
+/// transition band mirrors `warn_analytic_gf_heating` (1e4 < z < 3e5).
 fn greens_regime_warnings(z_h: f64) -> Vec<String> {
     let mut warnings = Vec::new();
     if z_h > 5e6 {
@@ -1392,10 +1404,10 @@ fn greens_regime_warnings(z_h: f64) -> Vec<String> {
              function is not cosmology-aware and applies no Compton suppression; results \
              here are qualitative only."
         ));
-    } else if (3e4..2e5).contains(&z_h) {
+    } else if (1e4..3e5).contains(&z_h) {
         warnings.push(format!(
-            "z_h={z_h:.2e}: μ–y transition region (3e4 < z < 2e5); the analytic Green's \
-             function has ~8–13% shape error vs the PDE here."
+            "z_h={z_h:.2e}: μ–y transition region (1e4 < z < 3e5); the analytic Green's \
+             function has ~8–17% shape error vs the PDE here."
         ));
     }
     warnings
@@ -1403,15 +1415,10 @@ fn greens_regime_warnings(z_h: f64) -> Vec<String> {
 
 /// Builds a GridConfig from CLI options.
 ///
-/// The base is `GridConfig::production()` (4000 points) if `production_grid` is
-/// set, otherwise `GridConfig::default()` (2000 points). `n_points`, from
-/// `--n-points`, overrides the base's point count.
-fn build_grid_config(n_points: Option<usize>, production_grid: bool) -> GridConfig {
-    let base = if production_grid {
-        GridConfig::production()
-    } else {
-        GridConfig::default()
-    };
+/// The base is the production grid, `GridConfig::default()` (4000 points,
+/// ADR 0010). `n_points`, from `--n-points`, overrides its point count.
+fn build_grid_config(n_points: Option<usize>) -> GridConfig {
+    let base = GridConfig::default();
     match n_points {
         Some(n_points) => GridConfig { n_points, ..base },
         None => base,
@@ -1497,6 +1504,15 @@ fn diagnostic_flag_warnings(solver_opts: &SolverOpts) -> Vec<String> {
                 .to_string(),
         );
     }
+    if solver_opts.fixed_ionization {
+        out.push(
+            "--fixed-ionization reads X_e from the standard recombination history, with the \
+             gas at the photon temperature. Heating below z = 1600 then leaves X_e too low, \
+             and in every run X_e is 2 to 10% too high below z = 200, where the gas is \
+             colder than the photons. Diagnostic flag, not for production runs."
+                .to_string(),
+        );
+    }
     if solver_opts.split_dcbr {
         out.push(
             "--split-dcbr disables the coupled DC/BR Newton iteration. Photon-source spikes can \
@@ -1511,6 +1527,7 @@ fn diagnostic_flag_warnings(solver_opts: &SolverOpts) -> Vec<String> {
 /// Applies common solver flags from CLI options to a solver instance.
 fn apply_solver_flags(solver: &mut ThermalizationSolver, solver_opts: &SolverOpts) {
     solver.disable_dcbr = solver_opts.disable_dcbr;
+    solver.fixed_ionization = solver_opts.fixed_ionization;
     solver.number_conserving = solver_opts.number_conserving;
     for w in diagnostic_flag_warnings(solver_opts) {
         eprintln!("  Warning: {w}");
@@ -1545,7 +1562,7 @@ fn default_solve_z_start(injection: &InjectionScenario, cosmo: &Cosmology) -> f6
 /// Returns `Err` if the cosmology options are invalid (see [`build_cosmology`]); if
 /// `--delta-rho` or the `--dn-planck` amplitude is not a finite number; if the injection type
 /// is unknown or its parameters fail `InjectionScenario::validate`; if a resonant-conversion
-/// scenario has no resonance redshift in [50, 3e6]; if the solver or grid configuration fails
+/// scenario has no resonance redshift in [10, 3e7]; if the solver or grid configuration fails
 /// validation; or if the upper edge of the injection window lies outside [`z_end`, `z_start`],
 /// so that the solve would miss the injection.
 pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
@@ -1576,14 +1593,14 @@ pub fn execute_solve(opts: &SolveOpts) -> Result<SolverResult, String> {
     // looks like a "successful" null result.
     if injection.is_impulsive_resonance() && injection.resonance_params(&cosmo).is_none() {
         return Err(
-            "Resonant conversion: no resonance redshift z_res in [50, 3e6] for the given \
+            "Resonant conversion: no resonance redshift z_res in [10, 3e7] for the given \
              parameters. The plasma frequency never crosses the particle mass in the supported \
              band, so no conversion occurs. Adjust the mass or extend the supported range."
                 .to_string(),
         );
     }
 
-    let mut grid_config = build_grid_config(n_grid, opts.solver.production_grid);
+    let mut grid_config = build_grid_config(n_grid);
 
     if !opts.solver.no_auto_refine {
         injection.refine_grid(&mut grid_config);
@@ -1729,7 +1746,7 @@ pub fn execute_sweep(opts: &SweepOpts) -> Result<SweepResult, String> {
             let sigma: f64 = InjectionScenario::default_sigma_z(z_h);
             let z_start: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma);
 
-            let grid_config = build_grid_config(n_grid, solver_opts.production_grid);
+            let grid_config = build_grid_config(n_grid);
             let injection = InjectionScenario::SingleBurst {
                 z_h,
                 delta_rho_over_rho: delta_rho,
@@ -1936,7 +1953,7 @@ fn run_photon_sweeps(
             let sigma_z: f64 = InjectionScenario::default_sigma_z(z_h);
             let z_start_val: f64 = solver_opts.z_start.unwrap_or(z_h + 7.0 * sigma_z);
 
-            let mut grid_config = build_grid_config(n_grid, solver_opts.production_grid);
+            let mut grid_config = build_grid_config(n_grid);
 
             let injection = InjectionScenario::MonochromaticPhotonInjection {
                 x_inj,
@@ -2221,7 +2238,9 @@ mod tests {
             let mut args = vec![s("solve"), s(ty)];
             for key in keys {
                 args.push(s(key));
-                args.push(s("1.0"));
+                if !BOOL_FLAGS.contains(key) {
+                    args.push(s("1.0"));
+                }
             }
             // A representative flag from each shared group must also pass.
             for (extra, val) in [
@@ -2236,6 +2255,26 @@ mod tests {
                 matches!(parse_command(&args), Ok(Command::Solve(_))),
                 "flags for '{ty}' were falsely rejected: {:?}",
                 parse_command(&args)
+            );
+        }
+    }
+
+    #[test]
+    fn test_dark_photon_neutral_hydrogen_flag() {
+        // The option must reach the scenario through the CLI, and stay off
+        // without the flag (ADR 0008).
+        for (extra, expected) in [(vec![], false), (vec![s("--neutral-hydrogen")], true)] {
+            let mut args = vec![s("--epsilon"), s("1e-9"), s("--m-ev"), s("1e-7")];
+            args.extend(extra);
+            let map = parse_flat_args(&args).unwrap();
+            let scenario = build_injection_scenario("dark-photon-resonance", &map, 0.0).unwrap();
+            assert!(
+                matches!(
+                    scenario,
+                    InjectionScenario::DarkPhotonResonance { neutral_hydrogen, .. }
+                        if neutral_hydrogen == expected
+                ),
+                "expected neutral_hydrogen = {expected}"
             );
         }
     }
@@ -2266,6 +2305,7 @@ mod tests {
             s("500"),
             s("--no-dcbr"),
             s("--split-dcbr"),
+            s("--fixed-ionization"),
             s("--nc-z-min"),
             s("5e4"),
             s("--production-grid"),
@@ -2277,8 +2317,8 @@ mod tests {
             Command::Sweep(opts) => {
                 assert!(opts.solver.disable_dcbr);
                 assert!(opts.solver.split_dcbr);
+                assert!(opts.solver.fixed_ionization);
                 assert!(opts.solver.number_conserving);
-                assert!(opts.solver.production_grid);
                 assert!(opts.solver.no_auto_refine);
                 assert!((opts.solver.dy_max.unwrap() - 0.01).abs() < 1e-10);
                 assert!((opts.solver.nc_z_min.unwrap() - 5e4).abs() < 1.0);
@@ -2717,21 +2757,21 @@ mod tests {
         );
     }
 
-    /// N-3: `--production-grid` without `--n-points` used 2000 points in `solve` and
-    /// the photon sweeps, because `n_points.unwrap_or(2000)` overrode the preset.
-    /// It must give the 4000-point production grid; the plain default stays 2000.
+    /// The CLI defaults to the 4000-point production grid (ADR 0010), with or
+    /// without the legacy `--production-grid` flag. N-3: `--n-points` must not be
+    /// overridden by a hard-coded count.
     #[test]
     fn test_production_grid_point_count() {
         assert_eq!(GridConfig::production().n_points, 4000);
-        assert_eq!(GridConfig::default().n_points, 2000);
+        assert_eq!(GridConfig::default().n_points, 4000);
         let n_of = |line: &str| -> usize {
             let Command::Solve(opts) = parse_command(&argv(line)).unwrap() else {
                 panic!("expected Solve");
             };
-            build_grid_config(opts.solver.n_points, opts.solver.production_grid).n_points
+            build_grid_config(opts.solver.n_points).n_points
         };
         assert_eq!(n_of("solve single-burst --z-h 2e5 --production-grid"), 4000);
-        assert_eq!(n_of("solve single-burst --z-h 2e5"), 2000);
+        assert_eq!(n_of("solve single-burst --z-h 2e5"), 4000);
         assert_eq!(
             n_of("solve single-burst --z-h 2e5 --production-grid --n-points 3000"),
             3000

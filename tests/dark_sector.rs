@@ -18,8 +18,7 @@ use spectroxide::spectrum;
 /// Helper: find the resonance redshift z_res where omega_pl(z_res) = m.
 ///
 /// Uses bisection in log-space to find z where the plasma frequency equals m.
-/// Returns (z_res, omega_pl_at_z_res). Only the axion tests use it.
-#[cfg(feature = "axion")]
+/// Returns (z_res, omega_pl_at_z_res).
 fn find_resonance_z(m_dp: f64, cosmo: &Cosmology) -> (f64, f64) {
     let ev_j = 1.602_176_634e-19_f64;
     let hbar_ev_s = HBAR / ev_j;
@@ -119,6 +118,7 @@ fn test_axion_depletes_wien_tail_opposite_to_dark_photon() {
     let dark = InjectionScenario::DarkPhotonResonance {
         epsilon: 1e-6,
         m_ev,
+        neutral_hydrogen: false,
     };
 
     let dn_ax = axion.initial_delta_n(&x_grid, &cosmo).expect("axion IC");
@@ -202,6 +202,7 @@ fn test_axion_experimental_warning() {
     let dark = InjectionScenario::DarkPhotonResonance {
         epsilon: 1e-6,
         m_ev: 1e-6,
+        neutral_hydrogen: false,
     };
     assert_eq!(count(axion), 1, "axion run must warn exactly once");
     assert_eq!(
@@ -435,4 +436,80 @@ fn test_pde_photon_depletion_post_recombination() {
         dn_far < 0.1 * dn_dip,
         "Depletion should be concentrated near x_inj: Δn_far={dn_far:.4e} vs dip={dn_dip:.4e}"
     );
+}
+
+/// The dark-photon depletion is installed at the plasma-only resonance z_res
+/// (ADR 0008): the neutral-hydrogen term only lowers m_γ², so no frequency can
+/// cross later than z_res, and installing earlier would let bremsstrahlung
+/// refill the low-x hole before it forms. The target z_res comes from this
+/// file's own bisection of ω_pl(z) = m.
+#[test]
+fn test_dark_photon_installs_at_plasma_z_res() {
+    let cosmo = Cosmology::default();
+    for (m_ev, neutral_hydrogen) in [1e-12, 1e-11, 1e-9]
+        .into_iter()
+        .flat_map(|m| [(m, false), (m, true)])
+    {
+        let (z_res, _) = find_resonance_z(m_ev, &cosmo);
+        let solver = ThermalizationSolver::builder(cosmo.clone())
+            .injection(InjectionScenario::DarkPhotonResonance {
+                epsilon: 1e-7,
+                m_ev,
+                neutral_hydrogen,
+            })
+            .build()
+            .expect("dark-photon solver builds");
+        let z_start = solver.config.z_start;
+        assert!(
+            (z_start - z_res).abs() < 1e-6 * z_res,
+            "m={m_ev:e}, neutral_hydrogen={neutral_hydrogen}: z_start={z_start} vs \
+             plasma-only z_res={z_res}"
+        );
+    }
+}
+
+/// The neutral-hydrogen switch (ADR 0008). By default the depletion is the
+/// plasma-only one of Chluba, Cyr & Johnson (2024, Eq. 6),
+/// Δn = −[1 − exp(−γ_con/x)] n_pl, to rounding. With the switch on, a
+/// post-recombination mass (m = 1e-11 eV, z_res ≈ 670, where the neutral term
+/// is ~2× the plasma term at x = 4) must change the high-x depletion by more
+/// than 10%, and a pre-recombination mass (m = 1e-7 eV, z_res ≈ 3.2e4, neutral
+/// fraction ~0) must leave it within 1e-3, the cell-averaging difference.
+#[test]
+fn test_dark_photon_neutral_hydrogen_switch() {
+    let cosmo = Cosmology::default();
+    let x_grid = spectroxide::grid::FrequencyGrid::new(&GridConfig::default()).x;
+    let epsilon = 1e-8;
+    let ic = |m_ev: f64, neutral_hydrogen: bool| {
+        InjectionScenario::DarkPhotonResonance {
+            epsilon,
+            m_ev,
+            neutral_hydrogen,
+        }
+        .initial_delta_n(&x_grid, &cosmo)
+        .expect("resonance in band")
+    };
+    let i4 = x_grid.partition_point(|&x| x < 4.0);
+    for m_ev in [1e-11, 1e-7] {
+        let (gamma_con, _) =
+            spectroxide::dark_photon::gamma_con(epsilon, m_ev, &cosmo).expect("resonance");
+        let plasma = ic(m_ev, false);
+        for (&x, &dn) in x_grid.iter().zip(&plasma) {
+            let target = -(1.0 - (-gamma_con / x).exp()) * spectrum::planck(x);
+            assert!(
+                (dn - target).abs() <= 1e-14 * target.abs(),
+                "m={m_ev:e}, x={x}: default IC {dn:e} vs plasma-only {target:e}"
+            );
+        }
+        let neutral = ic(m_ev, true);
+        let rel = (neutral[i4] / plasma[i4] - 1.0).abs();
+        if m_ev < 1e-9 {
+            assert!(
+                rel > 0.1,
+                "m={m_ev:e}: neutral H changes x=4 by only {rel:e}"
+            );
+        } else {
+            assert!(rel < 1e-3, "m={m_ev:e}: neutral H changes x=4 by {rel:e}");
+        }
+    }
 }

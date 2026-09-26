@@ -472,8 +472,8 @@ def warn_x_grid_narrow(x_grid):
 def warn_analytic_gf_heating(z_min, z_max):
     """Warn when analytic GF covers the mu-y transition region.
 
-    The analytic Green's function has 8-13% spectral shape errors in the
-    transition era (3e4 < z < 2e5) because it decomposes into pure mu +
+    The analytic Green's function has 8-17% spectral shape errors in the
+    transition era (1e4 < z < 3e5) because it decomposes into pure mu +
     pure y + temperature shift.  The PDE-based Green's function table
     (GreensTable) captures the true intermediate shapes.
 
@@ -481,13 +481,13 @@ def warn_analytic_gf_heating(z_min, z_max):
     ----------
     z_min, z_max : float
         Redshift bounds of the integration.  Warns if the range overlaps
-        ``3e4 < z < 2e5``.
+        ``1e4 < z < 3e5``.
     """
     # Only warn if the integration range overlaps the transition region
-    if z_min < 2e5 and z_max > 3e4:
+    if z_min < 3e5 and z_max > 1e4:
         warnings.warn(
-            "Analytic Green's function has 8-13% spectral shape errors in the "
-            "mu-y transition region (3e4 < z < 2e5). For percent-level accuracy, "
+            "Analytic Green's function has 8-17% spectral shape errors in the "
+            "mu-y transition region (1e4 < z < 3e5). For percent-level accuracy, "
             "use the PDE-based Green's function table:\n"
             "  table = spectroxide.load_or_build_greens_table()\n"
             "  dn = table.distortion_from_heating(x, dq_dz, z_min, z_max)",
@@ -499,14 +499,14 @@ def warn_table_z_density(z_injections):
     """Warn if z-injection grid is too sparse for accurate interpolation.
 
     Cubic spline interpolation in log(z_h) needs adequate sampling,
-    especially in the transition region (3e4-2e5) where the Green's
+    especially in the transition region (1e4-3e5) where the Green's
     function shape changes rapidly.
 
     Parameters
     ----------
     z_injections : array_like
         Injection redshifts of the table.  Warns if there are fewer than
-        two points, if the table has points within ``3e4 <= z <= 2e5`` but
+        two points, if the table has points within ``1e4 <= z <= 3e5`` but
         fewer than 10 of them per log-decade of that band (a table with no
         point there is not flagged), or if it has fewer than 15 points per
         log-decade overall.
@@ -521,14 +521,14 @@ def warn_table_z_density(z_injections):
         return
 
     # Check points per log-decade in the transition region
-    in_transition = z[(z >= 3e4) & (z <= 2e5)]
+    in_transition = z[(z >= 1e4) & (z <= 3e5)]
     if in_transition.size > 0:
-        log_range = np.log10(2e5) - np.log10(3e4)  # ~0.82 decades
+        log_range = np.log10(3e5) - np.log10(1e4)  # ~1.48 decades
         density = in_transition.size / log_range
         if density < 10:
             warnings.warn(
                 f"Only {in_transition.size} z-injection points in the mu-y "
-                f"transition region (3e4-2e5), giving {density:.0f} points per "
+                f"transition region (1e4-3e5), giving {density:.0f} points per "
                 "log-decade. This region has the steepest shape changes. "
                 "Recommend >= 10 points per log-decade (use >= 150 total "
                 "z-injection points with default log-spacing).",

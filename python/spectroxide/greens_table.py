@@ -13,8 +13,8 @@ The module provides two table classes:
 Tables are built by running the partial differential equation (PDE)
 solver at many injection redshifts, then interpolating for fast
 convolution of arbitrary injection histories.  This eliminates the
-~8–13% shape errors of the analytic Green's function in the μ-to-y
-transition region ``3 × 10⁴ < z < 10⁵``
+~8–17% shape errors of the analytic Green's function in the μ-to-y
+transition region ``10⁴ < z < 3 × 10⁵``
 (see :func:`spectroxide.greens.greens_function`).
 
 Usage::
@@ -689,11 +689,11 @@ class PhotonGreensTable:
 def _build_greens_table(
     z_injections: ArrayLike | None = None,
     delta_rho: float = 1.0e-5,
-    n_points: int = 2000,
+    n_points: int = 4000,
     x_min: float = 0.01,
     x_max: float = 30.0,
     n_x: int = 500,
-    z_end: float = 0.0,
+    z_end: float = 10.0,
     cosmo_params: Mapping[str, float] | None = None,
     number_conserving: bool = True,
     cache_path: str | Path | None = None,
@@ -721,7 +721,7 @@ def _build_greens_table(
     delta_rho : float, optional
         Fractional energy injection per burst (default ``1e-5``).
     n_points : int, optional
-        PDE grid points (default 2000).
+        PDE grid points (default 4000, the production grid).
     x_min : float, optional
         Lower edge of the output frequency grid (default 0.01).
     x_max : float, optional
@@ -729,7 +729,7 @@ def _build_greens_table(
     n_x : int, optional
         Number of output frequency points (default 500).
     z_end : float, optional
-        Final redshift for PDE evolution (default 0.0).
+        Final redshift for PDE evolution (default 10.0).
     cosmo_params : Mapping, optional
         Cosmological parameters.  Default *None* (Rust defaults).
     number_conserving : bool, optional
@@ -919,11 +919,11 @@ def _build_photon_greens_table(
     x_inj_values: ArrayLike | None = None,
     z_injections: ArrayLike | None = None,
     delta_n_over_n: float = 1.0e-5,
-    n_points: int = 2000,
+    n_points: int = 4000,
     x_min: float = 0.01,
     x_max: float = 30.0,
     n_x: int = 500,
-    z_end: float = 0.0,
+    z_end: float = 10.0,
     cosmo_params: Mapping[str, float] | None = None,
     number_conserving: bool = True,
     cache_path: str | Path | None = None,
@@ -952,7 +952,7 @@ def _build_photon_greens_table(
     delta_n_over_n : float, optional
         Photon-number injection fraction ``ΔN/N`` (default ``1e-5``).
     n_points : int, optional
-        PDE grid points (default 2000).
+        PDE grid points (default 4000, the production grid).
     x_min : float, optional
         Lower edge of the output frequency grid (default 0.01).
     x_max : float, optional
@@ -960,7 +960,7 @@ def _build_photon_greens_table(
     n_x : int, optional
         Number of output frequency points (default 500).
     z_end : float, optional
-        Final redshift for PDE evolution (default 0.0).
+        Final redshift for PDE evolution (default 10.0).
     cosmo_params : Mapping, optional
         Cosmological parameters.
     number_conserving : bool, optional

@@ -13,7 +13,10 @@ References
 ----------
 - Peebles (1968), ApJ 153, 1.
 - Pequignot, Petitjean & Boisson (1991), A&A 251, 680 (case-B α).
-- Chluba & Thomas (2011), MNRAS 412, 748 (TLA fudge factor F = 1.125).
+- Rubino-Martin, Chluba, Fendt & Wandelt (2010), MNRAS 403, 439 (basis of
+  the TLA fudge factor F = 1.125).
+- Lee & Ali-Haimoud (2020), arXiv:2007.14114, App. B2 (RECFAST's fudge
+  factor and Lyman-alpha escape correction).
 - Planck Collaboration (2016), A&A 594, A13 (Planck 2015 parameters).
 - Planck Collaboration (2020), A&A 641, A6 (Planck 2018 VI parameters).
 """
@@ -320,7 +323,10 @@ def _saha_hydrogen(z, cosmo):
 
 
 def _alpha_recomb(t):
-    """Case-B recombination coefficient [m^3/s] (Pequignot+ 1991, F=1.125)."""
+    """Case-B recombination coefficient [m^3/s] (Pequignot+ 1991, F=1.125).
+
+    F = 1.125 is RECFAST 1.5.2's value and goes with ``_lya_escape_correction``.
+    """
     tt = t / 1.0e4
     f = 1.125
     return f * 1e-19 * 4.309 * tt ** (-0.6166) / (1.0 + 0.6703 * tt**0.5300)
@@ -334,12 +340,22 @@ def _beta_ion(t_rad):
     )
 
 
+def _lya_escape_correction(z):
+    """RECFAST 1.5.2 correction 1 + Delta(z) to the Sobolev parameter K_H (ADR 0011)."""
+    ln_1pz = np.log1p(z)
+    return (
+        1.0
+        - 0.14 * np.exp(-(((ln_1pz - 7.28) / 0.18) ** 2))
+        + 0.079 * np.exp(-(((ln_1pz - 6.73) / 0.33) ** 2))
+    )
+
+
 def _peebles_c(z, x_e, cosmo):
     """Peebles C factor: fraction of excited atoms reaching ground state."""
     t_rad = cosmo["t_cmb"] * (1.0 + z)
     n_h = _cosmo_n_h(z, cosmo)
     h = _cosmo_hubble(z, cosmo)
-    k_h = _LAMBDA_LYA**3 / (8.0 * np.pi * h)
+    k_h = _LAMBDA_LYA**3 / (8.0 * np.pi * h) * _lya_escape_correction(z)
     n_1s = n_h * max(1.0 - x_e, 0.0)
     rate_lya = 1.0 / (k_h * n_1s) if n_1s > 1e-30 else 1e30
     rate_ion = _beta_ion(t_rad)
@@ -447,7 +463,8 @@ def ionization_fraction(z: ArrayLike, cosmo: CosmoLike | None = None) -> FloatOr
 
     Uses Saha equilibrium for helium (He II at 54.4 eV, He I at 24.6 eV)
     and the Peebles three-level atom ODE for hydrogen recombination,
-    with fudge factor F = 1.125 (Chluba & Thomas 2011).  The ODE table is
+    with RECFAST 1.5.2's fudge factor F = 1.125 and Lyman-alpha escape
+    correction.  The ODE table is
     cached per cosmology for fast repeated lookups.
 
     Parameters

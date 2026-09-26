@@ -73,6 +73,10 @@ pub const ENERGY_CHECK_Z_LATE: f64 = 600.0;
 /// late heat lost. 3% keeps a margin.
 pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.03;
 
+/// Largest step, as a fraction of z, below hydrogen's Saha switch when X_H is
+/// evolved with T_e (ADR 0009).
+pub const XE_COUPLED_DZ_FRAC: f64 = 0.005;
+
 /// Upper guard on ρ_e = T_e/T_z in the predictor, the coupled Newton solve,
 /// and the DC/BR target temperature (ADR 0007).
 ///
@@ -87,18 +91,20 @@ pub const ENERGY_CHECK_MAX_LATE_FRACTION: f64 = 0.03;
 pub const RHO_E_GUARD_MAX: f64 = 1e4;
 
 /// ρ_e above which a run below [`HOT_GAS_Z_MAX`] warns that the gas is too
-/// hot for the fixed ionization history (ADR 0007).
+/// hot for the ionization model (ADR 0007, reason amended by ADR 0009).
 ///
-/// The solver holds X_e on the standard recombination history. At z = 850,
-/// ρ_e = 10 means T_e ≈ 2.3e4 K: the case-B recombination coefficient has
-/// fallen by about 85%, and collisional ionization of hydrogen has set in.
+/// The solver evolves X_H with the Peebles three-level atom at the gas
+/// temperature, so slower recombination in hot gas is modeled. Collisional
+/// ionization is not. At z = 850, ρ_e = 10 means T_e ≈ 2.3e4 K, where
+/// collisional ionization of hydrogen has set in, so X_e comes out too low.
 /// The threshold is a judgment call, not a derived bound.
 pub const HOT_GAS_RHO_E: f64 = 10.0;
 
 /// Redshift below which [`HOT_GAS_RHO_E`] applies. Above about z = 1500
 /// hydrogen stays ionized however hot the electrons are. Hot electrons would
 /// still slow He I recombination (z ≈ 1600 to 2500), which the solver takes
-/// from Saha at T_z; that changes n_e by at most about 8% and does not warn.
+/// from Saha at T_z (ADR 0009 evolves hydrogen only); that changes n_e by at
+/// most about 8% and does not warn.
 pub const HOT_GAS_Z_MAX: f64 = 1500.0;
 
 /// Returns how far the final Δρ/ρ may fall below (first) and rise above
@@ -127,9 +133,8 @@ fn energy_closure_allowance(gross: f64, late_abs: f64, late_net: f64) -> (f64, f
 
 /// Tunable solver parameters.
 ///
-/// Defaults are production-quality and match the values used for all paper
-/// runs. The fields most callers want to change are [`Self::z_start`],
-/// [`Self::z_end`], and [`Self::dtau_max`].
+/// Defaults are production-quality. The fields most callers want to change
+/// are [`Self::z_start`], [`Self::z_end`], and [`Self::dtau_max`].
 #[derive(Debug, Clone)]
 pub struct SolverConfig {
     /// Upper redshift at which integration begins (solver evolves from
@@ -141,17 +146,18 @@ pub struct SolverConfig {
     /// slow-varying sources). Default 0.02. Historical value 0.005 was
     /// calibrated for photon-injection bursts; for smooth (continuous) heat
     /// injection scenarios 0.02 gives the same μ/y to 4 significant figures
-    /// with 5–6× fewer steps, since `dtau_max` takes over as the binding
-    /// constraint at z ≲ 1.5×10⁶.
+    /// with 5–6× fewer steps. The step is limited by the smaller of
+    /// `dy_max`/θ_e and `dtau_max` in τ, so with the defaults `dy_max` binds
+    /// only where θ_e ≈ θ_z = 4.60×10⁻¹⁰(1+z) exceeds `dy_max`/`dtau_max` =
+    /// 0.002, at z ≳ 4.3×10⁶; below that `dtau_max` is the binding constraint.
     pub dy_max: f64,
     /// Minimum allowed step size in z; smaller values trigger a warning.
     /// Default 1e-6.
     pub dz_min: f64,
     /// Maximum Compton optical depth per step. With exact exponential DC/BR
     /// (unconditionally stable), this primarily limits Kompaneets CN accuracy.
-    /// Default 10.0 matches the command-line interface (CLI) default (the
-    /// value used for all paper runs). Raise to ~50 for exploratory runs
-    /// where modest accuracy loss is acceptable.
+    /// Default 10.0 matches the command-line interface (CLI) default. Raise
+    /// to ~50 for exploratory runs where modest accuracy loss is acceptable.
     pub dtau_max: f64,
     /// Minimum redshift for number-conserving T-shift subtraction.
     /// Default 5e4: only subtract at z > nc_z_min where DC/BR is significant.
@@ -273,7 +279,7 @@ impl Default for SolverConfig {
     fn default() -> Self {
         SolverConfig {
             z_start: 3.0e6,
-            z_end: 1.0,
+            z_end: 10.0,
             dy_max: 0.02,
             dz_min: 1e-6,
             dtau_max: 10.0,
@@ -298,6 +304,8 @@ pub struct SolverSnapshot {
     pub delta_n: Vec<f64>,
     /// Electron-to-photon temperature ratio `ρ_e = T_e / T_z` at this redshift.
     pub rho_e: f64,
+    /// Free electrons per hydrogen nucleus, X_e, at this redshift.
+    pub x_e: f64,
     /// Bose-Einstein chemical-potential-like distortion amplitude μ.
     pub mu: f64,
     /// Compton y-parameter distortion amplitude.
@@ -463,8 +471,19 @@ pub struct ThermalizationSolver {
     pub step_count: usize,
     /// Compton equilibrium ρ_eq = I₄/(4G₃) from the photon spectrum.
     rho_eq: f64,
-    /// Cached recombination history for fast X_e(z) lookups.
+    /// Cached standard recombination history: the X_H initial value, the
+    /// Saha regime above `z_switch`, and the fixed-history mode.
     recomb: RecombinationHistory,
+    /// Hydrogen ionization fraction X_H evolved with the gas temperature
+    /// (ADR 0009). Valid at redshift `x_h_z`; any other `z` (a new run, or a
+    /// caller that moved `z`) restarts it from the standard history.
+    x_h: f64,
+    /// Redshift at which `x_h` holds; NaN when unset.
+    x_h_z: f64,
+    /// If true, read X_e from the standard history (gas at T_z) instead of
+    /// evolving X_H with T_e. For diagnostics and comparison with runs made
+    /// before ADR 0009.
+    pub fixed_ionization: bool,
     /// Initial photon perturbation Δn(x) to use instead of zeros.
     /// Consumed (taken) by run_with_snapshots on first call.
     initial_delta_n: Option<Vec<f64>>,
@@ -755,6 +774,9 @@ impl ThermalizationSolver {
             step_count: 0,
             rho_eq: 1.0,
             recomb,
+            x_h: 1.0,
+            x_h_z: f64::NAN,
+            fixed_ionization: false,
             initial_delta_n: None,
             disable_dcbr: false,
             coupled_dcbr: true,
@@ -893,6 +915,8 @@ impl ThermalizationSolver {
         self.disable_dcbr = false;
         self.coupled_dcbr = true;
         self.number_conserving = true;
+        self.fixed_ionization = false;
+        self.x_h_z = f64::NAN;
         for v in self.emission_rates.iter_mut() {
             *v = 0.0;
         }
@@ -910,12 +934,40 @@ impl ThermalizationSolver {
         }
     }
 
-    fn x_e_at(&self, z: f64) -> f64 {
-        self.recomb.x_e(z)
+    /// Returns X_H at the current redshift: the evolved value if it belongs
+    /// to `self.z`, else the standard history there.
+    fn x_h_now(&self) -> f64 {
+        if self.x_h_z == self.z {
+            self.x_h
+        } else {
+            self.recomb.x_h(self.z)
+        }
+    }
+
+    /// Returns the free-electron fraction X_e at the current redshift.
+    pub fn x_e_now(&self) -> f64 {
+        if self.fixed_ionization {
+            self.recomb.x_e(self.z)
+        } else {
+            self.recomb.x_e_with_x_h(self.z, self.x_h_now())
+        }
+    }
+
+    /// Returns X_e at `z_mid` for a step from `self.z`, with X_H advanced
+    /// from `self.z` at the gas temperature `rho_m` T_z (ADR 0009). The
+    /// fixed-ionization mode reads the standard table instead.
+    fn x_e_at_mid(&self, z_mid: f64, rho_m: f64) -> f64 {
+        if self.fixed_ionization {
+            return self.recomb.x_e(z_mid);
+        }
+        let x_mid = self
+            .recomb
+            .advance_x_h(self.z, z_mid, self.x_h_now(), rho_m);
+        self.recomb.x_e_with_x_h(z_mid, x_mid)
     }
 
     fn adaptive_dz(&self) -> f64 {
-        let x_e = self.x_e_at(self.z);
+        let x_e = self.x_e_now();
         let t_c = self.cosmo.t_compton(self.z, x_e);
         let h = self.cosmo.hubble(self.z);
         let theta_e_val = self.electron_temp.theta_e_with(self.cosmo.theta_z(self.z));
@@ -980,6 +1032,12 @@ impl ThermalizationSolver {
             // Post-injection (z < z_lower): normal adaptive stepping
         }
 
+        // Below z_switch in coupled mode X_H follows T_e, whose backward-Euler
+        // step is first order; cap the step so X_e inherits a small error
+        // (ADR 0009 addendum).
+        if !self.fixed_ionization && self.z <= self.recomb.z_switch() {
+            dz = dz.min(XE_COUPLED_DZ_FRAC * self.z);
+        }
         dz.max(self.config.dz_min).min(self.z * 0.05)
     }
 
@@ -992,8 +1050,8 @@ impl ThermalizationSolver {
     ///
     /// The upper guard only catches a failed solve (ADR 0007). Heating that drives
     /// ρ_e past [`HOT_GAS_RHO_E`] below [`HOT_GAS_Z_MAX`] pushes a separate
-    /// once-per-run warning, because gas that hot would change the ionization
-    /// history, which the solver holds fixed. In coupled mode the predictor
+    /// once-per-run warning, because gas that hot ionizes by collisions,
+    /// which the solver's ionization model omits. In coupled mode the predictor
     /// passes through here before the Newton solve replaces it, so a
     /// predictor above the threshold can warn when the final ρ_e stays just
     /// below it. A negative or non-finite ρ_e pushes its own once-per-run
@@ -1012,10 +1070,9 @@ impl ThermalizationSolver {
             self.diag.hot_gas_warned = true;
             self.diag.warnings.push(format!(
                 "Hot gas: at z = {z:.4e} the electron temperature reached T_e/T_z = \
-                 {rho:.3e}, above {HOT_GAS_RHO_E}. Gas this hot would recombine more slowly \
-                 and start to ionize by collisions, which changes the ionization history; \
-                 the solver holds X_e on the standard history, so results may be \
-                 inaccurate."
+                 {rho:.3e}, above {HOT_GAS_RHO_E}. Gas this hot starts to ionize by \
+                 collisions, which the three-level atom used for X_e omits, so X_e comes \
+                 out too low and the heat reaches the photons too slowly."
             ));
         }
         if out == Some(raw) {
@@ -1065,6 +1122,7 @@ impl ThermalizationSolver {
         &mut self,
         z_eval: f64,
         actual_dz: f64,
+        x_e: f64,
     ) -> (f64, f64, f64, f64, f64, f64) {
         // Fused max|Δn| scan + spectral integrals: single pass over delta_n
         // to avoid a redundant O(n) traversal. NaN detection is folded in.
@@ -1136,7 +1194,6 @@ impl ThermalizationSolver {
             0.0
         };
 
-        let x_e = self.x_e_at(z_eval);
         let t_c = self.cosmo.t_compton(z_eval, x_e);
         let theta_z_val = self.cosmo.theta_z(z_eval);
 
@@ -1352,9 +1409,12 @@ impl ThermalizationSolver {
         let actual_dz = self.z - z_new;
         let z_mid = self.z - 0.5 * actual_dz;
 
+        let (z_old, rho_e_start) = (self.z, self.electron_temp.rho_e);
+        let x_e_mid = self.x_e_at_mid(z_mid, rho_e_start);
+
         // update_temperatures computes ρ_e via backward Euler and returns dtau + hubble
         let (x_e, _t_c, theta_z_val, max_dn_abs, dtau, h) =
-            self.update_temperatures(z_mid, actual_dz);
+            self.update_temperatures(z_mid, actual_dz, x_e_mid);
         if !max_dn_abs.is_finite() {
             return None;
         }
@@ -1721,7 +1781,23 @@ impl ThermalizationSolver {
             self.subtract_temperature_shift();
         }
 
+        // Corrector for X_H (ADR 0009): redo the advance with ρ_e averaged over
+        // the step, now that the step's end value is known. The step's own
+        // T_e and Δn solve keep the predictor's X_e.
+        let x_h_new = if self.fixed_ionization {
+            self.recomb.x_h(z_new)
+        } else {
+            let rho_avg = 0.5 * (rho_e_start + self.electron_temp.rho_e);
+            let x_h_old = if self.x_h_z == z_old {
+                self.x_h
+            } else {
+                self.recomb.x_h(z_old)
+            };
+            self.recomb.advance_x_h(z_old, z_new, x_h_old, rho_avg)
+        };
         self.z = z_new;
+        self.x_h = x_h_new;
+        self.x_h_z = z_new;
         self.step_count += 1;
         Some(actual_dz)
     }
@@ -1767,6 +1843,7 @@ impl ThermalizationSolver {
         let saved_disable_dcbr = self.disable_dcbr;
         let saved_coupled_dcbr = self.coupled_dcbr;
         let saved_number_conserving = self.number_conserving;
+        let saved_fixed_ionization = self.fixed_ionization;
         self.reset();
         self.config = saved_config;
         self.z = self.config.z_start;
@@ -1774,6 +1851,7 @@ impl ThermalizationSolver {
         self.disable_dcbr = saved_disable_dcbr;
         self.coupled_dcbr = saved_coupled_dcbr;
         self.number_conserving = saved_number_conserving;
+        self.fixed_ionization = saved_fixed_ionization;
         self.injection = injection;
 
         // Frequency grid sanity: the μ/y decomposition silently returns
@@ -1814,9 +1892,9 @@ impl ThermalizationSolver {
         if let Some(z_res) = res_z_res {
             if (self.config.z_start - z_res).abs() > 1e-6 * z_res {
                 self.diag.warnings.push(format!(
-                    "Resonant conversion: z_start={:.3e} ≠ NWA resonance z_res={:.3e}; the \
-                     depletion IC is installed at z_start, not z_res. Leave z_start unset \
-                     (no --z-start, or SolverBuilder without z_range) to start at z_res.",
+                    "Resonant conversion: z_start={:.3e} ≠ resonance installation redshift {:.3e}; the \
+                     depletion IC is installed at z_start instead. Leave z_start unset \
+                     (no --z-start, or SolverBuilder without z_range) to start there.",
                     self.config.z_start, z_res
                 ));
             }
@@ -2063,6 +2141,7 @@ impl ThermalizationSolver {
             z,
             delta_n: full_delta_n,
             rho_e: self.electron_temp.rho_e,
+            x_e: self.x_e_now(),
             mu,
             y,
             delta_rho_over_rho: drho,
@@ -2203,6 +2282,7 @@ pub struct SolverBuilder {
     disable_dcbr: bool,
     coupled_dcbr: bool,
     number_conserving: bool,
+    fixed_ionization: bool,
 }
 
 impl SolverBuilder {
@@ -2216,6 +2296,7 @@ impl SolverBuilder {
             disable_dcbr: false,
             coupled_dcbr: true,
             number_conserving: true,
+            fixed_ionization: false,
         }
     }
 
@@ -2283,6 +2364,13 @@ impl SolverBuilder {
         self
     }
 
+    /// Reads X_e from the standard recombination history instead of evolving
+    /// X_H with the electron temperature (ADR 0009). For diagnostics.
+    pub fn fixed_ionization(mut self) -> Self {
+        self.fixed_ionization = true;
+        self
+    }
+
     /// Sets the maximum number of Newton iterations per Kompaneets step.
     pub fn max_newton_iter(mut self, val: usize) -> Self {
         self.config.max_newton_iter = val;
@@ -2319,10 +2407,12 @@ impl SolverBuilder {
         }
 
         // For resonant conversion scenarios (dark photon, axion) the impulsive
-        // Δn depletion happens at the NWA resonance z_res; evolving from a
-        // higher z_start is unphysical (the conversion hasn't occurred yet) and
-        // evolving from lower misses it entirely. Default z_start to z_res when
-        // the user didn't supply an explicit value.
+        // Δn depletion is installed at the plasma-only NWA resonance z_res.
+        // With the dark photon's neutral_hydrogen option, higher-x photons cross
+        // earlier, but no photon crosses later than z_res (ADR 0008), so
+        // installing there is never early; starting lower would miss the
+        // low-x conversion. Default z_start to z_res when the user didn't
+        // supply an explicit value.
         let mut config = self.config;
         if !self.z_start_explicit {
             if let Some((_gamma, z_res)) = self
@@ -2341,6 +2431,7 @@ impl SolverBuilder {
         solver.disable_dcbr = self.disable_dcbr;
         solver.coupled_dcbr = self.coupled_dcbr;
         solver.number_conserving = self.number_conserving;
+        solver.fixed_ionization = self.fixed_ionization;
 
         if let Some(scenario) = self.injection {
             solver.set_injection(scenario)?;
@@ -2375,7 +2466,7 @@ mod tests {
             Cosmology::default(),
             GridConfig {
                 n_points: 100,
-                ..GridConfig::default()
+                ..GridConfig::coarse()
             },
         );
         solver.set_injection(burst).unwrap();

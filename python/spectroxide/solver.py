@@ -240,6 +240,7 @@ _INJECTION_PARAM_MAP = {
     "f_inj": "--f-inj",
     "epsilon": "--epsilon",
     "m_ev": "--m-ev",
+    "neutral_hydrogen": "--neutral-hydrogen",
     "g_agamma": "--g-agamma",
     "b_rms": "--b-rms",
 }
@@ -258,7 +259,7 @@ def _injection_param_args(injection):
             continue
         if key not in _INJECTION_PARAM_MAP:
             raise ValueError(f"Unknown injection parameter: {key!r}")
-        if isinstance(value, bool):
+        if isinstance(value, (bool, np.bool_)):
             if value:
                 args.append(_INJECTION_PARAM_MAP[key])
         else:
@@ -491,6 +492,7 @@ _FLOAT_RESULT_KEYS = frozenset(
         "drho",
         "delta_rho_inj",
         "rho_e",
+        "x_e",
         "accumulated_delta_t",
         "z_h",
         "x_inj",
@@ -522,8 +524,8 @@ def _emit_solver_warnings(parsed):
     The Rust ``SolverResult``, ``SweepResult``, ``PhotonSweepResult``, and
     ``GreensResult`` types each carry an optional ``warnings`` field
     populated from ``SolverDiagnostics.warnings``, including Newton
-    non-convergence, rho_e clamping, x_inj-out-of-grid, and untested-regime
-    soft warnings.
+    non-convergence, the hot-gas warning (rho_e > 10 below z = 1500),
+    x_inj-out-of-grid, and untested-regime soft warnings.
     Without this re-emission Python callers had no way to see them.
     """
     if not isinstance(parsed, dict):
@@ -869,7 +871,7 @@ def _run_pde_single_solve(
 def run_sweep(
     delta_rho: float = 1.0e-5,
     z_injections: Sequence[float] | None = None,
-    z_end: float = 500.0,
+    z_end: float = 10.0,
     z_start: float | None = None,
     cosmo_params: Mapping[str, float] | None = None,
     project_root: str | Path | None = None,
@@ -906,7 +908,7 @@ def run_sweep(
         Injection redshifts to sweep over.  If *None* (default), the Rust
         binary uses its built-in 17-point grid from 2e3 to 3e6.
     z_end : float, optional
-        Final redshift for PDE evolution.  Default 500.
+        Final redshift for PDE evolution.  Default 10.
     z_start : float, optional
         Starting redshift for PDE evolution.  *None* (default) uses the
         Rust CLI default (5e6).
@@ -939,8 +941,9 @@ def run_sweep(
         Disable double Compton and bremsstrahlung emission entirely
         (diagnostic).  Default *False*.
     production_grid : bool, optional
-        Use the production-quality frequency grid.  *None* inherits from
-        the active preset.
+        No effect: the binary always builds the production grid,
+        x in [1e-5, 60], and ``n_points`` sets its point count (ADR 0010).
+        Kept so that existing calls still run.
     debug : bool, optional
         If *True*, use the :data:`DEBUG` quality preset.  Default *False*.
     n_threads : int, optional
@@ -999,7 +1002,7 @@ def run_photon_sweep(
     delta_n_over_n: float = 1.0e-5,
     sigma_x: float | None = None,
     z_injections: Sequence[float] | None = None,
-    z_end: float = 500.0,
+    z_end: float = 10.0,
     cosmo_params: Mapping[str, float] | None = None,
     project_root: str | Path | None = None,
     timeout: float = 600.0,
@@ -1032,7 +1035,7 @@ def run_photon_sweep(
         Injection redshifts.  Default *None* — Rust uses 150 log-spaced
         points from 1e3 to 5e6.
     z_end : float, optional
-        Final redshift for PDE evolution.  Default 500.
+        Final redshift for PDE evolution.  Default 10.
     cosmo_params : Mapping, optional
         Cosmological parameters.  Default *None* (Rust defaults).
     project_root : str or Path, optional
@@ -1134,7 +1137,7 @@ def run_photon_sweep_batch(
     delta_n_over_n: float = 1.0e-5,
     sigma_x: float | None = None,
     z_injections: Sequence[float] | None = None,
-    z_end: float = 500.0,
+    z_end: float = 10.0,
     cosmo_params: Mapping[str, float] | None = None,
     project_root: str | Path | None = None,
     timeout: float = 3600.0,
@@ -1169,7 +1172,7 @@ def run_photon_sweep_batch(
         Injection redshifts.  Default *None* (150 log-spaced from 1e3
         to 5e6 on the Rust side).
     z_end : float, optional
-        Final redshift for PDE evolution.  Default 500.
+        Final redshift for PDE evolution.  Default 10.
     cosmo_params : Mapping, optional
         Cosmological parameters.  Default *None*.
     project_root : str or Path, optional
@@ -1447,6 +1450,9 @@ class SolverResult:
         CMB temperature today, in K, of the run's cosmology.  Sets the
         frequency scale of :attr:`delta_I`.  Default 2.726 K, the default
         cosmology's value.
+    x_e : float, optional
+        Final free-electron fraction per hydrogen nucleus (PDE only).
+        Evolved with the electron temperature below z ≈ 1600.
     """
 
     x: NDArray[np.float64]
@@ -1459,6 +1465,7 @@ class SolverResult:
     rho_e: Optional[float] = None
     accumulated_delta_t: Optional[float] = None
     t_cmb: float = _DEFAULT_T_CMB
+    x_e: Optional[float] = None
 
     @property
     def delta_I(self) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -1485,7 +1492,7 @@ def solve(
     injection: Mapping[str, Any] | None = None,
     cosmo: CosmoSpec = None,
     z_start: float | None = None,
-    z_end: float = 500.0,
+    z_end: float = 10.0,
     method: str = "pde",
     z_h: float | None = None,
     delta_rho: float = 1.0e-5,
@@ -1536,9 +1543,15 @@ def solve(
 
             {"type": "dark_photon_resonance", "epsilon": 1e-9, "m_ev": 1e-7}
 
-        The Rust solver then computes ``γ_con`` and ``z_res``
-        itself and installs the impulsive depletion initial condition
-        at ``z_res``.
+        The Rust solver installs the impulsive depletion
+        ``Δn = −[1 − exp(−γ_con/x)] n_pl`` at the resonance redshift, with
+        the photon mass equal to the plasma frequency (Chluba, Cyr &
+        Johnson 2024).  Add ``"neutral_hydrogen": True`` to include neutral
+        hydrogen in the photon mass, which matters after recombination
+        (``m ≲ 1e-10`` eV; ADR 0008); the per-frequency conversion
+        probability is then cell-averaged over each grid cell, as in
+        :func:`spectroxide.dark_photon.cell_average`, which mirrors the Rust
+        code the solver runs.
     cosmo : Cosmology, Mapping, or None, optional
         Cosmological parameters.  Accepts a :class:`Cosmology` dataclass
         or a plain dict; *None* (default) uses Rust defaults.
@@ -1548,7 +1561,7 @@ def solve(
         continuous scenarios, or the Rust CLI default for ``dq_dz`` /
         ``photon_source``.
     z_end : float, optional
-        Final redshift (default 500).
+        Final redshift (default 10).
     method : {"pde", "greens_function", "table"}, optional
         Solver mode (default ``"pde"``).
     z_h : float, optional
@@ -2004,6 +2017,7 @@ def solve(
         rho_e=r.get("rho_e"),
         accumulated_delta_t=r.get("accumulated_delta_t"),
         t_cmb=float(cosmo.get("t_cmb", _DEFAULT_T_CMB)) if cosmo else _DEFAULT_T_CMB,
+        x_e=r.get("x_e"),
     )
 
 

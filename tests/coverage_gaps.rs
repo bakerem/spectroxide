@@ -588,7 +588,7 @@ fn burst_run(
     let mut solver = ThermalizationSolver::builder(Cosmology::default())
         .grid(GridConfig {
             n_points,
-            ..GridConfig::default()
+            ..GridConfig::coarse()
         })
         .injection(InjectionScenario::SingleBurst {
             z_h,
@@ -716,9 +716,12 @@ fn energy_closure_silent_when_resolved() {
 /// ρ_e caps (1.5 and 3) deleted the excess: the photons received 83% and 31%
 /// of the heat. The gas cannot keep it (its thermal energy is ~1e-9 of the
 /// photons'), and the physical loss after recombination is 1.4e-4 at
-/// z_h = 1000 (`heat_delivery.rs`), so both must deliver within 1%. Only the
-/// run below z = 1500 with ρ_e above 10 warns about the ionization history;
-/// 1e-6 at z_h = 1000 (ρ_e ≈ 2.6) must not.
+/// z_h = 1000 (`heat_delivery.rs`), so all must deliver within 1%. Only a
+/// run below z = 1500 with ρ_e above 10 warns that the gas is hot enough to
+/// ionize by collisions. Under the fixed ionization history 1e-5 at z_h = 1000
+/// reached ρ_e ≈ 17. With X_H evolved at the gas temperature (ADR 0009) the
+/// hot gas stays more ionized, couples faster, and stays below 10, so it must
+/// not warn; 1e-3 still passes 10 and must warn once.
 #[test]
 fn narrow_bursts_deliver_their_heat() {
     let (drho, warnings, _) = burst_run(3000.0, 2e-4, 3900.0, 2000.0, 1000);
@@ -731,6 +734,10 @@ fn narrow_bursts_deliver_their_heat() {
 
     let (drho, warnings, _) = burst_run(1000.0, 1e-5, 1700.0, 200.0, 1000);
     assert!((drho / 1e-5 - 1.0).abs() < 0.01, "drho = {drho:e}");
+    assert!(!has_warning(&warnings, "Hot gas"), "{warnings:?}");
+
+    let (drho, warnings, _) = burst_run(1000.0, 1e-3, 1700.0, 200.0, 1000);
+    assert!((drho / 1e-3 - 1.0).abs() < 0.01, "drho = {drho:e}");
     let hot: Vec<&String> = warnings
         .iter()
         .filter(|w| w.starts_with("Hot gas"))
@@ -752,7 +759,7 @@ fn energy_closure_tabulated_heating() {
         let mut solver = ThermalizationSolver::builder(Cosmology::default())
             .grid(GridConfig {
                 n_points,
-                ..GridConfig::default()
+                ..GridConfig::coarse()
             })
             .injection(InjectionScenario::TabulatedHeating {
                 rate_table: vec![1e-11; z_table.len()],

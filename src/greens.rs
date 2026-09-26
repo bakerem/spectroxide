@@ -127,9 +127,9 @@ pub fn visibility_j_t(z: f64) -> f64 {
 /// # Accuracy
 ///
 /// Per-point spectral shape compared with PDE (worst-case over frequency grid):
-/// - **Deep μ-era** (z_h > 2×10⁵): < 17% per-point; < 5% on integrated μ.
+/// - **Deep μ-era** (z_h > 3×10⁵): < 17% per-point; < 5% on integrated μ.
 /// - **y-era** (z_h < 10⁴): < 5% per-point; < 1% on integrated y.
-/// - **Transition era** (z_h ~ 3×10⁴ – 10⁵): 8–17% per-point shape error
+/// - **Transition era** (z_h ~ 10⁴ – 3×10⁵): 8–17% per-point shape error
 ///   (improved from 30–70% by using the independently fitted J_y instead of
 ///   1 − J_μ). Integrated μ and y agree with PDE to ~5–10%.
 ///

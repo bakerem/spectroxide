@@ -119,8 +119,8 @@ fn test_cli_greens_json_output() {
 ///                          0.04·z_h (wider than the tight z*0.01 bursts),
 ///                          and in the μ-era PDE/GF agree at ~20-40%
 ///                          (see test_heat_pde_vs_gf_multi_z_sweep),
-///                     (iv) rows are genuinely distinct (PDE Δρ/ρ spread
-///                          across z_h > 5%), catches a worker bug that
+///                     (iv) rows are genuinely distinct (PDE μ spread
+///                          across z_h > 1%), catches a worker bug that
 ///                          returns the same result for every z_h.
 ///
 /// A thread-pool indexing bug → (i) fails. Broken delta_rho plumb → (ii)
@@ -199,23 +199,21 @@ fn test_execute_sweep_parallel_rows_consistent() {
         );
     }
 
-    // (iv) Rows are genuinely distinct — Δρ/ρ (decomposed) varies across
-    // z_h by > 5%. If a worker-scope bug returned the same result for every
-    // z_h, Δρ would be byte-identical and this would fail. The snapshot
-    // Δρ/ρ differs between rows because thermalization efficiency changes
-    // with z_h even when the integrated injection is the same.
-    let drhos: Vec<f64> = result
-        .rows
-        .iter()
-        .map(|r| r.snapshot.delta_rho_over_rho)
-        .collect();
-    let drho_max = drhos.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let drho_min = drhos.iter().cloned().fold(f64::INFINITY, f64::min);
-    let spread = (drho_max - drho_min) / drho_max.abs().max(1e-30);
+    // (iv) Rows are genuinely distinct: the PDE μ spreads across z_h by
+    // more than 1%. If a worker-scope bug returned the same result for
+    // every z_h, μ would be byte-identical and this would fail. μ, not Δρ/ρ:
+    // the injected energy is the same in every row, so the Δρ/ρ spread is
+    // only the energy-closure error, 0.06% on the default grid (ADR 0010).
+    // μ falls with z_h as DC/BR thermalize more of it (J_bb*).
+    let mus: Vec<f64> = result.rows.iter().map(|r| r.snapshot.mu).collect();
+    let mu_max = mus.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let mu_min = mus.iter().cloned().fold(f64::INFINITY, f64::min);
+    let spread = (mu_max - mu_min) / mu_max.abs().max(1e-30);
+    eprintln!("PDE mu per row: {mus:?}, spread {:.2}%", spread * 100.0);
     assert!(
-        spread > 0.005,
-        "Rows look identical — thread-pool returned the same Δρ/ρ for every z_h? \
-         spread={:.2}%, values={drhos:?}",
+        spread > 0.01,
+        "Rows look identical — thread-pool returned the same μ for every z_h? \
+         spread={:.2}%, values={mus:?}",
         spread * 100.0
     );
 }

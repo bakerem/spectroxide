@@ -24,16 +24,21 @@
 //! - `peebles_c`: Peebles C factor decomposed into competing rates
 //! - Saha-subtracted ordinary differential equation (ODE) form to avoid catastrophic cancellation
 //!
-//! The fudge factor F=1.125 follows Chluba & Thomas (2011, arXiv:1011.3758),
-//! matching DarkHistory. This gives ~1% accuracy in X_e, sufficient for
-//! spectral distortion calculations.
+//! The fudge factor F = 1.125 and the double-Gaussian correction to the
+//! Lyman-α escape rate are those of RECFAST 1.5.2, which fitted them together
+//! to the multi-level codes HyRec and CosmoRec (Lee & Ali-Haïmoud 2020,
+//! arXiv:2007.14114, App. B2). The pair gives X_e within 0.35% of HyRec-2 for
+//! 100 ≤ z ≤ 1400; F = 1.125 alone is off by 1.4% (ADR 0011).
 //!
 //! ## References
 //!
 //! - Peebles (1968) — Three-level atom model
 //! - Péquignot, Petitjean & Boisson (1991) — Case-B recombination fit
 //! - Seager, Sasselov & Scott (1999) — RECFAST
-//! - Chluba & Thomas (2011, arXiv:1011.3758) — Updated fudge factor
+//! - Rubiño-Martín, Chluba, Fendt & Wandelt (2010, arXiv:0910.4383) — the
+//!   study behind F = 1.125
+//! - Lee & Ali-Haïmoud (2020, HyRec-2, arXiv:2007.14114) — App. B2 describes
+//!   RECFAST's fudge factor and escape-rate correction
 //! - Liu et al. (2020, DarkHistory) — Reference implementation
 
 use crate::constants::*;
@@ -168,21 +173,24 @@ pub fn saha_hydrogen(z: f64, cosmo: &Cosmology) -> f64 {
 /// Computes the case-B recombination coefficient α_B(T) [m³/s].
 ///
 /// Péquignot, Petitjean & Boisson (1991) fitting formula with
-/// fudge factor F = 1.125 (Chluba & Thomas 2011):
+/// fudge factor F = 1.125 (RECFAST 1.5.2):
 ///
 ///   α_B = F × 10⁻¹⁹ × 4.309 × t^{−0.6166} / (1 + 0.6703 × t^{0.5300})
 ///
 /// where t = T / 10⁴ K.
 ///
-/// The fudge factor accounts for higher-order corrections to Case-B
-/// recombination (stimulated recombination, two-photon processes).
-/// F = 1.14 was used in the original RECFAST; F = 1.125 is the updated
-/// value from Chluba & Thomas (2011), also used by DarkHistory.
+/// The fudge factor stands in for the multi-level corrections to case-B
+/// recombination that a three-level atom leaves out. The original RECFAST
+/// used F = 1.14; RECFAST 1.5.2 lowered it to 1.125 when it added the
+/// escape-rate correction in [`lya_escape_correction`], and the two values
+/// belong together (CLASS `precisions.h`: `recfast_fudge_H` 1.14 plus
+/// `recfast_delta_fudge_H` −0.015 when the correction is on). The value
+/// rests on Rubiño-Martín et al. (2010, arXiv:0910.4383); see Lee &
+/// Ali-Haïmoud (2020, arXiv:2007.14114, App. B2). DarkHistory uses the same
+/// pair.
 fn alpha_recomb(t: f64) -> f64 {
     let tt = t / 1.0e4;
-    let f = 1.125; // Chluba & Thomas (2011); their printed best fit is 1.126 —
-    // a 0.09% slip, negligible vs the 1-5% TLA accuracy
-    // (dev/audit/recombination_audit.md)
+    let f = 1.125;
     f * 1e-19 * 4.309 * tt.powf(-0.6166) / (1.0 + 0.6703 * tt.powf(0.5300))
 }
 
@@ -203,12 +211,36 @@ fn beta_ion(t_rad: f64) -> f64 {
     alpha * thermal_de_broglie(t_rad) * (-E_ION_N2 / (K_BOLTZMANN * t_rad)).exp()
 }
 
+/// Returns RECFAST's correction factor 1 + Δ(z) to the Sobolev parameter K_H.
+///
+/// RECFAST 1.5.2 multiplies K_H = λ_Lyα³/(8πH), and so divides the Lyman-α
+/// escape rate, by a sum of two Gaussians in ln(1+z):
+///
+/// ```text
+///   1 + Δ(z) = 1 − 0.14 exp{−[(ln(1+z) − 7.28)/0.18]²}
+///                + 0.079 exp{−[(ln(1+z) − 6.73)/0.33]²}.
+/// ```
+///
+/// The dip near z ≈ 1450 speeds recombination and the bump near z ≈ 840
+/// slows it. Amplitudes and widths were chosen to mimic HyRec and CosmoRec,
+/// together with F = 1.125 in [`alpha_recomb`] (Lee & Ali-Haïmoud 2020,
+/// arXiv:2007.14114, App. B2). Values as in CLASS (`recfast_AGauss1` …
+/// `recfast_wGauss2`) and DarkHistory 1.1.2 (`physics.peebles_C`). The
+/// correction depends on z alone, so it is the same in the standard table
+/// and in the coupled mode of ADR 0009 (ADR 0011).
+fn lya_escape_correction(z: f64) -> f64 {
+    let ln_1pz = (1.0 + z).ln();
+    1.0 - 0.14 * (-((ln_1pz - 7.28) / 0.18).powi(2)).exp()
+        + 0.079 * (-((ln_1pz - 6.73) / 0.33).powi(2)).exp()
+}
+
 /// Computes the Peebles C factor: the fraction of excited atoms that reach the ground state.
 ///
 /// Decomposition into competing rates:
 ///
-/// - `rate_lya_escape`: Lyman-α escape using the Sobolev approximation.
-///   Rate = 1/(K_H × n_{1s}) = 8πH / (n_H (1−X_e) λ_Lyα³).
+/// - `rate_lya_escape`: Lyman-α escape using the Sobolev approximation,
+///   Rate = 1/(K_H × n_{1s}) = 8πH / (n_H (1−X_e) λ_Lyα³), divided by
+///   RECFAST's correction [`lya_escape_correction`].
 ///   Most Ly-α photons are reabsorbed; only the cosmological redshift
 ///   allows escape from the optically thick line.
 ///
@@ -231,8 +263,9 @@ fn peebles_c(z: f64, x_e: f64, cosmo: &Cosmology) -> f64 {
     let n_h = cosmo.n_h(z);
     let h = cosmo.hubble(z);
 
-    // Sobolev optical depth parameter: K_H = λ_Lyα³ / (8π H)
-    let k_h = LAMBDA_LYA.powi(3) / (8.0 * std::f64::consts::PI * h);
+    // Sobolev optical depth parameter K_H = λ_Lyα³ / (8π H), with RECFAST's
+    // correction (ADR 0011)
+    let k_h = LAMBDA_LYA.powi(3) / (8.0 * std::f64::consts::PI * h) * lya_escape_correction(z);
 
     // Number of neutral hydrogen atoms [m⁻³]
     let n_1s = n_h * (1.0 - x_e).max(0.0);
@@ -260,13 +293,19 @@ fn peebles_c(z: f64, x_e: f64, cosmo: &Cosmology) -> f64 {
 /// _downward_ in z (the physical direction of time). The sign convention
 /// matches `peebles_step`.
 ///
-/// NOTE: `alpha_recomb` and `beta_ion` are evaluated at the **radiation
-/// temperature** T_γ = T_cmb · (1+z), not the matter temperature T_m. During
-/// H recombination Compton coupling still enforces T_m ≈ T_γ, so the error is
-/// ≲1%. Full accuracy (≲0.1%, as in RECFAST) would require the coupled
-/// matter-temperature ODE; this solver's purpose is spectral-distortion
-/// templates, where 1–5% disagreement with RECFAST is accepted.
-fn peebles_rhs(z: f64, x_h: f64, cosmo: &Cosmology) -> f64 {
+/// `rho_m` = T_m/T_γ sets the gas temperature for the recombination
+/// coefficient; `beta_ion`, X_S, and the C factor stay at the radiation
+/// temperature T_γ = T_cmb · (1+z), since the CMB does the photoionizing.
+/// With α_B(T_m) = α_B(T_γ) + Δα the right-hand side becomes
+///
+/// ```text
+///   C n_H/[H(1+z)] · { α_B(T_γ) [X_h² − X_S²(1−X_h)/(1−X_S)] + Δα X_h² },
+/// ```
+///
+/// which keeps the Saha subtraction and adds a term that is exactly zero at
+/// `rho_m` = 1, so the standard history is unchanged
+/// (decisions/0009-evolve-hydrogen-ionization-with-electron-temperature.md).
+fn peebles_rhs(z: f64, x_h: f64, rho_m: f64, cosmo: &Cosmology) -> f64 {
     let t = cosmo.t_cmb * (1.0 + z);
     let n_h = cosmo.n_h(z);
     let h = cosmo.hubble(z);
@@ -279,7 +318,12 @@ fn peebles_rhs(z: f64, x_h: f64, cosmo: &Cosmology) -> f64 {
 
     let rhs_factor = c_r * alpha * n_h / (h * (1.0 + z));
     let saha_term = x_saha * x_saha * (1.0 - x_h).max(0.0) / one_minus_xs;
-    rhs_factor * (x_h * x_h - saha_term)
+    let rhs = rhs_factor * (x_h * x_h - saha_term);
+    if rho_m == 1.0 {
+        return rhs;
+    }
+    let d_alpha = alpha_recomb(rho_m * t) - alpha;
+    rhs + c_r * d_alpha * n_h / (h * (1.0 + z)) * x_h * x_h
 }
 
 /// Takes a single trapezoidal (Heun's method) step of the Peebles ODE.
@@ -297,13 +341,13 @@ fn peebles_rhs(z: f64, x_h: f64, cosmo: &Cosmology) -> f64 {
 /// `[1e-5, 1.0]` is a safety net; removing it would let step overshoot
 /// produce negative X_h at large dz — if it fires it signals that the
 /// outer step size is too coarse.
-fn peebles_step(z_new: f64, x_h: f64, dz: f64, cosmo: &Cosmology) -> f64 {
+fn peebles_step(z_new: f64, x_h: f64, dz: f64, rho_m: f64, cosmo: &Cosmology) -> f64 {
     let z_prev = z_new + dz;
-    let k1 = peebles_rhs(z_prev, x_h, cosmo);
+    let k1 = peebles_rhs(z_prev, x_h, rho_m, cosmo);
     // Evaluate k2 at the predictor, clamped to avoid feeding unphysical
     // values into saha_term / peebles_c.
     let x_pred = (x_h - dz * k1).clamp(1e-5, 1.0);
-    let k2 = peebles_rhs(z_new, x_pred, cosmo);
+    let k2 = peebles_rhs(z_new, x_pred, rho_m, cosmo);
     (x_h - 0.5 * dz * (k1 + k2)).clamp(1e-5, 1.0)
 }
 
@@ -372,7 +416,7 @@ pub fn ionization_fraction(z: f64, cosmo: &Cosmology) -> f64 {
 
     for i in 0..n_steps {
         let z_new = z_switch - (i + 1) as f64 * dz_actual;
-        x_e = peebles_step(z_new, x_e, dz_actual, cosmo);
+        x_e = peebles_step(z_new, x_e, dz_actual, 1.0, cosmo);
     }
 
     x_e + helium_electron_fraction(z_end, cosmo)
@@ -426,7 +470,7 @@ impl RecombinationHistory {
 
         for i in 0..n_steps {
             let z_new = z_switch - (i + 1) as f64 * dz_actual;
-            x_h = peebles_step(z_new, x_h, dz_actual, cosmo);
+            x_h = peebles_step(z_new, x_h, dz_actual, 1.0, cosmo);
 
             let x_e_total = x_h + helium_electron_fraction(z_new.max(1.0), cosmo);
             z_table.push(z_new);
@@ -471,6 +515,71 @@ impl RecombinationHistory {
             let t = (z_hi - z) / (z_hi - z_lo);
             x_hi + t * (x_lo - x_hi)
         }
+    }
+
+    /// Returns the redshift below which hydrogen follows the Peebles ODE.
+    pub fn z_switch(&self) -> f64 {
+        self.z_switch
+    }
+
+    /// Returns the hydrogen ionization fraction X_H(z) of the standard
+    /// history (gas at the radiation temperature).
+    pub fn x_h(&self, z: f64) -> f64 {
+        if z > 8000.0 {
+            1.0
+        } else if z > self.z_switch {
+            saha_hydrogen(z, &self.cosmo).min(1.0)
+        } else {
+            self.x_e(z) - helium_electron_fraction(z.max(1.0), &self.cosmo)
+        }
+    }
+
+    /// Returns the total X_e for a given hydrogen fraction: X_H plus Saha helium.
+    ///
+    /// Above `z_switch` this is [`Self::x_e`] exactly, whatever `x_h` is, so
+    /// callers that evolve X_H reproduce the standard history there bit for bit.
+    pub fn x_e_with_x_h(&self, z: f64, x_h: f64) -> f64 {
+        if z > self.z_switch {
+            self.x_e(z)
+        } else {
+            x_h + helium_electron_fraction(z.max(1.0), &self.cosmo)
+        }
+    }
+
+    /// Advances X_H from `z_from` down to `z_to` with the gas at `rho_m` = T_m/T_γ.
+    ///
+    /// Sub-cycles the Heun step of the table (dz ≤ 0.5) with `rho_m` held
+    /// fixed. Above `z_switch` hydrogen is in Saha equilibrium at T_γ and the
+    /// result is [`Self::x_h`]; a step that crosses `z_switch` starts the ODE
+    /// from the Saha value there, as the table does (ADR 0009).
+    pub fn advance_x_h(&self, z_from: f64, z_to: f64, x_h: f64, rho_m: f64) -> f64 {
+        debug_assert!(rho_m.is_finite(), "rho_m = {rho_m}");
+        // The solver's T_e guard admits ρ_e = 0, where α_B diverges; the DC/BR
+        // target uses the same floor.
+        let rho_m = rho_m.max(0.05);
+        if z_to > self.z_switch {
+            return self.x_h(z_to);
+        }
+        let (z_top, x_top) = if z_from > self.z_switch {
+            (
+                self.z_switch,
+                saha_hydrogen(self.z_switch, &self.cosmo).min(1.0),
+            )
+        } else {
+            (z_from, x_h)
+        };
+        let span = z_top - z_to;
+        if span <= 0.0 {
+            return x_top;
+        }
+        let n_sub = ((span / 0.5).ceil() as usize).max(1);
+        let dz = span / n_sub as f64;
+        let mut x = x_top;
+        for i in 0..n_sub {
+            let z_new = z_top - (i + 1) as f64 * dz;
+            x = peebles_step(z_new, x, dz, rho_m, &self.cosmo);
+        }
+        x
     }
 }
 
@@ -705,6 +814,68 @@ mod tests {
         }
     }
 
+    /// Checks the Saha-subtracted right-hand side with the gas-temperature term
+    /// against the unsubtracted Peebles (1968) form
+    ///
+    ///   dX/dz_up = C/[H(1+z)] · [α_B(T_m) n_H X² − β_B(T_γ) e^{−E_α/kT_γ} (1−X)],
+    ///
+    /// with E_α = E_H − E_n=2 the Lyman-α energy (ADR 0009). At X = 0.3,
+    /// z = 1300, the two terms are within a factor of a few of each other, so
+    /// an error in the rewrite shows up at O(1).
+    #[test]
+    fn test_peebles_rhs_matches_unsubtracted_form() {
+        let cosmo = Cosmology::default();
+        let (z, x) = (1300.0, 0.3);
+        for rho_m in [1.0, 0.8, 1.5, 3.0] {
+            let t_gam = cosmo.t_cmb * (1.0 + z);
+            let c = peebles_c(z, x, &cosmo);
+            let pre = c / (cosmo.hubble(z) * (1.0 + z));
+            let down = alpha_recomb(rho_m * t_gam) * cosmo.n_h(z) * x * x;
+            let e_lya = E_H_ION - E_ION_N2;
+            let up = beta_ion(t_gam) * (-e_lya / (K_BOLTZMANN * t_gam)).exp() * (1.0 - x);
+            let raw = pre * (down - up);
+            let rhs = peebles_rhs(z, x, rho_m, &cosmo);
+            let scale = pre * down.max(up);
+            assert!(
+                (rhs - raw).abs() < 1e-10 * scale,
+                "rho_m={rho_m}: subtracted {rhs:.12e} vs unsubtracted {raw:.12e}"
+            );
+        }
+    }
+
+    /// With the gas at the photon temperature, `advance_x_h` in coarse steps
+    /// must reproduce the standard table; hot gas must stay more ionized and
+    /// cold gas less, since α_B falls with temperature.
+    #[test]
+    fn test_advance_x_h_limits() {
+        let cosmo = Cosmology::default();
+        let hist = RecombinationHistory::new(&cosmo);
+        let mut x = hist.x_h(2000.0);
+        let mut z = 2000.0;
+        let mut worst: f64 = 0.0;
+        while z > 100.0 {
+            let z_new = (z - 17.0_f64).max(100.0);
+            x = hist.advance_x_h(z, z_new, x, 1.0);
+            z = z_new;
+            let rel = x / hist.x_h(z) - 1.0;
+            worst = worst.max(rel.abs());
+        }
+        assert!(
+            worst < 1e-4,
+            "rho_m = 1: X_H vs table, worst rel {worst:.3e}"
+        );
+
+        let z_s = hist.z_switch();
+        let x_s = hist.x_h(z_s);
+        let x_std = hist.x_h(800.0);
+        let x_hot = hist.advance_x_h(z_s, 800.0, x_s, 2.0);
+        let x_cold = hist.advance_x_h(z_s, 800.0, x_s, 0.9);
+        assert!(
+            x_hot > 1.2 * x_std && x_cold < x_std,
+            "X_H(800): hot {x_hot:.4e}, standard {x_std:.4e}, cold {x_cold:.4e}"
+        );
+    }
+
     #[test]
     fn test_recombination_history_monotonic() {
         let cosmo = Cosmology::default();
@@ -745,8 +916,8 @@ mod tests {
 
     /// Compares X_e at key redshifts against RECFAST literature values.
     ///
-    /// Peebles 3-level atom with fudge factor F=1.125 (Chluba & Thomas 2011)
-    /// agrees with RECFAST (Seager, Sasselov & Scott 1999) to ~1-5%.
+    /// Peebles 3-level atom with RECFAST 1.5.2's fudge factor F = 1.125 and
+    /// escape-rate correction (ADR 0011).
     ///
     /// Anchors are HyRec-2 (github.com/nanoomlee/HyRec-2, run 2026-07-05) on
     /// the exact default cosmology (T_CMB=2.726, Ω_b=0.044, Ω_m=0.26, h=0.71,

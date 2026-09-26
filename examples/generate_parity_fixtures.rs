@@ -429,6 +429,24 @@ fn main() {
             rtol: 5e-3,
             note: "CCJ24 Eq. 6 at epsilon = 1e-7; returns (gamma_con, z_res). Tolerance set by the finite-difference d ln omega_pl^2/d ln a acting on the interpolated X_e table",
         });
+        let dp_inputs: Vec<Vec<f64>> = [1e-12_f64, 1e-11, 1e-10, 1e-9, 1e-7]
+            .iter()
+            .flat_map(|&m| [0.5_f64, 1.0, 2.8, 4.0, 10.0].map(|x| vec![m, x]))
+            .collect();
+        groups.push(Group {
+            name: "dark_photon_conversion",
+            cosmo: label,
+            inputs: dp_inputs.clone(),
+            values: dp_inputs
+                .iter()
+                .map(|i| {
+                    let conv = dark_photon::conversion_probability(1.0e-7, i[0], &[i[1]], c);
+                    conv.crossings[0].first().map(|&z_top| vec![conv.tau[0], z_top])
+                })
+                .collect(),
+            rtol: 5e-3,
+            note: "tau(x) with the neutral-hydrogen photon mass (ADR 0008) at epsilon = 1e-7; returns (tau, highest crossing z). Tolerance as for gamma_con",
+        });
     }
 
     // --- Photon-injection Green's function ----------------------------------

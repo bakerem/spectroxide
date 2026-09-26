@@ -154,16 +154,36 @@ pub enum InjectionScenario {
     /// Dark photon (γ ↔ A') resonant conversion in the narrow-width
     /// approximation (NWA).
     ///
-    /// Applied as an initial condition (IC) at the resonance redshift:
-    /// Δn(x) = -[1 - exp(-γ_con/x)] × n_pl(x) at z_start = z_res, where
-    /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a|_{z_res} × T_γ(z_res) × H(z_res)).
-    /// The solver then evolves this IC with Kompaneets and DC/BR.
+    /// Applied as an initial condition (IC) at z_start = z_res, the redshift
+    /// where ω_pl = m. By default the photon mass is the plasma frequency,
+    /// m_γ = ω_pl, as in Chluba, Cyr & Johnson (2024, Sec. 2): each x crosses
+    /// once, at z_res, and Δn(x) = -[1 - exp(-γ_con/x)] × n_pl(x), with
+    /// γ_con = π ε² m² / (|d ln ω_pl²/d ln a| T_γ H) at z_res (their Eq. 6).
+    /// The 1/x carries P ∝ 1/ω for ultrarelativistic photons. The solver then
+    /// evolves the IC with Kompaneets and DC/BR.
     ///
-    /// The 1/x factor in the conversion probability captures the frequency
-    /// dependence P(x) ∝ 1/ω for ultrarelativistic photons.
+    /// With `neutral_hydrogen = true` the photon mass also includes neutral
+    /// hydrogen, m_γ² = ω_pl² − 4π α_H n_HI ω² (Caputo et al. 2020, PRD 102,
+    /// 103533, Eq. 1; ADR 0008), and Δn(x) = -⟨1 - exp(-τ(x))⟩ × n_pl(x).
+    /// τ(x) sums the Landau–Zener probabilities
+    /// P_i = π ε² m² / (ω_i H_i |d ln m_γ²/d ln a|_i) over every crossing of
+    /// m_γ²(z, x) = m², and ⟨·⟩ is the average over each grid cell
+    /// ([`crate::dark_photon::cell_averaged_probability`]), which keeps the
+    /// integrable divergence of the NWA at tangent crossings from depending on
+    /// the grid. The neutral term only lowers m_γ², so every crossing has
+    /// ω_pl(z) ≥ m and hence z ≥ z_res: installing at z_res is never early.
+    /// The term matters only after recombination (z_res ≲ 2000, m ≲ 10⁻¹⁰ eV),
+    /// where it can exceed the plasma term and moves and multiplies the
+    /// crossings of high-x photons. Elsewhere both modes give τ(x) = γ_con/x,
+    /// up to the cell average.
+    ///
+    /// In both modes the plasma-only (γ_con, z_res) are the nominal values for
+    /// reporting and range warnings, and a mass with no plasma-only resonance
+    /// in z ∈ [10, 3×10⁷] has no resonance.
     ///
     /// References:
     ///   Mirizzi, Redondo & Sigl (2009), JCAP 0903, 026
+    ///   Caputo, Liu, Mishra-Sharma & Ruderman (2020), PRD 102, 103533
     ///   Chluba, Cyr & Johnson (2024), MNRAS 535, 1874
     ///   Arsenadze et al. (2025), JHEP 03, 018
     DarkPhotonResonance {
@@ -171,6 +191,9 @@ pub enum InjectionScenario {
         epsilon: f64,
         /// Dark photon mass m_{A'}, in eV.
         m_ev: f64,
+        /// Include neutral hydrogen in the photon mass (ADR 0008). Off by
+        /// default, which matches Chluba, Cyr & Johnson (2024).
+        neutral_hydrogen: bool,
     },
 
     /// Resonant axion–photon (γ ↔ a) conversion in the narrow-width
@@ -621,7 +644,7 @@ impl InjectionScenario {
                 require_pos("gamma_x", *gamma_x)?;
                 Ok(())
             }
-            InjectionScenario::DarkPhotonResonance { epsilon, m_ev } => {
+            InjectionScenario::DarkPhotonResonance { epsilon, m_ev, .. } => {
                 require_pos("epsilon", *epsilon)?;
                 require_pos("m_ev", *m_ev)?;
                 Ok(())
@@ -1061,14 +1084,16 @@ impl InjectionScenario {
         }
     }
 
-    /// Returns the dark-photon NWA parameters (γ_con, z_res), if applicable.
+    /// Returns the plasma-only dark-photon NWA parameters (γ_con, z_res), if applicable.
     ///
     /// Returns `Some((γ_con, z_res))` for `DarkPhotonResonance`,
     /// `None` for all other scenarios. Returns `None` if the resonance
-    /// falls outside the supported redshift range.
+    /// falls outside the supported redshift range. These are the nominal
+    /// values (m_γ = ω_pl); with `neutral_hydrogen` the depletion itself uses
+    /// the full photon mass (see [`Self::initial_delta_n`]).
     pub fn dark_photon_params(&self, cosmo: &Cosmology) -> Option<(f64, f64)> {
         match self {
-            InjectionScenario::DarkPhotonResonance { epsilon, m_ev } => {
+            InjectionScenario::DarkPhotonResonance { epsilon, m_ev, .. } => {
                 crate::dark_photon::gamma_con(*epsilon, *m_ev, cosmo)
             }
             _ => None,
@@ -1116,9 +1141,11 @@ impl InjectionScenario {
     /// Returns the impulsive-resonance NWA parameters (γ_con, z_res) for whichever
     /// resonant channel applies (dark photon or axion), or `None` for other scenarios.
     ///
-    /// Both resonant scenarios install a depletion IC at `z_start = z_res`; the
-    /// solver and CLI use this to auto-set `z_start` and to hard-error when no
-    /// resonance exists in the supported band.
+    /// Both resonant scenarios install a depletion IC at `z_start = z_res`, the
+    /// plasma-only resonance; the solver and CLI use this to auto-set `z_start`
+    /// and to hard-error when no resonance exists in the supported band. For the
+    /// dark photon z_res is the lowest redshift at which any frequency crosses,
+    /// with or without neutral hydrogen (ADR 0008).
     pub fn resonance_params(&self, cosmo: &Cosmology) -> Option<(f64, f64)> {
         self.dark_photon_params(cosmo)
             .or_else(|| self.axion_params(cosmo))
@@ -1132,14 +1159,28 @@ impl InjectionScenario {
     /// scenarios return `None` and are evolved from Δn = 0.
     pub fn initial_delta_n(&self, x_grid: &[f64], cosmo: &Cosmology) -> Option<Vec<f64>> {
         match self {
-            InjectionScenario::DarkPhotonResonance { .. } => {
+            InjectionScenario::DarkPhotonResonance {
+                epsilon,
+                m_ev,
+                neutral_hydrogen,
+            } => {
+                // No plasma-only resonance in the band means no resonance (see
+                // the variant docs); otherwise every x has at least one crossing.
                 let (gamma_con, _z_res) = self.dark_photon_params(cosmo)?;
+                if !*neutral_hydrogen {
+                    return Some(
+                        x_grid
+                            .iter()
+                            .map(|&x| -(1.0 - (-gamma_con / x).exp()) * planck(x))
+                            .collect(),
+                    );
+                }
+                let conv =
+                    crate::dark_photon::cell_averaged_probability(*epsilon, *m_ev, x_grid, cosmo);
                 let dn: Vec<f64> = x_grid
                     .iter()
-                    .map(|&x| {
-                        let p = 1.0 - (-gamma_con / x).exp();
-                        -p * planck(x)
-                    })
+                    .zip(&conv.probability)
+                    .map(|(&x, &p)| -p * planck(x))
                     .collect();
                 Some(dn)
             }
@@ -1249,7 +1290,12 @@ impl InjectionScenario {
     /// fine.
     pub fn warn_dark_photon_range(&self, cosmo: &Cosmology) -> Vec<String> {
         let mut warnings = Vec::new();
-        if let InjectionScenario::DarkPhotonResonance { m_ev, .. } = self {
+        if let InjectionScenario::DarkPhotonResonance {
+            m_ev,
+            neutral_hydrogen,
+            ..
+        } = self
+        {
             match self.dark_photon_params(cosmo) {
                 None => {
                     warnings.push(format!(
@@ -1265,6 +1311,27 @@ impl InjectionScenario {
                              range (z ≳ 50). Recombination history and Compton coupling \
                              are not trusted at such low z; treat results as indicative."
                         ));
+                        // With neutral hydrogen, z_res comes from directly integrated
+                        // X_e and the depletion from the tabulated history; they differ
+                        // by ~1e-5, so for m within ~1e-4 of ω_pl(z = 10) the table may
+                        // find no crossing at all.
+                        if *neutral_hydrogen
+                            && crate::dark_photon::conversion_probability(
+                                1.0,
+                                *m_ev,
+                                &[1e-3],
+                                cosmo,
+                            )
+                            .crossings[0]
+                                .is_empty()
+                        {
+                            warnings.push(format!(
+                                "DarkPhotonResonance: z_res={z_res:.4e} lies at the edge of \
+                                 the searched band z ≥ 10, and the tabulated recombination \
+                                 history used for the depletion finds no crossing. The \
+                                 depletion IC will be zero."
+                            ));
+                        }
                     } else if z_res > 3.0e6 {
                         warnings.push(format!(
                             "DarkPhotonResonance: z_res={z_res:.3e} is above the validated \

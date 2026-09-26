@@ -139,7 +139,7 @@ fn run_pure_kompaneets(n_points: usize, dy_max: f64, dtau_max: f64) -> RunResult
     let mut solver = ThermalizationSolver::builder(Cosmology::default())
         .grid(GridConfig {
             n_points,
-            ..GridConfig::default()
+            ..GridConfig::coarse()
         })
         .injection(InjectionScenario::SingleBurst {
             z_h: 2.0e5,

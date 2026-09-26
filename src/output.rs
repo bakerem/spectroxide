@@ -70,8 +70,8 @@ pub struct SolverResult {
     /// Number of steps where Newton iteration hit the max iteration limit.
     pub diag_newton_exhausted: usize,
     /// Diagnostic warnings collected during the run (Newton non-convergence,
-    /// ρ_e clamping, NaN emission rates, untested regimes, validation soft
-    /// warnings). Empty for a clean run.
+    /// the hot-gas warning for ρ_e > 10 below z = 1500, NaN emission rates,
+    /// untested regimes, validation soft warnings). Empty for a clean run.
     pub warnings: Vec<String>,
     /// CMB temperature today of the run's cosmology, in K. Serialized as `t_cmb`.
     pub t_cmb: f64,
@@ -100,6 +100,8 @@ impl SolverResult {
         write_json_kv(&mut out, "z", s.z);
         out.push(',');
         write_json_kv(&mut out, "rho_e", s.rho_e);
+        out.push(',');
+        write_json_kv(&mut out, "x_e", s.x_e);
         out.push(',');
         write_json_kv(&mut out, "step_count", self.step_count as f64);
         out.push(',');
@@ -146,6 +148,7 @@ impl SolverResult {
         writeln!(w, "  y             = {:.6e}", s.y)?;
         writeln!(w, "  delta_rho/rho = {:.6e}", s.delta_rho_over_rho)?;
         writeln!(w, "  rho_e         = {:.8}", s.rho_e)?;
+        writeln!(w, "  x_e           = {:.6e}", s.x_e)?;
         writeln!(w, "  accum_delta_T = {:.6e}", s.accumulated_delta_t)?;
         writeln!(w, "  steps         = {}", self.step_count)?;
         writeln!(w, "  grid points   = {}", self.x_grid.len())?;
@@ -697,6 +700,7 @@ mod tests {
                 z: 100.0,
                 delta_n: vec![1e-6, 2e-6, -3e-6],
                 rho_e: 1.000_01,
+                x_e: 1.0,
                 mu: 5.0e-7,
                 y: 1.0e-7,
                 delta_rho_over_rho: 1.0e-5,
@@ -734,6 +738,7 @@ mod tests {
                         z: 500.0,
                         delta_n: vec![1e-8, 2e-8],
                         rho_e: 1.0,
+                        x_e: 1.0,
                         mu: 1e-10,
                         y: 2.5e-6,
                         delta_rho_over_rho: 1e-5,
@@ -751,6 +756,7 @@ mod tests {
                         z: 500.0,
                         delta_n: vec![3e-6, -1e-6],
                         rho_e: 1.000_01,
+                        x_e: 1.0,
                         mu: 1.4e-5,
                         y: 1e-8,
                         delta_rho_over_rho: 1e-5,
