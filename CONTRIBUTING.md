@@ -120,12 +120,19 @@ This project does not merge code where test targets cannot be traced to an indep
 
 ### CI pipeline
 
-The GitHub Actions CI runs automatically on every PR:
+The GitHub Actions CI runs automatically on every PR (`.github/workflows/ci.yml`):
 
-- **Rust**: build, unit tests, science suite, convergence tests, doc tests, Clippy, format check (Ubuntu + macOS)
-- **Python**: install, import tests, pytest, black format check
-- **Docs**: Sphinx and rustdoc build
-- **Coverage**: uploaded to Codecov
+- **rust**: build, `cargo test --release` (the full suite, including doc tests), the `axion`
+  feature's unit and integration tests, Clippy (default and `axion` feature), format check
+  (Ubuntu + macOS).
+- **miri-kernel**: Miri UB-freedom check on the unsafe `get_unchecked` kernel loops in
+  `kompaneets.rs`, plus the same tests rerun in release with debug assertions on (Ubuntu only).
+- **rust-coverage**: `cargo llvm-cov`, uploaded to Codecov (Ubuntu only).
+- **python**: install, black format check, import tests, pytest with coverage uploaded to
+  Codecov (Ubuntu only).
+- **parity**: regenerates the Rust-Python parity fixture and fails if the committed one is
+  stale, then runs the parity tests against it.
+- **docs**: Sphinx and embedded rustdoc build, uploaded as a build artifact.
 
 All checks must pass before merge. If CI fails, fix the issue — do not ask for the check to be skipped.
 

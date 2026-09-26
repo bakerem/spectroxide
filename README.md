@@ -17,7 +17,7 @@ spectroxide provides:
 - **Full PDE solver** in Rust: implicit Kompaneets and coupled double Compton (DC) and bremsstrahlung (BR) with adaptive stepping
 - **Green's function** mode for fast approximate calculations (pure Python, no compilation needed)
 - **9 built-in injection scenarios**: single burst, decaying particles (heat or photon channel), dark matter (DM) annihilation (s-wave or p-wave), dark photon oscillation, monochromatic photon injection, and tabulated sources (plus custom heating through the Rust API)
-- **Comprehensive test suite**: 480+ unit, integration, and doc-tests
+- **Comprehensive test suite**: 470+ unit, integration, and doc-tests
 - **Zero production dependencies** in Rust (pure `std` library)
 
 ## Installation
@@ -46,8 +46,8 @@ extras add on top of those:
 |------------|-----------------------------------|-----------------------------------|
 | `plot`     | matplotlib                        | Scripts and plotting (default)    |
 | `notebook` | matplotlib, jupyter               | Interactive notebooks             |
-| `dev`      | matplotlib, jupyter, pytest, mutmut | Development and testing         |
-| `doc`      | sphinx, nbsphinx, pydata-sphinx-theme | Building documentation        |
+| `dev`      | matplotlib, jupyter, pytest, mutmut, black | Development and testing  |
+| `doc`      | sphinx, nbsphinx, pydata-sphinx-theme, and other Sphinx extensions | Building documentation |
 
 Run `./install.sh --help` to see all options, such as the flags that skip steps or print verbose output.
 
@@ -126,7 +126,7 @@ redshifts in one call:
 from spectroxide import solve, run_sweep
 import numpy as np
 
-# Single-burst injection at z = 2e5 (mu-era)
+# Single-burst injection at z = 2e5 (mu-y transition era)
 result = solve(
     injection={"type": "single_burst", "z_h": 2e5, "sigma_z": 5000},
     delta_rho=1e-5,
@@ -196,7 +196,7 @@ let cosmo = Cosmology::default();
 let mut solver = ThermalizationSolver::new(cosmo, GridConfig::default());
 solver.set_injection(InjectionScenario::SingleBurst {
     z_h: 2e5, delta_rho_over_rho: 1e-5, sigma_z: 5000.0,
-});
+}).unwrap();
 solver.set_config(SolverConfig {
     z_start: 5e5, z_end: 1e3, ..SolverConfig::default()
 });
@@ -222,7 +222,7 @@ cargo run --release --bin spectroxide -- sweep --delta-rho 1e-5
 cargo run --release --bin spectroxide -- greens --z-h 2e5 --delta-rho 1e-5
 ```
 
-The CLI writes output to stdout as JSON (pipe to a file with `> output.json`).
+The CLI writes JSON to stdout by default. Use `--format csv` or `--format table` for other formats, and `--output <path>` to write to a file.
 
 ## Example notebooks
 
@@ -231,13 +231,13 @@ The tutorial notebooks in `notebooks/tutorials/` are numbered in the suggested r
 | Notebook | Description |
 |----------|-------------|
 | [`01_getting_started.ipynb`](notebooks/tutorials/01_getting_started.ipynb) | Green's function basics, first PDE runs, PDE versus GF comparison |
-| [`02_energy_injection.ipynb`](notebooks/tutorials/02_energy_injection.ipynb) | PDE: decaying particles, DM annihilation (s-wave, p-wave), amplitude scaling |
+| [`02_energy_injection.ipynb`](notebooks/tutorials/02_energy_injection.ipynb) | PDE: decaying particles, DM annihilation (s-wave, p-wave) |
 | [`03_new_physics.ipynb`](notebooks/tutorials/03_new_physics.ipynb) | PDE: dark photon depletion, monochromatic photon injection, $\mu$ sign flip |
 | [`04_custom_scenarios.ipynb`](notebooks/tutorials/04_custom_scenarios.ipynb) | Custom injection scenarios and tabulated heating histories |
-| [`05_observational_constraints.ipynb`](notebooks/tutorials/05_observational_constraints.ipynb) | Far Infrared Absolute Spectrophotometer (FIRAS) and Primordial Inflation Explorer (PIXIE) limits, $\mu$-$y$ plane, mock PIXIE observation |
+| [`05_observational_constraints.ipynb`](notebooks/tutorials/05_observational_constraints.ipynb) | Far Infrared Absolute Spectrophotometer (FIRAS) limits on monochromatic photon injection and on dark-photon kinetic mixing |
 | [`06_greens_table.ipynb`](notebooks/tutorials/06_greens_table.ipynb) | Precomputed Green's function tables for fast convolution |
 
-Additional notebooks cover [physics topics](notebooks/physics/) (photon injection, dark photons) and [observational constraints](notebooks/observational/) (FIRAS photon injection limits). Development and validation notebooks are in the [development notebooks directory](dev/notebooks/).
+Additional notebooks cover [physics topics](notebooks/physics/) (adiabatic cooling, photon injection, injection-width resolution) and [observational constraints](notebooks/observational/) (FIRAS photon injection limits, dark-photon limit conventions). Development and validation notebooks are in the [development notebooks directory](dev/notebooks/).
 
 ## Injection scenarios
 
@@ -253,7 +253,7 @@ Pass arbitrary sources as callables instead of an `injection` dict.
 | `AnnihilatingDM` | `"annihilating_dm"` | $f_{\rm ann}$ |
 | `AnnihilatingDMPWave` | `"annihilating_dm_pwave"` | $f_{\rm ann}$ |
 | `MonochromaticPhotonInjection` | `"monochromatic_photon"` | $x_{\rm inj}$, $\Delta N/N$, $z_h$ |
-| `DarkPhotonResonance` | `"dark_photon_resonance"` | $\epsilon$, $m_{A'}$ (eV) |
+| `DarkPhotonResonance` | `"dark_photon_resonance"` | $\epsilon$, $m_{A'}$ (eV); optional `neutral_hydrogen` (default off) |
 | `TabulatedHeating` | `dq_dz=` callable | heating history $dQ/dz(z)$ |
 | `TabulatedPhotonSource` | `photon_source=` callable | photon source $S(x, z)$ |
 | `Custom` | — (Rust API only) | user-defined closure |
@@ -291,7 +291,7 @@ src/
 ├── spectrum.rs            # Planck, Bose-Einstein, spectral shapes
 ├── grid.rs                # Non-uniform frequency grid
 ├── electron_temp.rs       # Electron temperature (quasi-stationary)
-├── recombination.rs       # Peebles 3-level atom + Saha
+├── recombination.rs       # Peebles 3-level atom (RECFAST fudge + Lyman-α correction) + Saha; X_H evolved at T_e
 ├── constants.rs           # CODATA 2018 constants
 └── bin/check_adiabatic.rs # Adiabatic cooling validation utility
 
@@ -317,6 +317,7 @@ tests/
 ├── components.rs          # Cosmology, grid, rates, kernel, table I/O
 ├── dark_sector.rs         # Photon depletion and resonant conversion
 ├── heat_delivery.rs       # Post-recombination heat delivery
+├── ionization_coupling.rs # Hydrogen ionization evolved with T_e
 ├── adversarial_inputs.rs  # Edge cases, bad inputs
 ├── cosmotherm_comparison.rs # PDE vs CosmoTherm reference data
 ├── greens_function_checks.rs # GF spectral shapes, limits, conservation
@@ -334,7 +335,7 @@ tests/
 
 dev/
 ├── scripts/               # Validation and diagnostic scripts
-└── notebooks/             # Validation and dev notebooks (4 notebooks)
+└── notebooks/             # Validation and dev notebooks (6 notebooks)
 ```
 
 ## Citation
@@ -352,7 +353,7 @@ A machine-readable `CITATION.cff` is also included in the repository root.
 
 ## Contributing
 
-Contributions — new injection scenarios, improved physics, validation, bug fixes ---
+Contributions — new injection scenarios, improved physics, validation, bug fixes —
 are welcome. Most contributions to spectroxide (including the bulk of the original
 codebase) are written with LLM assistance, and the workflow is built around that:
 the human supplies the physics (analytic limits, paper references, dimensional

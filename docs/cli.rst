@@ -14,7 +14,7 @@ any of the flags that the subcommand accepts.
 
 The CLI rejects, with an error, any flag that the subcommand or injection type
 does not read, a flag given twice, a value after a flag that takes none (such as
-``--production-grid``), and any extra word that is not a flag's value.
+``--no-dcbr``), and any extra word that is not a flag's value.
 
 
 Subcommands
@@ -50,7 +50,8 @@ output options.
    * - ``annihilating-dm-pwave``
      - ``--f-ann``
    * - ``dark-photon-resonance``
-     - ``--epsilon``, ``--m-ev``
+     - ``--epsilon``, ``--m-ev`` [``--neutral-hydrogen``: include neutral
+       hydrogen in the photon mass; off by default]
    * - ``monochromatic-photon``
      - ``--x-inj``, ``--delta-n-over-n``, ``--z-h`` [``--sigma-x``]
    * - ``decaying-particle-photon``
@@ -130,17 +131,18 @@ supply:
        ``dark-photon-resonance``; 5e6 for every other type. The sweeps start
        each point at :math:`z_h + 7\sigma_z`.
    * - ``--z-end Z``
-     - 500
+     - 10
      - Final redshift. Must be greater than 0.
    * - ``--n-points N``
-     - 2000
-     - Frequency-grid point count; 4000 by default with ``--production-grid``.
-       Overrides the point count of either grid.
+     - 4000
+     - Frequency-grid point count on the production grid,
+       :math:`x \in [10^{-5}, 60]`, the same grid the Python interface uses.
        Rejected below 100 points (sanity floor, not an accuracy bound).
        Below 1000 points the solver warns that the result is untested.
    * - ``--production-grid``
      - off
-     - Use the high-resolution production grid preset (4000 points).
+     - No effect: the production grid is the default. Accepted so that
+       older scripts still run.
    * - ``--dy-max VALUE``
      - 0.02
      - Cap on the adaptive ``y_C`` step.
@@ -157,6 +159,10 @@ supply:
    * - ``--split-dcbr``
      - off
      - Operator-split DC/BR instead of coupled Newton iteration.
+   * - ``--fixed-ionization``
+     - off
+     - Take X_e from the standard recombination history instead of evolving it
+       with the electron temperature (diagnostic).
    * - ``--no-number-conserving``
      - off
      - Disable the number-conserving :math:`T`-shift subtraction (on by default).
@@ -241,9 +247,8 @@ The following commands show common ways to run the solver from the command line:
    spectroxide solve decaying-particle --f-x 7.8e5 --gamma-x 1.1e-10 \
        --cosmology planck2018
 
-   # Sweep with production grid, save to file
-   spectroxide sweep --delta-rho 1e-5 --production-grid \
-       --output sweep_results.json
+   # Sweep, save to file
+   spectroxide sweep --delta-rho 1e-5 --output sweep_results.json
 
    # Green's function comparison
    spectroxide greens --z-h 2e5 --delta-rho 1e-5

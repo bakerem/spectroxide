@@ -10,7 +10,7 @@ This project is a Rust PDE solver (spectroxide) with Python bindings and Jupyter
 
 ```bash
 cargo build --release          # Build optimized binary
-cargo test --release           # Run all tests (198 unit + 251 integration + 3 doc pass; +4 ignored). Never run tests in debug mode.
+cargo test --release           # Run all tests (209 unit + 258 integration + 3 doc pass; +5 ignored). Never run tests in debug mode.
 cargo test --release test_name # Run a single test by name
 CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true cargo test --release --lib  # Release build with debug_assert! checks on
 cargo run --release --bin spectroxide -- sweep  # Run PDE sweep over default z_h grid
@@ -24,7 +24,7 @@ cd python && pip install -e ".[plot]"    # Install with matplotlib
 cd python && pip install -e ".[notebook]" # Install with jupyter too
 ```
 
-**Key constraints**: Zero production Rust dependencies (pure std library). Only dev-dependency is `approx` for float comparison in tests.
+**Key constraints**: Zero production Rust dependencies (pure std library). Dev-dependencies are `approx` (float comparison in tests) and `criterion` (benchmarks).
 
 **Cargo features**: `axion` (off by default) gates resonant axion–photon conversion — `src/axion.rs`, `InjectionScenario::AxionResonance`, the `solve axion-resonance` subcommand, and five tests in `tests/dark_sector.rs`. It is experimental and excluded from the release. The user-facing docs (README, Sphinx, public docstrings) omit it on purpose; instead each axion run pushes `axion::EXPERIMENTAL_WARNING`, and the Python helpers in `spectroxide.axion` warn once per process. Build/test it with `--features axion`. **Both configurations must build, test and pass clippy** — check the `not(feature)` arm when touching `InjectionScenario` matches, `axion_params`, or `warn_axion_range` (the latter two are defined in both configurations, returning `None`/empty when off, so call sites need no `cfg`).
 
@@ -42,8 +42,8 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 - `kompaneets.rs` — Compton scattering via Fokker-Planck equation. IMEX solver: Crank-Nicolson for Kompaneets + backward Euler for DC/BR, with nonlinear Newton iteration. Largest and most numerically delicate module.
 - `double_compton.rs` — DC emission (γe → γγe), photon-number changing. Semi-implicit backward Euler.
 - `bremsstrahlung.rs` — BR emission (e+ion → e+ion+γ). Non-relativistic Gaunt factor: Born approximation (Brussaard & van de Hulst 1962) with softplus interpolation (Draine 2011, *Physics of the Interstellar and Intergalactic Medium*, Ch. 10).
-- `electron_temp.rs` — Electron temperature T_e. Perturbative quasi-stationary equilibrium.
-- `recombination.rs` — Ionization fraction X_e(z). Peebles 3-level atom ODE (z<1500), Saha (z>1500). Cached with O(log N) lookup.
+- `electron_temp.rs` — Electron temperature T_e. Perturbative quasi-stationary equilibrium. The solver evolves X_H alongside T_e below z ≈ 1575 by a lagged split with an X_H corrector pass, and caps the step there at `XE_COUPLED_DZ_FRAC` = 0.005 z (ADR 0009); `--fixed-ionization` / `.fixed_ionization()` restores the standard table.
+- `recombination.rs` — Ionization fraction X_e(z). Peebles 3-level atom ODE (z<1575) with RECFAST 1.5.2's fudge factor F = 1.125 and Lyman-α escape correction (ADR 0011), Saha (z>1575). The cached standard table (gas at T_z, O(log N) lookup) feeds the Green's function and the fixed-ionization mode; `advance_x_h` evolves X_H at the gas temperature for the PDE solver (ADR 0009). Helium stays Saha at T_z.
 **Infrastructure layer**:
 - `constants.rs` — CODATA 2018 constants, spectral integrals (G₁, G₂, G₃), β_μ, κ_c.
 - `cosmology.rs` — Flat ΛCDM background: H(z), densities, Thomson time. Default params: Y_p=0.24, Ω_b=0.044, h=0.71.
@@ -60,8 +60,8 @@ CMB spectral distortion solver: evolves photon occupation number n(x, z) through
 
 **Entry points**:
 - `lib.rs` — Library root. `prelude` module re-exports `Cosmology`, `ThermalizationSolver`, `SolverConfig`, `GridConfig`, `FrequencyGrid`, `InjectionScenario`.
-- `main.rs` — CLI binary entry. Subcommands: `solve`, `sweep`, `greens`, `info`, `help`.
-- `cli.rs` — CLI argument parsing and dispatch. Handles JSON output, diagnostic flags (`--no-dcbr`, `--number-conserving`, `--split-dcbr`).
+- `main.rs` — CLI binary entry. Subcommands: `solve`, `sweep`, `photon-sweep`, `photon-sweep-batch`, `greens`, `info`, `physics-hash`, `help`.
+- `cli.rs` — CLI argument parsing and dispatch. Handles JSON output, diagnostic flags (`--no-dcbr`, `--no-number-conserving`, `--split-dcbr`, `--fixed-ionization`).
 - `output.rs` — JSON serialization of `SolverResult` / `SolverSnapshot`.
 - `bin/check_adiabatic.rs` — Utility for adiabatic cooling validation (only maintained binary).
 
@@ -89,10 +89,10 @@ Shared setup lives in `tests/common/mod.rs`: burst and photon-injection builders
 - `solver_numerics.rs` — 15 tests: stability at large Δn and large steps, snapshot landing, adaptive stepping, number-conserving mode, free streaming, timestep convergence, null tests (no injection, adiabatic cooling).
 - `gf_visibility.rs` — 20 tests, no PDE runs: visibility functions and their limits, heat and photon Green's functions, the (μ, y, ΔT/T) decomposition, FIRAS helpers.
 - `components.rs` — 23 tests, no PDE runs: cosmology background, grid, DC/BR rates, Kompaneets kernel, injection-rate functions, table I/O, quasi-stationary T_e.
-- `dark_sector.rs` — 3 tests in the default build (photon depletion); 5 more behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 9 tests in total.
+- `dark_sector.rs` — 5 tests in the default build (dark-photon depletion, including the install redshift and the off-by-default neutral-hydrogen switch of ADR 0008); 5 more behind `--features axion`, which also enables 4 unit tests in `src/axion.rs`, so the feature adds 9 tests in total.
 - `adversarial_inputs.rs` — 19 tests: edge cases, invalid inputs, boundary conditions, rejected solver tolerances (R-2), refinement zones that overlap the grid (N-2).
 - `coverage_gaps.rs` — 22 tests: closes coverage gaps flagged during audit (energy conservation, warning thresholds, table I/O, boundary conditions, grid refinement), plus the post-run energy-closure and small-grid warnings (R-1), and full heat delivery from narrow bursts that drive T_e far above T_z (ADR 0007). `GridConfig::validate` rejects `n_points < 100` (review decision 2026-09-23; a sanity floor, not an accuracy bound). A 50-point run — built directly via `ThermalizationSolver::new` + `set_injection`, bypassing `validate`, since the builder can no longer construct it — must stop with the NaN error, never panic; a run on the 100-point validation floor must be finite and warn, or fail cleanly, never return silently.
-- `cosmotherm_comparison.rs` — 8 tests: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
+- `cosmotherm_comparison.rs` — 7 tests + 1 ignored: cross-validation against CosmoTherm reference data (DI_cooling, DI_damping, adiabatic μ), plus a μ-era decay against the CosmoTherm GF database (ignored by default; needs `Greens_data.dat` and `SPECTROXIDE_GREENS_DB`).
 - `greens_function_checks.rs` — 10 tests: Chluba 2013 Green's function limits (μ-era, y-era, pure temperature shift), energy conservation, and PDE cross-validation, plus four anchors of the BR Gaunt factor and coefficient against Draine (2011).
 - `convergence_order.rs` — 8 tests + 1 ignored: grid and timestep convergence with two-sided Richardson-order bounds.
 - `cli_integration.rs` — 5 tests: CLI end-to-end.
@@ -100,7 +100,8 @@ Shared setup lives in `tests/common/mod.rs`: burst and photon-injection builders
 - `physics_identities.rs` — 12 tests + 1 ignored: closed-form and published identities added by the physics-check audit (`dev/audit/PHYSICS_CHECKS_STATUS_2026-07-26.md`): Thomson depth vs Planck z_*, exact moments of the G_bb/M/Y shapes, Kompaneets first/second moment identities and H-theorem, quasi-stationary T_e energy return, DC/BR crossover redshift, grid-boundary independence, T_e Compton/adiabatic balance, α_th = 5/2 (ignored, ~7 min), plus the sensitivity-directed photon anchors T-PS-1/2/3 (P_s(x_c) = 1/e, x_c vs Chluba 2015 Eq. 25, μ at x_inj = x_c), and the reduced-mass hydrogen ionization energy from typed CODATA values.
 - `mms_convergence.rs` — 8 tests: method of manufactured solutions on the Kompaneets kernel and the coupled path, plus the photon-number ledger identity. **Verifies the discretization, not the equation** — see Pitfall #11.
 - `conservation_fuzz.rs` — 3 tests: randomized energy/number-closure fuzzing across scenarios and grids.
-- `heat_delivery.rs` — 2 tests: fraction of injected heat that reaches the photons after recombination, pinned to an independent gas-temperature integration (`dev/scripts/heatloss/`, `dev/audit/fix_a_cn_old_half_ab.md`). The burst at z_h = 1000 must deliver 0.999862 ± 3e-5; the tolerance is a fifth of the 1.38e-4 physical loss, so full delivery (1.0) fails. The decay with lifetime at z = 1000 must deliver 0.99417 ± 1e-3. Both fail without ADR 0004 (0.938 and 0.849).
+- `ionization_coupling.rs` — 5 tests: X_H evolved with T_e (ADR 0009). A no-injection run matches HyRec-2 X_e and T_m after freeze-out (z = 200, 100, 50), where the fixed history is off by 2–10% and fails the same bands; the fixed mode reproduces the standard table exactly; runs ending above recombination are bit-identical in both modes; smooth heating through recombination (a decay) gives X_e within 1% of small steps; a burst at z_h = 600 matches X_e(200) and the coupling's change in delivered heat from the independent `dev/scripts/heatloss/coupled_xe_expectation.py`.
+- `heat_delivery.rs` — 2 tests: fraction of injected heat that reaches the photons after recombination, pinned to an independent gas-temperature integration (`dev/scripts/heatloss/`, `dev/audit/fix_a_cn_old_half_ab.md`). The burst at z_h = 1000 must deliver 0.999856 ± 3e-5 (`coupled_xe_expectation.py`, which evolves X_H with T_m as the solver does since ADR 0009; 0.999863 with a fixed X_e); the tolerance is a fifth of the 1.44e-4 physical loss, so full delivery (1.0) fails. The decay with lifetime at z = 1000 must deliver 0.99418 ± 1e-3. Both fail without ADR 0004 (0.938 and 0.849).
 
 **The moment-hierarchy suite** (`dev/audit/KOMPANEETS_VERIFICATION_RESULTS.md`, plan `dev/PLAN_KOMPANEETS_MOMENT_VERIFICATION_2026-07-07.md`). These exist to pin the *formulation* against targets derived outside the code, closing the Pitfall #11 gap that MMS cannot reach. Coverage is tracked per physical term in `dev/audit/term_coverage_matrix.md`.
 - `kompaneets_moments.rs` — 11 tests: the exact moment hierarchy `dM_k/dy = (k−2)(k+1)M_k − (k−2)M_{k+1}` (derived by integration by parts on the *published* Kompaneets equation, coefficients not taken from the code) at k = 3,4,5; the Zel'dovich–Sunyaev energy law; the (φ−1) heating branch against the analytic Y_SZ shape *and* amplitude — the only test that exercises that branch, since every other kernel test runs at φ = 1 where it vanishes; a Δn² linearity diagnostic; and the H-theorem at Δn ~ n_pl, the only fully nonlinear check in the repo. Two tiers: tier-a carries the independent physics, tier-b adds the measured stimulated/quadratic term `C_k` to separate regime contamination from real failure.
@@ -120,13 +121,14 @@ Shared setup lives in `tests/common/mod.rs`: burst and photon-injection builders
 
 **`physics/`** — Specific physics topics:
 - `adiabatic_cooling.ipynb` — Adiabatic-cooling sanity checks
+- `injection_width_resolution.ipynb` — Sensitivity of μ, y, and the spectrum to the burst's temporal and spectral widths (referee 2, comment 4)
 - `photon_injection.ipynb` — Monochromatic photon injection (Chluba 2015)
 - `photon_injection_validation.ipynb` — Photon-injection validation against literature
 
 **`observational/`** — FIRAS/PIXIE constraints:
 - `firas_photon_limits.ipynb` — FIRAS photon-injection limits
 
-**`paper_figures/`** — Self-contained notebooks, one per paper figure (10 notebooks). Generated by `_generate_notebooks.py` from source scripts/notebooks.
+**`paper_figures/`** — Self-contained notebooks, one per paper figure (11 notebooks). Edit them directly; there is no generator.
 
 **`figures/`** — Generated PDF figures consumed by the paper.
 
@@ -134,7 +136,7 @@ Shared setup lives in `tests/common/mod.rs`: burst and photon-injection builders
 
 - `dev/scripts/` — 24 validation and diagnostic scripts (build_gf_table, build_visibility_table, build_baseline_table, fit_visibility_conservation, convergence_figure, mms_convergence_figure, dm_cosmotherm_compare, fit_visibility_from_table, photon_energy_conservation, plot_visibility_comparison, remake_firas_photon_limits, benchmark_paper_table, check_refs, class_sd_compare, class_sd_case_b, compton_equilibrium_coefficients, gamma_con_landau_zener, highprec_oracle, extract_test_assertions, error_budget, build_test_provenance, bryce2411_red_sensitivity, docs_style_lint, nb_md_replace, plus the ccj24_gap/, dm_residual_diagnostics/, heatloss/, visibility_diagnostics/, and y_estimator/ subdirectories). `build_visibility_table` -> `build_baseline_table` -> `fit_visibility_conservation` is the paper's Table 1 (visibility-function fit) pipeline.
 - `dev/audit/` — validation records. Two coverage matrices, deliberately: `coverage_matrix.md` is indexed by *published result* (one row per paper figure, R0), `term_coverage_matrix.md` by *physical term* in the code. Do not merge them; do not rename `term_coverage_matrix.md` back to `COVERAGE_MATRIX.md` (case-insensitive collision breaks macOS/Windows checkouts).
-- `dev/notebooks/` — 4 notebooks: cosmology_background, mu_y_vs_zh, pde_greens_function, pde_validation
+- `dev/notebooks/` — 6 notebooks: cosmology_background, mu_y_vs_zh, pde_greens_function, pde_validation, remake_pathological_figure, xe_darkhistory_comparison (coupled X_e/T_e against DarkHistory's three-level atom, paper Appendix `app:xe`; needs `pip install darkhistory`, and uses `examples/xe_history.rs` for snapshot histories)
 
 ## Critical Numerical Pitfalls
 
@@ -174,7 +176,7 @@ These are the hard-won lessons from development. **Violating any of these will s
 
 ## Validation Targets
 
-- μ ≈ 1.401 × Δρ/ρ for injection in deep μ-era (z > 2×10⁵)
+- μ ≈ 1.401 × Δρ/ρ for injection in deep μ-era (z > 3×10⁵)
 - y = Δρ/(4ρ) for injection in y-era (z < 10⁴)
 - PDE vs Green's function: 2–5% agreement for μ, ~5% for y
 - Energy conservation < ±5% across all redshifts
@@ -184,7 +186,7 @@ These are the hard-won lessons from development. **Violating any of these will s
 
 - When I ask for scaffolding or a plan, provide ONLY scaffolding/TODOs — do not implement the actual logic unless I explicitly ask you to implement it.
 - When I exit plan mode or ask you to implement, stop planning and start writing code immediately. Do not continue writing plan files.
-- Keep tone professional. Bluntness and directness are good; vulgar shorthand or crude abbreviations (e.g. "idgaf") are not.
+- Keep tone professional. Bluntness and directness are good; vulgar shorthand or crude abbreviations are not.
 
 ## Environment
 

@@ -30,9 +30,9 @@ specific functional forms and references.
 
 .. note::
 
-   **Accuracy versus PDE** — ``<5%`` deep μ-era (z_h > 2 × 10⁵), ``<1%``
-   y-era (z_h < 10⁴), ``~8–13%`` shape error in the μ↔y transition
-   (3 × 10⁴–10⁵). For the transition region prefer the PDE-based
+   **Accuracy versus PDE** — ``<5%`` deep μ-era (z_h > 3 × 10⁵), ``<1%``
+   y-era (z_h < 10⁴), ``~8–17%`` shape error in the μ↔y transition
+   (10⁴–3 × 10⁵). For the transition region prefer the PDE-based
    numerical Green's function in :doc:`greens_table`.
 
 Quick example
@@ -92,7 +92,7 @@ provides three presets:
    * - ``PLANCK2015_COSMO``
      - Planck 2015 (matches the CosmoTherm reference files): h=0.6727, Ω_b=0.04917, Ω_m=0.3139, Y_p=0.2467.
    * - ``PLANCK2018_COSMO``
-     - Planck 2018 (Planck VI 2020, TT,TE,EE+lowE+lensing): h=0.6736, Ω_b=0.04930, Ω_m=0.3153, Y_p=0.2454.
+     - Planck 2018 (Planck VI 2020, TT,TE,EE+lowE+lensing): h=0.6736, Ω_b=0.04930, Ω_m=0.31377, Y_p=0.2454. Ω_m is the code's ω_b/ω_cdm reduction, not the paper's 0.3153, which adds the massive-neutrino density this code does not model.
 
 .. autodata:: spectroxide.greens.Z_MU
 .. autodata:: spectroxide.greens.BETA_MU

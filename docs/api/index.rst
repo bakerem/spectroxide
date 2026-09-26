@@ -62,7 +62,7 @@ secondary; the PDE solver computes the science targets.
       ``spectroxide.greens_table`` — precomputed numerical Green's
       function from the Rust PDE, tabulated for fast convolution. More
       accurate than the analytic Green's function in the μ↔y transition
-      region (3 × 10⁴ < z < 10⁵).
+      region (10⁴ < z < 3 × 10⁵).
 
    .. grid-item-card:: FIRAS data
       :link: firas

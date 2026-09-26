@@ -77,7 +77,7 @@ Plain-dict cosmology presets. Each contains the keys ``h``, ``omega_b``,
    * - ``PLANCK2015_COSMO``
      - Planck 2015 (matches the CosmoTherm reference files): h=0.6727, Ω_b=0.04917, Ω_m=0.3139, Y_p=0.2467.
    * - ``PLANCK2018_COSMO``
-     - Planck 2018 (Planck VI 2020, TT,TE,EE+lowE+lensing): h=0.6736, Ω_b=0.04930, Ω_m=0.3153, Y_p=0.2454.
+     - Planck 2018 (Planck VI 2020, TT,TE,EE+lowE+lensing): h=0.6736, Ω_b=0.04930, Ω_m=0.31377, Y_p=0.2454. Ω_m is the code's ω_b/ω_cdm reduction, not the paper's 0.3153, which adds the massive-neutrino density this code does not model.
 
 .. autodata:: spectroxide.cosmology.DEFAULT_COSMO
 .. autodata:: spectroxide.cosmology.PLANCK2015_COSMO
@@ -113,8 +113,8 @@ Recombination
 -------------
 
 Free-electron fraction ``X_e(z)``: Saha for helium, Peebles three-level
-atom for hydrogen with fudge factor ``F = 1.125`` (Chluba & Thomas
-2011). The module caches the ordinary differential equation table per cosmology.
+atom for hydrogen with RECFAST 1.5.2's fudge factor ``F = 1.125`` and
+Lyman-alpha escape correction. The module caches the ordinary differential equation table per cosmology.
 
 .. autosummary::
    :nosignatures:

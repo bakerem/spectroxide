@@ -79,7 +79,7 @@ For the physics behind each scenario and full derivations, see the
    * - ``"decaying_particle_photon"``
      - ``x_inj_0``, ``f_inj``, ``gamma_x`` [1/s]
    * - ``"dark_photon_resonance"``
-     - ``epsilon``, ``m_ev`` [eV]
+     - ``epsilon``, ``m_ev`` [eV] (``neutral_hydrogen`` optional, default off)
 
 ``f_x`` is the energy released per hydrogen nucleus (the rate uses
 :math:`n_{\rm H}`, not the baryon number density); ``sigma_z``/``sigma_x`` are the

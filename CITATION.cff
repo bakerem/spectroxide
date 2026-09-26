@@ -6,8 +6,8 @@ message: >-
 title: "spectroxide: a code package for computing cosmic microwave background spectral distortions"
 abstract: >-
   We present spectroxide, a code package for computing cosmic microwave background
-  spectral distortions in which all ~14,500 lines of Rust code, Python interface,
-  and ~400 automated tests were written by an AI assistant (Claude Code) under
+  spectral distortions in which all ~12,000 lines of Rust code, Python interface,
+  and over 950 automated tests were written by an AI assistant (Claude Code) under
   human physicist supervision. The solver evolves the photon Boltzmann equation
   under Compton scattering, double Compton emission, and Bremsstrahlung from
   z ~ 5 x 10^6 to the present, computing spectral distortions from arbitrary heat

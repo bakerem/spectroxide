@@ -38,3 +38,7 @@ top level — import explicitly:
 .. autofunction:: spectroxide.dark_photon.dln_omega_pl_sq_dlna
 .. autofunction:: spectroxide.dark_photon.gamma_con
 .. autofunction:: spectroxide.dark_photon.gc_per_epsilon_sq
+.. autofunction:: spectroxide.dark_photon.photon_mass_sq_ev2
+.. autofunction:: spectroxide.dark_photon.conversion_probability
+.. autofunction:: spectroxide.dark_photon.cell_average
+.. autofunction:: spectroxide.dark_photon.tau_per_epsilon_sq

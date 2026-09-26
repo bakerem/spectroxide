@@ -8,7 +8,7 @@ Precomputed numerical Green's function from the Rust partial
 differential equation (:term:`PDE`) solver, tabulated for fast
 convolution of arbitrary injection histories. Strictly more accurate
 than the :doc:`analytic Green's function <greens>`, especially in the
-μ↔y transition region (3 × 10⁴ < z < 10⁵) where the analytic
+μ↔y transition region (10⁴ < z < 3 × 10⁵) where the analytic
 visibility fits break down.
 
 Use this when you need fast convolution but want PDE-quality results
