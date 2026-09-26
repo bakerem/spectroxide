@@ -13,7 +13,7 @@ but X_e(z) is taken from spectroxide. The burst width is the CLI default,
 sigma_z = max(0.04 z_h, 100); ``--sigma`` overrides it.
 
 Target of tests/heat_delivery.rs::burst_at_recombination_delivers_independent_fraction:
-    python heat_delivery_expectation.py 1000        ->  0.999862
+    python heat_delivery_expectation.py 1000        ->  0.999863
 
 Usage: python heat_delivery_expectation.py Z_H [--drho 1e-8] [--z-end 200] [--sigma S] [--ledger FILE]
 """

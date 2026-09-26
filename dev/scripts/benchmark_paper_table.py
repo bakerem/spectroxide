@@ -154,3 +154,26 @@ for name, dt in results:
     else:
         print(f"{name:<45s} {dt:>8.1f}s")
 print("=" * 60)
+
+# --- Save (audit B19: the paper's timings need a saved record) ---
+import datetime
+import json
+import os
+import platform
+
+cpu = platform.processor() or platform.machine()
+try:
+    with open("/proc/cpuinfo") as f:
+        cpu = next(l.split(":", 1)[1].strip() for l in f if l.startswith("model name"))
+except (OSError, StopIteration):
+    pass
+record = {
+    "date": datetime.datetime.now().isoformat(timespec="seconds"),
+    "cpu": cpu,
+    "logical_cpus": os.cpu_count(),
+    "warmup_s": t_warmup,
+    "results_s": {name: dt for name, dt in results},
+}
+out = pathlib.Path(__file__).resolve().parent.parent / "data" / "benchmark_paper_table.json"
+out.write_text(json.dumps(record, indent=2) + "\n")
+print(f"Saved: {out}")

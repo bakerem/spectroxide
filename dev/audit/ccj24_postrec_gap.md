@@ -38,3 +38,38 @@ After both swaps, a −1.0% residual remains at 800 < z_res < 1450, and −0.6% 
 
 - If Fig. 8 or the notebooks quote agreement with CCJ24 below 2e-10 eV, they should use the vector curve `ccj24_fig8_firas_vector.txt` or state that the AxionLimits file is 1–1.4% high there.
 - A like-for-like comparison below 2e-9 eV should use Planck cosmology in the ε → γ_con mapping. The default cosmology costs 0.4–1% there.
+
+## 2026-09-25 follow-up: two errors on our side
+
+Script `dev/scripts/ccj24_gap/postrec_followup.py`, output `postrec_followup_out.txt`. Same statistic as above (Δχ² = 4, normalized to z_res 3e3–5e4), Planck 2018 throughout, current X_e (ADR 0009 and 0011), against the Fig. 8 vector curve, on a 120-point mass grid instead of band medians. The band medians above hid both effects below.
+
+**He I recombination (our error, −4% to +12% in ε at m = 1.1e-9 to 2.6e-9 eV).** Our helium is Saha at T_z (`src/recombination.rs`), so He I recombines too early and too steeply. Seager, Sasselov & Scott (2000) found that He I recombination lags Saha. Our X_e is 2.3%, 4.8%, and 5.9% below HyRec-2020 at z = 1900, 2100, and 2300, while RECFAST and HyRec agree to 0.1% there and ours matches HyRec to 1e-4 at z ≤ 1700. The slope, not the level, drives the error. The mapping uses d = 3 + d ln X_e / d ln(1+z) at z_res. At 1.32e-9 eV our d is 3.00 against HyRec's 3.32, and at 2.04e-9 eV it is 3.79 against 3.09. That accounts for 0.951 of the 0.958 dip and 1.108 of the 1.124 peak. The level difference shifts z_res by at most 1.7% and ε by 1–2%. So a fix must reproduce the timing of He I recombination; rescaling the level will not work. On a dense grid, ε_ours/ε_HyRec runs from 0.958 at 1.32e-9 eV to 1.124 at 2.04e-9 eV. A fresh-context verifier reproduced these numbers with its own mapping code, which agrees with `gc_per_epsilon_sq` to 0.05%. (The script's splice "ours + HyRec above z = 1550" is identical to HyRec for m ≥ 1e-9 eV, because z_res > 1550 there. It shows nothing beyond the X_e comparison.) The notebook `dp_firas_limit_conventions.ipynb` attributes its dip at 1.3e-9 eV to "the difference between our template and CosmoTherm's". That is wrong: the templates agree to 0.2% there. Paper Fig. 8 uses the same mapping. Its cached curve (`dev/data/dp_firas_pde_limits.npz`, 70 masses), divided by the vector curve and normalized to z_res 3e3–5e4, gives 0.974 at 9.0e-10 eV, 0.940 at 1.34e-9, 1.101 at 2.0e-9, and 0.990 at 3.0e-9 eV. So the figure carries the error at two of its nodes.
+
+**Low-z hydrogen (our error, −0.1% to −0.7% in ε at z_res < 800).** Our standard X_e table evolves hydrogen with the gas at T_z. Below z ≈ 800 our X_e runs 0.3–1.9% above HyRec (z = 800 to 200), and s is low by 0.01–0.03. Splicing HyRec below z = 800 removes the offset. That the cause is T_m < T_z is likely but not tested directly: the sign and growth toward low z match, and `tests/ionization_coupling.rs` shows the coupled (ADR 0009) history matches HyRec where the fixed one is off by 2–10% at z ≤ 200.
+
+**CCJ24 Fig. 2 is not their Fig. 8 mapping.** We read the z_con(m) curve from the vector paths of `eps/con_plot.pdf` (`ccj24_zcon_vector.txt`). It agrees with our z_res to 0.3% above 1e-8 eV but sits 2–7% lower in z below 1e-9 eV, for every X_e history and cosmology we tried, and it is a staircase in z with 1.5% steps. Used as the mapping, it would make our limit 5–14% weaker than CCJ24 below 1e-9 eV. The measured gap has the opposite sign and is under 1%, so Fig. 8 did not use the Fig. 2 curve. Its matter–radiation equality marker sits at z_con = 3418. Planck 2018 gives z_eq = 3403 and our default cosmology gives 3130. If the marker was computed rather than placed by hand, this is consistent with CCJ24 using Planck, which supports the swap in the table above.
+
+**What remains.** With HyRec at Planck 2018, the ratio is 1.001 at z_res 250–800, 0.991 at 800–1550, 0.993 at 1550–2700, 0.997 at 2700–7000, and 1.001 above. The −0.9% at 800–1550 appears for every X_e history, so it is not recombination physics we can vary. Single-mass features at 1.1e-9 eV (−1.5%) and 7.4e-9 eV (+2.9%) are identical for all histories. The template γ limits change by less than 0.02% across them. The CCJ24 vector curve is not monotone there: ε = 3.64e-8, 3.70e-8, 3.81e-8, and 3.45e-8 at m = 5.9e-9, 6.9e-9, 8.0e-9, and 9.3e-9 eV. So these features sit in their curve, probably from contouring across the H and He II steps. We do not know the source of the −0.9%.
+
+**Budget, current code against the AxionLimits file (what the conventions notebook plots).** At z_res 250–800: AxionLimits file high by 0.6–1.5%, default against Planck cosmology 0.4%, low-z X_e 0.1–0.7%, residual ≈ 0. At 800–1550: file 1.0%, cosmology 1.1%, residual 0.9%. At 1.1e-9 to 2.6e-9 eV: He I, −4% to +12%, per mass.
+
+**Fixes (not made; each changes a physics model or default and needs an ADR).** (1) A He I recombination ODE in `recombination.rs` (RECFAST 1.5.2's He I treatment, as in Seager et al. 2000 and Wong, Moss & Scott 2008), replacing Saha. It also changes n_e, and so the Thomson rate, by up to 6% at z = 1900–2300 in every run. (2) A standard X_e table that evolves T_m with Compton coupling, as RECFAST does, rather than T_m = T_z. Or: build the dark-photon mapping from the coupled no-injection history.
+
+### The plateau offset is a mass-axis (n_e) signature
+
+Between z_res ≈ 850 and 1450 the resonance redshift barely changes with mass, so ε ∝ 1/m, and any offset in the m ↔ z_res relation shows up there and almost nowhere else. We regressed ln(ε_ours/ε_CCJ24) on the local slope d ln ε / d ln m. We used RECFAST at Planck 2018 and 200 masses, excluding the He I kink and m > 5e-8 eV. Against the Fig. 8 vector curve: ln ratio = 0.0027 + 0.0103 × slope, and the rms drops from 0.58% to 0.38%, the scatter floor of the reference. Against the AxionLimits file: 0.0155 × slope, with rms 0.85% → 0.54%. Scaling n_e by (1 + f) gives ln ratio = f/2 × (1 + slope), so the fit reads f ≈ 2.1% against the figure and 3.1% against the file. CCJ24 behave as if their n_e(z) near recombination is about 2% above ours, and the file carries another 1% of the same signature. So the file-to-figure difference is probably a different run or mapping, not digitization.
+
+`postrec_candidates.py` tests the physical inputs, with ratios normalized to the y era (target 1.000):
+
+| case | z_res 250–800 | z_res 850–1450 |
+|---|---|---|
+| HyRec, Planck 2018 | 1.002 | 0.992 |
+| RECFAST 1.5 (escape correction on) | 1.002 | 0.992 |
+| RECFAST 1.4 (F = 1.14, no correction) | 1.007 | 0.995 |
+| HyRec, Y_p = 0.24 | 1.004 | 0.995 |
+| Y_p = 0.24 + RECFAST 1.4 | 1.009 | 0.998 |
+| HyRec, Planck 2015 | 0.999 | 0.988 |
+| HyRec, our default cosmology | 1.000 | 0.983 |
+| HyRec, n_e × 1.02 | 1.004 | 1.001 |
+
+Each plausible CosmoTherm-era choice (Y_p = 0.24, RECFAST without the 1.5 correction) moves the plateau by about +0.3%. Together they close it to 0.2%, but overshoot the 250–800 band by 0.9%. No documented combination fits both bands better than a flat 2% n_e rescaling. We have no physical reason for such a rescaling. The inputs that could decide it are CCJ24's Y_p, their recombination code and version, and their X_e table.

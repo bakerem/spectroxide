@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-24T22:09:23",
+  "cpu": "AMD Ryzen 5 8645HS w/ Radeon 760M Graphics",
+  "logical_cpus": 12,
+  "warmup_s": 0.10177482099970803,
+  "results_s": {
+    "PDE single burst (y-era, z_h=1e3)": 0.03654100699350238,
+    "PDE single burst (mu-era, z_h=1e5)": 0.7058131460216828,
+    "PDE single burst (thermalization, z_h=3e6)": 22.223745913011953,
+    "PDE decaying particle": 19.077016029012157,
+    "PDE s-wave annihilation": 17.770001440978376,
+    "PDE monochromatic photon injection": 19.070403052988695,
+    "15-point sweep (parallel)": 27.13238949899096,
+    "GF single spectrum (1000 pts)": 0.019747557858994697,
+    "GF convolution (1000x1000)": 0.07081758099957369,
+    "GF mu+y from heating": 0.00012420451996149494
+  }
+}

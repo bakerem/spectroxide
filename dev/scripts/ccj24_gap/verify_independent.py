@@ -1,8 +1,9 @@
 import numpy as np
 from scipy.stats import norm
 from scipy.optimize import minimize_scalar
-R='/home/bakerem/spectroxide/'
-import os; S = os.path.dirname(os.path.abspath(__file__)) + '/'
+import os
+S = os.path.dirname(os.path.abspath(__file__)) + '/'
+R = os.path.abspath(os.path.join(S, '..', '..', '..')) + '/'
 h=6.62607015e-34;k=1.380649e-23;c=2.99792458e8
 D=np.loadtxt(R+'data/firas_monopole_spec_v1.txt')
 fcm,spec,res,sig,gal=D.T

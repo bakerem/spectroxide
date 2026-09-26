@@ -368,7 +368,26 @@ def fit_all7(label="all7 spectral"):
           LIT["z_y"] / 1e4, LIT["alpha_y"], LIT["z_mu"] / 1e4, LIT["alpha_mu"]]
     bounds = [(0.8, 1.1), (0.0, 0.3), (0.5, 5.0),
               (1.0, 20.0), (1.0, 5.0), (1.0, 20.0), (1.0, 4.0)]
-    out = minimize(cost, p0, method="L-BFGS-B", bounds=bounds)
+    # Rescale the cost to O(1) at the literature point and tighten the
+    # tolerances: with the raw cost and default tolerances L-BFGS-B stopped
+    # after a few iterations with beta still at its start value (audit A3,
+    # dev/REVIEW_PAPER_CLAIMS_2026-09-24.md). Several starts guard against a
+    # start-dependent answer; all of them must land on the same minimum.
+    c_ref = cost(p0)
+    opts = dict(ftol=1e-15, gtol=1e-12, maxiter=5000, maxfun=50000)
+    starts = [p0,
+              [0.98, 0.06, 1.2] + p0[3:],
+              [0.99, 0.02, 3.5] + p0[3:],
+              [0.95, 0.10, 1.8, 7.0, 2.3, 6.0, 1.7],
+              [1.00, 0.04, 2.8, 5.0, 2.9, 5.0, 2.1]]
+    runs = [minimize(lambda p: cost(p) / c_ref, s, method="L-BFGS-B",
+                     bounds=bounds, options=opts) for s in starts]
+    for s, r in zip(starts, runs):
+        print(f"  start beta={s[2]:.2f} B={s[1]:.3f}: nit {r.nit}, "
+              f"cost {r.fun * c_ref:.6f}, beta {r.x[2]:.4f}, B {r.x[1]:.4f}")
+    out = min(runs, key=lambda r: r.fun)
+    out.fun *= c_ref
+    spread = np.ptp([r.x for r in runs], axis=0)
     A, B, beta = out.x[0], out.x[1], out.x[2]
     z_y, alpha_y, z_mu, alpha_mu = (out.x[3] * 1e4, out.x[4],
                                     out.x[5] * 1e4, out.x[6])
@@ -381,7 +400,8 @@ def fit_all7(label="all7 spectral"):
               f"delta {100*(val/lit-1):+6.2f}%")
     return {"A": A, "B": B, "beta": beta, "z_y": z_y, "alpha_y": alpha_y,
             "z_mu": z_mu, "alpha_mu": alpha_mu,
-            "cost": out.fun, "n_spectra": int(n_z)}
+            "cost": out.fun, "n_spectra": int(n_z), "nit": int(out.nit),
+            "n_starts": len(runs), "start_spread": spread.tolist()}
 
 
 all7 = fit_all7()

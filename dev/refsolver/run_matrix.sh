@@ -1,8 +1,8 @@
 #!/bin/bash
 # Production run matrix for the R3 reference solver.  Sequential: 7 GB box.
 set -e
-P=/home/bakerem/miniforge3/bin/python
-cd /home/bakerem/spectroxide/dev/refsolver
+P=python
+cd "$(dirname "$0")"
 L=outputs/run_matrix.log
 : > $L
 run() { echo "### $*" >> $L; $P refsolver.py "$@" >> $L 2>&1; }

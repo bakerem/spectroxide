@@ -6,9 +6,9 @@ B. Table 1 visibility recipe per spectrum: NC-strip, cooling baseline subtracted
    model (3/kappa_c) P M_nc + (J_y/4) Y_nc times drho, cost trapz[(x^3 (model-data))^2] on [0.5,20],
    P and J_y free (closed-form 2x2).
 """
-import json, sys
+import json, os, sys
 import numpy as np
-R = "/home/bakerem/spectroxide"
+R = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 sys.path.insert(0, R + "/python")
 from spectroxide.greens import mu_shape, y_shape, g_bb, j_y, j_mu, j_bb_star
 from spectroxide.cosmotherm import load_greens_database, cosmotherm_gf_to_delta_n

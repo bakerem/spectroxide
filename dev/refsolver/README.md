@@ -353,7 +353,7 @@ could appear that is not a bug in either code.
 
 ## 3. Self-tests (run on every invocation)
 
-    /home/bakerem/miniforge3/bin/python refsolver.py --selftest-only --N 2049
+    python refsolver.py --selftest-only --N 2049
 
 | test | quantity | value |
 |---|---|---|
@@ -405,6 +405,6 @@ ledger, three fit weightings), `outputs/spectrum_<case>.csv` (`x, delta_n`,
 
 ## 4. Reproducing
 
-    /home/bakerem/miniforge3/bin/python refsolver.py --selftest-only
+    python refsolver.py --selftest-only
     ./run_matrix.sh          # ~25 min, sequential
-    /home/bakerem/miniforge3/bin/python collect.py
+    python collect.py

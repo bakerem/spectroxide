@@ -15,7 +15,7 @@ and the X_e(z) source are in heatloss_common.py.
 
 Target of tests/heat_delivery.rs::decay_at_recombination_delivers_independent_fraction
 (lifetime at z = 1000):
-    python decay_delivery_expectation.py 10 7.1838e-14 5e4 200   ->  0.99417
+    python decay_delivery_expectation.py 10 7.1838e-14 5e4 200   ->  0.99418
 
 Usage: python decay_delivery_expectation.py F_X_EV GAMMA Z_START Z_END [--ledger FILE]
 """

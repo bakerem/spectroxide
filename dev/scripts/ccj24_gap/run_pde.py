@@ -1,8 +1,9 @@
-import sys, numpy as np
+import os, sys, numpy as np
 from spectroxide import g_bb
 from spectroxide.solver import solve
 from spectroxide.dark_photon import gc_per_epsilon_sq
-ccj = np.loadtxt('/home/bakerem/spectroxide/dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt')
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+ccj = np.loadtxt(os.path.join(REPO_ROOT, 'dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt'))
 ccj = ccj[ccj[:, 0] <= 1.5e-4]  # drop the contour-closure row at m ~ 1e-3 eV
 def eps_pub(m):
     return 10**np.interp(np.log10(m), np.log10(ccj[:,0]), np.log10(ccj[:,1]))

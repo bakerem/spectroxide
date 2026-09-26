@@ -1,7 +1,10 @@
+import os
 import numpy as np
 from scipy.stats import norm
 from scipy.optimize import brentq
 from stats import *
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 def convs(a, s):
     k = a/s
     out = {}
@@ -12,7 +15,7 @@ def convs(a, s):
     out['chi2(g)-chi2(0)=3.84'] = k+np.sqrt(k*k+3.84) if k<0 else k+1.96
     out['Feldman-Cousins-like: 1.645 at k=0 bound'] = None
     return {kk: v for kk, v in out.items() if v is not None}
-ccj = np.loadtxt('/home/bakerem/spectroxide/dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt')
+ccj = np.loadtxt(os.path.join(REPO_ROOT, 'dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt'))
 ccj = ccj[ccj[:, 0] <= 1.5e-4]  # drop the contour-closure row at m ~ 1e-3 eV
 epub = lambda m: 10**np.interp(np.log10(m), np.log10(ccj[:,0]), np.log10(ccj[:,1]))
 import glob

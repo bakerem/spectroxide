@@ -1,8 +1,8 @@
 """Plot mu and 4y per unit energy for three estimators, PDE (markers) and CosmoTherm (lines),
 with residuals relative to the visibility fit. Usage: plot.py est.json out.pdf"""
-import json, sys, numpy as np, matplotlib
+import json, os, sys, numpy as np, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-sys.path.insert(0, "/home/bakerem/spectroxide/python")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "python")))
 from spectroxide import apply_style, C, DOUBLE_COL
 from spectroxide.greens import j_y, j_mu, j_bb_star
 apply_style()

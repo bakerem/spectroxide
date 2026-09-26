@@ -1,6 +1,8 @@
+import os
 import numpy as np, glob
 from stats import *
-ccj = np.loadtxt('/home/bakerem/spectroxide/dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt')
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+ccj = np.loadtxt(os.path.join(REPO_ROOT, 'dev/AxionLimits/limit_data/DarkPhoton/COBEFIRAS_Chluba.txt'))
 ccj = ccj[ccj[:, 0] <= 1.5e-4]  # drop the contour-closure row at m ~ 1e-3 eV
 epub = lambda m: 10**np.interp(np.log10(m), np.log10(ccj[:,0]), np.log10(ccj[:,1]))
 steps = [

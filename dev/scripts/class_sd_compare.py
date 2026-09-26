@@ -8,7 +8,7 @@ arXiv:1910.04619) computes mu, y from heating histories via
 Green's-function/branching-ratio methods — a different group, language, and
 numerical approach.
 
-CLASS build: v3.3.0, commit 0ceb7a9, at /home/bakerem/CLASS (binary prebuilt).
+CLASS build: v3.3.0, commit 0ceb7a9, at CLASS_DIR (default ~/CLASS, binary prebuilt).
 Cosmology matched to Cosmology::default() (Chluba 2013 / CosmoTherm):
   h=0.71, Omega_b=0.044, Omega_m=0.26 -> omega_b=0.0221836, omega_cdm=0.1088856,
   T_cmb=2.726, Y_p=0.24, N_eff=3.046 (N_ur=3.046, N_ncdm=0).
@@ -46,7 +46,7 @@ from __future__ import annotations
 import argparse, json, os, re, subprocess, sys
 import numpy as np
 
-CLASS_DIR = "/home/bakerem/CLASS"
+CLASS_DIR = os.environ.get("CLASS_DIR", os.path.expanduser("~/CLASS"))
 CLASS_BIN = os.path.join(CLASS_DIR, "class")
 SPX_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(SPX_ROOT, "dev", "output", "class_sd")
@@ -353,7 +353,7 @@ def decay_fraction_for_spx(f_x_ev, y_p=0.24, omega_b=0.044, omega_cdm=None):
 def run_case_decay(gamma_x=1.1e-10, f_x_ev=7.8e5):
     """Case B — decaying particle. Paper Fig-4 values: gamma_x=1.1e-10/s,
     f_x=7.8e5 eV. TODO(run): needs CLASS + PDE builds (serialise vs other heavy
-    builds on this 7GB box, see ROUND2_STATUS.md). Steps:
+    builds on this 7GB box, see dev/audit/ROUND2_STATUS.md at commit 6f549fc). Steps:
       1. f_dec = decay_fraction_for_spx(f_x_ev); write CLASS ini with
          DM_decay_Gamma=gamma_x, DM_decay_fraction=f_dec, sd_only_exotic=yes.
       2. Run CLASS -> mu,y + _sd_heating.dat.
