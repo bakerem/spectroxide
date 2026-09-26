@@ -22,7 +22,7 @@ the physics obey that nothing in `tests/` currently checks?**
   `bremsstrahlung.rs`, `electron_temp.rs`.
 - **Out:** validation-guard mutants (declared out of scope in `R2_WRAPUP_TODO.md`
   §8), Python `firas.py` mutation triage (same), R1 CLASS and R3 refsolver
-  (separate workstreams, tracked in `ROUND2_STATUS.md`).
+  (separate workstreams, tracked in `ROUND2_STATUS.md` (removed 2026-09-26; in git history at `6f549fc`)).
 
 All new tests live in **`tests/physics_identities.rs`** except the bump-drift
 characterisation, which needs crate-private helpers and sits in

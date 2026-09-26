@@ -192,7 +192,7 @@ down as fact; then reclassify all 68.
 41% conversion rate; the campaign is reported as a verified ≥63.6% lower bound
 with per-module lean bounds, not a headline score. No silent caps (CLAUDE.md).
 
-**C4 —** update `ROUND2_STATUS.md`: R2 → CLOSED (truncated). **C5 —** write the
+**C4 —** update `ROUND2_STATUS.md` (removed 2026-09-26; in git history at `6f549fc`): R2 → CLOSED (truncated). **C5 —** write the
 referee-reply paragraph (`mutation_audit.md` placeholder, line 542).
 
 ## 6. Optional — the one run worth doing before closing (~4 h, not 13 days)

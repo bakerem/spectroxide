@@ -204,7 +204,7 @@ published curves. Consequences:
 
 **R3 (landed, with a scoped claim).** All five contract cases agree with the
 clean-room Chang–Cooper solver to 0.32–0.87% on the dominant component, inside
-the contract's 2–5% bands (table in `ROUND2_STATUS.md`). But the claim is
+the contract's 2–5% bands (table in `ROUND2_STATUS.md` (removed 2026-09-26; in git history at `6f549fc`)). But the claim is
 **independent discretisation, not independent code**: the specification is
 shared and is a demonstrated common-mode channel (findings F-R3-1, F-R3-3), and
 project CLAUDE.md leaks the reference flux splitting into subagent context. So:

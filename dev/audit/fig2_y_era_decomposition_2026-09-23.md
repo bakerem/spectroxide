@@ -36,7 +36,7 @@ CosmoTherm shows it too (1.0069 at z_h = 2514). Cause not pinned.
 
 - Paper lines 666–678 and the Fig. 2 caption: "sub-percent for z_h ≲ 1e4" and "y-era (z_h ≲ 5e4)"
   are wrong; flagged with `\rtodo` for EB. PDE agrees with CosmoTherm to 0.3%, so the solver is fine.
-- R1-A′ (open y-excess finding, `dev/audit/ROUND2_STATUS.md`) compares fitted y between codes; it
+- R1-A′ (open y-excess finding, `dev/audit/ROUND2_STATUS.md` (removed 2026-09-26; in git history at `6f549fc`)) compares fitted y between codes; it
   should be rechecked with identical decompositions on both sides. Not done.
 
 Scripts: session scratchpad `yera/` (`sweep.pkl`, `ana.py`, `y2b.py`, `ygam.py`). The CosmoTherm

@@ -25,7 +25,8 @@ Infrastructure delivered in this phase:
   1e-11, table/quadrature-mediated groups to 1e-5–5e-3 with the cause stated.
 - **Assertion inventory** (`dev/scripts/extract_test_assertions.py` →
   `dev/audit/test_assertions.json`): 1343 numeric assertions in 619 tests,
-  input to the B0 provenance census (`TEST_PROVENANCE.md`).
+  input to the B0 provenance census (`TEST_PROVENANCE.md`). Both files were
+  removed 2026-09-26 as stale and are kept in git history at commit `6f549fc`.
 
 Findings P0-1 … P0-3 were discovered (P0-1 by the referee, P0-2/P0-3 by the
 parity harness on its first run) as Rust↔Python divergences where the Rust
@@ -134,10 +135,12 @@ figures are regenerated (Phase 4 / B4).
 
 ## B0 test-provenance census (complete)
 
-`dev/audit/TEST_PROVENANCE.md` classifies all 624 tests carrying numeric
-assertions (1343 assertions; inventory in `test_assertions.json`, raw
-classification fragments in `census/`, removed 2026-09-24 and kept in git
-history at commit `492842a`):
+`dev/audit/TEST_PROVENANCE.md` classified all 624 tests carrying numeric
+assertions as of 2026-07-03 (1343 assertions; inventory in
+`test_assertions.json`, raw classification fragments in `census/`). The
+fragments were removed 2026-09-24 (git history at commit `492842a`); the census
+and inventory were removed 2026-09-26 as stale (git history at commit
+`6f549fc`):
 
 | Class | Tests |
 |---|---|

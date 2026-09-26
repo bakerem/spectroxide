@@ -25,7 +25,7 @@ running in the repo directly:
    root-owned read-only `devtmpfs` bind-mount of `/dev/null`, not a regular
    file. cargo-mutants' default *copy-mode* tries to copy it and dies with
    "Permission denied"; it cannot be removed without root (documented in
-   `ROUND2_STATUS.md`). The isolated copy has no such device, so runs proceed
+   `ROUND2_STATUS.md` (removed 2026-09-26; in git history at `6f549fc`)). The isolated copy has no such device, so runs proceed
    with `--in-place` there (copy-mode's tree-copy is redundant once the tree is
    already an isolated throwaby copy, and `--in-place` reuses one primed
    `target/` — critical on this 7 GB RAM box, which OOMs on concurrent cold

@@ -141,3 +141,6 @@ __pycache__/
 .pytest_cache/
 .coverage
 *.egg-info/
+
+# Per-mass PDE run cache for dev/scripts/dp_firas_pde_limits.py
+/dev/data/dp_pde_limit_runs/

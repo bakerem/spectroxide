@@ -1,6 +1,6 @@
 # Plan: code attribution and paper updates after the 2026-09-22 review (2026-09-23)
 
-Source of the items: `dev/audit/paper_impact_2026-09-23.md`. Paper: `~/cosmoxide/paper/paper.tex`.
+Source of the items: `~/cosmoxide/paper/paper_impact_2026-09-23.md` (moved out of this repo 2026-09-26). Paper: `~/cosmoxide/paper/paper.tex`.
 Paper edits use the referee-round markup (`\radd`, `\rdel`, `\rtodo`) and are left uncommitted
 for EB to review.
 
@@ -120,3 +120,10 @@ Stopped by an out-of-memory kill, resume one at a time:
 - Review follow-ups on 190390d done (928346d): x_range tests, j_y_fit column name, wrapped line.
 - Still open, each waits for EB's go-ahead (one heavy job at a time): Fig. 8 PDE limits rerun; item 10 (R1-A′ recheck).
 - Paper text for Fig. 2 (line 666, \rtodo, caption, appendix estimator rationale) is EB's.
+
+## 2026-09-24 afternoon
+- EB approved both heavy jobs, run one at a time. Fig. 8 PDE limits rerun started first (new cache `dev/data/dp_firas_pde_limits_2026-09-24.npz`, per-mass files in the session scratchpad `fig8/`); item 10 (R1-A′) starts after it finishes.
+- Paper (uncommitted, cosmoxide): `Draine2011` placeholder replaced by `2011piim.book.....D` (2 places, `\rtodo` trimmed to the equation-number check); `Chluba:2013kua` (Chluba 2014, MNRAS 440, 2544) added with `\replace` next to Chluba2013greens/Chluba2015photon at the visibility parameterization and the literature-values sentence. The J_bb* fit itself is Chluba (2015) Eq. 13, "using the results of Chluba (2014)". Test build clean.
+- Item 10 (R1-A′ recheck and the low-z y floor) SCRAPPED by EB 2026-09-24: not important for the paper. Likely cause on record: fitted y vs CLASS's energy-branching y (`fitted-y-not-energy`); never tested.
+- Fig. 8 rerun DONE: `dev/data/dp_firas_pde_limits_2026-09-24.npz` (67 masses, m ≤ 1e-4 eV per EB; script `dev/scripts/dp_firas_pde_limits.py`, both notebooks' grids cut at 1e-4). New/old limits 0.9985–1.0021 (median 1.0000), all converged; figure unchanged. Old cache not replaced yet (EB's call).
+- Item 9 (option 1, EB): cap warning now depends on the redshift where ρ_e hits the cap (`HEATING_CAP_Z_RECOMBINATION` = 1500) and reports the heat shortfall at run end; amplitude-limit table in `docs/api/solver.rst`. Found: narrow bursts hit the cap before recombination too (2e-4 at z_h = 3000 delivers 83%), where only the cap is at fault. Paper bursts have ≥5× margin. Raising the caps (option 2) not done.
