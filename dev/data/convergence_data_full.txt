@@ -1,4 +1,4 @@
-[1m[92m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`release` profile [optimized]]8;;\ target(s) in 0.04s
+[1m[92m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`release` profile [optimized]]8;;\ target(s) in 0.10s
 [1m[92m     Running[0m tests/convergence_order.rs (/home/bakerem/spectroxide/target/release/deps/convergence_order-91dbe124549caa38)
 
 running 1 test
@@ -29,43 +29,43 @@ CONV|pure_kompaneets|spectral|4000|0.0005|0|0|0|4.03810587e-9|0
   Spectral L2 orders: [2.094798658212056, 2.0231649573173622, 2.045079411674758, 2.145923027842755]
 
 --- Spatial: Full Physics ---
-CONV|full_physics|spatial|250|0.0005|1.55751242e-5|-4.51336647e-9|1.01604889e-5|2.05967060e-5|6308
-CONV|full_physics|spatial|500|0.0005|1.52758004e-5|1.21748920e-8|1.00315657e-5|1.95256025e-5|6308
-CONV|full_physics|spatial|1000|0.0005|1.52069242e-5|1.60278942e-8|1.00016084e-5|1.92794605e-5|6308
-CONV|full_physics|spatial|2000|0.0005|1.51896384e-5|1.69823627e-8|9.99410471e-6|1.92185703e-5|6308
-CONV|full_physics|spatial|4000|0.0005|1.51873685e-5|1.70864911e-8|9.99222919e-6|1.92033971e-5|6308
-CONV|full_physics|spatial|8000|0.0005|1.51852356e-5|1.72145390e-8|9.99176050e-6|1.91996080e-5|6308
+CONV|full_physics|spatial|250|0.0005|1.54417669e-5|-1.54559808e-8|1.00600557e-5|2.01220932e-5|6308
+CONV|full_physics|spatial|500|0.0005|1.52493383e-5|9.26710869e-9|1.00087302e-5|1.94298261e-5|6308
+CONV|full_physics|spatial|1000|0.0005|1.52038473e-5|1.50412486e-8|9.99560794e-6|1.92564133e-5|6308
+CONV|full_physics|spatial|2000|0.0005|1.51886326e-5|1.67515061e-8|9.99260488e-6|1.92128418e-5|6308
+CONV|full_physics|spatial|4000|0.0005|1.51857958e-5|1.71149374e-8|9.99185415e-6|1.92019683e-5|6308
+CONV|full_physics|spatial|8000|0.0005|1.51851340e-5|1.72026451e-8|9.99166672e-6|1.91992512e-5|6308
   mu (spatial, full_physics):
-    level 0→1: |diff|=2.9932e-7, order=2.12
-    level 1→2: |diff|=6.8876e-8, order=1.99
-    level 2→3: |diff|=1.7286e-8, order=2.93
-    level 3→4: |diff|=2.2699e-9, order=0.09
-    level 4→5: |diff|=2.1329e-9
-    median order (skipping coarsest): 1.99
+    level 0→1: |diff|=1.9243e-7, order=2.08
+    level 1→2: |diff|=4.5491e-8, order=1.58
+    level 2→3: |diff|=1.5215e-8, order=2.42
+    level 3→4: |diff|=2.8368e-9, order=2.10
+    level 4→5: |diff|=6.6185e-10
+    median order (skipping coarsest): 2.10
 
 --- Spatial spectral: Full Physics ---
-CONV|full_physics|spectral|250|0.0005|0|0|0|1.24558855e-6|0
-CONV|full_physics|spectral|500|0.0005|0|0|0|2.91285204e-7|0
-CONV|full_physics|spectral|1000|0.0005|0|0|0|7.16845890e-8|0
-CONV|full_physics|spectral|2000|0.0005|0|0|0|1.73823143e-8|0
-CONV|full_physics|spectral|4000|0.0005|0|0|0|3.94084136e-9|0
-  Spectral L2 orders: [2.096323259567818, 2.022697519012859, 2.0440428213953585, 2.141044596644152]
+CONV|full_physics|spectral|250|0.0005|0|0|0|8.36430109e-7|0
+CONV|full_physics|spectral|500|0.0005|0|0|0|2.10788293e-7|0
+CONV|full_physics|spectral|1000|0.0005|0|0|0|5.27747562e-8|0
+CONV|full_physics|spectral|2000|0.0005|0|0|0|1.25706551e-8|0
+CONV|full_physics|spectral|4000|0.0005|0|0|0|2.88484353e-9|0
+  Spectral L2 orders: [1.9884502515712033, 1.9978748314799586, 2.069788176706242, 2.1234948540832654]
 
 --- Spatial: Gaussian ---
-CONV|gaussian|spatial|250|0.0005|-1.29384971e-4|-1.26429272e-5|5.64415676e-4|3.42702880e-4|705
-CONV|gaussian|spatial|500|0.0005|-1.25617084e-4|-1.28097943e-5|5.64410624e-4|3.40892076e-4|705
-CONV|gaussian|spatial|1000|0.0005|-1.25086992e-4|-1.28260185e-5|5.64398434e-4|3.40455885e-4|705
-CONV|gaussian|spatial|2000|0.0005|-1.24948794e-4|-1.28305255e-5|5.64394940e-4|3.40347260e-4|705
-CONV|gaussian|spatial|4000|0.0005|-1.25264246e-4|-1.28088361e-5|5.64394016e-4|3.40320155e-4|705
-CONV|gaussian|spatial|8000|0.0005|-1.25075114e-4|-1.28208891e-5|5.64393780e-4|3.40313386e-4|705
+CONV|gaussian|spatial|250|0.0005|-1.26775322e-4|-1.28296201e-5|5.64210534e-4|3.42967147e-4|705
+CONV|gaussian|spatial|500|0.0005|-1.25575647e-4|-1.28170925e-5|5.64352004e-4|3.40964033e-4|705
+CONV|gaussian|spatial|1000|0.0005|-1.25795440e-4|-1.27808264e-5|5.64384038e-4|3.40471149e-4|705
+CONV|gaussian|spatial|2000|0.0005|-1.25083487e-4|-1.28219927e-5|5.64391276e-4|3.40351063e-4|705
+CONV|gaussian|spatial|4000|0.0005|-1.25071908e-4|-1.28214407e-5|5.64393093e-4|3.40321105e-4|705
+CONV|gaussian|spatial|8000|0.0005|-1.25076989e-4|-1.28207830e-5|5.64393548e-4|3.40313623e-4|705
 
 --- Spatial spectral: Gaussian ---
-CONV|gaussian|spectral|250|0.0005|0|0|0|2.23109313e-6|0
-CONV|gaussian|spectral|500|0.0005|0|0|0|5.40353902e-7|0
-CONV|gaussian|spectral|1000|0.0005|0|0|0|1.33366184e-7|0
-CONV|gaussian|spectral|2000|0.0005|0|0|0|3.26238813e-8|0
-CONV|gaussian|spectral|4000|0.0005|0|0|0|8.15529059e-9|0
-  Spectral L2 orders: [2.045774228710859, 2.0185116965872623, 2.0313925723040707, 2.000120239572386]
+CONV|gaussian|spectral|250|0.0005|0|0|0|2.41243812e-6|0
+CONV|gaussian|spectral|500|0.0005|0|0|0|5.91136602e-7|0
+CONV|gaussian|spectral|1000|0.0005|0|0|0|1.43690564e-7|0
+CONV|gaussian|spectral|2000|0.0005|0|0|0|3.51130874e-8|0
+CONV|gaussian|spectral|4000|0.0005|0|0|0|8.84590171e-9|0
+  Spectral L2 orders: [2.0289284788815927, 2.040526229360353, 2.0328845627411636, 1.9889277371967238]
 
 --- Temporal: Pure Kompaneets ---
 CONV|pure_kompaneets|temporal|4000|0.02|1.51391301e-5|1.72951665e-8|9.95426093e-6|1.97194190e-5|581
@@ -83,18 +83,18 @@ CONV|pure_kompaneets|temporal|4000|0.0005|1.51927396e-5|1.70924139e-8|9.99222763
     median order (skipping coarsest): 1.00
 
 --- Temporal: Full Physics ---
-CONV|full_physics|temporal|4000|0.02|1.51338174e-5|1.72905260e-8|9.95429108e-6|1.91137597e-5|581
-CONV|full_physics|temporal|4000|0.01|1.51062555e-5|1.72254412e-8|9.93681712e-6|1.90838640e-5|609
-CONV|full_physics|temporal|4000|0.005|1.50973297e-5|1.71336372e-8|9.93193411e-6|1.90802629e-5|757
-CONV|full_physics|temporal|4000|0.002|1.51572588e-5|1.71087433e-8|9.97208269e-6|1.91622370e-5|1588
-CONV|full_physics|temporal|4000|0.001|1.51773186e-5|1.70943124e-8|9.98550589e-6|1.91896708e-5|3158
-CONV|full_physics|temporal|4000|0.0005|1.51873685e-5|1.70864911e-8|9.99222919e-6|1.92033971e-5|6308
+CONV|full_physics|temporal|4000|0.02|1.51322563e-5|1.73195740e-8|9.95392654e-6|1.91123513e-5|581
+CONV|full_physics|temporal|4000|0.01|1.51046955e-5|1.72543165e-8|9.93645111e-6|1.90824542e-5|609
+CONV|full_physics|temporal|4000|0.005|1.50957685e-5|1.71622556e-8|9.93156508e-6|1.90788486e-5|757
+CONV|full_physics|temporal|4000|0.002|1.51556900e-5|1.71372535e-8|9.97170969e-6|1.91608131e-5|1588
+CONV|full_physics|temporal|4000|0.001|1.51757472e-5|1.71227809e-8|9.98513153e-6|1.91882437e-5|3158
+CONV|full_physics|temporal|4000|0.0005|1.51857958e-5|1.71149374e-8|9.99185415e-6|1.92019683e-5|6308
   mu (temporal, full_physics):
-    level 0→1: |diff|=2.7562e-8, order=1.63
-    level 1→2: |diff|=8.9258e-9, order=-2.75
-    level 2→3: |diff|=5.9929e-8, order=1.58
-    level 3→4: |diff|=2.0060e-8, order=1.00
-    level 4→5: |diff|=1.0050e-8
+    level 0→1: |diff|=2.7561e-8, order=1.63
+    level 1→2: |diff|=8.9271e-9, order=-2.75
+    level 2→3: |diff|=5.9922e-8, order=1.58
+    level 3→4: |diff|=2.0057e-8, order=1.00
+    level 4→5: |diff|=1.0049e-8
     median order (skipping coarsest): 1.00
 
 --- Joint: Pure Kompaneets ---
@@ -103,18 +103,19 @@ CONV|pure_kompaneets|joint|500|0.01|1.51986829e-5|1.23331529e-8|9.97534033e-6|2.
 CONV|pure_kompaneets|joint|1000|0.005|1.51219766e-5|1.60835549e-8|9.94115839e-6|1.97632494e-5|757
 CONV|pure_kompaneets|joint|2000|0.002|1.51648799e-5|1.70093156e-8|9.97394140e-6|1.97865025e-5|1588
 CONV|pure_kompaneets|joint|4000|0.001|1.51826837e-5|1.71000711e-8|9.98550233e-6|1.97994983e-5|3158
+test convergence_study_full_data has been running for over 60 seconds
 CONV|pure_kompaneets|joint|8000|0.0005|1.51906126e-5|1.72201185e-8|9.99175897e-6|1.98098972e-5|6308
 
 --- Joint: Full Physics ---
-CONV|full_physics|joint|250|0.02|1.55155956e-5|-4.25968459e-9|1.01188698e-5|2.04950642e-5|581
-CONV|full_physics|joint|500|0.01|1.51933416e-5|1.23346272e-8|9.97536955e-6|1.94030916e-5|609
-CONV|full_physics|joint|1000|0.005|1.51166413e-5|1.60806639e-8|9.94117608e-6|1.91557016e-5|757
-CONV|full_physics|joint|2000|0.002|1.51595137e-5|1.70048878e-8|9.97394892e-6|1.91773684e-5|1588
-CONV|full_physics|joint|4000|0.001|1.51773186e-5|1.70943124e-8|9.98550589e-6|1.91896708e-5|3158
-CONV|full_physics|joint|8000|0.0005|1.51852356e-5|1.72145390e-8|9.99176050e-6|1.91996080e-5|6308
+CONV|full_physics|joint|250|0.02|1.53865774e-5|-1.51197944e-8|1.00212817e-5|2.00266468e-5|581
+CONV|full_physics|joint|500|0.01|1.51677089e-5|9.45081676e-9|9.95308936e-6|1.93085506e-5|609
+CONV|full_physics|joint|1000|0.005|1.51136920e-5|1.51004188e-8|9.93527178e-6|1.91328877e-5|757
+CONV|full_physics|joint|2000|0.002|1.51585188e-5|1.67745711e-8|9.97245726e-6|1.91716595e-5|1588
+CONV|full_physics|joint|4000|0.001|1.51757472e-5|1.71227809e-8|9.98513153e-6|1.91882437e-5|3158
+CONV|full_physics|joint|8000|0.0005|1.51851340e-5|1.72026451e-8|9.99166672e-6|1.91992512e-5|6308
 
 === Full Convergence Study Complete ===
 test convergence_study_full_data ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 46.23s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 70.09s
 

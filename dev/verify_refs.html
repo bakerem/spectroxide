@@ -1,0 +1,2883 @@
+<!DOCTYPE html>
+<!--
+BibCheck: step through a .bib file and compare each entry with its CrossRef record.
+
+Open this file in a browser (file:// works). Only the CrossRef lookups need a network.
+
+The built-in references are a verbatim copy of the paper's refs.bib in the
+<script id="builtin-bib"> block below. The paper lives in the cosmoxide repository;
+spectroxide keeps an identical copy of this page. To refresh the references after
+editing the bibliography, run this from the root of either repository:
+
+python3 - <<'EOF'
+import pathlib, re
+page = pathlib.Path("dev/verify_refs.html")
+bib = next(p for p in map(pathlib.Path, ["paper/refs.bib", "../cosmoxide/paper/refs.bib"])
+           if p.exists()).read_text()
+assert "</script" not in bib.lower()
+text = re.sub(r'(<script type="text/plain" id="builtin-bib">\n).*?(</script>)',
+              lambda m: m[1] + bib + m[2], page.read_text(), count=1, flags=re.S)
+page.write_text(text)
+EOF
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BibCheck</title>
+<style>
+:root {
+    color-scheme: light;
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #f0f2f5;
+    --border: #e1e4ea;
+    --text: #1b2130;
+    --muted: #677084;
+    --faint: #9aa2b1;
+    --accent: #3563d6;
+    --accent-soft: rgba(53, 99, 214, 0.10);
+    --ok: #1c8a4c;
+    --ok-soft: rgba(28, 138, 76, 0.10);
+    --warn: #a86a00;
+    --warn-soft: rgba(214, 150, 0, 0.13);
+    --bad: #c93434;
+    --bad-soft: rgba(201, 52, 52, 0.10);
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #0e1116;
+        --surface: #161a21;
+        --surface-2: #1d222b;
+        --border: #2a303b;
+        --text: #e5e8ee;
+        --muted: #939bab;
+        --faint: #636b7a;
+        --accent: #7ea2ff;
+        --accent-soft: rgba(126, 162, 255, 0.13);
+        --ok: #4fd18b;
+        --ok-soft: rgba(79, 209, 139, 0.12);
+        --warn: #f2c14e;
+        --warn-soft: rgba(242, 193, 78, 0.13);
+        --bad: #ff7b7b;
+        --bad-soft: rgba(255, 123, 123, 0.12);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e1116;
+    --surface: #161a21;
+    --surface-2: #1d222b;
+    --border: #2a303b;
+    --text: #e5e8ee;
+    --muted: #939bab;
+    --faint: #636b7a;
+    --accent: #7ea2ff;
+    --accent-soft: rgba(126, 162, 255, 0.13);
+    --ok: #4fd18b;
+    --ok-soft: rgba(79, 209, 139, 0.12);
+    --warn: #f2c14e;
+    --warn-soft: rgba(242, 193, 78, 0.13);
+    --bad: #ff7b7b;
+    --bad-soft: rgba(255, 123, 123, 0.12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
+body {
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.mono { font-family: var(--mono); }
+
+kbd {
+    display: inline-block;
+    min-width: 22px;
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+    color: var(--muted);
+}
+
+/* ---------- Header ---------- */
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--surface);
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.filename {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 6px;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.spacer { flex: 1; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    font-size: 13.5px;
+    color: var(--text);
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover { background: var(--surface-2); }
+.btn:focus-visible, .verdict-btn:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--bad); }
+
+.jump {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+#jump-input {
+    width: 60px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    text-align: center;
+}
+
+.progress-track {
+    height: 3px;
+    background: var(--border);
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width 0.25s ease;
+}
+
+/* ---------- Main review layout ---------- */
+
+main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+#app {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(340px, 2fr) 3fr;
+    gap: 16px;
+    padding: 16px 20px;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow-y: auto;
+    min-height: 0;
+}
+
+#entry-panel {
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: box-shadow 0.25s, border-color 0.25s;
+}
+
+#entry-panel.flash-correct { border-color: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+#entry-panel.flash-revision { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
+#entry-panel.flash-skipped { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft); }
+
+.entry-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.entry-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+#cite-key {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent);
+    word-break: break-all;
+}
+
+.chip {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 12px;
+    font-family: var(--mono);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.badge::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.badge.pending { background: var(--surface-2); color: var(--muted); }
+.badge.correct { background: var(--ok-soft); color: var(--ok); }
+.badge.revision { background: var(--bad-soft); color: var(--bad); }
+.badge.skipped { background: var(--warn-soft); color: var(--warn); }
+
+#entry-title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+}
+
+#fields {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    column-gap: 14px;
+    row-gap: 7px;
+    font-size: 14px;
+}
+
+#fields dt {
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-top: 2px;
+}
+
+#fields dd { overflow-wrap: anywhere; }
+
+details.source summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    user-select: none;
+}
+
+details.source pre {
+    margin-top: 8px;
+    padding: 12px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+}
+
+.verdicts {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.verdict-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.verdict-btn kbd { font-weight: 400; }
+.verdict-btn.revision { color: var(--bad); }
+.verdict-btn.skipped { color: var(--warn); }
+.verdict-btn.correct { color: var(--ok); }
+.verdict-btn.revision:hover { background: var(--bad-soft); border-color: var(--bad); }
+.verdict-btn.skipped:hover { background: var(--warn-soft); border-color: var(--warn); }
+.verdict-btn.correct:hover { background: var(--ok-soft); border-color: var(--ok); }
+
+.nav-hint {
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: center;
+}
+
+/* ---------- CrossRef panel ---------- */
+
+#crossref-panel { padding: 20px 22px; }
+
+.cr-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.cr-header h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: auto;
+}
+
+.link-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--accent);
+    background: var(--surface);
+}
+
+.link-pill:hover { background: var(--accent-soft); text-decoration: none; }
+
+.verdict {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.verdict .icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    color: var(--surface);
+    flex: none;
+}
+
+.verdict.ok { background: var(--ok-soft); color: var(--ok); }
+.verdict.ok .icon { background: var(--ok); }
+.verdict.warn { background: var(--warn-soft); color: var(--warn); }
+.verdict.warn .icon { background: var(--warn); }
+.verdict.fail { background: var(--bad-soft); color: var(--bad); }
+.verdict.fail .icon { background: var(--bad); }
+.verdict.none { background: var(--surface-2); color: var(--muted); }
+.verdict.none .icon { background: var(--faint); }
+
+.verdict .sub { font-weight: 400; color: var(--muted); font-size: 13px; }
+
+.cmp {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.cmp th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.cmp td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    overflow-wrap: break-word;
+}
+
+.cmp tr:last-child td { border-bottom: none; }
+
+.cmp td.field {
+    width: 92px;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    border-left: 3px solid transparent;
+}
+
+.cmp td.mark { width: 28px; text-align: center; font-weight: 700; }
+.cmp td .note { display: block; margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+.cmp td .none { color: var(--faint); font-style: italic; }
+
+.cmp tr.match td.field { border-left-color: var(--ok); }
+.cmp tr.match td.mark { color: var(--ok); }
+.cmp tr.partial td.field { border-left-color: var(--warn); }
+.cmp tr.partial td.mark { color: var(--warn); }
+.cmp tr.partial td { background: var(--warn-soft); }
+.cmp tr.mismatch td.field { border-left-color: var(--bad); }
+.cmp tr.mismatch td.mark { color: var(--bad); }
+.cmp tr.mismatch td { background: var(--bad-soft); }
+.cmp tr.info td.field { border-left-color: var(--border); }
+.cmp tr.info td.mark { color: var(--faint); }
+
+.empty-state {
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.empty-state p + p { margin-top: 8px; }
+
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    padding: 8px 0;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Footer status bar ---------- */
+
+footer {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 9px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    flex-wrap: wrap;
+}
+
+.count { display: inline-flex; align-items: center; gap: 6px; }
+.count b { color: var(--text); font-variant-numeric: tabular-nums; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.correct { background: var(--ok); }
+.dot.revision { background: var(--bad); }
+.dot.skipped { background: var(--warn); }
+.dot.pending { background: var(--faint); }
+
+.keys { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+
+/* ---------- Upload page ---------- */
+
+#upload-page {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 40px 16px;
+    text-align: center;
+}
+
+#upload-page h1 { font-size: 28px; letter-spacing: -0.02em; }
+#upload-page p { max-width: 480px; color: var(--muted); }
+
+#drop-zone {
+    width: min(440px, 100%);
+    padding: 40px 20px;
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+#drop-zone:hover, #drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+}
+
+#drop-zone svg { width: 34px; height: 34px; color: var(--accent); }
+#drop-zone strong { color: var(--text); font-weight: 600; }
+
+#bib-file-input { display: none; }
+
+/* ---------- Summary page ---------- */
+
+#summary-page {
+    flex: 1;
+    display: none;
+    overflow-y: auto;
+    padding: 28px 20px 40px;
+}
+
+.summary-inner { max-width: 860px; margin: 0 auto; }
+
+.summary-inner h2 { font-size: 24px; letter-spacing: -0.01em; margin-bottom: 6px; }
+.summary-inner .lede { color: var(--muted); margin-bottom: 22px; }
+
+.summary-section { margin-bottom: 26px; }
+
+.summary-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.summary-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.summary-ref {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 9px 14px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    text-align: left;
+}
+
+.summary-ref:last-child { border-bottom: none; }
+.summary-ref:hover { background: var(--surface-2); }
+.summary-ref .key { font-family: var(--mono); color: var(--accent); font-weight: 600; font-size: 13.5px; }
+.summary-ref .info { color: var(--muted); font-size: 13px; text-align: right; }
+
+.summary-actions { display: flex; gap: 8px; }
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 860px) {
+    body { height: auto; min-height: 100%; }
+    #app { grid-template-columns: 1fr; padding: 12px 16px; }
+    .panel { overflow: visible; }
+    header { padding: 10px 16px; }
+    footer { padding: 9px 16px; }
+    .keys { display: none; }
+    #fields { grid-template-columns: 80px 1fr; }
+}
+
+/* Phones: one comparison row becomes a small card with the two values stacked. */
+@media (max-width: 600px) {
+    .cmp thead { display: none; }
+    .cmp, .cmp tbody { display: block; }
+    .cmp tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        border-bottom: 1px solid var(--border);
+        border-left: 3px solid var(--border);
+        padding: 6px 0;
+    }
+    .cmp tr.match { border-left-color: var(--ok); }
+    .cmp tr.partial { border-left-color: var(--warn); background: var(--warn-soft); }
+    .cmp tr.mismatch { border-left-color: var(--bad); background: var(--bad-soft); }
+    .cmp tr td, .cmp tr.partial td, .cmp tr.mismatch td { background: none; border: none; padding: 3px 10px; }
+    .cmp td.field { width: auto; border-left: none; }
+    .cmp td[data-label] { grid-column: 1 / -1; }
+    .cmp td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="brand"><span class="brand-mark">B</span>BibCheck</div>
+    <span id="toolbar-filename" class="filename" hidden></span>
+    <span class="spacer"></span>
+    <div class="jump review-only" hidden>
+        <label for="jump-input">Entry</label>
+        <input type="number" id="jump-input" min="1">
+        <span id="progress-text">0 / 0</span>
+    </div>
+    <button class="btn review-only" hidden onclick="showSummary()">Summary</button>
+    <button class="btn" onclick="showUploadPage()">Load .bib</button>
+    <button class="btn review-only" hidden onclick="exportResults()">Export JSON</button>
+    <button class="btn danger review-only" hidden onclick="resetAll()">Reset</button>
+</header>
+<div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+
+<main>
+    <section id="upload-page">
+        <h1>Check a bibliography</h1>
+        <p>Step through a .bib file one entry at a time and compare each with its CrossRef record. Your verdicts are saved in this browser.</p>
+        <button id="drop-zone" type="button" onclick="document.getElementById('bib-file-input').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="M9.5 13.5 12 11l2.5 2.5"/>
+            </svg>
+            <strong>Drop a .bib file here</strong>
+            <span>or click to browse</span>
+        </button>
+        <input type="file" id="bib-file-input" accept=".bib,text/plain">
+        <button class="btn primary" onclick="startWithBuiltin()">Use the paper's refs.bib</button>
+    </section>
+
+    <div id="app" hidden>
+        <section class="panel" id="entry-panel">
+            <div class="entry-top">
+                <span id="entry-position"></span>
+                <span id="current-status" class="badge pending">pending</span>
+            </div>
+            <div class="entry-head">
+                <span id="cite-key"></span>
+                <span class="chip" id="entry-type"></span>
+            </div>
+            <div id="entry-title"></div>
+            <dl id="fields"></dl>
+            <details class="source">
+                <summary>BibTeX source</summary>
+                <pre id="entry-source"></pre>
+            </details>
+            <div class="verdicts">
+                <button class="verdict-btn revision" onclick="markAndAdvance('revision')">Needs revision <kbd>&larr;</kbd></button>
+                <button class="verdict-btn skipped" onclick="markAndAdvance('skipped')">Skip <kbd>&darr;</kbd></button>
+                <button class="verdict-btn correct" onclick="markAndAdvance('correct')">Correct <kbd>&rarr;</kbd></button>
+            </div>
+            <div class="nav-hint"><kbd>[</kbd> previous &nbsp; <kbd>]</kbd> next &nbsp; (moves without changing a verdict)</div>
+        </section>
+
+        <section class="panel" id="crossref-panel">
+            <div id="crossref-content"></div>
+        </section>
+    </div>
+
+    <section id="summary-page"></section>
+</main>
+
+<footer id="status-bar">
+    <span class="count"><span class="dot correct"></span><b id="count-correct">0</b> correct</span>
+    <span class="count"><span class="dot revision"></span><b id="count-revision">0</b> need revision</span>
+    <span class="count"><span class="dot skipped"></span><b id="count-skipped">0</b> skipped</span>
+    <span class="count"><span class="dot pending"></span><b id="count-remaining">0</b> remaining</span>
+    <span class="keys"><kbd>&rarr;</kbd> correct <kbd>&larr;</kbd> revise <kbd>&darr;</kbd> skip</span>
+</footer>
+
+<script type="text/plain" id="builtin-bib">
+% References for spectroxide paper
+% Verified against Crossref/arXiv/INSPIRE/ADS, 2026-09-29
+
+@article{Ellis:1990nb,
+    author = "Ellis, John R. and Gelmini, G. B. and Lopez, Jorge L. and Nanopoulos, Dimitri V. and Sarkar, Subir",
+    title = "{Astrophysical constraints on massive unstable neutral relic particles}",
+    reportNumber = "CERN-TH-5853-90, CTP-TAMU-96-90, ACT-24",
+    doi = "10.1016/0550-3213(92)90438-H",
+    journal = "Nucl. Phys. B",
+    volume = "373",
+    pages = "399--437",
+    year = "1992"
+}
+
+@misc{OpenAICodex2025,
+    author = {{OpenAI}},
+    title = {Introducing {Codex}},
+    year = {2025},
+    howpublished = {\url{https://openai.com/index/introducing-codex/}},
+    note = {Cloud-based coding agent, released May 2025}
+}
+
+@book{Press2007,
+    author = {Press, William H. and Teukolsky, Saul A. and Vetterling, William T. and Flannery, Brian P.},
+    title = {Numerical Recipes: The Art of Scientific Computing},
+    edition = {3rd},
+    publisher = {Cambridge University Press},
+    year = {2007},
+}
+
+@article{Zeldovich:1969qmq,
+    author = "Zel'dovich, Ya. B. and Kurt, V. G. and Syunyaev, R. A.",
+    title = "{Recombination of Hydrogen in the Hot Model of the Universe}",
+    journal = "Sov. Phys. JETP",
+    volume = "28",
+    pages = "146--150",
+    year = "1969"
+}
+
+@article{Zeldovich1969,
+    author = {Zel'dovich, Ya. B. and Sunyaev, R. A.},
+    title = {The Interaction of Matter and Radiation in a Hot-Model Universe},
+    journal = {Astrophys. Space Sci.},
+    volume = {4},
+    pages = {301--316},
+    year = {1969},
+    doi = {10.1007/BF00661821}
+}
+
+@article{Sunyaev1970mu,
+    author = {Sunyaev, R. A. and Zel'dovich, Ya. B.},
+    title = {Small-Scale Fluctuations of Relic Radiation},
+    journal = {Astrophys. Space Sci.},
+    volume = {7},
+    pages = {3--19},
+    year = {1970},
+    doi = {10.1007/BF00653471}
+}
+
+@article{Sunyaev1970dissipation,
+    author = {Sunyaev, R. A. and Zel'dovich, Ya. B.},
+    title = {The interaction of matter and radiation in the hot model of the Universe, {II}},
+    journal = {Astrophys. Space Sci.},
+    volume = {7},
+    pages = {20--30},
+    year = {1970},
+    doi = {10.1007/BF00653472}
+}
+
+@article{Illarionov1975,
+    author = {Illarionov, A. F. and Sunyaev, R. A.},
+    title = {Comptonization, characteristic radiation spectra, and the thermal balance of low-density plasma},
+    journal = {Sov. Astron.},
+    volume = {18},
+    pages = {413--419},
+    year = {1975}
+}
+
+@article{Kompaneets1957,
+    author = {Kompaneets, A. S.},
+    title = {The establishment of thermal equilibrium between quanta and electrons},
+    journal = {Sov. Phys. JETP},
+    volume = {4},
+    pages = {730--737},
+    year = {1957}
+}
+
+@article{Weymann1965,
+    author = {Weymann, R.},
+    title = {Diffusion Approximation for a Photon Gas Interacting with a Plasma via the Compton Effect},
+    journal = {Phys. Fluids},
+    volume = {8},
+    pages = {2112--2114},
+    year = {1965},
+    doi = {10.1063/1.1761165}
+}
+
+@article{Lightman1981,
+    author = {Lightman, A. P.},
+    title = {Double Compton emission in radiation dominated thermal plasmas},
+    journal = {Astrophys. J.},
+    volume = {244},
+    pages = {392--405},
+    year = {1981},
+    doi = {10.1086/158716}
+}
+
+@article{Thorne1981,
+    author = {Thorne, K. S.},
+    title = {Relativistic radiative transfer: moment formalisms},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {194},
+    pages = {439--473},
+    year = {1981}
+}
+
+@book{Rybicki1979,
+    author = {Rybicki, G. B. and Lightman, A. P.},
+    title = {Radiative Processes in Astrophysics},
+    year = {1979},
+    publisher = {Wiley-Interscience},
+    address = {New York}
+}
+
+@article{BrussaardvandeHulst1962,
+    author = {Brussaard, P. J. and van de Hulst, H. C.},
+    title = {Approximation Formulas for Nonrelativistic Bremsstrahlung and Average Gaunt Factors for a {Maxwellian} Electron Gas},
+    journal = {Rev. Mod. Phys.},
+    volume = {34},
+    pages = {507--520},
+    year = {1962},
+    doi = {10.1103/RevModPhys.34.507}
+}
+
+@article{KarzasLatter1961,
+    author = {Karzas, W. J. and Latter, R.},
+    title = {Electron Radiative Transitions in a Coulomb Field},
+    journal = {Astrophys. J. Suppl.},
+    volume = {6},
+    pages = {167},
+    year = {1961},
+    doi = {10.1086/190063}
+}
+
+@article{Daly1991,
+    author = {Daly, R. A.},
+    title = {Spectral distortions of the microwave background radiation resulting from the damping of pressure waves},
+    journal = {Astrophys. J.},
+    volume = {371},
+    pages = {14--28},
+    year = {1991},
+    doi = {10.1086/169866}
+}
+
+@article{Silk:1968,
+    author = {Silk, J.},
+    title = {Cosmic Black-Body Radiation and Galaxy Formation},
+    journal = {Astrophys. J.},
+    volume = {151},
+    pages = {459},
+    year = {1968},
+    doi = {10.1086/149449}
+}
+
+@article{Hu1993,
+    author = {Hu, W. and Silk, J.},
+    title = {Thermalization and spectral distortions of the cosmic background radiation},
+    journal = {Phys. Rev. D},
+    volume = {48},
+    pages = {485--502},
+    year = {1993},
+    doi = {10.1103/PhysRevD.48.485}
+}
+
+@article{Fixsen1996,
+    author = {Fixsen, D. J. and Cheng, E. S. and Gales, J. M. and Mather, J. C. and Shafer, R. A. and Wright, E. L.},
+    title = {The Cosmic Microwave Background Spectrum from the Full {COBE} {FIRAS} Data Set},
+    journal = {Astrophys. J.},
+    volume = {473},
+    pages = {576--587},
+    year = {1996},
+    doi = {10.1086/178173}
+}
+
+@article{Fixsen2009,
+    author = {Fixsen, D. J.},
+    title = {The Temperature of the Cosmic Microwave Background},
+    journal = {Astrophys. J.},
+    volume = {707},
+    pages = {916--920},
+    year = {2009},
+    doi = {10.1088/0004-637X/707/2/916}
+}
+
+@article{Kogut2011,
+    author = {Kogut, A. and others},
+    title = {The Primordial Inflation Explorer ({PIXIE}): A Nulling Polarimeter for Cosmic Microwave Background Observations},
+    journal = {JCAP},
+    volume = {2011},
+    number = {07},
+    pages = {025},
+    year = {2011},
+    doi = {10.1088/1475-7516/2011/07/025}
+}
+
+@article{Acharya:2021zhq,
+    author = "Acharya, Sandeep Kumar and Chluba, Jens",
+    title = "{CMB spectral distortions from continuous large energy release}",
+    eprint = "2112.06699",
+    archivePrefix = "arXiv",
+    primaryClass = "astro-ph.CO",
+    doi = "10.1093/mnras/stac2137",
+    journal = "Mon. Not. Roy. Astron. Soc.",
+    volume = "515",
+    number = "4",
+    pages = "5775--5789",
+    year = "2022"
+}
+
+% CosmoTherm code paper
+@article{Chluba2012cosmotherm,
+    author = {Chluba, J. and Sunyaev, R. A.},
+    title = {The evolution of {CMB} spectral distortions in the early Universe},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {419},
+    pages = {1294--1314},
+    year = {2012},
+    doi = {10.1111/j.1365-2966.2011.19786.x}
+}
+
+% Double Compton emissivity
+@article{Chluba2007dc,
+    author = {Chluba, J. and Sazonov, S. Yu. and Sunyaev, R. A.},
+    title = {The double {Compton} emissivity in a mildly relativistic thermal plasma within the soft photon limit},
+    journal = {Astron. Astrophys.},
+    volume = {468},
+    pages = {785--795},
+    year = {2007},
+    doi = {10.1051/0004-6361:20066701}
+}
+
+% Chluba2010cosmorec merged into Chluba2011cosmorec2 (same paper, same DOI)
+
+% Review of spectral distortion science
+@inproceedings{Chluba2014review,
+    author = {Chluba, J.},
+    title = {Science with {CMB} spectral distortions},
+    booktitle = {Proceedings of the XLIXth Rencontres de Moriond},
+    year = {2014},
+    eprint = {1405.6938},
+    archivePrefix = {arXiv}
+}
+
+% Distinguishing injection scenarios
+@article{Chluba2013DM,
+    author = {Chluba, J.},
+    title = {Distinguishing different scenarios of early energy release with spectral distortions of the cosmic microwave background},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {436},
+    pages = {2232--2243},
+    year = {2013},
+    doi = {10.1093/mnras/stt1733}
+}
+
+@article{Chluba2012dissipation,
+    author = {Chluba, J. and Khatri, R. and Sunyaev, R. A.},
+    title = {{CMB} at $2 \times 2$ order: the dissipation of primordial acoustic waves and the observable part of the associated energy release},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {425},
+    pages = {1129--1169},
+    year = {2012},
+    doi = {10.1111/j.1365-2966.2012.21474.x}
+}
+
+% Green's function paper
+@article{Chluba2013greens,
+    author = {Chluba, J.},
+    title = {Green's function of the cosmological thermalization problem},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {434},
+    pages = {352--357},
+    year = {2013},
+    doi = {10.1093/mnras/stt1025}
+}
+
+% Photon injection Green's function
+@article{Chluba2015photon,
+    author = {Chluba, J.},
+    title = {Green's function of the cosmological thermalization problem -- {II}. Effect of photon injection and constraints},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {454},
+    pages = {4182--4196},
+    year = {2015},
+    doi = {10.1093/mnras/stv2243}
+}
+
+% CosmoSpec / CRR
+@article{Chluba2016CRR,
+    author = {Chluba, J. and Ali-Ha\"{\i}moud, Y.},
+    title = {{COSMOSPEC}: Fast and detailed computation of the cosmological recombination radiation from hydrogen and helium},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {456},
+    pages = {3494--3508},
+    year = {2016},
+    doi = {10.1093/mnras/stv2691}
+}
+
+% Bremsstrahlung Gaunt factors (BRpack)
+@article{Chluba2020gaunt,
+    author = {Chluba, J. and Ravenni, A. and Bolliet, B.},
+    title = {Improved calculations of electron--ion bremsstrahlung {Gaunt} factors for astrophysical applications},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {492},
+    pages = {177--194},
+    year = {2020},
+    doi = {10.1093/mnras/stz3389}
+}
+
+% Dark photon spectral distortions
+@article{Chluba2024darkphoton,
+    author = {Chluba, J. and Cyr, B. and Johnson, M. C.},
+    title = {Revisiting Dark Photon Constraints from {CMB} Spectral Distortions},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {535},
+    pages = {1874--1887},
+    year = {2024},
+    doi = {10.1093/mnras/stae2464},
+    eprint = {2409.12115},
+    archivePrefix = {arXiv}
+}
+
+@misc{CyrPrivComm,
+    author = {Cyr, Bryce},
+    howpublished = {private communication},
+    year = {2026}
+}
+
+@article{Khatri2012,
+    author = {Khatri, R. and Sunyaev, R. A.},
+    title = {Beyond $y$ and $\mu$: the shape of the {CMB} spectral distortions in the intermediate epoch, $1.5 \times 10^4 < z < 2 \times 10^5$},
+    journal = {JCAP},
+    volume = {2012},
+    number = {09},
+    pages = {016},
+    year = {2012},
+    doi = {10.1088/1475-7516/2012/09/016}
+}
+
+% CLASS-SD
+@article{Lucca2020,
+    author = {Lucca, M. and Sch{\"o}neberg, N. and Hooper, D. C. and Lesgourgues, J. and Chluba, J.},
+    title = {The synergy between {CMB} spectral distortions and anisotropies},
+    journal = {JCAP},
+    volume = {2020},
+    number = {02},
+    pages = {026},
+    year = {2020},
+    doi = {10.1088/1475-7516/2020/02/026}
+}
+
+@article{Bolliet2021,
+    author = {Bolliet, B. and Chluba, J. and Battye, R.},
+    title = {Spectral distortion constraints on photon injection from low-mass decaying particles},
+    journal = {Mon. Not. Roy. Astron. Soc.},
+    volume = {507},
+    pages = {3148--3178},
+    year = {2021},
+    doi = {10.1093/mnras/stab1997}
+}
+
+@article{McDonald2001,
+    author = {McDonald, P. and Scherrer, R. J. and Walker, T. P.},
+    title = {Cosmic microwave background constraint on residual annihilations of relic particles},
+    journal = {Phys. Rev. D},
+    volume = {63},
+    pages = {023001},
+    year = {2000},
+    doi = {10.1103/PhysRevD.63.023001}
+}
+
+@article{ChenKamionkowski2004,
+    author = {Chen, X. and Kamionkowski, M.},
+    title = {Particle decays during the cosmic dark ages},
+    journal = {Phys. Rev. D},
+    volume = {70},
+    pages = {043502},
+    year = {2004},
+    doi = {10.1103/PhysRevD.70.043502}
+}
+
+@article{PadmanabhanFinkbeiner2005,
+    author = {Padmanabhan, N. and Finkbeiner, D. P.},
+    title = {Detecting dark matter annihilation with {CMB} polarization: Signatures and experimental prospects},
+    journal = {Phys. Rev. D},
+    volume = {72},
+    pages = {023508},
+    year = {2005},
+    doi = {10.1103/PhysRevD.72.023508}
+}
+
+@article{Mirizzi2009,
+    author = {Mirizzi, A. and Redondo, J. and Sigl, G.},
+    title = {Microwave background constraints on mixing of photons with hidden photons},
+    journal = {JCAP},
+    volume = {2009},
+    number = {03},
+    pages = {026},
+    year = {2009},
+    doi = {10.1088/1475-7516/2009/03/026}
+}
+
+@article{Holdom1986,
+    author = {Holdom, B.},
+    title = {Two {U}(1)'s and {$\epsilon$} Charge Shifts},
+    journal = {Phys. Lett. B},
+    volume = {166},
+    pages = {196--198},
+    year = {1986},
+    doi = {10.1016/0370-2693(86)91377-8}
+}
+
+
+
+@article{Peebles1968,
+    author = {Peebles, P. J. E.},
+    title = {Recombination of the Primeval Plasma},
+    journal = {Astrophys. J.},
+    volume = {153},
+    pages = {1},
+    year = {1968},
+    doi = {10.1086/149628}
+}
+
+@article{AliHaimoud2011,
+    author = {Ali-Ha\"{\i}moud, Y. and Hirata, C. M.},
+    title = {{HyRec}: A fast and highly accurate primordial hydrogen and helium recombination code},
+    journal = {Phys. Rev. D},
+    volume = {83},
+    pages = {043513},
+    year = {2011},
+    doi = {10.1103/PhysRevD.83.043513}
+}
+
+@article{Sazonov2000,
+    author = {Sazonov, S. Yu. and Sunyaev, R. A.},
+    title = {The Profile of a Narrow Line after Single Scattering by {Maxwellian} Electrons: Relativistic Corrections to the Kernel of the Integral Kinetic Equation},
+    journal = {Astrophys. J.},
+    volume = {543},
+    pages = {28--55},
+    year = {2000},
+    doi = {10.1086/317078}
+}
+
+@misc{Stebbins1997,
+    author = {Stebbins, Albert},
+    title = {Extensions to the {Kompaneets} Equation and {Sunyaev-Zel'dovich} Distortion},
+    year = {1997},
+    eprint = {astro-ph/9709065},
+    archivePrefix = {arXiv}
+}
+
+@article{Challinor1998,
+    author = {Challinor, A. and Lasenby, A.},
+    title = {Relativistic Corrections to the {Sunyaev-Zel'dovich} Effect},
+    journal = {Astrophys. J.},
+    volume = {499},
+    pages = {1--6},
+    year = {1998},
+    doi = {10.1086/305623}
+}
+
+@article{Itoh1998,
+    author = {Itoh, N. and Kohyama, Y. and Nozawa, S.},
+    title = {Relativistic Corrections to the {Sunyaev-Zeldovich} Effect for Clusters of Galaxies},
+    journal = {Astrophys. J.},
+    volume = {502},
+    pages = {7--15},
+    year = {1998},
+    doi = {10.1086/305876}
+}
+
+@incollection{Cranmer2015,
+    author = {Cranmer, K.},
+    title = {Practical Statistics for the {LHC}},
+    booktitle = {Proceedings, 2011 European School of High-Energy Physics ({ESHEP} 2011)},
+    series = {CERN Yellow Reports: School Proceedings},
+    volume = {CERN-2014-003},
+    pages = {267--308},
+    year = {2015},
+    eprint = {1503.07622},
+    archivePrefix = {arXiv},
+    doi = {10.5170/CERN-2014-003.267}
+}
+
+@article{Arsenadze2025,
+    author = {Arsenadze, G. and Caputo, A. and Gan, X. and Liu, H. and Ruderman, J. T.},
+    title = {Shaping Dark Photon Spectral Distortions},
+    journal = {JHEP},
+    volume = {2025},
+    pages = {018},
+    year = {2025},
+    doi = {10.1007/JHEP03(2025)018},
+    eprint = {2409.12940},
+    archivePrefix = {arXiv}
+}
+
+@article{Chluba2021Voyage,
+    author = {Chluba, J. and others},
+    title = {New horizons in cosmology with spectral distortions of the cosmic microwave background},
+    journal = {Exp. Astron.},
+    volume = {51},
+    pages = {1515--1554},
+    year = {2021},
+    doi = {10.1007/s10686-021-09729-5},
+    eprint = {1909.01593},
+    archivePrefix = {arXiv}
+}
+
+@misc{ClaudeCode,
+    author = {{Anthropic}},
+    title = {Claude Code: An Agentic Coding Tool},
+    year = {2025},
+    howpublished = {\url{https://code.claude.com/docs}},
+    note = {Accessed: 2025}
+}
+
+@article{RubinoMartin2006,
+    author = {Rubi\~{n}o-Mart\'{\i}n, J. A. and Chluba, J. and Sunyaev, R. A.},
+    title = {Lines in the cosmic microwave background spectrum from the epoch of cosmological hydrogen recombination},
+    journal = {Mon. Not. R. Astron. Soc.},
+    volume = {371},
+    pages = {1939--1952},
+    year = {2006},
+    doi = {10.1111/j.1365-2966.2006.10839.x},
+    eprint = {astro-ph/0607373},
+    archivePrefix = {arXiv}
+}
+
+@article{Chluba2010electron,
+    author = {Chluba, J.},
+    title = {Could the cosmological recombination spectrum help us understand annihilating dark matter?},
+    journal = {Mon. Not. R. Astron. Soc.},
+    volume = {402},
+    pages = {1195--1207},
+    year = {2010},
+    doi = {10.1111/j.1365-2966.2009.15957.x},
+    eprint = {0910.3663},
+    archivePrefix = {arXiv}
+}
+
+@article{Slatyer2015,
+    author = {Slatyer, Tracy R.},
+    title = {Indirect dark matter signatures in the cosmic dark ages. {II}. {I}onization, heating, and photon production from arbitrary energy injections},
+    journal = {Phys. Rev. D},
+    volume = {93},
+    pages = {023521},
+    year = {2016},
+    doi = {10.1103/PhysRevD.93.023521},
+    eprint = {1506.03812},
+    archivePrefix = {arXiv}
+}
+
+@article{Acharya2019,
+    author = {Acharya, Sandeep Kumar and Khatri, Rishi},
+    title = {Rich structure of nonthermal relativistic {CMB} spectral distortions from high energy particle cascades at redshifts $z \lesssim 2 \times 10^5$},
+    journal = {Phys. Rev. D},
+    volume = {99},
+    pages = {043520},
+    year = {2019},
+    doi = {10.1103/PhysRevD.99.043520},
+    eprint = {1808.02897},
+    archivePrefix = {arXiv}
+}
+
+@article{Acharya2019decay,
+    author = {Acharya, Sandeep Kumar and Khatri, Rishi},
+    title = {New {CMB} spectral distortion constraints on decaying dark matter with full evolution of electromagnetic cascades before recombination},
+    journal = {Phys. Rev. D},
+    volume = {99},
+    number = {12},
+    pages = {123510},
+    year = {2019},
+    doi = {10.1103/PhysRevD.99.123510},
+    eprint = {1903.04503},
+    archivePrefix = {arXiv}
+}
+
+@article{Liu2023exotic,
+    author = {Liu, Hongwan and Qin, Wenzer and Ridgway, Gregory W. and Slatyer, Tracy R.},
+    title = {Exotic energy injection in the early {Universe}. {II}. {CMB} spectral distortions and constraints on light dark matter},
+    journal = {Phys. Rev. D},
+    volume = {108},
+    number = {4},
+    pages = {043531},
+    year = {2023},
+    doi = {10.1103/PhysRevD.108.043531},
+    eprint = {2303.07370},
+    archivePrefix = {arXiv}
+}
+
+@article{CJ2014,
+    author = {Chluba, J. and Jeong, D.},
+    title = {Teasing bits of information out of the {CMB} energy spectrum},
+    journal = {Mon. Not. R. Astron. Soc.},
+    volume = {438},
+    pages = {2065--2082},
+    year = {2014},
+    doi = {10.1093/mnras/stt2327},
+    eprint = {1306.5751},
+    archivePrefix = {arXiv}
+}
+
+@article{BianchiniFabbian2022,
+    author = {Bianchini, F. and Fabbian, G.},
+    title = {{CMB} spectral distortions revisited: a new take on $\mu$ distortions and primordial non-{G}aussianities from {FIRAS} data},
+    journal = {Phys. Rev. D},
+    volume = {106},
+    pages = {063527},
+    year = {2022},
+    doi = {10.1103/PhysRevD.106.063527},
+    eprint = {2206.02762},
+    archivePrefix = {arXiv}
+}
+
+@article{Caputo2020,
+    author = {Caputo, Andrea and Liu, Hongwan and Mishra-Sharma, Siddharth and Ruderman, Joshua T.},
+    title = {Dark Photon Oscillations in Our Inhomogeneous Universe},
+    journal = {Phys. Rev. Lett.},
+    volume = {125},
+    pages = {221303},
+    year = {2020},
+    doi = {10.1103/PhysRevLett.125.221303},
+    eprint = {2002.05165},
+    archivePrefix = {arXiv}
+}
+
+@article{Caputo2020modeling,
+    author = {Caputo, Andrea and Liu, Hongwan and Mishra-Sharma, Siddharth and Ruderman, Joshua T.},
+    title = {Modeling dark photon oscillations in our inhomogeneous universe},
+    journal = {Phys. Rev. D},
+    volume = {102},
+    pages = {103533},
+    year = {2020},
+    doi = {10.1103/PhysRevD.102.103533},
+    eprint = {2004.06733},
+    archivePrefix = {arXiv}
+}
+
+@article{FOSSIL2024,
+    author = {Coulon, Xavier and Maffei, Bruno and Aghanim, Nabila},
+    title = {Towards measurements of {CMB} spectral distortions},
+    journal = {EPJ Web Conf.},
+    volume = {293},
+    pages = {00012},
+    year = {2024},
+    doi = {10.1051/epjconf/202429300012}
+}
+
+@article{CrankNicolson1947,
+    author = {Crank, J. and Nicolson, P.},
+    title = {A practical method for numerical evaluation of solutions of partial differential equations of the heat-conduction type},
+    journal = {Proc. Cambridge Philos. Soc.},
+    volume = {43},
+    pages = {50--67},
+    year = {1947},
+    doi = {10.1017/S0305004100023197}
+}
+
+@article{Seager1999,
+    author = {Seager, Sara and Sasselov, Dimitar D. and Scott, Douglas},
+    title = {A New Calculation of the Recombination Epoch},
+    journal = {Astrophys. J.},
+    volume = {523},
+    pages = {L1--L5},
+    year = {1999},
+    doi = {10.1086/312250},
+    eprint = {astro-ph/9909275},
+    archivePrefix = {arXiv}
+}
+
+@article{Chluba2011cosmorec2,
+    author = {Chluba, J. and Thomas, R. M.},
+    title = {Towards a complete treatment of the cosmological recombination problem},
+    journal = {Mon. Not. R. Astron. Soc.},
+    volume = {412},
+    pages = {748--764},
+    year = {2011},
+    doi = {10.1111/j.1365-2966.2010.17940.x},
+    eprint = {1010.3631},
+    archivePrefix = {arXiv}
+}
+
+@article{numpy2020,
+    author = {Harris, Charles R. and Millman, K. Jarrod and van der Walt, St\'{e}fan J. and others},
+    title = {Array programming with {NumPy}},
+    journal = {Nature},
+    volume = {585},
+    pages = {357--362},
+    year = {2020},
+    doi = {10.1038/s41586-020-2649-2}
+}
+
+@article{scipy2020,
+    author = {Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E. and others},
+    title = {{{SciPy}} 1.0: fundamental algorithms for scientific computing in {Python}},
+    journal = {Nature Methods},
+    volume = {17},
+    pages = {261--272},
+    year = {2020},
+    doi = {10.1038/s41592-019-0686-2}
+}
+
+@article{matplotlib2007,
+    author = {Hunter, John D.},
+    title = {{Matplotlib}: A {2D} Graphics Environment},
+    journal = {Computing in Science \& Engineering},
+    volume = {9},
+    number = {3},
+    pages = {90--95},
+    year = {2007},
+    doi = {10.1109/MCSE.2007.55}
+}
+
+@misc{rust2024,
+    author = {{The Rust Project Developers}},
+    title = {The {Rust} Programming Language},
+    year = {2024},
+    url = {https://www.rust-lang.org}
+}
+
+@article{Roache2002,
+  title = {Code {{Verification}} by the {{Method}} of {{Manufactured Solutions}}},
+  author = {Roache, Patrick J.},
+  year = 2002,
+  month = nov,
+  journal = {Journal of Fluids Engineering},
+  volume = {124},
+  number = {1},
+  pages = {4--10},
+  issn = {0098-2202},
+  doi = {10.1115/1.1436090},
+  urldate = {2026-08-06},
+  abstract = {Verification of Calculations involves error estimation, whereas Verification of Codes involves error evaluation, from known benchmark solutions. The best benchmarks are exact analytical solutions with sufficiently complex solution structure; they need not be realistic since Verification is a purely mathematical exercise. The Method of Manufactured Solutions (MMS) provides a straightforward and quite general procedure for generating such solutions. For complex codes, the method utilizes Symbolic Manipulation, but here it is illustrated with simple examples. When used with systematic grid refinement studies, which are remarkably sensitive, MMS produces strong Code Verifications with a theorem-like quality and a clearly defined completion point.}
+}
+
+@article{Aghanim:2026mii,
+    author = "Aghanim, N. and others",
+    title = "{FOSSIL: A future mission for CMB spectral distortion measurements}",
+    eprint = "2609.17618",
+    archivePrefix = "arXiv",
+    primaryClass = "astro-ph.CO",
+    month = "9",
+    year = "2026"
+}
+
+
+@ARTICLE{Rubino-Martin2010,
+       author = {{Rubi{\~n}o-Mart{\'\i}n}, J.A. and {Chluba}, J. and {Fendt}, W.A. and {Wandelt}, B.D.},
+        title = "{Estimating the impact of recombination uncertainties on the cosmological parameter constraints from cosmic microwave background experiments}",
+      journal = {Mon. Not. R. Astron. Soc.},
+     keywords = {cosmic microwave background, cosmological parameters, cosmology: observations, Astrophysics - Cosmology and Nongalactic Astrophysics},
+         year = 2010,
+        month = mar,
+       volume = {403},
+       number = {1},
+        pages = {439-452},
+          doi = {10.1111/j.1365-2966.2009.16136.x},
+archivePrefix = {arXiv},
+       eprint = {0910.4383},
+ primaryClass = {astro-ph.CO},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2010MNRAS.403..439R},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+@article{Lee:2020obi,
+    author = {Lee, Nanoom and Ali-Ha{\"\i}moud, Yacine},
+    title = "{HYREC-2: a highly accurate sub-millisecond recombination code}",
+    eprint = "2007.14114",
+    archivePrefix = "arXiv",
+    primaryClass = "astro-ph.CO",
+    doi = "10.1103/PhysRevD.102.083517",
+    journal = "Phys. Rev. D",
+    volume = "102",
+    number = "8",
+    pages = "083517",
+    year = "2020"
+}
+
+@article{Liu:2019bbm,
+    author = "Liu, Hongwan and Ridgway, Gregory W. and Slatyer, Tracy R.",
+    title = "{Code package for calculating modified cosmic ionization and thermal histories with dark matter and other exotic energy injections}",
+    eprint = "1904.09296",
+    archivePrefix = "arXiv",
+    primaryClass = "astro-ph.CO",
+    doi = "10.1103/PhysRevD.101.023530",
+    journal = "Phys. Rev. D",
+    volume = "101",
+    number = "2",
+    pages = "023530",
+    year = "2020"
+}
+
+@article{Chluba:2013kua,
+    author = "Chluba, Jens",
+    title = "{Refined approximations for the distortion visibility function and {\ensuremath{\mu}}-type spectral distortions}",
+    eprint = "1312.6030",
+    archivePrefix = "arXiv",
+    primaryClass = "astro-ph.CO",
+    doi = "10.1093/mnras/stu414",
+    journal = "Mon. Not. Roy. Astron. Soc.",
+    volume = "440",
+    number = "3",
+    pages = "2544--2563",
+    year = "2014"
+}
+
+@BOOK{2011piim.book.....D,
+       author = {{Draine}, Bruce T.},
+        title = "{Physics of the Interstellar and Intergalactic Medium}",
+         year = 2011,
+    publisher = {Princeton University Press},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2011piim.book.....D},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+@article{Chluba:2016bvg,
+    author = "Chluba, Jens",
+    title = "{Which spectral distortions does $\Lambda$CDM actually predict?}",
+    eprint = "1603.02496",
+    archivePrefix = "arXiv",
+    primaryClass = "astro-ph.CO",
+    doi = "10.1093/mnras/stw945",
+    journal = "Mon. Not. Roy. Astron. Soc.",
+    volume = "460",
+    number = "1",
+    pages = "227--239",
+    year = "2016"
+}
+
+
+@ARTICLE{DeMillo1978,
+  author={DeMillo, R.A. and Lipton, R.J. and Sayward, F.G.},
+  journal={Computer}, 
+  title={Hints on Test Data Selection: Help for the Practicing Programmer}, 
+  year={1978},
+  volume={11},
+  number={4},
+  pages={34-41},
+  keywords={Programming profession;System testing;Error correction;Computer errors;Software reliability;Software debugging;Computer bugs;Process design;Error analysis},
+  doi={10.1109/C-M.1978.218136}}
+
+
+
+@software{jupyter2024,
+    author = {Kluyver, Thomas and Ragan-Kelley, Benjamin and P\'{e}rez, Fernando and others},
+    title = {Jupyter Notebooks---a publishing format for reproducible computational workflows},
+    year = {2016},
+    doi = {10.3233/978-1-61499-649-1-87}
+}
+
+% tSZ from structure formation
+@article{Hill2015,
+    author = {Hill, J. Colin and Battaglia, Nick and Chluba, Jens and Ferraro, Simone and Schaan, Emmanuel and Spergel, David N.},
+    title = {Taking the Universe's Temperature with Spectral Distortions of the Cosmic Microwave Background},
+    journal = {Phys. Rev. Lett.},
+    volume = {115},
+    pages = {261301},
+    year = {2015},
+    doi = {10.1103/PhysRevLett.115.261301},
+    eprint = {1507.01583},
+    archivePrefix = {arXiv}
+}
+
+% ALP-photon conversion SD
+@article{Tashiro2013axion,
+    author = {Tashiro, Hiroyuki and Silk, Joseph and Marsh, David J. E.},
+    title = {Constraints on primordial magnetic fields from {CMB} distortions in the axiverse},
+    journal = {Phys. Rev. D},
+    volume = {88},
+    pages = {125024},
+    year = {2013},
+    doi = {10.1103/PhysRevD.88.125024},
+    eprint = {1308.0314},
+    archivePrefix = {arXiv}
+}
+
+% Polarized SD from axion-photon conversion
+@article{Mukherjee2018,
+    author = {Mukherjee, Suvodip and Khatri, Rishi and Wandelt, Benjamin D.},
+    title = {Polarized anisotropic spectral distortions of the {CMB}: {G}alactic and extragalactic constraints on photon-axion conversion},
+    journal = {JCAP},
+    volume = {2018},
+    number = {04},
+    pages = {045},
+    year = {2018},
+    doi = {10.1088/1475-7516/2018/04/045},
+    eprint = {1801.09701},
+    archivePrefix = {arXiv}
+}
+
+% Axion-photon conversion SD (Chluba & Cyr)
+@article{Cyr2024axion,
+    author = {Cyr, Bryce and Chluba, Jens and Gangrekalve Manoj, Pranav Bharadwaj},
+    title = {Revisiting constraints on resonant axion-photon conversions from {CMB} spectral distortions},
+    year = {2024},
+    eprint = {2411.13701},
+    archivePrefix = {arXiv}
+}
+
+% PBH SD constraints
+@article{Acharya2020pbh,
+    author = {Acharya, Sandeep Kumar and Khatri, Rishi},
+    title = {{CMB} spectral distortions constraints on primordial black holes, cosmic strings and long lived unstable particles revisited},
+    journal = {JCAP},
+    volume = {2020},
+    number = {02},
+    pages = {010},
+    year = {2020},
+    doi = {10.1088/1475-7516/2020/02/010},
+    eprint = {1912.10995},
+    archivePrefix = {arXiv}
+}
+
+% Cosmic string SD
+@article{Cyr2023strings,
+    author = {Cyr, Bryce and Chluba, Jens and Acharya, Sandeep Kumar},
+    title = {Constraints on the spectral signatures of superconducting cosmic strings},
+    journal = {Mon. Not. R. Astron. Soc.},
+    volume = {525},
+    number = {2},
+    pages = {2632--2653},
+    year = {2023},
+    doi = {10.1093/mnras/stad2457},
+    eprint = {2305.09816},
+    archivePrefix = {arXiv}
+}
+
+% Magnetic field SD
+@article{Jedamzik2000,
+    author = {Jedamzik, Karsten and Katalini\'{c}, Visnja and Olinto, Angela V.},
+    title = {Limit on Primordial Small-Scale Magnetic Fields from Cosmic Microwave Background Distortions},
+    journal = {Phys. Rev. Lett.},
+    volume = {85},
+    pages = {700--703},
+    year = {2000},
+    doi = {10.1103/PhysRevLett.85.700},
+    eprint = {astro-ph/9911100},
+    archivePrefix = {arXiv}
+}
+
+% Phase transition SD
+@article{AminGrin2014,
+    author = {Amin, Mustafa A. and Grin, Daniel},
+    title = {Probing early-universe phase transitions with {CMB} spectral distortions},
+    journal = {Phys. Rev. D},
+    volume = {90},
+    pages = {083529},
+    year = {2014},
+    doi = {10.1103/PhysRevD.90.083529},
+    eprint = {1405.1039},
+    archivePrefix = {arXiv}
+}
+
+% LiteBIRD science goals
+@article{LiteBIRD2023,
+    author = {{LiteBIRD Collaboration} and Allys, E. and others},
+    title = {Probing cosmic inflation with the {LiteBIRD} cosmic microwave background polarization survey},
+    journal = {Prog. Theor. Exp. Phys.},
+    volume = {2023},
+    pages = {042F01},
+    year = {2023},
+    doi = {10.1093/ptep/ptac150},
+    eprint = {2202.02773},
+    archivePrefix = {arXiv}
+}
+
+% clax: AI-generated JAX CLASS solver
+@misc{clax2025,
+    author = {Mishra-Sharma, Siddharth},
+    title = {Long-running {Claude} for scientific computing},
+    year = {2025},
+    howpublished = {\url{https://www.anthropic.com/research/long-running-Claude}},
+    note = {Code: \url{https://github.com/smsharma/clax}}
+}
+
+% BISOU balloon spectrometer
+@inproceedings{BISOU2021,
+    author = {Maffei, B. and Abitbol, M. H. and Aghanim, N. and Aumont, J. and Battistelli, E. and Chluba, J. and Coulon, X. and De Bernardis, P. and Douspis, M. and Grain, J. and others},
+    title = {{BISOU}: a balloon project to measure the {CMB} spectral distortions},
+    booktitle = {Proceedings of the 16th Marcel Grossmann Meeting (MG16)},
+    pages = {1633--1644},
+    year = {2023},
+    doi = {10.1142/9789811269776_0129},
+    eprint = {2111.00246},
+    archivePrefix = {arXiv}
+}
+
+% SPECTER instrument concept
+@article{SPECTER2024,
+    author = {Sabyr, Alina and Sierra, Carlos and Hill, J. Colin and McMahon, Jeffrey J.},
+    title = {{SPECTER}: An Instrument Concept for {CMB} Spectral Distortion Measurements with Enhanced Sensitivity},
+    journal = {JCAP},
+    volume = {2025},
+    number = {10},
+    pages = {088},
+    year = {2025},
+    doi = {10.1088/1475-7516/2025/10/088},
+    eprint = {2409.12188},
+    archivePrefix = {arXiv}
+}
+
+
+@article{Bartlett1988,
+    author = {Bartlett, D. F. and L\"ogl, S.},
+    title = {Limits on an Electromagnetic Fifth Force},
+    journal = {Phys. Rev. Lett.},
+    volume = {61},
+    pages = {2285--2287},
+    year = {1988},
+    doi = {10.1103/PhysRevLett.61.2285}
+}
+
+@article{DarkSRF2023,
+    author = {Romanenko, A. and others},
+    title = {Search for Dark Photons with Superconducting Radio Frequency Cavities},
+    journal = {Phys. Rev. Lett.},
+    volume = {130},
+    pages = {261801},
+    year = {2023},
+    eprint = {2301.11512},
+    archivePrefix = {arXiv},
+    doi = {10.1103/PhysRevLett.130.261801}
+}
+
+@article{CROWS2013,
+    author = {Betz, M. and others},
+    title = {First results of the {CERN} Resonant Weakly Interacting sub-eV Particle Search ({CROWS})},
+    journal = {Phys. Rev. D},
+    volume = {88},
+    pages = {075014},
+    year = {2013},
+    eprint = {1310.8098},
+    archivePrefix = {arXiv},
+    doi = {10.1103/PhysRevD.88.075014}
+}
+
+@misc{AxionLimits,
+    author = {O'Hare, Ciaran A. J.},
+    title = {{AxionLimits}},
+    howpublished = {\url{https://github.com/cajohare/AxionLimits}},
+    doi = {10.5281/zenodo.3932430},
+    year = {2020}
+}
+
+@article{Tu2005,
+    author = {Tu, Liang-Cheng and Luo, Jun and Gillies, George T.},
+    title = {The mass of the photon},
+    journal = {Rept. Prog. Phys.},
+    volume = {68},
+    pages = {77--130},
+    year = {2005},
+    doi = {10.1088/0034-4885/68/1/R02}
+}
+
+@article{ALPS2010,
+    author = {Ehret, K. and others},
+    title = {New {ALPS} results on hidden-sector lightweights},
+    journal = {Phys. Lett. B},
+    volume = {689},
+    pages = {149--155},
+    year = {2010},
+    eprint = {1004.1313},
+    archivePrefix = {arXiv},
+    doi = {10.1016/j.physletb.2010.04.066}
+}
+
+@article{PDG2024,
+    author = {Navas, S. and others},
+    collaboration = {Particle Data Group},
+    title = {Review of Particle Physics},
+    journal = {Phys. Rev. D},
+    volume = {110},
+    number = {3},
+    pages = {030001},
+    year = {2024},
+    doi = {10.1103/PhysRevD.110.030001}
+}
+</script>
+
+<script>
+"use strict";
+
+// ============================================================
+// State
+// ============================================================
+
+const BUILTIN_NAME = "paper/refs.bib";
+const BUILTIN_STORAGE_KEY = "bibcheck_spectroxide_ref_verify_state";
+const VERDICTS = ["correct", "revision", "skipped"];
+
+let REFS = [];
+let STORAGE_KEY = BUILTIN_STORAGE_KEY;
+let currentFileName = BUILTIN_NAME;
+let state = { currentIndex: 0, results: {}, showSummary: false };
+
+// DOI -> {ok: true, msg} or {ok: false, status}, and arXiv id -> {ok: true, md} or
+// {ok: false, status}. Network failures are not cached.
+const crossrefCache = new Map();
+const inflight = new Map();
+const inspireCache = new Map();
+const inspireInflight = new Map();
+let renderSeq = 0;
+
+function loadState() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            state.currentIndex = parsed.currentIndex || 0;
+            state.results = parsed.results || {};
+        }
+    } catch (e) {}
+    state.currentIndex = Math.min(Math.max(state.currentIndex, 0), Math.max(REFS.length - 1, 0));
+}
+
+function saveState() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            currentIndex: state.currentIndex,
+            results: state.results
+        }));
+    } catch (e) {}
+}
+
+// ============================================================
+// BibTeX parsing
+// ============================================================
+
+// Scan the file entry by entry, matching braces, so that nested braces, "@" inside
+// values, and both {...} and "..." delimiters parse correctly.
+function parseBib(text) {
+    const entries = [];
+    const head = /@\s*(\w+)\s*([{(])/y;
+    let i = 0;
+    while (true) {
+        const at = text.indexOf("@", i);
+        if (at < 0) break;
+        head.lastIndex = at;
+        const m = head.exec(text);
+        if (!m) { i = at + 1; continue; }
+        const type = m[1].toLowerCase();
+        const start = head.lastIndex;
+        const end = findEntryEnd(text, start, m[2]);
+        i = end + 1;
+        if (type === "comment" || type === "preamble" || type === "string") continue;
+        const entry = parseEntryBody(text.slice(start, end), type);
+        if (entry) {
+            entry._source = text.slice(at, end + 1);
+            entries.push(entry);
+        }
+    }
+    return entries;
+}
+
+function findEntryEnd(text, start, open) {
+    let depth = 0;
+    for (let j = start; j < text.length; j++) {
+        const ch = text[j];
+        if (ch === "{") depth++;
+        else if (ch === "}") {
+            if (depth === 0 && open === "{") return j;
+            depth--;
+        } else if (ch === ")" && open === "(" && depth === 0) return j;
+    }
+    return text.length;
+}
+
+function parseEntryBody(body, type) {
+    const comma = body.indexOf(",");
+    const key = (comma < 0 ? body : body.slice(0, comma)).trim();
+    if (!key) return null;
+    const entry = { key, type, _raw: {} };
+    const n = body.length;
+    let p = comma < 0 ? n : comma + 1;
+    const name = /\s*([A-Za-z][\w\-:.]*)\s*=\s*/y;
+    while (p < n) {
+        while (p < n && /[\s,]/.test(body[p])) p++;
+        name.lastIndex = p;
+        const m = name.exec(body);
+        if (!m) break;
+        p = name.lastIndex;
+        let raw = "";
+        while (p < n) {
+            if (body[p] === "{") {
+                const q = matchBrace(body, p);
+                raw += body.slice(p + 1, q);
+                p = q + 1;
+            } else if (body[p] === '"') {
+                let q = p + 1, depth = 0;
+                while (q < n && !(body[q] === '"' && depth === 0 && body[q - 1] !== "\\")) {
+                    if (body[q] === "{") depth++;
+                    else if (body[q] === "}") depth--;
+                    q++;
+                }
+                raw += body.slice(p + 1, q);
+                p = q + 1;
+            } else {
+                const w = /[^\s,#]+/y;
+                w.lastIndex = p;
+                const wm = w.exec(body);
+                if (!wm) break;
+                raw += wm[0];
+                p = w.lastIndex;
+            }
+            let q = p;
+            while (q < n && /\s/.test(body[q])) q++;
+            if (body[q] === "#") { p = q + 1; while (p < n && /\s/.test(body[p])) p++; }
+            else break;
+        }
+        const field = m[1].toLowerCase();
+        entry._raw[field] = raw;
+        entry[field] = IDENTIFIER_FIELDS.has(field) ? cleanIdentifier(raw) : cleanTex(raw);
+    }
+    return entry;
+}
+
+// Identifiers keep "--", "~", and "$" verbatim; only markup is removed.
+const IDENTIFIER_FIELDS = new Set(["doi", "url", "eprint", "howpublished", "isbn", "issn"]);
+
+function cleanIdentifier(s) {
+    return s.replace(/\\url\s*/g, "").replace(/\\([&%$#_{}~])/g, "$1")
+        .replace(/[{}]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function matchBrace(s, p) {
+    let depth = 0;
+    for (let q = p; q < s.length; q++) {
+        if (s[q] === "{") depth++;
+        else if (s[q] === "}" && --depth === 0) return q;
+    }
+    return s.length;
+}
+
+const ACCENTS = {
+    '"': "̈", "'": "́", "`": "̀", "^": "̂", "~": "̃",
+    "=": "̄", ".": "̇", u: "̆", v: "̌", H: "̋",
+    c: "̧", k: "̨", r: "̊"
+};
+const SPECIAL = {
+    ss: "ß", o: "ø", O: "Ø", aa: "å", AA: "Å", ae: "æ", AE: "Æ",
+    oe: "œ", OE: "Œ", l: "ł", L: "Ł", i: "ı", j: "ȷ"
+};
+const SYMBOLS = {
+    alpha: "α", beta: "β", gamma: "γ", Gamma: "Γ", delta: "δ", Delta: "Δ",
+    epsilon: "ε", varepsilon: "ε", zeta: "ζ", eta: "η", theta: "θ", Theta: "Θ",
+    kappa: "κ", lambda: "λ", Lambda: "Λ", mu: "μ", nu: "ν", xi: "ξ", pi: "π",
+    rho: "ρ", sigma: "σ", Sigma: "Σ", tau: "τ", phi: "φ", varphi: "φ", Phi: "Φ",
+    chi: "χ", psi: "ψ", omega: "ω", Omega: "Ω", times: "×", lesssim: "≲",
+    gtrsim: "≳", sim: "∼", approx: "≈", leq: "≤", geq: "≥", pm: "±", infty: "∞"
+};
+
+// Render a BibTeX value as plain Unicode text: accents, Greek letters, and common
+// macros become characters; braces, math delimiters, and other commands are dropped.
+function cleanTex(s) {
+    s = s.replace(/\\([uvHckr])(?:\s*\{\s*(\\?[A-Za-z])\s*\}|\s+(\\?[A-Za-z]))/g,
+        (_, a, x, y) => baseLetter(x || y) + ACCENTS[a]);
+    s = s.replace(/\\(["'`^~=.])\s*(?:\{\s*(\\?[A-Za-z])\s*\}|(\\?[A-Za-z]))/g,
+        (_, a, x, y) => baseLetter(x || y) + ACCENTS[a]);
+    s = s.replace(/\\(ss|aa|AA|ae|AE|oe|OE|o|O|l|L|i|j)(?![A-Za-z])\s*/g, (_, c) => SPECIAL[c]);
+    s = s.replace(/\\([A-Za-z]+)/g, (all, c) => (c in SYMBOLS ? SYMBOLS[c] : all));
+    s = s.replace(/\\([&%$#_{}])/g, "$1");
+    s = s.replace(/\\[A-Za-z]+\*?\s*/g, "");
+    s = s.replace(/[{}$]/g, "").replace(/~/g, " ");
+    s = s.replace(/---/g, "—").replace(/--/g, "–");
+    return s.normalize("NFC").replace(/\s+/g, " ").trim();
+}
+
+function baseLetter(x) {
+    return x === "\\i" ? "i" : x === "\\j" ? "j" : x;
+}
+
+// Split a raw author field on "and" at brace depth 0, so "{A and B Collaboration}"
+// stays one name.
+function splitAuthors(raw) {
+    const names = [];
+    let depth = 0, last = 0;
+    for (let i = 0; i < raw.length; i++) {
+        if (raw[i] === "{") depth++;
+        else if (raw[i] === "}") depth--;
+        else if (depth === 0 && /\s/.test(raw[i])) {
+            const m = /^\s+and\s+/i.exec(raw.slice(i));
+            if (m) {
+                names.push(raw.slice(last, i));
+                i += m[0].length - 1;
+                last = i + 1;
+            }
+        }
+    }
+    names.push(raw.slice(last));
+    return names.map(cleanTex).filter(Boolean);
+}
+
+function surname(name) {
+    if (name.includes(",")) return name.split(",")[0].trim();
+    const parts = name.split(/\s+/);
+    return parts[parts.length - 1];
+}
+
+// ============================================================
+// Text helpers
+// ============================================================
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// CrossRef strings can carry HTML or MathML markup and (sometimes double-encoded)
+// entities. Tags become spaces because CrossRef often omits the spaces around them.
+function htmlToText(s) {
+    if (!s) return "";
+    s = String(s).replace(/<[^>]*>/g, " ");
+    for (let k = 0; k < 2 && /&[#\w]+;/.test(s); k++)
+        s = new DOMParser().parseFromString(s, "text/html").body.textContent;
+    return s.replace(/\s+/g, " ").trim();
+}
+
+function fold(s) {
+    return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
+        .replace(/ß/g, "ss").replace(/ø/g, "o").replace(/ł/g, "l").replace(/æ/g, "ae");
+}
+
+function normalizeStr(s) {
+    return fold(s).replace(/['\u2019\u2018\u02bc`]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+}
+
+function words(s) {
+    return normalizeStr(s).split(" ").filter(Boolean);
+}
+
+function cleanDoi(doi) {
+    return doi.trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, "").replace(/^doi:\s*/i, "");
+}
+
+function arxivUrl(eprint) {
+    return "https://arxiv.org/abs/" + eprint.replace(/^arXiv:/i, "");
+}
+
+// "arXiv:2409.12188v2" -> "2409.12188". INSPIRE does not accept version suffixes.
+function cleanEprint(eprint) {
+    return eprint.trim().replace(/^arxiv:\s*/i, "").replace(/v\d+$/i, "");
+}
+
+function inspireUrl(id) {
+    return "https://inspirehep.net/literature?q=" + encodeURIComponent("arxiv:" + id);
+}
+
+function getRefUrl(ref) {
+    if (ref.doi) return "https://doi.org/" + cleanDoi(ref.doi);
+    if (ref.eprint) return arxivUrl(ref.eprint);
+    if (ref.url) return ref.url;
+    if (/^https?:\/\//.test(ref.howpublished || "")) return ref.howpublished;
+    return null;
+}
+
+function linkPill(href, label) {
+    return '<a class="link-pill" href="' + escapeHtml(href) + '" target="_blank" rel="noopener">'
+        + escapeHtml(label) + ' &#8599;</a>';
+}
+
+// ============================================================
+// Rendering the entry
+// ============================================================
+
+const DISPLAY_FIELDS = [
+    "author", "journal", "booktitle", "year", "volume", "number", "pages",
+    "doi", "eprint", "publisher", "edition", "address", "howpublished", "url", "note"
+];
+
+function renderRef(index) {
+    if (index < 0 || index >= REFS.length) return;
+    const ref = REFS[index];
+
+    document.getElementById("progress-text").textContent = "of " + REFS.length;
+    document.getElementById("entry-position").textContent = "Entry " + (index + 1) + " of " + REFS.length;
+    document.getElementById("progress-bar").style.width = ((index + 1) / REFS.length * 100) + "%";
+    document.getElementById("jump-input").value = index + 1;
+    document.getElementById("jump-input").max = REFS.length;
+
+    const status = state.results[ref.key] || "pending";
+    const badge = document.getElementById("current-status");
+    badge.textContent = status === "revision" ? "needs revision" : status;
+    badge.className = "badge " + status;
+
+    document.getElementById("cite-key").textContent = ref.key;
+    document.getElementById("entry-type").textContent = "@" + ref.type;
+    document.getElementById("entry-title").textContent = ref.title || "(no title)";
+    document.getElementById("entry-source").textContent = ref._source || "";
+
+    let html = "";
+    for (const field of DISPLAY_FIELDS) {
+        if (!ref[field]) continue;
+        let value;
+        if (field === "author") {
+            value = escapeHtml(splitAuthors(ref._raw.author).join("; "));
+        } else if (field === "doi") {
+            const doi = cleanDoi(ref.doi);
+            value = '<a class="mono" href="https://doi.org/' + escapeHtml(doi) + '" target="_blank" rel="noopener">' + escapeHtml(doi) + "</a>";
+        } else if (field === "eprint") {
+            value = '<a class="mono" href="' + escapeHtml(arxivUrl(ref.eprint)) + '" target="_blank" rel="noopener">' + escapeHtml(ref.eprint) + "</a>";
+        } else if (/^https?:\/\//.test(ref[field])) {
+            value = '<a href="' + escapeHtml(ref[field]) + '" target="_blank" rel="noopener">' + escapeHtml(ref[field]) + "</a>";
+        } else {
+            value = escapeHtml(ref[field]);
+        }
+        html += "<dt>" + field + "</dt><dd>" + value + "</dd>";
+    }
+    document.getElementById("fields").innerHTML = html;
+
+    fetchAndRenderCrossRef(ref);
+    updateStatusBar();
+    saveState();
+}
+
+// ============================================================
+// CrossRef lookup
+// ============================================================
+
+// Look the DOI up in CrossRef; if CrossRef has never heard of it, try DataCite, which
+// registers many proceedings, software, and data DOIs (Zenodo, CERN reports).
+function fetchCrossRef(doi) {
+    if (crossrefCache.has(doi)) return Promise.resolve(crossrefCache.get(doi));
+    if (inflight.has(doi)) return inflight.get(doi);
+    const req = (async () => {
+        const resp = await fetch("https://api.crossref.org/works/" + encodeURIComponent(doi), {
+            headers: { "Accept": "application/json" }
+        });
+        let result;
+        if (resp.ok) {
+            result = { ok: true, source: "CrossRef", msg: (await resp.json()).message };
+        } else if (resp.status === 404) {
+            const dc = await fetch("https://api.datacite.org/dois/" + encodeURIComponent(doi), {
+                headers: { "Accept": "application/vnd.api+json" }
+            });
+            result = dc.ok
+                ? { ok: true, source: "DataCite", msg: dataciteToCrossref((await dc.json()).data.attributes) }
+                : { ok: false, status: 404 };
+        } else {
+            return { ok: false, status: resp.status };
+        }
+        crossrefCache.set(doi, result);
+        return result;
+    })().finally(() => inflight.delete(doi));
+    inflight.set(doi, req);
+    return req;
+}
+
+// Reshape a DataCite record into the CrossRef fields that renderComparison reads.
+function dataciteToCrossref(a) {
+    const c = a.container || {};
+    const pages = [c.firstPage, c.lastPage].filter(Boolean).join("-");
+    return {
+        title: a.titles && a.titles.length ? [a.titles[0].title] : [],
+        author: (a.creators || []).map(p => p.familyName
+            ? { family: p.familyName, given: p.givenName || "" }
+            : { name: p.name || "" }),
+        issued: a.publicationYear ? { "date-parts": [[a.publicationYear]] } : undefined,
+        "container-title": c.title ? [c.title] : [],
+        volume: c.volume || "",
+        issue: c.issue || "",
+        page: pages
+    };
+}
+
+// arXiv's own API does not allow cross-origin requests, so arXiv numbers are looked up in
+// INSPIRE, which indexes physics preprints with their titles, authors, and linked DOIs.
+function fetchInspire(id) {
+    if (inspireCache.has(id)) return Promise.resolve(inspireCache.get(id));
+    if (inspireInflight.has(id)) return inspireInflight.get(id);
+    const req = (async () => {
+        const path = id.split("/").map(encodeURIComponent).join("/");
+        const resp = await fetch("https://inspirehep.net/api/arxiv/" + path, {
+            headers: { "Accept": "application/json" }
+        });
+        const result = resp.ok
+            ? { ok: true, md: (await resp.json()).metadata }
+            : { ok: false, status: resp.status };
+        if (resp.ok || resp.status === 404) inspireCache.set(id, result);
+        return result;
+    })().finally(() => inspireInflight.delete(id));
+    inspireInflight.set(id, req);
+    return req;
+}
+
+function inspireDois(md) {
+    return [...new Set((md.dois || []).map(d => d.value.toLowerCase()))];
+}
+
+function yearOf(date) {
+    return date ? String(date).slice(0, 4) : "";
+}
+
+// Reshape an INSPIRE record into the CrossRef fields that renderComparison reads. Both the
+// journal year and the preprint year count as a match for the entry's year.
+function inspireToCrossref(md) {
+    const pub = (md.publication_info || []).find(x => x.journal_title) || {};
+    const titles = (md.titles || []).map(x => x.title).filter(Boolean);
+    const pubYear = pub.year ? String(pub.year) : "";
+    const preYear = yearOf(md.preprint_date || md.earliest_date);
+    const year = y => y ? { "date-parts": [[y]] } : undefined;
+    return {
+        title: titles.slice(0, 1),
+        _altTitles: titles.slice(1),
+        author: (md.authors || []).map(a => {
+            const n = a.full_name || "";
+            const c = n.indexOf(",");
+            return c < 0 ? { name: n } : { family: n.slice(0, c).trim(), given: n.slice(c + 1).trim() };
+        }),
+        "published-print": year(pubYear),
+        "published-online": year(preYear),
+        "container-title": pub.journal_title ? [pub.journal_title] : [],
+        volume: pub.journal_volume || "",
+        issue: pub.journal_issue || "",
+        page: pub.page_start ? [pub.page_start, pub.page_end].filter(Boolean).join("-") : (pub.artid || "")
+    };
+}
+
+function prefetchNext(index) {
+    const next = REFS[index + 1];
+    if (next && next.doi) fetchCrossRef(cleanDoi(next.doi)).catch(() => {});
+    if (next && next.eprint) fetchInspire(cleanEprint(next.eprint)).catch(() => {});
+}
+
+async function fetchAndRenderCrossRef(ref) {
+    const seq = ++renderSeq;
+    const container = document.getElementById("crossref-content");
+    const url = getRefUrl(ref);
+    const eprint = ref.eprint ? cleanEprint(ref.eprint) : null;
+    // Start the INSPIRE lookup alongside the CrossRef one.
+    const inspire = eprint
+        ? fetchInspire(eprint).catch(err => ({ ok: false, error: err.message }))
+        : Promise.resolve(null);
+
+    if (!ref.doi && eprint) {
+        container.innerHTML = crHeader([], "INSPIRE") + '<div class="loading"><span class="spinner"></span>Fetching the INSPIRE record for <span class="mono">arXiv:' + escapeHtml(eprint) + "</span></div>";
+        const ins = await inspire;
+        if (seq !== renderSeq) return;
+        if (ins.ok) {
+            renderComparison(ref, inspireToCrossref(ins.md), container, "INSPIRE", ins);
+            prefetchNext(state.currentIndex);
+            return;
+        }
+    }
+
+    if (!ref.doi) {
+        const ins = await inspire;
+        if (seq !== renderSeq) return;
+        const q = encodeURIComponent(ref.title || ref.key);
+        let html = crHeader([
+            url && linkPill(url, ref.eprint ? "arXiv" : "Open link"),
+            linkPill("https://search.crossref.org/search/works?q=" + q + "&from_ui=yes", "Search CrossRef"),
+            linkPill("https://ui.adsabs.harvard.edu/search/q=" + encodeURIComponent('title:"' + (ref.title || "") + '"'), "Search ADS"),
+            linkPill("https://scholar.google.com/scholar?q=" + q, "Search Scholar")
+        ]);
+        if (ins && ins.status === 404) {
+            html += verdictBox("warn", "!", "No DOI, and INSPIRE has no record of arXiv:" + escapeHtml(eprint),
+                "Check that the arXiv number is right. INSPIRE covers physics; papers from other fields may be missing.");
+        } else if (ins && !ins.ok) {
+            html += verdictBox("warn", "!", "INSPIRE request failed",
+                escapeHtml(ins.error || "HTTP " + ins.status) + " (check your network connection)")
+                + '<button class="btn" id="retry-btn">Retry</button>';
+        } else {
+            html += verdictBox("none", "–", "No DOI or arXiv number, so this entry cannot be checked automatically",
+                ref.type === "book" ? "Books usually lack a CrossRef record. Check the publisher and edition by hand."
+                    : "Check this entry by hand.");
+        }
+        container.innerHTML = html;
+        const retry = document.getElementById("retry-btn");
+        if (retry) retry.onclick = () => renderRef(state.currentIndex);
+        return;
+    }
+
+    const doi = cleanDoi(ref.doi);
+    container.innerHTML = crHeader([]) + '<div class="loading"><span class="spinner"></span>Fetching the CrossRef record for <span class="mono">' + escapeHtml(doi) + "</span></div>";
+
+    let result;
+    try {
+        result = await fetchCrossRef(doi);
+    } catch (err) {
+        if (seq !== renderSeq) return;
+        container.innerHTML = crHeader([linkPill("https://doi.org/" + doi, "Open DOI")])
+            + verdictBox("warn", "!", "CrossRef request failed", escapeHtml(err.message) + " (check your network connection)")
+            + '<button class="btn" id="retry-btn">Retry</button>';
+        document.getElementById("retry-btn").onclick = () => renderRef(state.currentIndex);
+        return;
+    }
+    // The user may have moved on while the request was in flight.
+    if (seq !== renderSeq) return;
+
+    if (!result.ok) {
+        container.innerHTML = crHeader([linkPill("https://doi.org/" + doi, "Try the DOI directly")])
+            + verdictBox("fail", "✕", result.status === 404 ? "DOI not found in CrossRef or DataCite" : "CrossRef returned HTTP " + result.status,
+                result.status === 404 ? "The DOI may be mistyped, registered with a third agency, or fabricated. Try opening it directly." : "");
+        return;
+    }
+
+    const ins = await inspire;
+    if (seq !== renderSeq) return;
+    renderComparison(ref, result.msg, container, result.source, ins);
+    prefetchNext(state.currentIndex);
+}
+
+function crHeader(links, source) {
+    return '<div class="cr-header"><h2>' + (source || "CrossRef") + ' record</h2>' + links.filter(Boolean).join("") + "</div>";
+}
+
+function verdictBox(kind, icon, text, sub) {
+    return '<div class="verdict ' + kind + '"><span class="icon">' + icon + "</span><div>" + escapeHtml(text)
+        + (sub ? '<div class="sub">' + sub + "</div>" : "") + "</div></div>";
+}
+
+function crYears(cr) {
+    const out = [];
+    for (const k of ["published-print", "published-online", "published", "issued"]) {
+        const parts = cr[k] && cr[k]["date-parts"] && cr[k]["date-parts"][0];
+        if (parts && parts[0]) out.push(String(parts[0]));
+    }
+    return [...new Set(out)];
+}
+
+function renderComparison(ref, cr, container, source, ins) {
+    source = source || "CrossRef";
+    const crTitle = htmlToText((cr.title && cr.title[0]) || "");
+    const crSubtitle = htmlToText((cr.subtitle && cr.subtitle[0]) || "");
+    const crAuthors = (cr.author || []).map(a => ({ family: htmlToText(a.family), given: htmlToText(a.given), name: htmlToText(a.name) }));
+    const crAuthorList = crAuthors.map(a => a.family ? (a.given ? a.given + " " + a.family : a.family) : a.name).filter(Boolean);
+    const crSurnames = crAuthors.map(a => a.family || a.name).filter(Boolean);
+    const crJournal = htmlToText((cr["container-title"] && cr["container-title"][0]) || "");
+    const crShortJournal = htmlToText((cr["short-container-title"] && cr["short-container-title"][0]) || "");
+    const years = crYears(cr);
+
+    const rows = [];
+    // Some publishers store a running head as the subtitle, so accept a match on the main title alone.
+    // INSPIRE keeps both the journal and the arXiv title; a match on either counts.
+    const altTitles = (cr._altTitles || []).map(htmlToText);
+    rows.push(compareField("Title", ref.title, crSubtitle ? crTitle + ": " + crSubtitle : crTitle,
+        (b, c) => [crTitle, ...altTitles].some(x => titleMatch(b, x) === "match") ? "match" : titleMatch(b, c)));
+    rows.push(authorRow(ref, crAuthorList, crSurnames));
+    rows.push(compareField("Year", ref.year, years.join(" / "), (b) => yearMatch(b, years)));
+    rows.push(compareField("Journal", ref.journal || ref.booktitle, crJournal, (b, c) => journalMatch(b, c, crShortJournal)));
+    if (ref.volume || cr.volume) rows.push(compareField("Volume", ref.volume, cr.volume, (b, c) =>
+        exactMatch(b, c) === "match" ? "match"
+            : ref.number && exactMatch(ref.number, c) === "match"
+                ? { status: "partial", note: "The record uses your issue number as the volume (JCAP style)" }
+                : "mismatch"));
+    if (ref.number || cr.issue) rows.push(compareField("Number", ref.number, cr.issue, exactMatch));
+    const crPages = cr.page || cr["article-number"] || "";
+    if (ref.pages || crPages) rows.push(compareField("Pages", ref.pages, crPages, pagesMatch));
+    if (source === "INSPIRE") {
+        const dois = inspireDois(ins.md);
+        rows.push({ field: "arXiv", bibVal: ref.eprint, crVal: "arXiv:" + cleanEprint(ref.eprint), status: "match", note: "Record found in INSPIRE" });
+        if (dois.length) rows.push({ field: "DOI", bibVal: "", crVal: dois.join(", "), status: "partial", note: "INSPIRE lists a DOI; consider adding it" });
+    } else if (ref.eprint) {
+        rows.push(arxivRow(ref, ins));
+    }
+
+    const mismatches = rows.filter(r => r.status === "mismatch").length;
+    const partials = rows.filter(r => r.status === "partial").length;
+    let verdict;
+    const names = s => rows.filter(r => r.status === s).map(r => r.field).join(", ");
+    if (mismatches > 0) verdict = verdictBox("fail", "✕", "Disagrees: " + names("mismatch"), partials ? "Minor differences: " + names("partial") : "");
+    else if (partials > 0) verdict = verdictBox("warn", "~", "Minor differences: " + names("partial"), "Probably differences of form, not substance");
+    else verdict = verdictBox("ok", "✓", "Every compared field matches " + source + (ins && ins.ok && source !== "INSPIRE" ? " and INSPIRE" : ""), "");
+
+    const links = [];
+    if (ref.doi) links.push(linkPill("https://doi.org/" + cleanDoi(ref.doi), "Publisher page"));
+    if (ref.eprint) links.push(linkPill(arxivUrl(ref.eprint), "arXiv"), linkPill(inspireUrl(cleanEprint(ref.eprint)), "INSPIRE"));
+
+    const marks = { match: "✓", partial: "~", mismatch: "✕", info: "–" };
+    let html = crHeader(links, source) + verdict;
+    html += '<table class="cmp"><thead><tr><th>Field</th><th></th><th>Your entry</th><th>' + source + '</th></tr></thead><tbody>';
+    for (const r of rows) {
+        html += '<tr class="' + r.status + '"><td class="field">' + r.field + '</td><td class="mark">' + marks[r.status] + "</td>"
+            + '<td data-label="Your entry">' + cell(r.bibVal) + '</td><td data-label="' + (r.source || source) + '">' + cell(r.crVal) + (r.note ? '<span class="note">' + escapeHtml(r.note) + "</span>" : "") + "</td></tr>";
+    }
+    html += "</tbody></table>";
+    container.innerHTML = html;
+}
+
+// Does the entry's arXiv number belong to the same paper as its DOI? INSPIRE links the two.
+function arxivRow(ref, ins) {
+    const id = cleanEprint(ref.eprint);
+    const row = { field: "arXiv", bibVal: ref.eprint, source: "INSPIRE" };
+    if (!ins || !ins.ok) {
+        if (ins && ins.status === 404)
+            return { ...row, crVal: "", status: "partial", note: "INSPIRE has no record of arXiv:" + id + ". Check the number on arXiv." };
+        return { ...row, crVal: "", status: "info", note: "INSPIRE lookup failed: " + (ins ? ins.error || "HTTP " + ins.status : "no response") };
+    }
+    const dois = inspireDois(ins.md);
+    const doi = cleanDoi(ref.doi).toLowerCase();
+    const titles = (ins.md.titles || []).map(x => htmlToText(x.title));
+    if (dois.includes(doi))
+        return { ...row, crVal: "arXiv:" + id + " → " + doi, status: "match", note: "INSPIRE links this preprint to your DOI" };
+    const sameTitle = titles.some(x => titleMatch(ref.title || "", x) !== "mismatch");
+    if (!dois.length)
+        return { ...row, crVal: titles[0] || "", status: sameTitle ? "partial" : "mismatch",
+            note: sameTitle ? "INSPIRE links no DOI to this preprint, but the titles agree"
+                : "arXiv:" + id + " looks like a different paper" };
+    // A different DOI with the same title is usually another version (proceedings, erratum).
+    return { ...row, crVal: "arXiv:" + id + " → " + dois.join(", "), status: sameTitle ? "partial" : "mismatch",
+        note: sameTitle ? "INSPIRE links this preprint to a different DOI, but the titles agree"
+            : "INSPIRE links this preprint to a different paper" + (titles[0] ? ": " + titles[0] : "") };
+}
+
+function cell(v) {
+    return v ? escapeHtml(v) : '<span class="none">none</span>';
+}
+
+function compareField(field, bibVal, crVal, matchFn) {
+    bibVal = bibVal || "";
+    crVal = crVal || "";
+    if (!bibVal && !crVal) return { field, bibVal, crVal, status: "info" };
+    if (!crVal) return { field, bibVal, crVal, status: "info", note: "Not in the lookup record" };
+    // Physics bibliographies rarely give issue numbers, so a missing one is not a problem.
+    if (!bibVal) return { field, bibVal, crVal, status: field === "Number" ? "info" : "partial", note: "Missing from your entry" };
+    const res = matchFn(bibVal, crVal);
+    return typeof res === "string" ? { field, bibVal, crVal, status: res } : { field, bibVal, crVal, ...res };
+}
+
+// ============================================================
+// Field matchers. Each returns "match", "partial", "mismatch", or {status, note}.
+// ============================================================
+
+function exactMatch(a, b) {
+    const na = normalizeStr(a).replace(/^0+(?=\d)/, "");
+    const nb = normalizeStr(b).replace(/^0+(?=\d)/, "");
+    return na === nb ? "match" : "mismatch";
+}
+
+function yearMatch(bib, years) {
+    if (years.includes(bib)) return "match";
+    const y = parseInt(bib, 10);
+    if (years.some(c => Math.abs(parseInt(c, 10) - y) === 1))
+        return { status: "partial", note: "Off by one year, often online versus print publication" };
+    return "mismatch";
+}
+
+function titleMatch(bib, cr) {
+    const a = normalizeStr(bib), b = normalizeStr(cr);
+    if (a === b) return "match";
+    if (a && b && (a.includes(b) || b.includes(a))) return { status: "partial", note: "One title contains the other" };
+    const aw = new Set(words(bib).filter(w => w.length > 2));
+    const bw = new Set(words(cr).filter(w => w.length > 2));
+    const overlap = [...aw].filter(w => bw.has(w)).length;
+    const frac = overlap / Math.max(aw.size, bw.size, 1);
+    if (frac >= 0.6) return { status: "partial", note: Math.round(frac * 100) + "% of words shared" };
+    return "mismatch";
+}
+
+function authorRow(ref, crAuthorList, crSurnames) {
+    const bibNames = ref._raw.author ? splitAuthors(ref._raw.author) : [];
+    const bibText = bibNames.join("; ");
+    const shown = crAuthorList.slice(0, 12).join("; ") + (crAuthorList.length > 12 ? "; … (" + crAuthorList.length + " in total)" : "");
+    if (!bibNames.length && !crAuthorList.length) return { field: "Authors", bibVal: "", crVal: "", status: "info" };
+    if (!crAuthorList.length) return { field: "Authors", bibVal: bibText, crVal: "", status: "info", note: "Not in the lookup record" };
+    if (!bibNames.length) return { field: "Authors", bibVal: "", crVal: shown, status: "partial", note: "Missing from your entry" };
+
+    const crFolded = crSurnames.map(normalizeStr);
+    const found = (name) => {
+        const s = normalizeStr(surname(name));
+        return s.length > 0 && crFolded.some(c => c === s || c.includes(s) || s.includes(c) && c.length > 2);
+    };
+    const hasOthers = /^others$/i.test(bibNames[bibNames.length - 1]);
+    const listed = hasOthers ? bibNames.slice(0, -1) : bibNames;
+
+    if (!found(listed[0])) return { field: "Authors", bibVal: bibText, crVal: shown, status: "mismatch", note: "First author \"" + surname(listed[0]) + "\" is not in the lookup record" };
+    const missing = listed.filter(n => !found(n)).map(surname);
+    if (missing.length) return { field: "Authors", bibVal: bibText, crVal: shown, status: "partial", note: "Not in the lookup record: " + missing.join(", ") };
+    if (!hasOthers && listed.length !== crAuthorList.length)
+        return { field: "Authors", bibVal: bibText, crVal: shown, status: "partial", note: "Your entry lists " + listed.length + " authors, the record lists " + crAuthorList.length };
+    return { field: "Authors", bibVal: bibText, crVal: shown, status: "match" };
+}
+
+const JOURNAL_STOPWORDS = new Set(["the", "of", "and", "for", "in", "on", "de", "der", "und"]);
+
+// True if every word of the abbreviation is a prefix of the matching word of the full
+// name ("Astrophys. J." and "The Astrophysical Journal"), or if the abbreviation is the
+// initials of the full name ("JCAP", "A&A").
+function isAbbreviation(abbr, full) {
+    const a = words(abbr);
+    const f = words(full).filter(w => !JOURNAL_STOPWORDS.has(w));
+    if (!a.length || !f.length) return false;
+    if (a.length === f.length && a.every((w, i) => f[i].startsWith(w))) return true;
+    const initials = f.map(w => w[0]).join("");
+    return a.join("") === initials;
+}
+
+// Returns the words of the full name that the abbreviation skips, or null if the
+// abbreviation's words are not prefixes of an in-order subset of the full name.
+function abbreviationGaps(abbr, full) {
+    const a = words(abbr);
+    const f = words(full).filter(w => !JOURNAL_STOPWORDS.has(w));
+    const skipped = [];
+    let j = 0;
+    for (const w of f) {
+        if (j < a.length && w.startsWith(a[j])) j++;
+        else skipped.push(w);
+    }
+    return a.length > 0 && j === a.length ? skipped : null;
+}
+
+const JOURNAL_GENERIC = new Set(["series", "journal"]);
+
+function journalMatch(bib, cr, crShort) {
+    const a = normalizeStr(bib);
+    for (const c of [cr, crShort].filter(Boolean)) {
+        if (a === normalizeStr(c) || isAbbreviation(bib, c) || isAbbreviation(c, bib)) return "match";
+    }
+    for (const c of [cr, crShort].filter(Boolean)) {
+        const gaps = abbreviationGaps(bib, c);
+        if (gaps && gaps.every(w => JOURNAL_GENERIC.has(w))) return "match";
+        if (gaps) return { status: "partial", note: "Abbreviation skips: " + gaps.join(", ") };
+    }
+    const aw = new Set(words(bib).filter(w => w.length > 2));
+    const bw = new Set(words(cr).filter(w => w.length > 2));
+    const overlap = [...aw].filter(w => bw.has(w)).length;
+    if (overlap >= 2 || (aw.size <= 2 && overlap >= 1)) return { status: "partial", note: "Some words shared" };
+    return "mismatch";
+}
+
+function normalizePages(p) {
+    const parts = p.replace(/\s/g, "").replace(/[–—−]/g, "-").split(/-+/)
+        .map(x => /^\d+$/.test(x) ? String(parseInt(x, 10)) : x.toLowerCase());
+    if (parts.length === 2 && parts[0] === parts[1]) parts.pop();
+    return parts;
+}
+
+function pagesMatch(bib, cr) {
+    if (/^no-?no$/i.test(cr.replace(/\s/g, ""))) return { status: "info", note: "CrossRef has no page numbers" };
+    const a = normalizePages(bib), b = normalizePages(cr);
+    if (a.join("-") === b.join("-")) return "match";
+    if (a[0] === b[0] && b.length === 1) return { status: "match", note: "The record gives only the first page" };
+    if (a[0] === b[0]) return { status: "partial", note: "First page matches" };
+    return "mismatch";
+}
+
+// ============================================================
+// Verdicts and navigation
+// ============================================================
+
+function updateStatusBar() {
+    const counts = { correct: 0, revision: 0, skipped: 0 };
+    for (const ref of REFS) {
+        const v = state.results[ref.key];
+        if (v in counts) counts[v]++;
+    }
+    document.getElementById("count-correct").textContent = counts.correct;
+    document.getElementById("count-revision").textContent = counts.revision;
+    document.getElementById("count-skipped").textContent = counts.skipped;
+    document.getElementById("count-remaining").textContent = REFS.length - counts.correct - counts.revision - counts.skipped;
+}
+
+function flash(verdict) {
+    const panel = document.getElementById("entry-panel");
+    panel.classList.add("flash-" + verdict);
+    setTimeout(() => panel.classList.remove("flash-" + verdict), 320);
+}
+
+let advancing = false;
+
+function markAndAdvance(verdict) {
+    if (advancing || !REFS.length) return;
+    const ref = REFS[state.currentIndex];
+    state.results[ref.key] = verdict;
+    saveState();
+    updateStatusBar();
+    flash(verdict);
+    advancing = true;
+    setTimeout(() => {
+        advancing = false;
+        if (state.currentIndex < REFS.length - 1) {
+            state.currentIndex++;
+            renderRef(state.currentIndex);
+        } else {
+            showSummary();
+        }
+    }, 180);
+}
+
+function navigate(delta) {
+    const i = state.currentIndex + delta;
+    if (i >= 0 && i < REFS.length) {
+        state.currentIndex = i;
+        renderRef(i);
+    }
+}
+
+function jumpTo(n) {
+    if (n >= 1 && n <= REFS.length) {
+        state.currentIndex = n - 1;
+        if (state.showSummary) hideSummary();
+        else renderRef(state.currentIndex);
+    }
+}
+
+// ============================================================
+// Views
+// ============================================================
+
+function setView(view) {
+    document.getElementById("upload-page").style.display = view === "upload" ? "flex" : "none";
+    document.getElementById("app").hidden = view !== "review";
+    document.getElementById("summary-page").style.display = view === "summary" ? "block" : "none";
+    const loaded = view !== "upload";
+    for (const el of document.querySelectorAll(".review-only")) el.hidden = !loaded;
+    document.getElementById("toolbar-filename").hidden = !loaded;
+    document.getElementById("status-bar").hidden = !loaded;
+    document.getElementById("progress-bar").parentElement.style.visibility = loaded ? "visible" : "hidden";
+    state.showSummary = view === "summary";
+}
+
+function showSummary() {
+    if (!REFS.length) return;
+    setView("summary");
+    const groups = { revision: [], skipped: [], pending: [], correct: [] };
+    REFS.forEach((ref, i) => {
+        const v = state.results[ref.key];
+        groups[VERDICTS.includes(v) ? v : "pending"].push(i);
+    });
+
+    const section = (name, label, idx) => {
+        if (!idx.length) return "";
+        let h = '<div class="summary-section"><h3><span class="dot ' + name + '"></span>' + label + " (" + idx.length + ')</h3><div class="summary-list">';
+        for (const i of idx) {
+            const ref = REFS[i];
+            const first = ref._raw.author ? surname(splitAuthors(ref._raw.author)[0] || "") : "";
+            h += '<button class="summary-ref" onclick="jumpTo(' + (i + 1) + ')"><span class="key">' + escapeHtml(ref.key) + "</span>"
+                + '<span class="info">' + escapeHtml([first, ref.year].filter(Boolean).join(", ")) + "</span></button>";
+        }
+        return h + "</div></div>";
+    };
+
+    let html = '<div class="summary-inner"><h2>Review summary</h2>';
+    html += '<p class="lede">' + escapeHtml(currentFileName) + ", " + REFS.length + " entries. Click an entry to return to it.</p>";
+    html += section("revision", "Needs revision", groups.revision);
+    html += section("skipped", "Skipped", groups.skipped);
+    html += section("pending", "Not reviewed", groups.pending);
+    html += section("correct", "Correct", groups.correct);
+    html += '<div class="summary-actions"><button class="btn primary" onclick="hideSummary()">Back to review</button>'
+        + '<button class="btn" onclick="exportResults()">Export JSON</button></div></div>';
+    document.getElementById("summary-page").innerHTML = html;
+    saveState();
+}
+
+function hideSummary() {
+    setView("review");
+    renderRef(state.currentIndex);
+}
+
+function showUploadPage() {
+    setView("upload");
+}
+
+function startReview() {
+    setView("review");
+    document.getElementById("toolbar-filename").textContent = currentFileName + " · " + REFS.length + " entries";
+    renderRef(state.currentIndex);
+}
+
+// ============================================================
+// Export and reset
+// ============================================================
+
+function exportResults() {
+    const output = {
+        exportedAt: new Date().toISOString(),
+        file: currentFileName,
+        totalRefs: REFS.length,
+        results: {}
+    };
+    for (const ref of REFS) output.results[ref.key] = state.results[ref.key] || "pending";
+
+    const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ref_verification_" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function resetAll() {
+    if (!confirm("Reset all verdicts for " + currentFileName + "? This cannot be undone.")) return;
+    state = { currentIndex: 0, results: {}, showSummary: false };
+    saveState();
+    startReview();
+}
+
+// ============================================================
+// Keyboard
+// ============================================================
+
+document.addEventListener("keydown", function (e) {
+    if (e.target.id === "jump-input") {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            jumpTo(parseInt(e.target.value, 10));
+            e.target.blur();
+        }
+        return;
+    }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (state.showSummary || document.getElementById("app").hidden) return;
+
+    const actions = {
+        ArrowRight: () => markAndAdvance("correct"),
+        ArrowLeft: () => markAndAdvance("revision"),
+        ArrowDown: () => markAndAdvance("skipped"),
+        "[": () => navigate(-1),
+        "]": () => navigate(1)
+    };
+    if (actions[e.key]) {
+        e.preventDefault();
+        actions[e.key]();
+    }
+});
+
+document.getElementById("jump-input").addEventListener("change", function () {
+    jumpTo(parseInt(this.value, 10));
+});
+
+// ============================================================
+// Loading files
+// ============================================================
+
+function loadCustomBib(text, filename) {
+    const parsed = parseBib(text);
+    if (!parsed.length) {
+        alert("No BibTeX entries found in " + filename + ".");
+        return;
+    }
+    REFS = parsed;
+    currentFileName = filename;
+    // One storage slot per file name, so different files keep separate progress.
+    STORAGE_KEY = "bibcheck_" + filename.replace(/[^a-zA-Z0-9]/g, "_");
+    state = { currentIndex: 0, results: {}, showSummary: false };
+    loadState();
+    startReview();
+}
+
+function loadBuiltin() {
+    REFS = parseBib(document.getElementById("builtin-bib").textContent);
+    currentFileName = BUILTIN_NAME;
+    STORAGE_KEY = BUILTIN_STORAGE_KEY;
+    state = { currentIndex: 0, results: {}, showSummary: false };
+    loadState();
+}
+
+function startWithBuiltin() {
+    loadBuiltin();
+    startReview();
+}
+
+function readBibFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => loadCustomBib(e.target.result, file.name);
+    reader.readAsText(file);
+}
+
+const dropZone = document.getElementById("drop-zone");
+const fileInput = document.getElementById("bib-file-input");
+
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    if (e.dataTransfer.files[0]) readBibFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener("change", () => {
+    if (fileInput.files[0]) readBibFile(fileInput.files[0]);
+    fileInput.value = "";
+});
+
+// ============================================================
+// Start: resume the built-in review if it has saved progress, otherwise show the loader.
+// ============================================================
+
+loadBuiltin();
+if (Object.keys(state.results).length > 0) startReview();
+else setView("upload");
+</script>
+</body>
+</html>
